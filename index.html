@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="STARFABLE — 5つのステーション、着陸できる5つの星、乗り込める敵艦20隻。ブラウザで遊ぶ3D宇宙アドベンチャー。">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>STARFABLE — 星海の果て</title>
+<link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.min.js","three/addons/":"./vendor/three/examples/jsm/"}}</script>
+</head>
+<body>
+<div id="app">
+  <canvas id="gl"></canvas>
+  <div id="boot">
+    <div class="boot-logo">STARFABLE</div>
+    <div class="boot-sub">星海の果て</div>
+    <div class="boot-bar"><i id="boot-fill"></i></div>
+    <div id="boot-text">起動中…</div>
+  </div>
+</div>
+<noscript>このゲームの実行には JavaScript と WebGL2 が必要です。</noscript>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
