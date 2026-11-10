@@ -3,7 +3,8 @@ import * as THREE from 'three';
 import { G, clamp, damp, lerp, smooth, fmtDist, fmtSpeed, rng, rr } from '../core/util.js';
 import { BODIES, STATIONS, ENEMIES } from '../world/defs.js';
 import { buildShip, buildEnemy } from '../world/ships.js';
-import { buildStation } from '../world/stations.js';
+import { buildStation, stationSDF } from '../world/stations.js';
+import { enableDamage, rayHit, applyDamage, logDamage, clearDamage, syncDamage, Debris } from '../gfx/damage.js';
 import { Particles, Bolts, Shocks, ShieldFX, Streaks, makeGlowSprite } from '../gfx/fx.js';
 import { rockGeo } from '../gfx/builder.js';
 import { mat } from '../gfx/textures.js';
@@ -11,7 +12,7 @@ import { stats, save, earn, addCargo, event, remaining } from './state.js';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const _a = V(), _b = V(), _c = V(), _d = V(), _q = new THREE.Quaternion(), _q2 = new THREE.Quaternion(), _m = new THREE.Matrix4(), _e = new THREE.Euler();
-const FWD = V(0, 0, -1), UP = V(0, 1, 0), C = (c) => new THREE.Color(c);
+const FWD = V(0, 0, -1), UP = V(0, 1, 0), C = (c) => new THREE.Color(c), _hp = V(), _hd = V();
 const WHITE = C('#fff'), ORANGE = C('#ffb060'), SPARK = C('#ffd9a0');
 
 export class SpaceMode {
@@ -24,7 +25,8 @@ export class SpaceMode {
     s.add((this.amb = new THREE.HemisphereLight(0x3d4c62, 0x0c0e14, 0.55)));
     this.origin = V();
     this.parts = new Particles(3500); this.bolts = new Bolts(360); this.shocks = new Shocks(12); this.shield = new ShieldFX(8); this.streaks = new Streaks(800, 700);
-    s.add(this.parts.obj, this.bolts.obj, this.shocks.obj, this.shield.obj, this.streaks.obj);
+    this.debris = new Debris(260);
+    s.add(this.parts.obj, this.bolts.obj, this.shocks.obj, this.shield.obj, this.streaks.obj, this.debris.obj);
     this.flash = new THREE.PointLight(0xffb060, 0, 600, 1.6); s.add(this.flash);
     this.bodies = BODIES.filter((b) => b.type !== 'sun').map((b) => ({ def: b, uni: V(...b.pos), R: b.R }));
     this.stations = STATIONS.map((def) => ({ def, uni: V(...def.pos), m: null, kind: 'station' }));
@@ -41,7 +43,7 @@ export class SpaceMode {
     const im = new THREE.InstancedMesh(rockGeo(1, 2, 3, 0.4), mat('rock', { color: 0x6a5648, metal: 0.05, uvs: 0, ns: 1.4 }), n), o = new THREE.Object3D();
     for (let i = 0; i < n; i++) {
       const a = r() * 6.283, d = rr(r, 900, 5200), s = Math.pow(r(), 2.5) * 46 + 4;
-      o.position.set(Math.cos(a) * d, rr(r, -700, 700), Math.sin(a) * d); o.rotation.set(r() * 6, r() * 6, r() * 6); o.scale.set(s, s * rr(r, 0.6, 1), s * rr(r, 0.7, 1.1)); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
+      o.position.set(Math.cos(a) * d, rr(r, -700, 700), Math.sin(a) * d); o.rotation.set(r() * 6, r() * 6, r() * 6); o.scale.set(s, s * rr(r, 0.6, 1), s * rr(r, 0.7, 1.1)); o.updateMatrix(); im.setMatrixAt(i, o.matrix); (this.rockList || (this.rockList = [])).push([o.position.x, o.position.y, o.position.z, s * 0.82]);
     }
     im.frustumCulled = false; im.castShadow = im.receiveShadow = false; this.rocks = new THREE.Group(); this.rocks.add(im); this.rocksAt = st; this.scene.add(this.rocks);
   }
@@ -52,10 +54,12 @@ export class SpaceMode {
     const p = this.pl; if (p.id === id && p.m) return;
     const old = p.m, pos = old ? old.obj.position.clone() : V(), quat = old ? old.obj.quaternion.clone() : new THREE.Quaternion();
     if (old) this.scene.remove(old.obj);
-    p.m = buildShip(id); p.id = id; p.pos = p.m.obj.position.copy(pos); p.quat = p.m.obj.quaternion.copy(quat); this.scene.add(p.m.obj);
+    p.m = buildShip(id); syncDamage(p.m, id); p.id = id; p.pos = p.m.obj.position.copy(pos); p.quat = p.m.obj.quaternion.copy(quat); this.scene.add(p.m.obj);
     p.st = stats(id); p.hull = p.st.hull * G.p.ships[id].hull; p.shield = p.st.shield; p.energy = p.st.energy; p.missiles = p.st.missiles;
     const r = p.st.radius * 1.5, sc = this.sun.shadow.camera; sc.left = -r; sc.right = r; sc.top = r; sc.bottom = -r; sc.updateProjectionMatrix();
   }
+  /** 修理後: 傷のない新しいモデルに作り直す */
+  rebuildShip() { const p = this.pl, id = p.id, pos = p.pos.clone(), q = p.quat.clone(), gear = p.m.gear?.visible; clearDamage(id); this.scene.remove(p.m.obj); p.m = null; p.id = null; this.setShip(id); p.pos.copy(pos); p.quat.copy(q); if (p.m.gear) p.m.gear.visible = !!gear; G.modes.interior?.dropShip?.(id); G.modes.surface?.dropShip?.(id); }
   refit() { const p = this.pl; p.st = stats(p.id); p.hull = p.st.hull * G.p.ships[p.id].hull; p.shield = p.st.shield; p.energy = p.st.energy; p.missiles = p.st.missiles; }
   uni(pos, out = V()) { return out.copy(pos).add(this.origin); }
   /** ドッキングポートのシーン座標と外向き方向 */
@@ -73,13 +77,13 @@ export class SpaceMode {
     p.vel.set(0, 0, 0); p.av.set(0, 0, 0); p.docked = t; p.auto = null; p.sc.on = false; p.sc.speed = 0; p.thr = 0; G.input.setThr(0); p.camQ.copy(p.quat);
   }
   _sync(e) { if (e.kind === 'enemy') this._ensure(e); e.m.obj.position.subVectors(e.uni, this.origin); if (e.kind === 'enemy') e.m.obj.quaternion.copy(e.quat); e.m.obj.updateMatrixWorld(true); }
-  _ensure(e) { if (!e.m) { e.m = buildEnemy(e.def); this.scene.add(e.m.obj); if (!e.quat.lengthSq()) e.quat.identity(); } }
+  _ensure(e) { if (!e.m) { e.m = enableDamage(buildEnemy(e.def)); this.scene.add(e.m.obj); if (!e.quat.lengthSq()) e.quat.identity(); } }
 
   enter(o = {}) {
     const p = this.pl; this.title = !!o.title;
     for (const e of this.enemies) if (G.p.done[e.def.id] && e.state !== 'gone' && !e.fate) { e.state = 'gone'; if (e.m) e.m.obj.visible = false; }
     if (!o.resume) {
-      this.setShip(G.p.ship); this.refit();
+      this.setShip(G.p.ship); this.refit(); syncDamage(p.m, p.id);
       this.bolts.clear(); this.parts.clear(); p.auto = null; p.docked = null; p.dead = false; p.target = null; p.sc.on = false; p.sc.speed = 0;
       if (o.docked || o.undock) {
         const t = this.station(o.docked || o.undock); this.origin.copy(t.uni); p.pos.set(0, 0, 0); this.placeDocked(t);
@@ -97,6 +101,7 @@ export class SpaceMode {
         _m.lookAt(p.pos, P, UP); p.quat.setFromRotationMatrix(_m); p.vel.copy(FWD).applyQuaternion(p.quat).multiplyScalar(60); p.thr = 0.3; G.input.setThr(0.3); p.camQ.copy(p.quat);
       }
     }
+    if (o.resume) syncDamage(p.m, p.id);
     this.camera.aspect = G.W / G.H; this.camera.updateProjectionMatrix();
     G.hud.setMode(this.title ? 'title' : 'space'); G.hud.show(!this.title); G.gfx.look(0.62, 1.0, 1); G.gfx.fx.uFlare.value = 1;
     this._buttons(); this._cam(1, true);
@@ -129,7 +134,7 @@ export class SpaceMode {
     }
     // 浮動原点の再設定
     if (p.pos.lengthSq() > 4e6 || p.sc.on) this._rebase();
-    this._world(dt); this._enemies(dt); this._combat(dt); this._cam(dt);
+    this._world(dt); this._enemies(dt); this._combat(dt); this._collide(); this._cam(dt);
     this._fx(dt); this._hud(); this._context();
     // 回復
     if (this.time - p.lastHit > 4 && !p.dead) p.shield = Math.min(p.st.shield, p.shield + p.st.shield * 0.09 * dt);
@@ -137,7 +142,7 @@ export class SpaceMode {
   }
   _rebase() {
     const d = _d.copy(this.pl.pos); this.origin.add(d); this.pl.pos.set(0, 0, 0); this.camera.position.sub(d);
-    this.parts.shift(d); this.bolts.shift(d); this.shocks.shift(d); for (const m of this.missiles) m.g.position.sub(d);
+    this.parts.shift(d); this.bolts.shift(d); this.shocks.shift(d); this.debris.shift(d); for (const m of this.missiles) m.g.position.sub(d);
   }
   _title(dt) {
     const p = this.pl, t = this.time * 0.12; p.thr = 0.35;
@@ -314,17 +319,30 @@ export class SpaceMode {
     g.position.copy(p.pos).addScaledVector(_b.set(0, -1, 0).applyQuaternion(p.quat), p.m.bottom * 0.6);
     this.missiles.push({ g, vel: p.vel.clone().addScaledVector(fwd, 120), dir: fwd.clone(), t: p.target, life: 10, sp: p.vel.length() + 150 }); G.audio?.sfx('missile');
   }
-  damagePlayer(dmg, from, quiet) {
+  /** 船体ローカルの着弾点を求める。シールドが生きていれば球面で受け止める */
+  _precise(m, from, dir, shieldUp, maxT) {
+    if (shieldUp) return { shield: true };
+    const b = m.body; b.updateWorldMatrix(true, false); const inv = _m.copy(b.matrixWorld).invert(), o = _hp.copy(from).applyMatrix4(inv), d = _hd.copy(dir).transformDirection(inv), l = rayHit(m, o, d, maxT);
+    return l ? { l, d: d.clone(), w: l.clone().applyMatrix4(b.matrixWorld) } : null;
+  }
+  /** 着弾点の外板を凹ませ・剥がし、破片と火花を散らす */
+  _wound(m, h, R, depth, vel, color, id) {
+    const chips = applyDamage(m, h.l, h.d, R, depth); if (id) { logDamage(id, h.l, h.d, R, depth); m.applied++; }
+    const out = _hd.copy(h.d).transformDirection(m.body.matrixWorld).negate();
+    this.debris.burst(h.w, Math.min(16, 2 + chips * 2 + Math.round(R)), 14 + R * 6, 0.1 + R * 0.07, color, vel, out);
+    this.parts.burst(h.w, 8 + Math.round(R * 4), 26 + R * 12, SPARK, 0.35 + R * 0.12, 0.6, vel, 1.2); this.parts.burst(h.w, 2, 4, ORANGE, 0.8 + R * 0.5, 0.25, vel, 2);
+  }
+  damagePlayer(dmg, from, quiet, h, R = 1.5) {
     const p = this.pl; if (p.dead || p.docked) return; p.lastHit = this.time;
     if (p.shield > 0) { p.shield -= dmg; if (!quiet) { this.shield.hit(p.m.obj, p.st.radius * 0.75, from ? _b.copy(from).sub(p.pos) : FWD, '#5cf'); G.audio?.sfx('shield'); } if (p.shield < 0) { p.hull += p.shield; p.shield = 0; } }
-    else { p.hull -= dmg; if (!quiet) { p.shake = Math.min(1, p.shake + 0.5); G.audio?.sfx('hit'); this.parts.burst(p.pos, 14, 40, SPARK, 1.4, 0.6, p.vel); } }
+    else { p.hull -= dmg; if (!quiet) { p.shake = Math.min(1, p.shake + 0.5); G.audio?.sfx('hit'); if (h && h.l) this._wound(p.m, h, R, R * 0.28, p.vel, '#c8ccd4', p.id); else this.parts.burst(p.pos, 14, 40, SPARK, 1.4, 0.6, p.vel); } }
     G.p.ships[p.id].hull = clamp(p.hull / p.st.hull, 0, 1);
     if (p.hull <= 0) this._die();
   }
   _die() {
-    const p = this.pl; p.dead = true; p.auto = null; p.sc.on = false; this.explode(p.pos, p.st.radius * 2.2, p.vel); p.m.obj.visible = false;
+    const p = this.pl; p.dead = true; p.auto = null; p.sc.on = false; this.explode(p.pos, p.st.radius * 2.2, p.vel); this.debris.burst(p.pos, 50, 60, p.st.radius * 0.06, '#c8ccd4', p.vel); p.m.obj.visible = false;
     G.hud.banner('船体喪失', '救難艇が回収中…', 4); const fee = Math.round(G.p.credits * 0.1);
-    setTimeout(() => { G.p.credits -= fee; G.p.ships[p.id].hull = 1; p.m.obj.visible = true; G.go('space', { docked: G.p.last }).then(() => G.hud.msg(`${this.station(G.p.last).def.name} で修復されました (費用 ${fee.toLocaleString()} Cr)`, 'warn', 8)); }, 3200);
+    setTimeout(() => { G.p.credits -= fee; G.p.ships[p.id].hull = 1; this.rebuildShip(); p.m.obj.visible = true; G.go('space', { docked: G.p.last }).then(() => G.hud.msg(`${this.station(G.p.last).def.name} で修復されました (費用 ${fee.toLocaleString()} Cr)`, 'warn', 8)); }, 3200);
   }
   explode(pos, size, vel) {
     this.parts.burst(pos, 160, size * 9, ORANGE, size * 0.5, 1.6, vel, 0.9); this.parts.burst(pos, 60, size * 3, WHITE, size * 1.3, 0.7, vel, 1.5); this.parts.burst(pos, 90, size * 16, SPARK, size * 0.14, 2.4, vel, 0.3);
@@ -332,11 +350,12 @@ export class SpaceMode {
     this.flash.position.copy(pos); this.flash.intensity = 9000; this.flash.distance = size * 40;
     G.audio?.sfx('boom', clamp(1 - pos.distanceTo(this.pl.pos) / 6000, 0.15, 1)); if (pos.distanceTo(this.pl.pos) < 600) this.pl.shake = 1;
   }
-  hitEnemy(e, dmg, pos) {
+  hitEnemy(e, dmg, pos, h, R = 1.5) {
     e.lastHit = this.time; if (e.state === 'idle') e.state = 'attack';
-    if (e.state === 'disabled') { e.dis -= dmg; this.parts.burst(pos, 10, 50, SPARK, 1.6, 0.6, e.vel); if (e.dis <= 0) this._kill(e); return; }
+    const wound = () => { if (h && h.l) this._wound(e.m, h, R, R * 0.3, e.vel, e.def.glow); else this.parts.burst(pos, 12, 60, SPARK, 1.8, 0.7, e.vel); };
+    if (e.state === 'disabled') { e.dis -= dmg; wound(); if (e.dis <= 0) this._kill(e); return; }
     if (e.shield > 0) { e.shield -= dmg; this.shield.hit(e.m.obj, e.m.radius * 0.8, _b.copy(pos).sub(e.m.obj.position), e.def.glow); if (e.shield < 0) { e.hull += e.shield; e.shield = 0; } }
-    else { e.hull -= dmg; this.parts.burst(pos, 12, 60, SPARK, 1.8, 0.7, e.vel); }
+    else { e.hull -= dmg; wound(); }
     if (e.hull <= e.maxHull * 0.18) {
       if (e.hull < -25) return this._kill(e);
       e.state = 'disabled'; e.hull = Math.max(e.hull, 1); e.shield = 0; for (const pl of e.m.plumes) pl.visible = false; for (const s of e.m.glows) s.visible = false;
@@ -345,7 +364,7 @@ export class SpaceMode {
     }
   }
   _kill(e) {
-    this.explode(e.m.obj.position, e.m.radius, e.vel); e.state = 'gone'; e.m.obj.visible = false; G.p.done[e.def.id] = 'destroyed'; G.p.stats.kills++;
+    this.explode(e.m.obj.position, e.m.radius, e.vel); this.debris.burst(e.m.obj.position, 60, e.m.radius * 3.4, e.m.radius * 0.05, e.def.glow, e.vel); e.state = 'gone'; e.m.obj.visible = false; G.p.done[e.def.id] = 'destroyed'; G.p.stats.kills++;
     if (this.pl.target === e) this.pl.target = null; if (this.nav?.ref === e) this.nav = null; if (this.pl.docked === e) this.pl.docked = null;
     earn(e.def.bounty); const sal = addCargo('salvage', 1 + e.def.tier);
     G.hud.msg(`${e.def.name} 撃沈　賞金 ${e.def.bounty.toLocaleString()} Cr${sal ? `／回収部品 ×${sal}` : ''}　残存 ${remaining()} 隻`, 'good', 7);
@@ -363,11 +382,11 @@ export class SpaceMode {
     }, 2800);
   }
   _combat(dt) {
-    const p = this.pl, ppos = p.pos, pr = p.st.radius * 0.5;
+    const p = this.pl, ppos = p.pos, pr = p.st.radius * 0.75;
     this.bolts.update(dt, (prev, b) => {
       if (b.owner === 'p') {
-        for (const e of this.enemies) { if (e.state === 'gone' || e.dist > 6000 || !e.m) continue; if (segSphere(prev, b.p, e.m.obj.position, e.m.radius * 0.5)) { this.hitEnemy(e, b.dmg, b.p); return true; } }
-      } else if (!p.dead && !p.docked && segSphere(prev, b.p, ppos, pr)) { this.damagePlayer(b.dmg, prev); return true; }
+        for (const e of this.enemies) { if (e.state === 'gone' || e.dist > 6000 || !e.m) continue; if (segSphere(prev, b.p, e.m.obj.position, e.m.radius * 0.75)) { const h = this._precise(e.m, prev, b.d, e.shield > 0, prev.distanceTo(b.p) + e.m.radius * 1.6); if (h) { this.hitEnemy(e, b.dmg, h.w || b.p, h, 1.1 + b.dmg * 0.045); return true; } } }
+      } else if (!p.dead && !p.docked && segSphere(prev, b.p, ppos, pr)) { const h = this._precise(p.m, prev, b.d, p.shield > 0, prev.distanceTo(b.p) + p.st.radius * 1.6); if (h) { this.damagePlayer(b.dmg, prev, false, h, 1.0 + b.dmg * 0.06); return true; } }
       return false;
     });
     for (let i = this.missiles.length - 1; i >= 0; i--) {
@@ -375,7 +394,7 @@ export class SpaceMode {
       if (t && t.state !== 'gone') {
         const tp = _a.subVectors(t.uni, this.origin), to = _b.copy(tp).sub(m.g.position), d = to.length(); to.addScaledVector(t.vel, d / m.sp).normalize();
         _q.setFromUnitVectors(m.dir, to); const ang = 2 * Math.acos(clamp(_q.w, -1, 1)); if (ang > 1e-4) m.dir.applyQuaternion(_q2.identity().slerp(_q, Math.min(1, 2.6 * dt / ang))).normalize();
-        if (d < 16) { this.hitEnemy(t, 75, m.g.position); boom = true; }
+        if (d < 16) { const h = this._precise(t.m, _c.copy(m.g.position).addScaledVector(m.dir, -t.m.radius), m.dir, t.shield > 0, t.m.radius * 3); this.hitEnemy(t, 75, m.g.position, h, 4.6); boom = true; }
       }
       m.sp = Math.min(1100, m.sp + 500 * dt); m.vel.copy(m.dir).multiplyScalar(m.sp); m.g.position.addScaledVector(m.vel, dt); m.g.quaternion.setFromUnitVectors(_c.set(0, 0, -1), m.dir);
       this.parts.emit(m.g.position.x, m.g.position.y, m.g.position.z, 0, 0, 0, 1, 0.7, 0.35, 2.2, 0.45, 1);
@@ -470,12 +489,36 @@ export class SpaceMode {
   }
   _fx(dt) {
     const p = this.pl, f = G.gfx.fx;
-    this.parts.update(dt, G.gfx.ph / (2 * Math.tan(this.camera.fov * Math.PI / 360))); this.shocks.update(dt, this.camera.quaternion); this.shield.update(dt);
+    this.parts.update(dt, G.gfx.ph / (2 * Math.tan(this.camera.fov * Math.PI / 360))); this.shocks.update(dt, this.camera.quaternion); this.shield.update(dt); this.debris.update(dt);
+    this._smoke(p.m, p.vel, dt, p.hull < p.st.hull * 0.35); for (const e of this.enemies) if (e.m && e.state !== 'gone' && e.dist < 4000 && e.m.wounds.length) this._smoke(e.m, e.vel, dt, e.state === 'disabled');
     const sp = p.vel.length(); this.streaks.update(dt, p.sc.on ? _a.copy(p.vel).setLength(4000) : p.vel, p.sc.on ? 0.02 : 0.035, p.sc.on ? 1.6 : clamp(sp / 250, 0, 1) * 0.8, p.sc.on ? 90 : 26);
     f.uWarp.value = this.warp; f.uHeat.value = this.heat; G.hud.damage(p.hull < p.st.hull * 0.3 && !p.dead ? 0.35 + 0.2 * Math.sin(this.time * 5) : 0);
     f.uDamage.value = damp(f.uDamage.value, this.time - p.lastHit < 0.25 ? 1 : 0, 10, dt);
   }
 
+  /** 傷口から火花と燃えさしを噴く */
+  _smoke(m, vel, dt, heavy) {
+    for (const w of m.wounds) { w.t += dt; if (w.t > (heavy ? 1e9 : 9) || Math.random() > dt * (heavy ? 9 : 14 * w.k * Math.exp(-w.t * 0.4))) continue; _hp.copy(w.p).applyMatrix4(m.body.matrixWorld); this.parts.emit(_hp.x, _hp.y, _hp.z, vel.x * 0.6 + (Math.random() - 0.5) * 8, vel.y * 0.6 + (Math.random() - 0.5) * 8, vel.z * 0.6 + (Math.random() - 0.5) * 8, 1, 0.5, 0.18, 0.4 + Math.random() * 0.7 * w.k, 0.7, 0.8); }
+  }
+  /** 衝突: 敵艦・小惑星・ステーション。ぶつかった所だけが壊れる */
+  _collide() {
+    const p = this.pl, sr = p.st.radius * 0.36; if (p.docked || p.dead || p.auto?.type === 'dock' || p.auto?.type === 'push' || p.sc.on) return;
+    const bump = (n, depth, ov, label) => {
+      const vn = p.vel.x * n.x + p.vel.y * n.y + p.vel.z * n.z - (ov ? ov.dot(n) : 0); p.pos.addScaledVector(n, depth + 0.05); if (vn >= 0) return 0;
+      p.vel.addScaledVector(n, -vn * 1.55); const imp = -vn; if (imp < 8) return imp;
+      const h = this._precise(p.m, _a.copy(p.pos).addScaledVector(n, -p.st.radius * 1.6), n, false, p.st.radius * 3.2), R = clamp(imp * 0.045, 1.2, 7);
+      p.lastHit = this.time; p.shake = Math.min(1, 0.3 + imp / 120); G.audio?.sfx('hit'); const dmg = imp * 0.42;
+      if (p.shield > 0) { p.shield -= dmg * 0.5; if (p.shield < 0) p.shield = 0; } p.hull -= dmg * (p.shield > 0 ? 0.5 : 1);
+      if (h) this._wound(p.m, h, R, R * 0.3, p.vel, '#c8ccd4', p.id);
+      G.p.ships[p.id].hull = clamp(p.hull / p.st.hull, 0, 1); if (imp > 40 && !this.said.col) { this.said.col = 1; G.hud.msg(`${label}に衝突！ 船体が損傷した`, 'warn'); setTimeout(() => { this.said.col = 0; }, 3000); }
+      if (p.hull <= 0) this._die(); return imp;
+    };
+    for (const e of this.enemies) { if (e.state === 'gone' || !e.m || e.dist > 400) continue; const o = e.m.obj.position, R = sr + e.m.radius * 0.36, d = o.distanceTo(p.pos); if (d >= R || d < 1e-3) continue;
+      const n = _b.subVectors(p.pos, o).multiplyScalar(1 / d), imp = bump(n, R - d, e.vel, e.def.name); if (imp > 8) { const h = this._precise(e.m, _a.copy(o).addScaledVector(n, e.m.radius * 1.6), _c.copy(n).negate(), false, e.m.radius * 3.2); if (h) this._wound(e.m, h, clamp(imp * 0.045, 1.2, 6), 0.6, e.vel, e.def.glow); e.vel.addScaledVector(n, -imp * 0.4); this.hitEnemy(e, imp * 0.3, p.pos); } }
+    if (this.rocks.visible && this.rocks.position.distanceToSquared(p.pos) < 4.3e7) { const g = this.rocks.position; for (const r of this.rockList) { const dx = p.pos.x - g.x - r[0], dy = p.pos.y - g.y - r[1], dz = p.pos.z - g.z - r[2], R = r[3] + sr, d2 = dx * dx + dy * dy + dz * dz; if (d2 >= R * R) continue; const d = Math.sqrt(d2) || 1; bump(_b.set(dx / d, dy / d, dz / d), R - d, null, '小惑星'); } }
+    for (const s of this.stations) { if (!s.m || s.dist > s.m.radius * 1.4 + 200) continue; const o = s.m.obj, l = _a.copy(p.pos).sub(o.position), f = (x, y, z) => stationSDF(s.def.id, x, y, z), d = f(l.x, l.y, l.z); if (d >= sr) continue;
+      const n = _b.set(f(l.x + 1, l.y, l.z) - f(l.x - 1, l.y, l.z), f(l.x, l.y + 1, l.z) - f(l.x, l.y - 1, l.z), f(l.x, l.y, l.z + 1) - f(l.x, l.y, l.z - 1)); if (n.lengthSq() < 1e-8) n.copy(l); n.normalize(); bump(n, sr - d, null, s.def.name); }
+  }
   // ── HUD ──
   _hud() {
     const p = this.pl, h = G.hud, cam = this.camera, st = p.st;

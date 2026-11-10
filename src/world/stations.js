@@ -183,3 +183,14 @@ function rogue() {
 
 const BUILD = { haven, vulcan, aurora, bastion, rogue };
 export function buildStation(def) { const o = BUILD[def.id](); o.def = def; return o; }
+
+// ── 衝突判定用の近似距離関数 (ステーションのローカル座標) ──
+const sdBox = (x, y, z, cx, cy, cz, hx, hy, hz) => { const dx = Math.abs(x - cx) - hx, dy = Math.abs(y - cy) - hy, dz = Math.abs(z - cz) - hz; return Math.hypot(Math.max(dx, 0), Math.max(dy, 0), Math.max(dz, 0)) + Math.min(Math.max(dx, dy, dz), 0); };
+const SDF = {
+  haven: (x, y, z) => Math.min(Math.hypot(Math.hypot(x, y) - 250, z) - 28, Math.max(Math.hypot(x, y) - 50, Math.abs(z) - 100)),
+  vulcan: (x, y, z) => Math.min(sdBox(x, y, z, 0, 0, 0, 362, 12, 14), sdBox(x, y, z, -215, -62, 0, 82, 64, 50), sdBox(x, y, z, 0, -62, 0, 82, 64, 50), sdBox(x, y, z, 215, -62, 0, 82, 64, 50), sdBox(x, y, z, 392, 40, 0, 32, 66, 26)),
+  aurora: (x, y, z) => Math.min(Math.hypot(x, y, z) - 60, Math.hypot(Math.hypot(x, z) - 96, y) - 6, sdBox(x, y, z, 0, 0, 0, 345, 3, 44), Math.hypot(x, y - 26, Math.max(Math.abs(z + 110) - 65, 0)) - 17),
+  bastion: (x, y, z) => Math.min(Math.max(Math.hypot(x, z) - 158, Math.abs(y) - 64), Math.max(Math.hypot(x, z) - 74, Math.abs(y - 106) - 44), sdBox(x, y, z, 0, 0, 190, 10, 10, 60)),
+  rogue: (x, y, z) => Math.min((Math.hypot(x / 212, y / 145, z / 170) - 1) * 145, Math.hypot(x, y - 30, Math.max(Math.abs(z - 235) - 66, 0)) - 12),
+};
+export function stationSDF(id, x, y, z) { return SDF[id](x, y, z); }

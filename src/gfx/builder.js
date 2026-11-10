@@ -87,7 +87,16 @@ export class Placer extends Builder {
  * 断面ロフト。secs: [{z, w, t, b, y, e}]  w=半幅 t=上半高 b=下半高 e=スーパー楕円指数
  * 前方 = -Z。滑らかな機体外皮を作る。
  */
-export function loft(secs, seg = 36, flat = false) {
+export function loft(secs0, seg = 36, flat = false, maxStep = 0.9) {
+  // 断面間を Catmull-Rom で滑らかに補間して細分化 (滑らかな外皮 + 局所破壊の粒度向上)
+  const secs = [], K = ['w', 't', 'b', 'y', 'x', 'e'], val = (s, k) => (k === 't' ? s.t ?? s.w : k === 'b' ? s.b ?? s.t ?? s.w : k === 'e' ? s.e ?? 2.4 : s[k] ?? 0);
+  for (let i = 0; i < secs0.length - 1; i++) {
+    const p0 = secs0[Math.max(0, i - 1)], p1 = secs0[i], p2 = secs0[i + 1], p3 = secs0[Math.min(secs0.length - 1, i + 2)], m = Math.max(1, Math.ceil(Math.abs(p2.z - p1.z) / maxStep));
+    for (let j = 0; j < m; j++) { const t = j / m, o = { z: p1.z + (p2.z - p1.z) * t };
+      for (const k of K) { const a = val(p0, k), b2 = val(p1, k), c = val(p2, k), d = val(p3, k); let v = 0.5 * (2 * b2 + (c - a) * t + (2 * a - 5 * b2 + 4 * c - d) * t * t + (3 * b2 - a - 3 * c + d) * t * t * t); const lo = Math.min(b2, c), hi = Math.max(b2, c), pad = (hi - lo) * 0.12; v = Math.min(hi + pad, Math.max(lo - pad, v)); o[k] = k === 'w' || k === 't' ? Math.max(v, 0.005) : k === 'b' ? Math.max(v, 0) : v; }
+      secs.push(o); }
+  }
+  { const l = secs0[secs0.length - 1], o = { z: l.z }; for (const k of K) o[k] = val(l, k); secs.push(o); }
   const pos = [], idx = [], n = secs.length;
   for (const s of secs) {
     const ex = 2 / (s.e ?? 2.4), t = s.t ?? s.w, b = s.b ?? t, y0 = s.y ?? 0, x0 = s.x ?? 0;

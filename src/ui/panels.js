@@ -167,7 +167,7 @@ export class UI {
       } },
       { name: '整備', build: (b, api) => {
         const sh = G.p.ships[G.p.ship], full = stats(), cost = Math.round((1 - sh.hull) * full.hull * 6 * disc), pl = G.space.pl, mis = (full.missiles - pl.missiles) * 60;
-        this.row(b, '船体修理', `船体 ${Math.round(sh.hull * 100)}%`, cost ? fmtCr(cost) : '損傷なし', [{ label: '修理する', off: !cost || G.p.credits < cost, fn: () => { G.p.credits -= cost; sh.hull = 1; G.space.refit(); save(); SFX('buy'); api.refresh(); } }]);
+        this.row(b, '船体修理', `船体 ${Math.round(sh.hull * 100)}%`, cost ? fmtCr(cost) : '損傷なし', [{ label: '修理する', off: !cost || G.p.credits < cost, fn: () => { G.p.credits -= cost; sh.hull = 1; G.space.rebuildShip(); G.space.refit(); G.mode.refreshShip?.(); save(); SFX('buy'); G.hud.msg('船体を完全に修復した。凹みも傷も元通りだ。', 'good'); api.refresh(); } }]);
         this.row(b, 'ミサイル補給', `残弾 ${pl.missiles}/${full.missiles}`, mis ? fmtCr(mis) : '満載', [{ label: '補給する', off: !mis || G.p.credits < mis, fn: () => { G.p.credits -= mis; pl.missiles = full.missiles; SFX('buy'); api.refresh(); } }]);
       } }] });
   }

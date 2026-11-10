@@ -7,6 +7,7 @@ import { makeDrone } from '../world/props.js';
 import { buildShip } from '../world/ships.js';
 import { Mirror } from '../gfx/renderer.js';
 import { Particles, makeGlowSprite } from '../gfx/fx.js';
+import { syncDamage } from '../gfx/damage.js';
 import { mat, glow, aoMat } from '../gfx/textures.js';
 import { ENEMIES, SHIPS, BASES, station, body } from '../world/defs.js';
 import { stats, save, earn, addCargo, event, remaining } from './state.js';
@@ -51,7 +52,8 @@ export class InteriorMode {
     gun.position.set(0.2, -0.17, -0.42); gun.visible = false; this.camera.add(gun);
     this.fireT = 0; this.suit = 60; this.lastHurt = -9; this.time = 0;
   }
-  ship(id) { if (!this.ships[id]) { const m = buildShip(id); for (const p of m.plumes) p.visible = false; for (const g of m.glows) g.visible = false; if (m.gear) m.gear.visible = true; this.ships[id] = m; } return this.ships[id]; }
+  ship(id) { if (!this.ships[id]) { const m = buildShip(id); for (const p of m.plumes) p.visible = false; for (const g of m.glows) g.visible = false; if (m.gear) m.gear.visible = true; this.ships[id] = m; } syncDamage(this.ships[id], id); return this.ships[id]; }
+  dropShip(id) { const m = this.ships[id]; if (m) { m.obj.parent?.remove(m.obj); delete this.ships[id]; } }
 
   async enter(o) {
     this.ctx = o; const id = o.type === 'ship' ? G.p.ship : o.id || o.body, key = o.type + ':' + id;

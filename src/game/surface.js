@@ -5,6 +5,7 @@ import { buildSurface } from '../world/surface.js';
 import { buildShip } from '../world/ships.js';
 import { Mirror } from '../gfx/renderer.js';
 import { Particles, Streaks, makeGlowSprite } from '../gfx/fx.js';
+import { syncDamage, rayHit, applyDamage, logDamage, Debris } from '../gfx/damage.js';
 import { SHIPS, BASES, body } from '../world/defs.js';
 import { save, addCargo, event, remaining, commodity } from './state.js';
 
@@ -16,7 +17,7 @@ export class SurfaceMode {
     const s = (this.scene = new THREE.Scene()); this.camera = new THREE.PerspectiveCamera(64, G.W / G.H, 0.3, 30000); this.far = false;
     this.sun = new THREE.DirectionalLight(0xffffff, 3); s.add(this.sun, this.sun.target); this._shadow();
     s.add((this.hemi = new THREE.HemisphereLight(0xffffff, 0x222222, 1)));
-    this.mirror = new Mirror(G.gfx, 0); this.parts = new Particles(900); this.streaks = new Streaks(900, 260); s.add(this.parts.obj, this.streaks.obj);
+    this.mirror = new Mirror(G.gfx, 0); this.parts = new Particles(900); this.streaks = new Streaks(900, 260); this.debris = new Debris(120); s.add(this.parts.obj, this.streaks.obj, this.debris.obj);
     this.models = {}; this.env = null; this.bodyId = null; this.time = 0;
     this.ship = { pos: new THREE.Vector3(), yaw: 0, pitch: 0, yawV: 0, speed: 0, vy: 0, landed: false, auto: null, camQ: new THREE.Quaternion(), q: new THREE.Quaternion(), view: 0 };
     this.foot = false; this.fp = new THREE.Vector3(); this.fyaw = 0; this.fpitch = 0; this.bob = 0; this.sprites = [];
@@ -25,7 +26,8 @@ export class SurfaceMode {
   onQuality() { this._shadow(); }
   skyMesh(id) { return this.env && this.env.id === id ? this.env.sky : null; }
   reclaimSky(m) { this.scene.add(m); }
-  model(id) { if (!this.models[id]) { const m = buildShip(id); m.obj.traverse((o) => { if (o.isMesh && !o.userData.plume) o.castShadow = true; }); this.models[id] = m; } return this.models[id]; }
+  model(id) { if (!this.models[id]) { const m = buildShip(id); m.obj.traverse((o) => { if (o.isMesh && !o.userData.plume) o.castShadow = true; }); this.models[id] = m; } syncDamage(this.models[id], id); return this.models[id]; }
+  dropShip(id) { const m = this.models[id]; if (m && this.ship.m !== m) m.obj.parent?.remove(m.obj); delete this.models[id]; }
 
   load(id) {
     if (this.env) { this.scene.remove(this.env.group, this.env.sky); this.env.group.traverse((o) => { o.geometry?.dispose(); }); for (const s of this.sprites) this.scene.remove(s); this.sprites = []; }
@@ -79,7 +81,7 @@ export class SurfaceMode {
     const cv = this._cv || (this._cv = new THREE.Vector3()), cp = this.camera.position; if (this._lp) cv.copy(cp).sub(this._lp).multiplyScalar(1 / Math.max(dt, 1e-3)); else this._lp = new THREE.Vector3(); this._lp.copy(cp);
     this.streaks.update(dt, _a.copy(cv).sub(e.rain[0]), 0.02, e.rain[1], 3.2);
     if (e.smoke && Math.random() < dt * 40) this.parts.emit(e.smoke[0] + (Math.random() - 0.5) * 200, e.smoke[1], e.smoke[2] + (Math.random() - 0.5) * 200, (Math.random() - 0.5) * 60, 120 + Math.random() * 160, (Math.random() - 0.5) * 60, 3, 0.9, 0.2, 160 + Math.random() * 200, 5, 0.25, 12);
-    this.parts.update(dt, G.gfx.ph / (2 * Math.tan(this.camera.fov * Math.PI / 360)));
+    this.parts.update(dt, G.gfx.ph / (2 * Math.tan(this.camera.fov * Math.PI / 360))); this.debris.update(dt, 9.8, (x, z) => this.ground(x, z));
     // 光源は対象に追従
     const t = this.foot ? this.fp : s.pos; this.sun.position.copy(t).addScaledVector(e.sunDir, 600); this.sun.target.position.copy(t); e.sky.position.copy(this.camera.position);
     pl.energy = Math.min(pl.st.energy, pl.energy + pl.st.energy * 0.1 * dt);
@@ -106,7 +108,7 @@ export class SurfaceMode {
     if (s.pos.y <= g2) {
       const sl = Math.abs(e.H(s.pos.x + 6, s.pos.z) - e.H(s.pos.x - 6, s.pos.z)) / 12 + Math.abs(e.H(s.pos.x, s.pos.z + 6) - e.H(s.pos.x, s.pos.z - 6)) / 12, onPad = Math.hypot(s.pos.x, s.pos.z) < PAD_R;
       s.pos.y = g2;
-      if (s.speed > 55 || vdown > 16) { this._hull(s.speed * 0.25 + vdown * 1.5, '激しく接地した！'); s.vy = 14; s.speed *= 0.5; s.pitch = Math.max(s.pitch, 0.12); this.shake = 1; this.parts.burst(s.pos, 40, 30, _col.set('#ffd9a0'), 1.2, 0.8); G.audio?.sfx('hit'); }
+      if (s.speed > 55 || vdown > 16) { this._hull(s.speed * 0.25 + vdown * 1.5, '激しく接地した！'); this._crash(clamp((s.speed * 0.25 + vdown * 1.5) * 0.05, 1.4, 6)); s.vy = 14; s.speed *= 0.5; s.pitch = Math.max(s.pitch, 0.12); this.shake = 1; this.parts.burst(s.pos, 40, 30, _col.set('#ffd9a0'), 1.2, 0.8); G.audio?.sfx('hit'); }
       else if (!onPad && sl > 0.45) { s.vy = 6; if (!this._w2) { this._w2 = 1; G.hud.msg('傾斜がきつくて着陸できません。平らな場所かパッドへ。', 'warn'); setTimeout(() => { this._w2 = 0; }, 4000); } }
       else if (s.speed < 55) this._landed();
     }
@@ -133,6 +135,8 @@ export class SurfaceMode {
     const first = !G.p.stats.lands[e.id]; G.p.stats.lands[e.id] = (G.p.stats.lands[e.id] || 0) + 1; G.p.day++; save();
     G.hud.banner('着陸完了', e.name + (first ? ' — 初到達' : '')); if (first) { G.p.credits += 1500; G.hud.msg(`探査ボーナス：${body(e.id).name} 初着陸 +1,500 Cr`, 'good', 7); }
   }
+  /** 接地の衝撃で機体下面が凹む */
+  _crash(R) { const s = this.ship, o = new THREE.Vector3((Math.random() - 0.5) * 2, -40, (Math.random() - 0.5) * 6), up = new THREE.Vector3(0, 1, 0), l = rayHit(s.m, o, up, 80, 2.6); if (!l) return; applyDamage(s.m, l, up, R, R * 0.3); logDamage(s.id, l, up, R, R * 0.3); s.m.applied++; this.debris.burst(_b.copy(l).applyMatrix4(s.m.body.matrixWorld), 10, 16, 0.2, '#c8ccd4', null, up); }
   takeoff() { const s = this.ship; s.landed = false; s.vy = 16; s.pos.y += 0.5; G.input.setThr(0.15); if (s.m.gear) setTimeout(() => { if (!s.landed) s.m.gear.visible = false; }, 2500); G.audio?.sfx('undock'); G.hud.msg('離陸。高度 5km を超えると軌道へ離脱します。', 'good'); }
   _hull(d, msg) { const pl = G.space.pl; pl.hull -= d; pl.lastHit = G.space.time; G.p.ships[pl.id].hull = clamp(pl.hull / pl.st.hull, 0, 1); if (msg && !this._w3) { this._w3 = 1; G.hud.msg(msg, 'warn'); setTimeout(() => { this._w3 = 0; }, 3000); }
     if (pl.hull <= 0 && !this.dead) { this.dead = true; G.hud.banner('船体喪失', '救難艇が回収中…', 4); const fee = Math.round(G.p.credits * 0.1); G.audio?.sfx('boom'); setTimeout(() => { G.p.credits -= fee; G.p.ships[pl.id].hull = 1; this.dead = false; G.go('space', { docked: G.p.last }).then(() => G.hud.msg(`ステーションで修復されました (費用 ${fee.toLocaleString()} Cr)`, 'warn', 8)); }, 3000); } }
