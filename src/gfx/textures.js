@@ -303,8 +303,84 @@ function waterSet(seed = 14, size = 512) {
   return { map: ctex(A, true), normalMap: ctex(normalFromHeight(H, 6)), roughnessMap: ctex(R) };
 }
 
-const BUILDERS = { hull: hullSet, wall: wallSet, plate: plateSet, grate: grateSet, hex: hexSet, tile: tileSet, carpet: carpetSet, wood: woodSet, concrete: concreteSet, rock: rockSet, solar: solarSet, rib: ribSet, ceil: ceilSet, water: waterSet };
-const UVS = { hull: 0.11, wall: 0.25, plate: 0.5, grate: 1, hex: 0.5, tile: 0.5, carpet: 1, wood: 0.4, concrete: 0.25, rock: 0.2, solar: 0.25, rib: 0.5, ceil: 0.25, water: 0.05 };
+// ── 追加の壁・床 (拠点ごとの作り分け用) ──
+// リベット打ちの隔壁 (1リピート=4m)
+function bulkSet(seed = 21, size = 1024) {
+  const [A, H, R, a, h, r] = three(size, 150, 150, 150), rnd = rng(seed), u = size / 4;
+  for (let j = 0; j < 4; j++) for (let i = 0; i < 2; i++) {
+    const x = i * u * 2 + (j % 2 ? u : 0), y = j * u, w = u * 2;
+    for (const ox of [0, -size]) { a.fillStyle = g(120 + rnd() * 40); a.fillRect(x + ox, y, w, u); h.fillStyle = g(150 + rnd() * 40); h.fillRect(x + ox, y, w, u); r.fillStyle = g(120 + rnd() * 70); r.fillRect(x + ox, y, w, u);
+      h.strokeStyle = g(40); h.lineWidth = 7; h.strokeRect(x + ox, y, w, u); h.strokeStyle = g(240); h.lineWidth = 2; h.strokeRect(x + ox + 6, y + 6, w - 12, u - 12); a.strokeStyle = 'rgba(10,10,12,.85)'; a.lineWidth = 3; a.strokeRect(x + ox, y, w, u);
+      for (let k = 0; k < 13; k++) { dot3(h, a, x + ox + 22 + k * (w - 44) / 12, y + 20, 4.5); dot3(h, a, x + ox + 22 + k * (w - 44) / 12, y + u - 20, 4.5); }
+      for (let k = 1; k < 5; k++) { dot3(h, a, x + ox + 20, y + 20 + k * (u - 40) / 5, 4.5); dot3(h, a, x + ox + w - 20, y + 20 + k * (u - 40) / 5, 4.5); } }
+  }
+  for (let i = 0; i < 120; i++) { const x = rnd() * size, y = rnd() * size, l = 30 + rnd() * 160, gr = a.createLinearGradient(0, y, 0, y + l); gr.addColorStop(0, 'rgba(60,30,10,.22)'); gr.addColorStop(1, 'rgba(60,30,10,0)'); a.fillStyle = gr; a.fillRect(x, y, 2 + rnd() * 6, l); }
+  let gr = a.createLinearGradient(0, size - 80, 0, size); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.5)'); a.fillStyle = gr; a.fillRect(0, size - 80, size, 80);
+  grime(a, r, size, seed + 3, 1.2);
+  return finish(A, H, R, 3.2);
+}
+// 滑らかな複合材パネル (1リピート=4m)
+function smoothSet(seed = 22, size = 1024) {
+  const [A, H, R, a, h, r] = three(size, 232, 190, 70), rnd = rng(seed), u = size / 2;
+  for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) { const x = i * u, y = j * u; a.fillStyle = g(224 + rnd() * 16); a.fillRect(x, y, u, u); r.fillStyle = g(50 + rnd() * 40); r.fillRect(x, y, u, u);
+    h.strokeStyle = g(70); h.lineWidth = 5; h.strokeRect(x, y, u, u); a.strokeStyle = 'rgba(70,76,84,.8)'; a.lineWidth = 2; a.strokeRect(x, y, u, u); }
+  a.fillStyle = 'rgba(40,46,54,.9)'; a.fillRect(0, u - 26, size, 52); h.fillStyle = g(120); h.fillRect(0, u - 26, size, 52); r.fillStyle = g(160); r.fillRect(0, u - 26, size, 52);
+  for (let i = 0; i < 4; i++) { const x = 60 + i * 250; a.fillStyle = 'rgba(30,34,40,.75)'; a.fillRect(x, 60, 90, 44); h.fillStyle = g(110); h.fillRect(x, 60, 90, 44); for (let k = 0; k < 5; k++) { h.fillStyle = g(30); h.fillRect(x + 8, 66 + k * 8, 74, 3); } }
+  a.fillStyle = 'rgba(60,66,74,.9)'; a.fillRect(0, size - 60, size, 60); h.fillStyle = g(230); h.fillRect(0, size - 60, size, 60); r.fillStyle = g(130); r.fillRect(0, size - 60, size, 60);
+  let gr = a.createLinearGradient(0, size - 110, 0, size); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.42)'); a.fillStyle = gr; a.fillRect(0, size - 110, size, 110);
+  const n = noiseCanvas(256, 3, seed, 4, 225, 255); a.globalCompositeOperation = 'multiply'; a.drawImage(n, 0, 0, size, size); a.globalCompositeOperation = 'source-over';
+  return finish(A, H, R, 2);
+}
+// キルティング張り (高級ラウンジ, 1リピート=2m)
+function paddedSet(seed = 23, size = 512) {
+  const [A, H, R, a, h, r] = three(size, 150, 60, 190), n = 4, s = size / n;
+  for (let j = -1; j <= n * 2; j++) for (let i = -1; i <= n; i++) { const cx = i * s + (j & 1 ? s / 2 : 0), cy = j * s / 2, gr = h.createRadialGradient(cx, cy, 0, cx, cy, s * 0.62); gr.addColorStop(0, g(255)); gr.addColorStop(0.7, g(150)); gr.addColorStop(1, g(40));
+    h.fillStyle = gr; h.beginPath(); h.moveTo(cx, cy - s / 2); h.lineTo(cx + s / 2, cy); h.lineTo(cx, cy + s / 2); h.lineTo(cx - s / 2, cy); h.fill();
+    const g2 = a.createRadialGradient(cx - s * 0.1, cy - s * 0.1, 0, cx, cy, s * 0.6); g2.addColorStop(0, g(215)); g2.addColorStop(1, g(120)); a.fillStyle = g2; a.beginPath(); a.moveTo(cx, cy - s / 2); a.lineTo(cx + s / 2, cy); a.lineTo(cx, cy + s / 2); a.lineTo(cx - s / 2, cy); a.fill(); }
+  for (let j = 0; j <= n * 2; j++) for (let i = 0; i <= n; i++) { const cx = i * s + (j & 1 ? 0 : s / 2), cy = j * s / 2; h.fillStyle = g(10); h.beginPath(); h.arc(cx, cy, 7, 0, 7); h.fill(); a.fillStyle = g(235); a.beginPath(); a.arc(cx, cy, 5, 0, 7); a.fill(); r.fillStyle = g(40); r.beginPath(); r.arc(cx, cy, 5, 0, 7); r.fill(); }
+  return finish(A, H, R, 3.4);
+}
+// レンガ (1リピート=2m)
+function brickSet(seed = 24, size = 1024) {
+  const [A, H, R, a, h, r] = three(size, 90, 40, 235), rnd = rng(seed), rows = 24, bh = size / rows, bw = size / 8;
+  for (let j = 0; j < rows; j++) for (let i = -1; i < 8; i++) { const x = i * bw + (j & 1 ? bw / 2 : 0) + 3, y = j * bh + 3, v = rnd(); a.fillStyle = g(150 + v * 80); a.fillRect(x, y, bw - 6, bh - 6); h.fillStyle = g(190 + rnd() * 50); h.fillRect(x, y, bw - 6, bh - 6); r.fillStyle = g(170 + rnd() * 60); r.fillRect(x, y, bw - 6, bh - 6);
+    if (rnd() < 0.2) { a.fillStyle = 'rgba(0,0,0,.25)'; a.fillRect(x, y, bw - 6, bh - 6); } }
+  grime(a, r, size, seed, 1.1);
+  return finish(A, H, R, 3);
+}
+// 漆喰 (1リピート=4m)
+function plasterSet(seed = 25, size = 512) {
+  const [A, H, R, a, h, r] = three(size, 225, 128, 225);
+  a.drawImage(noiseCanvas(256, 4, seed, 5, 205, 250), 0, 0, size, size); h.drawImage(noiseCanvas(256, 16, seed + 1, 5, 80, 180), 0, 0, size, size); r.drawImage(noiseCanvas(256, 8, seed + 2, 4, 190, 250), 0, 0, size, size);
+  let gr = a.createLinearGradient(0, size - 70, 0, size); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.4)'); a.fillStyle = gr; a.fillRect(0, size - 70, size, 70);
+  return finish(A, H, R, 1.3);
+}
+// 障子・格子 (1リピート=2m)
+function shojiSet(seed = 26, size = 512) {
+  const [A, H, R, a, h, r] = three(size, 238, 120, 200), n = 4, s = size / n;
+  a.drawImage(noiseCanvas(256, 8, seed, 4, 225, 250), 0, 0, size, size);
+  for (let i = 0; i <= n; i++) { a.fillStyle = g(52); h.fillStyle = g(240); r.fillStyle = g(120); const w = i % 2 ? 10 : 20; a.fillRect(i * s - w / 2, 0, w, size); h.fillRect(i * s - w / 2, 0, w, size); r.fillRect(i * s - w / 2, 0, w, size); }
+  for (let j = 0; j <= n * 2; j++) { a.fillStyle = g(52); h.fillStyle = g(240); const w = j % 4 ? 8 : 20; a.fillRect(0, j * s / 2 - w / 2, size, w); h.fillRect(0, j * s / 2 - w / 2, size, w); }
+  return finish(A, H, R, 2);
+}
+// 大理石 (1リピート=3m)
+function marbleSet(seed = 27, size = 1024) {
+  const [A, H, R, a, h, r] = three(size, 235, 128, 30);
+  a.drawImage(noiseCanvas(512, 3, seed, 6, 150, 255, (t) => { const v = 1 - Math.abs(t * 2 - 1); return 1 - Math.pow(v, 9) * 0.85; }), 0, 0, size, size);
+  a.globalCompositeOperation = 'multiply'; a.drawImage(noiseCanvas(512, 6, seed + 3, 5, 200, 255, (t) => { const v = 1 - Math.abs(t * 2 - 1); return 1 - Math.pow(v, 14) * 0.6; }), 0, 0, size, size); a.globalCompositeOperation = 'source-over';
+  for (let i = 0; i <= 2; i++) { a.fillStyle = 'rgba(40,40,44,.55)'; a.fillRect(i * size / 2 - 1.5, 0, 3, size); a.fillRect(0, i * size / 2 - 1.5, size, 3); h.fillStyle = g(60); h.fillRect(i * size / 2 - 2, 0, 4, size); h.fillRect(0, i * size / 2 - 2, size, 4); }
+  r.drawImage(noiseCanvas(256, 6, seed + 5, 3, 15, 60), 0, 0, size, size);
+  return finish(A, H, R, 0.8);
+}
+// 草地 (1リピート=3m)
+function grassSet(seed = 28, size = 512) {
+  const [A, H, R, a, h, r] = three(size, 150, 128, 240), rnd = rng(seed);
+  a.drawImage(noiseCanvas(256, 6, seed, 5, 110, 230), 0, 0, size, size); h.drawImage(noiseCanvas(256, 32, seed + 1, 3, 40, 220), 0, 0, size, size);
+  for (let i = 0; i < 5000; i++) { const x = rnd() * size, y = rnd() * size, v = 120 + rnd() * 130; a.strokeStyle = `rgba(${v | 0},${v | 0},${v | 0},.5)`; a.lineWidth = 1; a.beginPath(); a.moveTo(x, y); a.lineTo(x + (rnd() - 0.5) * 5, y - 4 - rnd() * 7); a.stroke(); }
+  return finish(A, H, R, 2.4);
+}
+const BUILDERS = { bulk: bulkSet, smooth: smoothSet, padded: paddedSet, brick: brickSet, plaster: plasterSet, shoji: shojiSet, marble: marbleSet, grass: grassSet, hull: hullSet, wall: wallSet, plate: plateSet, grate: grateSet, hex: hexSet, tile: tileSet, carpet: carpetSet, wood: woodSet, concrete: concreteSet, rock: rockSet, solar: solarSet, rib: ribSet, ceil: ceilSet, water: waterSet };
+const UVS = { bulk: 0.25, smooth: 0.25, padded: 0.5, brick: 0.5, plaster: 0.25, shoji: 0.5, marble: 0.33, grass: 0.33, hull: 0.11, wall: 0.25, plate: 0.5, grate: 1, hex: 0.5, tile: 0.5, carpet: 1, wood: 0.4, concrete: 0.25, rock: 0.2, solar: 0.25, rib: 0.5, ceil: 0.25, water: 0.05 };
 const SETS = {};
 export function texSet(name) { return SETS[name] || (SETS[name] = BUILDERS[name]()); }
 
@@ -431,4 +507,54 @@ export function screenMat(kind, color, title, intensity = 1.6) {
   const m = new THREE.MeshBasicMaterial({ map: screenTex(kind, color, title), toneMapped: false });
   m.color.setScalar(intensity); m.userData.uvs = 0;
   return m;
+}
+
+// ── 接地影 / AO デカール ──
+let _sh, _ed, _aoB, _aoE;
+function shadowTex() {
+  if (_sh) return _sh; const s = 128, c = cv(s), x = c.getContext('2d'), gr = x.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  gr.addColorStop(0, '#fff'); gr.addColorStop(0.5, '#8a8a8a'); gr.addColorStop(0.8, '#2a2a2a'); gr.addColorStop(1, '#000'); x.fillStyle = gr; x.fillRect(0, 0, s, s);
+  return (_sh = ctex(c, false, false));
+}
+function edgeTex() {
+  if (_ed) return _ed; const c = cv(8, 128), x = c.getContext('2d'), gr = x.createLinearGradient(0, 0, 0, 128);
+  gr.addColorStop(0, '#fff'); gr.addColorStop(0.18, '#9a9a9a'); gr.addColorStop(0.5, '#333'); gr.addColorStop(1, '#000'); x.fillStyle = gr; x.fillRect(0, 0, 8, 128);
+  return (_ed = ctex(c, false, false));
+}
+/** 床に落ちる柔らかい影。kind: 'blob' (丸) | 'edge' (壁際) */
+export function aoMat(kind = 'blob') {
+  const mk = (t, o) => { const m = new THREE.MeshBasicMaterial({ color: 0x000000, alphaMap: t, transparent: true, opacity: o, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, toneMapped: false }); m.userData.uvs = 0; return m; };
+  if (kind === 'edge') return _aoE || (_aoE = mk(edgeTex(), 0.6));
+  return _aoB || (_aoB = mk(shadowTex(), 0.62));
+}
+// ── 葉の房 (アルファ抜き) ──
+let _leaf; const LEAFM = new Map();
+function leafTex() {
+  if (_leaf) return _leaf; const s = 256, c = cv(s), x = c.getContext('2d'), r = rng(321);
+  for (let i = 0; i < 70; i++) {
+    const px = 30 + r() * (s - 60), py = 30 + r() * (s - 60), len = 26 + r() * 22, w = len * (0.3 + r() * 0.14), a = r() * 6.283, v = i / 70;
+    x.save(); x.translate(px, py); x.rotate(a);
+    const gr = x.createLinearGradient(-len, 0, len, 0); gr.addColorStop(0, `rgb(${30 + v * 40 | 0},${88 + v * 70 | 0},${28 + v * 30 | 0})`); gr.addColorStop(1, `rgb(${52 + v * 60 | 0},${120 + v * 80 | 0},${38 + v * 34 | 0})`);
+    x.fillStyle = gr; x.beginPath(); x.moveTo(-len, 0); x.quadraticCurveTo(0, -w * 1.5, len, 0); x.quadraticCurveTo(0, w * 1.5, -len, 0); x.fill();
+    x.strokeStyle = `rgba(${150 + v * 60 | 0},${200 + v * 40 | 0},${110 + v * 40 | 0},.55)`; x.lineWidth = 1.2; x.beginPath(); x.moveTo(-len * 0.9, 0); x.lineTo(len * 0.9, 0); x.stroke();
+    x.restore();
+  }
+  return (_leaf = ctex(c, true, false));
+}
+export function leafMat(tint = 0xffffff) {
+  let m = LEAFM.get(tint); if (m) return m;
+  m = new THREE.MeshStandardMaterial({ map: leafTex(), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.7, metalness: 0, color: tint }); m.userData.uvs = 0; LEAFM.set(tint, m);
+  return m;
+}
+/** 葉のカード n 枚からなる樹冠。法線は中心から外向き (柔らかい陰影) */
+export function canopyGeo(R, n, rnd, flat = 0.8) {
+  const pos = [], nor = [], uv = [], idx = [], q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3();
+  for (let i = 0; i < n; i++) {
+    const u = rnd() * 2 - 1, a = rnd() * 6.283, sn = Math.sqrt(1 - u * u), rad = R * (0.4 + 0.6 * Math.sqrt(rnd())), cx = sn * Math.cos(a) * rad, cy = u * rad * flat, cz = sn * Math.sin(a) * rad, size = R * (0.6 + rnd() * 0.55);
+    e.set(rnd() * 3.14, rnd() * 6.28, rnd() * 3.14); q.setFromEuler(e); const b = pos.length / 3;
+    for (const [px, py] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { v.set(px * size / 2, py * size / 2, 0).applyQuaternion(q); const X = cx + v.x, Y = cy + v.y, Z = cz + v.z, l = Math.hypot(X, Y + R * 0.35, Z) || 1; pos.push(X, Y, Z); nor.push(X / l, (Y + R * 0.35) / l, Z / l); uv.push((px + 1) / 2, (py + 1) / 2); }
+    idx.push(b, b + 1, b + 2, b, b + 2, b + 3);
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
+  return g;
 }

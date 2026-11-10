@@ -142,7 +142,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .title .logo h1 { margin: 0; font-size: calc(var(--u) * 15); font-weight: 900; letter-spacing: .3em; padding-left: .3em; color: #fff; text-shadow: 0 0 calc(var(--u) * 3) var(--c), 0 0 calc(var(--u) * 9) #06f; }
 .title .logo p { margin: 0; font-size: calc(var(--u) * 3.6); letter-spacing: 1.1em; padding-left: 1.1em; color: var(--c); }
 .title .menu { display: flex; gap: calc(var(--u) * 2.4); }
-.title .cb { min-width: calc(var(--u) * 34); font-size: calc(var(--u) * 3.6); padding: calc(var(--u) * 2.6) calc(var(--u) * 4); }
+.title .cb { min-width: calc(var(--u) * 30); font-size: calc(var(--u) * 3.3); padding: calc(var(--u) * 2.4) calc(var(--u) * 3); }
 .title .hint { margin-top: calc(var(--u) * 2.4); font-size: calc(var(--u) * 2.2); color: #9fc8d8; letter-spacing: .1em; text-align: center; line-height: 1.7; }
 .shipsel { display: flex; gap: calc(var(--u) * 1.6); margin-bottom: calc(var(--u) * 3); }
 .shipsel button { padding: calc(var(--u) * 1.2) calc(var(--u) * 3); border: 1px solid rgba(111, 232, 255, .4); background: var(--bg); font-size: calc(var(--u) * 2.6); color: var(--c); letter-spacing: .1em; }

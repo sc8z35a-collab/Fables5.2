@@ -8,6 +8,10 @@ import { ACES } from './glsl.js';
 import { setAniso } from './textures.js';
 import { clamp } from '../core/util.js';
 
+/** 内部レンダリング解像度 (縦ピクセル数)。0 = 端末の最大解像度 */
+export const RES = { 540: '540p', 720: '720p', 1080: '1080p', 0: '最大' };
+/** 描画距離の倍率 */
+export const DIST = { near: ['近い', 0.6], mid: ['標準', 1], far: ['遠い', 1.6] };
 export const QUALITY = {
   low: { label: 'ロー', cap: 1, msaa: 0, sky: 512, pNear: 512, pFar: 256, shadow: 0, mirror: 0, bloom: 0.5 },
   medium: { label: 'ミドル', cap: 1.5, msaa: 0, sky: 1024, pNear: 1024, pFar: 256, shadow: 1024, mirror: 0.4, bloom: 0.5 },
@@ -17,14 +21,15 @@ export const QUALITY = {
 
 const FINAL = {
   uniforms: {
-    tDiffuse: { value: null }, uTime: { value: 0 }, uCA: { value: 0.0012 }, uVig: { value: 0.42 }, uGrain: { value: 0.03 }, uFade: { value: 1 }, uFlash: { value: 0 },
-    uSun: { value: new THREE.Vector3() }, uAspect: { value: 1.78 }, uExposure: { value: 1 }, uHeat: { value: 0 }, uWarp: { value: 0 }, uDamage: { value: 0 }, uSat: { value: 1.1 },
+    tDiffuse: { value: null }, uTime: { value: 0 }, uCA: { value: 0.0007 }, uVig: { value: 0.36 }, uGrain: { value: 0.022 }, uFade: { value: 1 }, uFlash: { value: 0 },
+    uRays: { value: 1 }, uSharp: { value: 0.3 }, uFlare: { value: 1 }, uPx: { value: new THREE.Vector2(1 / 1920, 1 / 1080) },
+    uSun: { value: new THREE.Vector3() }, uAspect: { value: 1.78 }, uExposure: { value: 1 }, uHeat: { value: 0 }, uWarp: { value: 0 }, uDamage: { value: 0 }, uSat: { value: 1.04 },
     uTint: { value: new THREE.Vector3(1, 1, 1) },
   },
   vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
   fragmentShader: /* glsl */`
 precision highp float;
-uniform sampler2D tDiffuse;uniform float uTime,uCA,uVig,uGrain,uFade,uFlash,uAspect,uExposure,uHeat,uWarp,uDamage,uSat;uniform vec3 uSun,uTint;varying vec2 vUv;
+uniform sampler2D tDiffuse;uniform float uTime,uCA,uVig,uGrain,uFade,uFlash,uAspect,uExposure,uHeat,uWarp,uDamage,uSat,uRays,uSharp,uFlare;uniform vec3 uSun,uTint;uniform vec2 uPx;varying vec2 vUv;
 ${ACES}
 float hash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
 vec3 flare(vec2 uv,vec2 sp){
@@ -41,7 +46,11 @@ void main(){
   uv+=uHeat*.0035*vec2(sin(uv.y*90.+uTime*30.),cos(uv.x*70.+uTime*26.));
   vec2 off=c*(uCA+uWarp*.014+uDamage*.004)*(.3+r2*4.);
   vec3 col=vec3(texture2D(tDiffuse,uv+off).r,texture2D(tDiffuse,uv).g,texture2D(tDiffuse,uv-off).b);
-  if(uSun.z>.001){vec2 a=vec2(uAspect,1.);col+=flare(c*2.*a,uSun.xy*a)*uSun.z;}
+  if(uSharp>0.){vec3 bl=(texture2D(tDiffuse,uv+vec2(uPx.x,0.)).rgb+texture2D(tDiffuse,uv-vec2(uPx.x,0.)).rgb+texture2D(tDiffuse,uv+vec2(0.,uPx.y)).rgb+texture2D(tDiffuse,uv-vec2(0.,uPx.y)).rgb)*.25;col=max(col+clamp(col-bl,-.4,.4)*uSharp,0.);}
+  if(uSun.z>.001&&uRays>0.){vec2 sp=uSun.xy*.5+.5,dl=uv-sp;float jit=hash(vUv*913.+fract(uTime)*7.3),w=1.,ws=0.;vec3 acc=vec3(0.);
+    for(int i=0;i<14;i++){vec3 sm=texture2D(tDiffuse,uv-dl*((float(i)+jit)/14.)*.94).rgb;acc+=min(max(sm-1.5,0.),vec3(10.))*w;ws+=w;w*=.93;}
+    col+=acc/ws*uRays*.2*uSun.z;}
+  if(uSun.z>.001&&uFlare>0.){vec2 a=vec2(uAspect,1.);col+=flare(c*2.*a,uSun.xy*a)*uSun.z*uFlare;}
   col+=uHeat*vec3(1.,.33,.07)*pow(r2*2.6,1.2)*1.6;
   col+=uWarp*vec3(.25,.45,1.)*pow(r2*2.4,1.6)*.5;
   col=aces(col*uExposure);
@@ -63,13 +72,12 @@ export class Gfx {
     r.shadowMap.type = THREE.PCFSoftShadowMap;
     setAniso(Math.min(16, r.capabilities.getMaxAnisotropy()));
     this.pmrem = new THREE.PMREMGenerator(r);
-    this.W = 1; this.H = 1; this.dyn = 1; this.fx = FINAL.uniforms; this.time = 0;
-    this._ft = 16; this._acc = 0;
+    this.W = 1; this.H = 1; this.res = 540; this.fx = FINAL.uniforms; this.time = 0;
     this.setQuality('high', true);
   }
   setQuality(name, init) {
     this.qName = name; this.q = QUALITY[name] || QUALITY.high;
-    this.renderer.shadowMap.enabled = this.q.shadow > 0;
+    this.renderer.shadowMap.enabled = this.q.shadow > 0; FINAL.uniforms.uRays.value = this.q.cap > 1 ? 1 : 0; FINAL.uniforms.uSharp.value = this.q.cap > 1 ? 0.3 : 0;
     this._build();
     if (!init) this.resize(this.W, this.H);
   }
@@ -86,24 +94,16 @@ export class Gfx {
   }
   resize(W, H) {
     this.W = W; this.H = H;
-    const pr = Math.min(window.devicePixelRatio || 1, this.q.cap) * this.dyn;
+    const dpr = window.devicePixelRatio || 1, pr = this.res ? Math.min(this.res / H, dpr) : Math.min(dpr, 3); // 解像度は固定 (自動変更なし)
     this.pr = pr;
     this.renderer.setPixelRatio(pr); this.renderer.setSize(W, H, false);
     this.canvas.style.width = W + 'px'; this.canvas.style.height = H + 'px';
     this.pw = Math.round(W * pr); this.ph = Math.round(H * pr);
     this.composer.setPixelRatio(1); this.composer.setSize(this.pw, this.ph);
-    this.fx.uAspect.value = W / H;
+    this.fx.uAspect.value = W / H; this.fx.uPx.value.set(1 / this.pw, 1 / this.ph);
     this.pxScale = this.ph / 1080;
   }
-  /** フレーム時間から動的解像度を調整 */
-  _adapt(dt) {
-    this._ft += (dt * 1000 - this._ft) * 0.05; this._acc += dt;
-    if (this._acc < 2.5) return; this._acc = 0;
-    let d = this.dyn;
-    if (this._ft > 40) d -= 0.12; else if (this._ft > 30) d -= 0.06; else if (this._ft < 19 && d < 1) d += 0.06;
-    d = clamp(d, 0.55, 1);
-    if (Math.abs(d - this.dyn) > 0.01) { this.dyn = d; this.resize(this.W, this.H); }
-  }
+  setRes(r) { this.res = r; this.resize(this.W, this.H); }
   /** モードごとの画作り: ブルーム強度・しきい値・露出 */
   look(strength = 0.62, threshold = 1.0, exposure = 1) { this.bloom.strength = strength; this.bloom.threshold = threshold; this.fx.uExposure.value = exposure; this._look = [strength, threshold, exposure]; }
   envFromScene(scene, blur = 0.02) { return this.pmrem.fromScene(scene, blur, 0.1, 1000).texture; }
@@ -114,7 +114,6 @@ export class Gfx {
     else { this.pFar.enabled = false; this.pNear.clear = true; this.pNear.clearDepth = false; }
     this.pNear.scene = scene; this.pNear.camera = camera;
     this.composer.render(dt);
-    if (this.autoRes !== false) this._adapt(dt);
   }
 }
 
@@ -158,8 +157,9 @@ export class Mirror {
   }
   /** MeshStandardMaterial に反射サンプリングを注入 */
   apply(material, strength = 1) {
-    const u = this.u;
-    material.onBeforeCompile = (sh) => {
+    const u = this.u, prev = material.onBeforeCompile, pk = material.customProgramCacheKey?.() || '';
+    material.onBeforeCompile = (sh, r) => {
+      prev?.call(material, sh, r);
       sh.uniforms.tMirror = u.tMirror; sh.uniforms.uMirrorMat = u.uMirrorMat; sh.uniforms.uMirrorOn = u.uMirrorOn; sh.uniforms.uMirrorK = { value: strength };
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform mat4 uMirrorMat;varying vec4 vMirror;')
         .replace('#include <project_vertex>', '#include <project_vertex>\nvMirror=uMirrorMat*(modelMatrix*vec4(transformed,1.));');
@@ -174,7 +174,7 @@ export class Mirror {
         }
         #include <opaque_fragment>`);
     };
-    material.customProgramCacheKey = () => 'mirror' + strength;
+    material.customProgramCacheKey = () => pk + 'mirror' + strength;
     material.needsUpdate = true;
     return material;
   }

@@ -55,7 +55,7 @@ export class SurfaceMode {
       if (o.foot) { this.foot = true; const e = this.env; if (o.door) { this.fp.set(e.door[0], 0, e.door[1]); this.fyaw = e.door[2] + Math.PI; } else { this.fp.set(s.pos.x + e.foot[0] + SHIPS[s.id].radius * 0.2, 0, s.pos.z + Math.min(e.foot[1], SHIPS[s.id].radius * 0.6 + 6)); this.fyaw = 0; } this.fpitch = 0; }
       else this.foot = false;
     }
-    const e = this.env; G.gfx.look(...e.look); G.gfx.fx.uHeat.value = e.heat || 0; G.gfx.fx.uWarp.value = 0; G.gfx.fx.uSun.value.z = 0;
+    const e = this.env; G.gfx.look(...e.look); G.gfx.fx.uHeat.value = e.heat || 0; G.gfx.fx.uWarp.value = 0; G.gfx.fx.uSun.value.z = 0; G.gfx.fx.uFlare.value = 0;
     this.camera.aspect = G.W / G.H; this.camera.updateProjectionMatrix();
     this._mode(); G.hud.show(true); G.hud.setTarget(null); G.audio?.music(e.music);
     this._cam(0, true);
@@ -186,6 +186,8 @@ export class SurfaceMode {
     }
     if (this.shake > 0.01) { this.shake *= Math.exp(-4 * (dt || 0.016)); c.position.x += (Math.random() - 0.5) * this.shake; c.position.y += (Math.random() - 0.5) * this.shake; }
     c.updateProjectionMatrix(); c.updateMatrixWorld();
+    // 太陽の画面位置 (光条用)
+    _a.copy(c.position).addScaledVector(e.sunDir, 5000).project(c); const u = G.gfx.fx.uSun.value; u.set(_a.x, _a.y, _a.z < 1 && Math.abs(_a.x) < 1.5 && Math.abs(_a.y) < 1.5 ? 1 : 0);
   }
   _hud() {
     const h = G.hud, s = this.ship, e = this.env, pl = G.space.pl, c = this.camera;

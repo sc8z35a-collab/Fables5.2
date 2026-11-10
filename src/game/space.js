@@ -98,7 +98,7 @@ export class SpaceMode {
       }
     }
     this.camera.aspect = G.W / G.H; this.camera.updateProjectionMatrix();
-    G.hud.setMode(this.title ? 'title' : 'space'); G.hud.show(!this.title); G.gfx.look(0.62, 1.0, 1);
+    G.hud.setMode(this.title ? 'title' : 'space'); G.hud.show(!this.title); G.gfx.look(0.62, 1.0, 1); G.gfx.fx.uFlare.value = 1;
     this._buttons(); this._cam(1, true);
     G.audio?.music('space');
   }
@@ -238,7 +238,8 @@ export class SpaceMode {
   dropSC(msg) { const p = this.pl; if (!p.sc.on) return; p.sc.on = false; p.vel.setLength(Math.min(p.st.maxSpeed * 0.8, 320)); p.sc.speed = 0; if (msg) G.hud.msg(msg, 'good'); G.audio?.sfx('drop'); this.shocks.spawn(_a.copy(FWD).applyQuaternion(p.quat).multiplyScalar(60).add(p.pos), '#8cf', 120, 0.7); }
   toggleAP() {
     const p = this.pl; if (p.docked) return;
-    if (p.auto) { p.auto = null; G.hud.msg('自動航行を解除'); return; }
+    if (p.auto?.type === 'nav') { p.auto = null; G.hud.msg('自動航行を解除'); return; }
+    if (p.auto?.type === 'dock') return;
     if (!this.nav) { G.hud.msg('目的地が未設定です。「星図」から航路を設定してください。', 'warn'); return; }
     p.auto = { type: 'nav' }; G.hud.msg(`自動航行：${this.nav.name} へ`, 'good');
   }

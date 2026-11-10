@@ -1,7 +1,7 @@
 // 内装の小道具ライブラリ。各関数は (P: Placer, o: オプション, e: 環境) を受け取る
 import * as THREE from 'three';
 import { Builder, mx, rockGeo } from '../gfx/builder.js';
-import { mat, glow, screenMat, signMesh } from '../gfx/textures.js';
+import { mat, glow, screenMat, signMesh, leafMat, canopyGeo } from '../gfx/textures.js';
 import { fxTime, makeGlowSprite } from '../gfx/fx.js';
 import { holoMat, glassMat } from './interior.js';
 
@@ -19,6 +19,9 @@ const flat = (c, r = 0.5, m = 0.2) => mat('flat', { color: c, rough: r, metal: m
 const CRATE = [0xb8452e, 0x2e7ab8, 0xc9a22e, 0x3aa86a, 0x7a808a, 0x8a4ab8];
 const scr = (P, kind, c, title, w, h, x, y, z, rx = 0, k = 1.5) => P.add(screenMat(kind, c, title, k), new THREE.PlaneGeometry(w, h), mx(x, y, z, rx, 0, 0));
 const blob = (P, m, r, x, y, z, seed, sy = 1) => P.add(m, rockGeo(r, 1, seed, 0.45), mx(x, y, z, 0, seed, 0, 1, sy, 1), 0);
+const LEAF = [0xffffff, 0xd8f0c0, 0xb0d890];
+/** 葉カードの茂み (中に暗い芯を入れて透けを防ぐ) */
+const bush = (P, e, R, n, x, y, z, flat = 0.8) => { P.add(leafMat(LEAF[Math.floor(e.rnd() * 3)]), canopyGeo(R, n, e.rnd, flat), mx(x, y, z), 0); P.add(mat('flat', { color: 0x163a18, rough: 0.9, metal: 0 }), rockGeo(R * 0.5, 1, x * 7 + z, 0.3), mx(x, y, z, 0, 0, 0, 1, flat, 1), 0); };
 
 // ── ホログラム ──
 export function makeHolo(kind, color, s = 1) {
@@ -107,14 +110,18 @@ export const PROPS = {
     e.rect(1.05, 2.15); e.use(o.label || '寝台で休む', 'rest', 2.2); },
   bunk(P, o, e) { const m = MM(); for (const y of [0.3, 1.5]) { P.box(m.st, 0.95, 0.08, 2.0, 0, y, 0); P.box(flat(0xdcdcd6, 0.9, 0), 0.85, 0.12, 1.9, 0, y + 0.1, 0); P.box(fab(o.c || 0x5a2a2a), 0.87, 0.05, 1.1, 0, y + 0.18, 0.35); } for (const [x, z] of [[-0.46, -0.98], [0.46, -0.98], [-0.46, 0.98], [0.46, 0.98]]) P.box(m.dk, 0.06, 2.1, 0.06, x, 1.05, z); for (let i = 0; i < 4; i++) P.box(m.st, 0.04, 0.04, 0.4, 0.5, 0.5 + i * 0.3, 0.75); e.rect(1, 2.05); if (o.use !== false) e.use('寝台で休む', 'rest', 2.2); },
   locker(P, o, e) { const m = MM(), n = o.n || 3; for (let i = 0; i < n; i++) { const x = (i - (n - 1) / 2) * 0.62; P.box(m.st, 0.6, 2.0, 0.5, x, 1.0, 0); P.box(m.dk, 0.5, 0.25, 0.02, x, 1.6, 0.255); P.box(glow(i % 2 ? '#6f6' : e.th.trim, 2), 0.06, 0.03, 0.02, x + 0.2, 1.1, 0.256); } e.rect(n * 0.62, 0.5); },
-  plant(P, o, e) { const m = MM(), s = o.s || 1; P.cyl(o.dark ? m.dk : m.wh, 0.3 * s, 0.22 * s, 0.45 * s, 0, 0.225 * s, 0, 'y', 16); P.cyl(m.so, 0.27 * s, 0.27 * s, 0.03, 0, 0.44 * s, 0, 'y', 12); P.cyl(m.tr, 0.03 * s, 0.045 * s, 0.7 * s, 0, 0.8 * s, 0, 'y', 6);
-    for (let i = 0; i < 5; i++) { const a = i * 1.26 + e.x; blob(P, i % 2 ? m.lf : m.lf2, (0.28 + e.rnd() * 0.16) * s, Math.cos(a) * 0.24 * s, (1.0 + (i % 3) * 0.24) * s, Math.sin(a) * 0.24 * s, i + e.x * 7, 0.85); } e.col(0.36 * s); },
-  tree(P, o, e) { const m = MM(), s = o.s || 1; P.cyl(m.wh, 1.0, 1.0, 0.45, 0, 0.225, 0, 'y', 24); P.cyl(m.so, 0.9, 0.9, 0.04, 0, 0.45, 0, 'y', 20); P.tor(glow(e.th.trim, 2), 1.02, 0.025, 0, 0.1, 0, HP, 0, 0, 40, 5);
-    P.cyl(m.tr, 0.1 * s, 0.18 * s, 2.4 * s, 0, 0.45 + 1.2 * s, 0, 'y', 8); P.add(m.tr, new THREE.CylinderGeometry(0.05 * s, 0.08 * s, 1.1 * s, 6), mx(0.3 * s, 2.3 * s, 0.1, 0, 0, -0.7)); P.add(m.tr, new THREE.CylinderGeometry(0.05 * s, 0.08 * s, 1.0 * s, 6), mx(-0.28 * s, 2.5 * s, -0.1, 0.2, 0, 0.7));
-    for (let i = 0; i < 8; i++) { const a = i * 0.9, r = i < 5 ? 0.85 : 0.35; blob(P, i % 2 ? m.lf : m.lf2, (0.7 + e.rnd() * 0.45) * s, Math.cos(a) * r * s, (2.9 + (i % 4) * 0.42) * s, Math.sin(a) * r * s, i * 3 + e.x); }
-    for (let i = 0; i < 5; i++) blob(P, m.lf2, 0.22, Math.cos(i * 1.3) * 0.62, 0.55, Math.sin(i * 1.3) * 0.62, i + 40, 0.7); e.col(1.05); },
+  plant(P, o, e) { const m = MM(), s = o.s || 1; P.cyl(o.dark ? m.dk : m.wh, 0.3 * s, 0.22 * s, 0.45 * s, 0, 0.225 * s, 0, 'y', 16); P.cyl(m.so, 0.27 * s, 0.27 * s, 0.03, 0, 0.44 * s, 0, 'y', 12);
+    for (let i = 0; i < 3; i++) P.add(m.tr, new THREE.CylinderGeometry(0.015 * s, 0.03 * s, 0.75 * s, 5), mx((i - 1) * 0.06 * s, 0.8 * s, 0, (i - 1) * 0.25, i * 2, (i - 1) * 0.3));
+    bush(P, e, 0.46 * s, 18, 0, 1.18 * s, 0, 0.95); e.col(0.36 * s); },
+  tree(P, o, e) { const m = MM(), s = o.s || 1, bark = mat('wood', { color: 0x6a4a32, rough: 0.95, metal: 0, uvs: 1.4 });
+    P.cyl(m.wh, 1.0, 1.0, 0.45, 0, 0.225, 0, 'y', 24); P.cyl(m.so, 0.9, 0.9, 0.04, 0, 0.45, 0, 'y', 20); P.tor(glow(e.th.trim, 2), 1.02, 0.025, 0, 0.1, 0, HP, 0, 0, 40, 5);
+    P.cyl(bark, 0.1 * s, 0.2 * s, 2.5 * s, 0, 0.45 + 1.25 * s, 0, 'y', 9);
+    for (const [x, y, z, rx, rz, l] of [[0.34, 2.5, 0.1, 0.1, -0.75, 1.3], [-0.3, 2.7, -0.12, 0.2, 0.7, 1.2], [0.05, 2.9, 0.3, 0.8, 0.05, 1.1], [0, 3.1, -0.28, -0.7, 0, 1.0]]) P.add(bark, new THREE.CylinderGeometry(0.035 * s, 0.085 * s, l * s, 6), mx(x * s, y * s, z * s, rx, 0, rz));
+    bush(P, e, 1.35 * s, 46, 0, 3.75 * s, 0, 0.75); bush(P, e, 0.9 * s, 22, 0.9 * s, 3.2 * s, 0.3 * s); bush(P, e, 0.85 * s, 22, -0.8 * s, 3.3 * s, -0.4 * s); bush(P, e, 0.8 * s, 18, 0.1 * s, 3.1 * s, 0.9 * s);
+    for (let i = 0; i < 5; i++) bush(P, e, 0.24, 5, Math.cos(i * 1.3) * 0.62, 0.62, Math.sin(i * 1.3) * 0.62); e.col(1.05); },
   planter(P, o, e) { const m = MM(), w = o.w || 4; P.box(m.wh, w, 0.5, 0.8, 0, 0.25, 0); P.box(m.so, w - 0.12, 0.04, 0.68, 0, 0.5, 0); P.box(glow(e.th.trim, 2), w, 0.03, 0.03, 0, 0.08, 0.41);
-    for (let x = -w / 2 + 0.4; x < w / 2 - 0.2; x += 0.55) blob(P, e.rnd() < 0.5 ? m.lf : m.lf2, 0.3 + e.rnd() * 0.16, x, 0.72 + e.rnd() * 0.12, (e.rnd() - 0.5) * 0.2, x * 9 + e.z, 0.9); if (o.flowers) for (let x = -w / 2 + 0.5; x < w / 2; x += 0.9) P.sph(glow(['#f6a', '#fd6', '#a8f'][Math.floor(e.rnd() * 3)], 1.4), 0.07, x, 1.02, 0.12, 1, 1, 1, 8); e.rect(w, 0.8); },
+    for (let x = -w / 2 + 0.45; x < w / 2 - 0.25; x += 0.62) bush(P, e, 0.36 + e.rnd() * 0.12, 9, x, 0.82 + e.rnd() * 0.1, (e.rnd() - 0.5) * 0.14, 0.85);
+    if (o.flowers) for (let x = -w / 2 + 0.4; x < w / 2; x += 0.5) P.sph(glow(['#f6a', '#fd6', '#a8f', '#fff'][Math.floor(e.rnd() * 4)], 1.2), 0.045, x, 1.08 + e.rnd() * 0.12, 0.1 + (e.rnd() - 0.5) * 0.3, 1, 1, 1, 6); e.rect(w, 0.8); },
   pipes(P, o, e) { const m = MM(), h = e.room.h; for (let i = 0; i < 5; i++) { const r = 0.07 + (i % 3) * 0.04, x = (i - 2) * 0.34; P.cyl(i % 2 ? m.st : crateM(o.c || 0xb8452e), r, r, h, x, h / 2, 0, 'y', 10); for (const y of [0.6, h * 0.5, h - 0.6]) P.cyl(m.dk, r + 0.04, r + 0.04, 0.08, x, y, 0, 'y', 10); } P.tor(crateM(0xc02020), 0.16, 0.025, 0.34, 1.25, 0.2, 0, 0, 0, 16, 6); P.box(glow('#6f6', 2.5), 0.08, 0.08, 0.02, -0.34, 1.5, 0.18); e.rect(1.8, 0.4); },
   reactor(P, o, e) {
     const m = MM(), c = o.c || '#4df0ff', h = Math.min(e.room.h, 6);
@@ -188,4 +195,41 @@ export const PROPS = {
     const liquid = e.dyn(new THREE.Mesh(new THREE.CylinderGeometry(0.47, 0.47, 2.0, 20), new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(0.35), transparent: true, opacity: 0.4, depthWrite: false, toneMapped: false })), 0, 1.45, 0);
     const sp = e.dyn(new THREE.Mesh(rockGeo(0.22, 2, e.x * 3 + 1, 0.5), glow(c, 2.2)), 0, 1.45, 0), y0 = sp.position.y; e.anim((dt, t) => { sp.position.y = y0 + Math.sin(t * 0.9 + e.x) * 0.3; sp.rotation.y += dt * 0.4; liquid.visible = true; }); e.col(0.62); e.light(c, 8, 1.5, 5); },
   steam(P, o, e) { const s = e.dyn(makeGlowSprite(o.c || '#fff', 1.6, 0.25), 0, o.y || 0.4, 0), y0 = s.position.y; e.anim((dt, t) => { const k = (t * 0.6 + e.x) % 1; s.position.y = y0 + k * 1.8; s.scale.setScalar(0.6 + k * 2.2); s.material.opacity = (1 - k) * 0.5; }); },
+  // ── 追加の小道具 (拠点ごとの作り込み用) ──
+  bookshelf(P, o, e) { const m = MM(), w = o.w || 2.2, hh = o.h || 2.3, cs = [0x8a2a20, 0x2a5a8a, 0xc9a22e, 0x3a7a4a, 0x6a4a8a, 0xd8d0c0, 0x30343c];
+    P.box(m.wd, w, hh, 0.06, 0, hh / 2, -0.17); P.box(m.wd, 0.06, hh, 0.4, -w / 2, hh / 2, 0); P.box(m.wd, 0.06, hh, 0.4, w / 2, hh / 2, 0);
+    for (let j = 0; j < 6; j++) { const y = 0.05 + j * (hh - 0.1) / 5; P.box(m.wd, w, 0.05, 0.4, 0, y, 0); if (j === 5) break; let x = -w / 2 + 0.1; while (x < w / 2 - 0.15) { const bw = 0.04 + e.rnd() * 0.06, bh = 0.24 + e.rnd() * 0.14; if (e.rnd() < 0.86) P.add(flat(cs[Math.floor(e.rnd() * cs.length)], 0.8, 0), new THREE.BoxGeometry(bw, bh, 0.26), mx(x + bw / 2, y + 0.03 + bh / 2, 0, 0, 0, e.rnd() < 0.1 ? 0.2 : 0)); x += bw + 0.008; } }
+    e.rect(w, 0.42); },
+  fountain(P, o, e) { const m = MM(), R = o.r || 1.7, st = mat('marble', { rough: 0.35, metal: 0.05 }), c = o.c || e.th.trim;
+    P.cyl(st, R, R + 0.15, 0.55, 0, 0.275, 0, 'y', 40); P.cyl(st, 0.5, 0.7, 1.2, 0, 0.6, 0, 'y', 20); P.cyl(st, 0.95, 0.35, 0.22, 0, 1.3, 0, 'y', 28); P.tor(glow(c, 2.5), R - 0.1, 0.025, 0, 0.5, 0, HP, 0, 0, 56, 5);
+    const wm = new THREE.MeshStandardMaterial({ color: 0x2a6a8a, roughness: 0.04, metalness: 0.6, normalMap: mat('water').normalMap, transparent: true, opacity: 0.85, envMapIntensity: 2 }); wm.normalMap = wm.normalMap.clone(); wm.normalMap.needsUpdate = true; wm.normalMap.repeat.set(2, 2);
+    e.dyn(new THREE.Mesh(new THREE.CircleGeometry(R - 0.08, 40).rotateX(-HP), wm), 0, 0.5, 0); e.dyn(new THREE.Mesh(new THREE.CircleGeometry(0.9, 28).rotateX(-HP), wm), 0, 1.4, 0);
+    const jet = e.dyn(new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.14, 1.3, 10, 1, true), holoMat('#cfefff', 0.5)), 0, 2.05, 0), fall = e.dyn(new THREE.Mesh(new THREE.CylinderGeometry(0.93, 0.98, 0.88, 28, 1, true), holoMat('#cfefff', 0.16)), 0, 0.95, 0);
+    e.anim((dt, t) => { wm.normalMap.offset.set(t * 0.03, t * 0.05); jet.scale.y = 1 + Math.sin(t * 3) * 0.08; fall.rotation.y += dt * 0.4; }); e.col(R + 0.15); e.light(c, 14, 1.4, 8); },
+  poster(P, o, e) { const s = signMesh(o.text || 'STARFABLE', o.c || e.th.trim, o.h || 1.1, { bg: o.bg || '#0c1018', frame: true, intensity: o.k || 1.3 }); e.dyn(s, 0, o.y || 1.9, 0.04); P.box(MM().bk, (s.userData.w || 1.6) + 0.1, (o.h || 1.1) + 0.1, 0.04, 0, o.y || 1.9, 0.015); },
+  fan(P, o, e) { const m = MM(), h = e.room.h, g = new THREE.Group(); P.cyl(m.dk, 0.03, 0.03, 0.5, 0, h - 0.25, 0, 'y', 6); P.cyl(m.dk, 0.14, 0.14, 0.12, 0, h - 0.54, 0, 'y', 12);
+    for (let i = 0; i < 4; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.02, 0.2), o.wood ? m.wd : m.st); b.position.set(Math.cos(i * HP) * 0.75, 0, Math.sin(i * HP) * 0.75); b.rotation.set(0.18, -i * HP, 0, 'YXZ'); g.add(b); } e.dyn(g, 0, h - 0.56, 0); e.anim((dt) => { g.rotation.y += dt * (o.sp || 2.4); }); },
+  fireplace(P, o, e) { const m = MM(), bk = mat('brick', { color: o.c || 0x8a7a70, rough: 1, metal: 0 }), h = Math.min(e.room.h, 3.6);
+    P.box(bk, 2.6, h, 0.7, 0, h / 2, 0.05); P.box(m.bk, 1.5, 1.1, 0.5, 0, 0.6, 0.2); P.box(m.wd, 2.9, 0.12, 0.9, 0, 1.45, 0.08); P.box(bk, 3.0, 0.12, 1.3, 0, 0.06, 0.3);
+    for (let i = 0; i < 3; i++) P.add(m.tr, new THREE.CylinderGeometry(0.08, 0.09, 1.0, 7).rotateZ(HP), mx((i - 1) * 0.05, 0.2 + i * 0.09, 0.25 + (i % 2) * 0.12, 0, i * 0.5, 0));
+    const fl = []; for (let i = 0; i < 5; i++) { const f = e.dyn(new THREE.Mesh(new THREE.ConeGeometry(0.16 + (i % 2) * 0.06, 0.7, 7, 1, true), new THREE.MeshBasicMaterial({ color: new THREE.Color(i % 2 ? '#ffb040' : '#ff6a1e').multiplyScalar(2.6), transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false })), (i - 2) * 0.2, 0.62, 0.3); fl.push(f); }
+    const L = { x: e.x, y: 0.9 + e.y0, z: e.z, c: new THREE.Color('#ff9a4a'), i: 30, d: 12 }; e.out.lights.push(L);
+    e.anim((dt, t) => { fl.forEach((f, i) => { f.scale.set(1 + Math.sin(t * 9 + i * 2) * 0.2, 0.8 + Math.sin(t * 13 + i * 1.7) * 0.3 + Math.sin(t * 5.3 + i) * 0.15, 1); }); L.i = 26 + Math.sin(t * 11) * 5 + Math.sin(t * 23) * 3; }); e.rect(3, 1.3, 0, 0.3); },
+  hoload(P, o, e) { const c = o.c || e.th.trim, s = signMesh(o.text || 'SALE', c, o.h || 0.9, { double: true, intensity: 2.2, frame: true }); e.dyn(s, 0, o.y || 2.8, 0); const pl = new THREE.Mesh(new THREE.PlaneGeometry((s.userData.w || 2) + 0.4, (o.h || 0.9) + 0.4), holoMat(c, 0.25)); e.dyn(pl, 0, o.y || 2.8, -0.02); const y0 = s.position.y;
+    P.cyl(MM().dk, 0.25, 0.32, 0.12, 0, 0.06, 0, 'y', 12); P.add(glow(c, 2), new THREE.CircleGeometry(0.2, 12).rotateX(-HP), mx(0, 0.125, 0), 0); e.anim((dt, t) => { s.position.y = pl.position.y = y0 + Math.sin(t * 1.3 + e.x) * 0.06; }); },
+  workbench(P, o, e) { const m = MM(); P.box(m.st, 2.4, 0.08, 0.9, 0, 0.92, 0); for (const [x, z] of [[-1.1, -0.38], [1.1, -0.38], [-1.1, 0.38], [1.1, 0.38]]) P.box(m.dk, 0.08, 0.9, 0.08, x, 0.45, z); P.box(m.dk, 2.2, 0.05, 0.8, 0, 0.3, 0); P.box(m.dk, 2.4, 1.2, 0.05, 0, 1.6, -0.43);
+    for (let i = 0; i < 9; i++) P.add(i % 3 ? m.ch : flat(0xb8452e, 0.6, 0.3), new THREE.BoxGeometry(0.05, 0.3 + (i % 4) * 0.1, 0.03), mx(-1 + i * 0.25, 1.6 + (i % 2) * 0.12, -0.39, 0, 0, (i % 3 - 1) * 0.3));
+    P.box(flat(0xb8452e, 0.5, 0.4), 0.3, 0.22, 0.26, 0.8, 1.07, 0.1); P.box(m.ch, 0.5, 0.06, 0.3, -0.5, 0.99, 0.05); P.add(glow('#ffe2b0', 3), new THREE.CylinderGeometry(0.03, 0.03, 1.6, 6).rotateZ(HP), mx(0, 2.15, -0.3), 0); P.box(crateM(0x2e7ab8), 0.5, 0.4, 0.4, -0.7, 0.53, 0); e.rect(2.4, 0.95); e.light('#ffe2b0', 8, 2, 5); if (o.use) e.use(o.label, o.use, 2.4, o); },
+  gantry(P, o, e) { const Y = mat('hull', { color: 0xe8a020, rough: 0.6, metal: 0.4 }), m = MM(), w = o.w || 30, h = e.room.h - 2.2; P.box(Y, w, 0.9, 0.5, 0, h, -0.9); P.box(Y, w, 0.9, 0.5, 0, h, 0.9); P.box(m.dk, 2.2, 0.7, 2.6, o.at || 3, h + 0.1, 0); P.cyl(m.dk, 0.03, 0.03, 4, o.at || 3, h - 2.2, 0, 'y', 6); P.add(m.st, new THREE.TorusGeometry(0.28, 0.07, 6, 14, Math.PI * 1.4), mx(o.at || 3, h - 4.45, 0, 0, 0, -0.6));
+    for (let i = 0; i < 8; i++) P.add(glow('#fc4', 1.2), new THREE.PlaneGeometry(0.3, 0.7), mx(-w / 2 + 2 + i * (w - 4) / 7, h, 1.155, 0, 0, 0.5), 0); for (const s of [-1, 1]) P.box(m.dk, 0.5, 0.5, 3, s * (w / 2 - 0.3), h + 0.5, 0); },
+  seatrow(P, o, e) { const m = MM(), n = o.n || 4, f = fab(o.c || 0x2a3a5a); for (let i = 0; i < n; i++) { const x = (i - (n - 1) / 2) * 0.62; P.box(f, 0.54, 0.1, 0.5, x, 0.46, 0); P.box(f, 0.54, 0.6, 0.09, x, 0.82, -0.24); P.box(m.ch, 0.04, 0.1, 0.5, x - 0.29, 0.6, 0); } P.box(m.dk, n * 0.62, 0.06, 0.4, 0, 0.38, 0); for (const s of [-1, 1]) P.box(m.ch, 0.06, 0.38, 0.4, s * (n * 0.31 - 0.1), 0.19, 0); e.rect(n * 0.62, 0.55); },
+  tablelong(P, o, e) { const m = MM(), w = o.w || 3.6, top = o.wood ? m.wd : m.st; P.box(top, w, 0.06, 0.85, 0, 0.76, 0); for (const s of [-1, 1]) { P.box(m.dk, 0.08, 0.74, 0.7, s * (w / 2 - 0.3), 0.37, 0); P.box(top, w - 0.2, 0.05, 0.32, 0, 0.45, s * 0.78); P.box(m.dk, 0.06, 0.44, 0.28, w / 2 - 0.4, 0.22, s * 0.78); P.box(m.dk, 0.06, 0.44, 0.28, -w / 2 + 0.4, 0.22, s * 0.78); }
+    for (let i = 0; i < 5; i++) P.cyl(i % 2 ? m.wh : flat(0xb8452e, 0.5, 0.1), 0.05, 0.04, 0.1, -w / 2 + 0.5 + i * (w - 1) / 4, 0.84, (i % 2 - 0.5) * 0.3, 'y', 8); e.rect(w, 1.9); },
+  toolcart(P, o, e) { const m = MM(), c = flat(o.c || 0xb8252a, 0.5, 0.4); P.box(c, 0.8, 0.75, 0.5, 0, 0.5, 0); for (let i = 0; i < 4; i++) { P.box(m.bk, 0.72, 0.01, 0.02, 0, 0.25 + i * 0.17, 0.255); P.box(m.ch, 0.3, 0.02, 0.03, 0, 0.3 + i * 0.17, 0.265); } P.box(m.st, 0.84, 0.03, 0.54, 0, 0.89, 0); for (const [x, z] of [[-0.3, -0.18], [0.3, -0.18], [-0.3, 0.18], [0.3, 0.18]]) P.cyl(m.bk, 0.06, 0.06, 0.05, x, 0.06, z, 'x', 8); e.col(0.5); },
+  floorlamp(P, o, e) { const m = MM(), c = o.c || '#ffd9a0'; P.cyl(m.ch, 0.16, 0.2, 0.03, 0, 0.015, 0, 'y', 14); P.cyl(m.ch, 0.015, 0.015, 1.6, 0, 0.8, 0, 'y', 6); P.add(flat(0xe8dcc8, 0.9, 0), new THREE.CylinderGeometry(0.16, 0.24, 0.34, 16, 1, true), mx(0, 1.72, 0), 0); P.sph(glow(c, 3), 0.07, 0, 1.68, 0, 1, 1.3, 1, 8); e.col(0.22); e.light(c, 10, 1.6, 7); },
+  cabinet(P, o, e) { const m = MM(), w = o.w || 1.4, hh = o.h || 2.0; P.box(o.metal ? m.st : m.wd, w, hh, 0.5, 0, hh / 2, 0); P.box(m.bk, 0.012, hh - 0.1, 0.01, 0, hh / 2, 0.252); for (const s of [-1, 1]) P.box(m.ch, 0.02, 0.2, 0.03, s * 0.07, hh * 0.52, 0.265); e.rect(w, 0.5); },
+  piano(P, o, e) { const b = flat(0x08080a, 0.08, 0.6), m = MM(); P.box(b, 1.5, 0.3, 1.9, 0, 0.85, -0.2); P.box(b, 1.5, 0.12, 0.5, 0, 0.72, 0.95); P.box(flat(0xf2f2ee, 0.3, 0), 1.3, 0.03, 0.16, 0, 0.8, 1.0); for (let i = 0; i < 10; i++) P.box(b, 0.05, 0.02, 0.1, -0.56 + i * 0.125, 0.825, 0.97); P.add(b, new THREE.BoxGeometry(1.45, 0.03, 1.8), mx(0.1, 1.3, -0.25, 0, 0, 0.5)); P.box(m.gd, 0.02, 0.7, 0.02, 0.4, 1.2, 0.2); for (const [x, z] of [[-0.6, 0.9], [0.6, 0.9], [0, -1.0]]) P.cyl(b, 0.05, 0.04, 0.72, x, 0.36, z, 'y', 8);
+    P.box(fab(0x2a2a2e), 0.7, 0.1, 0.36, 0, 0.5, 1.6); P.box(b, 0.6, 0.48, 0.3, 0, 0.24, 1.6); e.rect(1.6, 2.1, 0, -0.1); e.col(0.4, 0, 1.6); if (o.use !== false) e.use('ピアノを弾く', 'piano', 2.4); },
+  pooltable(P, o, e) { const m = MM(); P.box(m.wd, 2.6, 0.25, 1.4, 0, 0.75, 0); P.box(flat(0x1a6a3a, 0.95, 0), 2.36, 0.02, 1.16, 0, 0.885, 0); for (const [x, z] of [[-1.1, -0.5], [1.1, -0.5], [-1.1, 0.5], [1.1, 0.5]]) P.box(m.wd, 0.16, 0.65, 0.16, x, 0.32, z); for (let i = 0; i < 7; i++) P.sph(glow(['#fd4', '#f43', '#4cf', '#fff', '#6f6', '#f6a', '#fa4'][i], 0.9), 0.035, -0.6 + (i % 4) * 0.42, 0.93, -0.3 + Math.floor(i / 4) * 0.5 + (i % 2) * 0.1, 1, 1, 1, 8);
+    P.add(MM().dk, new THREE.BoxGeometry(1.6, 0.06, 0.5), mx(0, e.room.h > 4 ? 2.3 : e.room.h - 0.4, 0)); P.add(glow('#d8ffd0', 3), new THREE.PlaneGeometry(1.4, 0.36).rotateX(HP), mx(0, (e.room.h > 4 ? 2.3 : e.room.h - 0.4) - 0.035, 0), 0); e.rect(2.6, 1.4); e.light('#d8ffd0', 9, 2, 5); },
 };

@@ -1,7 +1,7 @@
 // STARFABLE — 起動・メインループ・モード遷移
 import * as THREE from 'three';
 import { G, clamp } from './core/util.js';
-import { Gfx, QUALITY } from './gfx/renderer.js';
+import { Gfx, QUALITY, DIST } from './gfx/renderer.js';
 import { Backdrop } from './gfx/planets.js';
 import { fxTime } from './gfx/fx.js';
 import { updateScreens } from './gfx/textures.js';
@@ -53,6 +53,9 @@ G.go = async (name, params = {}, o = {}) => {
   if (o.flash) { G.gfx.fx.uFade.value = 1; await G.fade(1, 0.9, true); } else await G.fade(1, 0.5);
 };
 G.setQuality = (name) => { if (G.p) { G.p.quality = name; if (!G.titleOn) save(); else try { localStorage.setItem('starfable-quality', name); } catch (e) { /* noop */ } } G.gfx.setQuality(name); for (const m of Object.values(G.modes)) m.onQuality?.(); };
+G.setRes = (r) => { if (G.p) G.p.res = r; try { localStorage.setItem('starfable-res', r); } catch (e) { /* noop */ } G.gfx.setRes(r); G.hud?.resize(); };
+G.setDist = (d) => { if (G.p) G.p.dist = d; try { localStorage.setItem('starfable-dist', d); } catch (e) { /* noop */ } G.drawDist = DIST[d][1]; G.distName = d; for (const m of Object.values(G.modes)) m.onQuality?.(); };
+G.drawDist = 1; G.distName = 'mid';
 G.checkVictory = () => { if (remaining() === 0 && !G.p.flags.won) { G.p.flags.won = 1; earn(50000); save(); setTimeout(() => { G.hud.banner('星系解放', 'ヴォイド艦隊 全艦無力化', 5); setTimeout(() => G.ui.victory(), 4000); }, 2500); } };
 G.start = (fresh) => {
   G.titleOn = false;
@@ -78,6 +81,7 @@ async function boot() {
   G.gfx = new Gfx(canvas);
   let q = Q.get('q') || load()?.quality; if (!q) { try { q = localStorage.getItem('starfable-quality'); } catch (e) { /* noop */ } }
   if (q && QUALITY[q]) G.gfx.setQuality(q, true);
+  { let r = Q.get('res'), d = Q.get('dist'); try { r = r ?? localStorage.getItem('starfable-res'); d = d ?? localStorage.getItem('starfable-dist'); } catch (e) { /* noop */ } if (r != null && !isNaN(+r)) G.gfx.res = +r; if (d && DIST[d]) { G.drawDist = DIST[d][1]; G.distName = d; } }
   layout();
   G.input = new Input(app); G.hud = new Hud(app); G.ui = new UI(app); G.audio = new AudioSys();
   G.hud.show(false);

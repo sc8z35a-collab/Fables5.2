@@ -1,13 +1,13 @@
 // 歩行モード (ステーション内・船内・敵艦内・惑星拠点): 一人称操作 / 照明 / 反射床 / 艦内戦闘
 import * as THREE from 'three';
 import { G, clamp, damp } from '../core/util.js';
-import { buildInterior, walkable, roomAt } from '../world/interior.js';
+import { buildInterior, walkable, roomAt, floorY } from '../world/interior.js';
 import { blueprint } from '../world/blueprints.js';
 import { makeDrone } from '../world/props.js';
 import { buildShip } from '../world/ships.js';
 import { Mirror } from '../gfx/renderer.js';
 import { Particles, makeGlowSprite } from '../gfx/fx.js';
-import { mat, glow } from '../gfx/textures.js';
+import { mat, glow, aoMat } from '../gfx/textures.js';
 import { ENEMIES, SHIPS, BASES, station, body } from '../world/defs.js';
 import { stats, save, earn, addCargo, event, remaining } from './state.js';
 
@@ -27,6 +27,10 @@ const TALK = {
   dealer: ['「運試しはいかが？ 当店のスロットは星系一の配当率でございます」'],
   miner: ['「外は灼熱だ。溶岩には近づくなよ。マグマ晶は光ってるからすぐ分かる」'],
   colonist: ['「このドームの木は、地球から運んだ苗を三世代かけて育てたものなんです」', '「砂漠香料は外の岩場に自生しています。採ってきたら香料市場へどうぞ」'],
+  doc: ['「怪我をしたら医療ポッドへ。艦内戦のあとは必ず検査を受けてくださいね」', '「リングの人工重力は 0.9G。地球育ちには少し軽く感じるでしょう」'],
+  design: ['「設計図は芸術だ。ハヤテの翼の曲線は、私が三年かけて描いたんだよ」', '「改修は工作室の端末で。エンジンと装甲、どちらを先に強化するかは腕の見せ所だ」'],
+  lib: ['「ここには星系の航海記録がすべて残っています。静かにどうぞ」', '「グラキエスのオーロラは、地磁気ではなく氷床下の結晶が発光源だという説があるのですよ」'],
+  staff: ['「ヴォイド艦隊は星ごとに小隊を置いている。脅威度の低い地球宙域から叩くのが定石だ」', '「敵艦を拿捕すれば賞金は二倍。制御コアは必ず艦橋の中央にある」'],
   ice: ['「今夜はオーロラが特に強い。外に出て空を見てごらん」', '「氷晶は青く光る柱だ。天文台のラボに持ち込めば喜ばれるよ」'],
 };
 
@@ -41,9 +45,10 @@ export class InteriorMode {
     // 敵弾プール & 自弾トレーサー & 携行ブラスター
     this.shots = []; for (let i = 0; i < 20; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), glow('#ff4030', 6)); m.add(makeGlowSprite('#ff4030', 0.7, 1.5)); m.visible = false; s.add(m); this.shots.push({ m, v: new THREE.Vector3(), life: 0, dmg: 0 }); }
     this.tracer = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1, 5).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: new THREE.Color(4, 8, 10), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false })); this.tracer.visible = false; s.add(this.tracer);
-    const gm = mat('hull', { color: 0x30343c, rough: 0.6, metal: 0.7 }), gun = (this.gun = new THREE.Group());
-    gun.add(new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.1, 0.42), gm), Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.16, 0.08), gm)), new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.02, 0.3), glow('#4df0ff', 3)));
-    gun.children[1].position.set(0, -0.11, 0.14); gun.children[2].position.set(0, 0.055, -0.02); gun.position.set(0.26, -0.24, -0.5); gun.visible = false; this.camera.add(gun);
+    const gm = mat('flat', { color: 0x6a727c, rough: 0.35, metal: 0.9 }), gk = mat('flat', { color: 0x16181c, rough: 0.6, metal: 0.4 }), gun = (this.gun = new THREE.Group()), gp = (g, m, x, y, z) => { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); gun.add(o); return o; };
+    gp(new THREE.BoxGeometry(0.05, 0.075, 0.3), gm, 0, 0, 0); gp(new THREE.CylinderGeometry(0.016, 0.02, 0.2, 10).rotateX(Math.PI / 2), gk, 0, 0.012, -0.24); gp(new THREE.BoxGeometry(0.04, 0.13, 0.06), gk, 0, -0.09, 0.09).rotation.x = 0.25;
+    gp(new THREE.BoxGeometry(0.056, 0.02, 0.16), gk, 0, 0.046, -0.02); gp(new THREE.BoxGeometry(0.008, 0.012, 0.18), glow('#4df0ff', 2.2), 0.029, 0.01, -0.03); gp(new THREE.BoxGeometry(0.008, 0.012, 0.18), glow('#4df0ff', 2.2), -0.029, 0.01, -0.03);
+    gun.position.set(0.2, -0.17, -0.42); gun.visible = false; this.camera.add(gun);
     this.fireT = 0; this.suit = 60; this.lastHurt = -9; this.time = 0;
   }
   ship(id) { if (!this.ships[id]) { const m = buildShip(id); for (const p of m.plumes) p.visible = false; for (const g of m.glows) g.visible = false; if (m.gear) m.gear.visible = true; this.ships[id] = m; } return this.ships[id]; }
@@ -71,6 +76,7 @@ export class InteriorMode {
     const s = o.at || it.bp.spawn; this.pos.set(s[0], 0, s[1]); this.yaw = s[2] ?? 0; this.pitch = 0;
     if (it.slot && !o.at) this.yaw = Math.atan2(s[0] - it.slot.x, s[1] - it.slot.z);
     if (o.type === 'ship' && o.via === 'airlock') { const ex = it.items.find((i) => i.act === 'exit'); if (ex) { const r = roomAt(it, ex.x, ex.z - 1.6); this.pos.set(ex.x, 0, ex.z - 1.8); this.yaw = 0; if (!r) this.pos.set(s[0], 0, s[1]); } }
+    this.pos.y = floorY(it, this.pos.x, this.pos.z); this.lastRoom = null; this._vis(true);
     this._slot();
     // 反射プローブ (初回のみ)
     this._lights(0, true);
@@ -88,7 +94,7 @@ export class InteriorMode {
   exit() { G.hud.setPrompt(''); G.hud.setCtx([]); G.hud.damage(0); this._sky?.(false); }
   onQuality() { this.cache.forEach((it) => { it.env = null; }); }
   /** 惑星上では空ドームを背景に使う */
-  _sky(on, bodyId) { const sm = G.modes.surface; if (!sm?.skyMesh) return; const m = sm.skyMesh(bodyId); if (!m) return; if (on) { this.scene.add(m); this.skyM = m; } else if (this.skyM) { this.scene.remove(this.skyM); sm.reclaimSky?.(this.skyM); this.skyM = null; } }
+  _sky(on, bodyId) { const sm = G.modes.surface; if (!on) { if (this.skyM) { this.scene.remove(this.skyM); sm.reclaimSky(this.skyM); this.skyM = null; } return; } const m = sm?.skyMesh?.(bodyId); if (m) { this.scene.add(m); this.skyM = m; } }
   /** 格納庫に自機を置く */
   _slot() {
     const it = this.cur; if (this.shipObj) { this.shipObj.parent?.remove(this.shipObj); this.shipObj = null; }
@@ -96,6 +102,8 @@ export class InteriorMode {
     if (!it.slot) return; const m = this.ship(G.p.ship), o = m.obj, r = SHIPS[G.p.ship].radius;
     const minY = new THREE.Box3().setFromObject(m.gear || m.body).min.y - o.position.y; o.position.set(it.slot.x, -minY, it.slot.z); o.rotation.set(0, Math.PI, 0); m.tilt.rotation.set(0, 0, 0);
     it.group.add(o); this.shipObj = o; it.cols.push({ x: it.slot.x, z: it.slot.z, r: Math.min(r * 0.42, 8), ship: 1 });
+    if (!this.shipShadow) { this.shipShadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), aoMat('blob')); this.shipShadow.renderOrder = 2; }
+    this.shipShadow.scale.set(r * 1.5, 1, SHIPS[G.p.ship].len * 1.25); this.shipShadow.position.set(it.slot.x, 0.02, it.slot.z); it.group.add(this.shipShadow);
     it.items.push({ x: it.slot.x, z: it.slot.z, y: 1.5, r: Math.min(r * 0.42, 8) + 4.5, label: `${SHIPS[G.p.ship].name} に乗船する`, act: 'ramp', wide: 1 });
   }
   refreshShip() { if (this.cur?.slot) this._slot(); }
@@ -107,11 +115,14 @@ export class InteriorMode {
     const sp = inp.down('run') ? 7.6 : 4.5, sn = Math.sin(this.yaw), cs = Math.cos(this.yaw);
     const dx = (-sn * ax.y + cs * ax.x) * sp * dt, dz = (-cs * ax.y - sn * ax.x) * sp * dt, p = this.pos;
     if (dx || dz) {
-      if (walkable(it, p.x + dx, p.z + dz)) { p.x += dx; p.z += dz; } else if (walkable(it, p.x + dx, p.z)) p.x += dx; else if (walkable(it, p.x, p.z + dz)) p.z += dz;
+      const fy = floorY(it, p.x, p.z);
+      if (walkable(it, p.x + dx, p.z + dz, fy)) { p.x += dx; p.z += dz; } else if (walkable(it, p.x + dx, p.z, fy)) p.x += dx; else if (walkable(it, p.x, p.z + dz, fy)) p.z += dz;
       const pb = this.bob; this.bob += Math.hypot(dx, dz) * 1.9; if (Math.floor(pb / Math.PI) !== Math.floor(this.bob / Math.PI)) G.audio?.sfx('step');
     }
+    p.y = damp(p.y, floorY(it, p.x, p.z), 14, dt);
     // 扉
-    for (const d of it.doors) { const near = Math.hypot(d.x - p.x, d.z - p.z) < 3.2 || it.drones.some((q) => q.alive && Math.hypot(d.x - q.x, d.z - q.z) < 2.4); if (near !== d.was) { d.was = near; if (Math.hypot(d.x - p.x, d.z - p.z) < 12) G.audio?.sfx('door'); } d.k = damp(d.k, near ? 1 : 0, 9, dt); d.panels[0].position.x = -(d.dw / 4 + d.k * d.dw * 0.49); d.panels[1].position.x = d.dw / 4 + d.k * d.dw * 0.49; }
+    for (const d of it.doors) { if (d.open) continue; const near = Math.hypot(d.x - p.x, d.z - p.z) < 3.2 || it.drones.some((q) => q.alive && Math.hypot(d.x - q.x, d.z - q.z) < 2.4); if (near !== d.was) { d.was = near; if (Math.hypot(d.x - p.x, d.z - p.z) < 12) G.audio?.sfx('door'); } d.k = damp(d.k, near ? 1 : 0, d.mode === 'y' ? 5 : 9, dt); if (d.mode === 'y') d.panels[0].position.y = d.k * d.dh * 0.97; else { d.panels[0].position.x = -(d.dw / 4 + d.k * d.dw * 0.49); d.panels[1].position.x = d.dw / 4 + d.k * d.dw * 0.49; } }
+    this._vis();
     for (const f of it.anim) f(dt, this.time);
     for (const n of it.npcs) { const a = Math.atan2(p.x - n.x, p.z - n.z), d = Math.hypot(p.x - n.x, p.z - n.z); let da = (d < 7 ? a : n.yaw) - n.g.rotation.y; da = Math.atan2(Math.sin(da), Math.cos(da)); n.g.rotation.y += da * Math.min(1, dt * 3); n.g.position.y = Math.sin(this.time * 1.6 + n.ph) * 0.012; }
     if (this.hostile) this._combat(dt);
@@ -127,9 +138,16 @@ export class InteriorMode {
     G.hud.begin();
   }
   idle(dt) { this._far(dt); }
+  /** 見えない部屋は描かない: 現在の部屋 + 開いている扉の先だけを表示 */
+  _vis(all) {
+    const it = this.cur, p = this.pos; if (all) { for (const id in it.roomGroups) it.roomGroups[id].visible = true; return; }
+    const rm = roomAt(it, p.x, p.z) || this.lastRoom; if (!rm) return; this.lastRoom = rm;
+    const vis = new Set([rm.id]), add = (id, depth) => { for (const a of it.adj[id] || []) { const d = a.d; if (vis.has(a.to)) continue; if (d.open || d.k > 0.02 || Math.hypot(d.x - p.x, d.z - p.z) < 9) { vis.add(a.to); if (depth < 2 && (d.open || d.k > 0.5)) add(a.to, depth + 1); } } };
+    add(rm.id, 0); for (const id in it.roomGroups) it.roomGroups[id].visible = vis.has(id);
+  }
   _cam(dt) {
-    const c = this.camera; c.position.set(this.pos.x, 1.68 + Math.sin(this.bob * 2) * 0.03, this.pos.z); c.rotation.set(this.pitch, this.yaw, 0, 'YXZ'); c.updateMatrixWorld();
-    if (this.gun.visible) { this.gun.position.z = damp(this.gun.position.z, -0.5, 14, dt || 0.016); this.gun.position.y = -0.24 + Math.sin(this.bob * 2) * 0.008; }
+    const c = this.camera; c.position.set(this.pos.x, this.pos.y + 1.68 + Math.sin(this.bob * 2) * 0.03, this.pos.z); c.rotation.set(this.pitch, this.yaw, 0, 'YXZ'); c.updateMatrixWorld();
+    if (this.gun.visible) { this.gun.position.z = damp(this.gun.position.z, -0.42, 14, dt || 0.016); this.gun.position.y = -0.17 + Math.sin(this.bob * 2) * 0.006; }
   }
   _far(dt) { if (!this.far) { if (this.skyM) this.skyM.position.copy(this.camera.position); return; } this.farQ.copy(this.frameQ).multiply(this.camera.quaternion); G.backdrop.update(this.camU, this.farQ, this.camera.fov, this.camera.aspect, dt, G.gfx.pxScale); }
   /** 近い論理ライトを実ライトのプールへ割り当てる (シェーダ再コンパイルなし) */
@@ -170,6 +188,7 @@ export class InteriorMode {
       case 'harvest': if (G.p.flags.harvest === G.p.day) return G.hud.msg('今日はもう収穫済み。作物が育つまで待とう。'); if (!addCargo('food', 3)) return G.hud.msg('貨物室に空きがありません', 'warn'); G.p.flags.harvest = G.p.day; G.audio?.sfx('pickup'); return G.hud.msg('新鮮な野菜を収穫した。食料 ×3 を貨物室へ。', 'good');
       case 'scope': return ui.talk('大望遠鏡', `深宇宙の闇に、星系の姿が浮かび上がる。<br>ヴォイド艦隊の残存は <b>${remaining()} 隻</b>。${['地球の雲がゆっくりと渦を巻いている。', 'ゼファーの環が陽光を受けて黄金に輝いている。', 'イグニスの夜側で、溶岩の河が赤く脈打っている。', 'グラキエスの極に、青緑のオーロラが揺れている。'][Math.floor(Math.random() * 4)]}`);
       case 'arcade': return ui.talk('アーケード筐体', ['ハイスコア 999,990 — 「AAA」。どうやっても抜けそうにない。', '画面の中でも宇宙船が戦っている。現実とあまり変わらないな。', '1 クレジット入れてみたが、3 秒で撃墜された。'][Math.floor(Math.random() * 3)]);
+      case 'piano': G.audio?.sfx('reward'); return G.hud.msg(['静かな旋律がラウンジに響いた。', '思いつくままに鍵盤を叩く。悪くない。', '船の振動と不思議に調和する和音だ。'][Math.floor(Math.random() * 3)], 'good');
       case 'pilot': return this.toPilot();
       case 'exit': return this.exitDoor();
       case 'ramp': return ui.talk(SHIPS[G.p.ship].name, `${SHIPS[G.p.ship].cls}「${SHIPS[G.p.ship].name}」。いつでも発進できる。`, [{ label: '船内に入る', fn: () => G.go('interior', { type: 'ship', from: 'station', station: c.id, via: 'airlock' }) }, { label: '発進する', cls: 'gold', fn: () => G.go('space', { undock: c.id }) }, { label: 'やめる' }]);
@@ -239,11 +258,11 @@ export class InteriorMode {
     // 自分の射撃
     this.fireT -= dt; this.tracer.visible = this.tracer.visible && this.fireT > 0.14;
     if (G.input.down('ffire') && this.fireT <= 0) {
-      this.fireT = 0.19; G.audio?.sfx('blaster'); this.gun.position.z = -0.42;
+      this.fireT = 0.19; G.audio?.sfx('blaster'); this.gun.position.z = -0.36;
       const dir = _a.set(0, 0, -1).applyQuaternion(cam.quaternion), o = cam.position; let best = null, bt = 60;
       for (const d of it.drones) { if (!d.alive) continue; const to = _b.copy(d.g.position).sub(o), t = to.dot(dir); if (t < 0.3 || t > bt) continue; const off = Math.sqrt(Math.max(0, to.lengthSq() - t * t)); if (off < 0.5 + t * 0.045 && this.rayClear(o.x, o.z, d.x, d.z)) { best = d; bt = t; } }
       let end; if (best) end = _c.copy(best.g.position); else { let t = 0.6; while (t < 40) { const x = o.x + dir.x * t, z = o.z + dir.z * t, y = o.y + dir.y * t; let ok = y > 0 && y < 16; if (ok) { ok = false; for (const w of it.walk) if (x >= w[0] - 0.4 && x <= w[2] + 0.4 && z >= w[1] - 0.4 && z <= w[3] + 0.4) { ok = true; break; } } if (!ok) break; t += 0.5; } end = _c.copy(o).addScaledVector(dir, t); }
-      const muz = _b.set(0.26, -0.2, -0.75).applyMatrix4(cam.matrixWorld), len = muz.distanceTo(end); this.tracer.position.copy(muz).lerp(end, 0.5); this.tracer.scale.set(1, 1, len); this.tracer.lookAt(end); this.tracer.visible = true;
+      const muz = _b.set(0.2, -0.16, -0.78).applyMatrix4(cam.matrixWorld), len = muz.distanceTo(end); this.tracer.position.copy(muz).lerp(end, 0.5); this.tracer.scale.set(1, 1, len); this.tracer.lookAt(end); this.tracer.visible = true;
       this.parts.burst(end, 10, 4, _col.set('#8fe8ff'), 0.14, 0.35, null, 2);
       if (best) { best.hp -= 15; best.alert = true; if (best.hp <= 0) { best.alive = false; best.g.visible = false; this.parts.burst(best.g.position, 60, 7, _col.set('#ffb060'), 0.35, 0.8, null, 1.5); this.parts.burst(best.g.position, 20, 2, _col.set('#ffffff'), 0.7, 0.3); G.audio?.sfx('boom', 0.5); earn(150); G.hud.msg('警備ドローン撃破 +150 Cr', 'good', 3); } }
     }

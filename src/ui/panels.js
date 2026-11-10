@@ -1,7 +1,7 @@
 // メニュー / 端末 UI (星図・市場・造船所・任務・酒場・カジノ ほか)
 import { G, el, fmtCr, fmtDist, clamp } from '../core/util.js';
 import { BODIES, STATIONS, ENEMIES, SHIPS, COMMODITIES, UPGRADES, BASES, station, body } from '../world/defs.js';
-import { QUALITY } from '../gfx/renderer.js';
+import { QUALITY, RES, DIST } from '../gfx/renderer.js';
 import { stats, save, wipe, newGame, load, price, cargoUsed, addCargo, takeCargo, earn, commodity, missionBoard, accept, event, remaining } from '../game/state.js';
 
 const SFX = (n) => G.audio?.sfx(n);
@@ -47,6 +47,8 @@ export class UI {
     const n = el('button', 'cb ' + (saved ? 'alt' : ''), 'はじめから', menu); n.onclick = () => go(true);
     const s = el('button', 'cb alt', '画質：' + QUALITY[G.gfx.qName].label, menu);
     s.onclick = () => { const k = Object.keys(QUALITY), nx = k[(k.indexOf(G.gfx.qName) + 1) % k.length]; G.setQuality(nx); s.textContent = '画質：' + QUALITY[nx].label; SFX('ui'); };
+    const rs = el('button', 'cb alt', '解像度：' + RES[G.gfx.res], menu);
+    rs.onclick = () => { const k = [540, 720, 1080, 0], nx = k[(k.indexOf(G.gfx.res) + 1) % k.length]; G.setRes(nx); rs.textContent = '解像度：' + RES[nx]; SFX('ui'); };
     el('div', 'hint', '機体を選んで出撃。5 つの宇宙ステーション、着陸できる 5 つの星、乗り込める敵艦 20 隻が待っている。<br>スマホは横向き全画面推奨（ホーム画面に追加すると完全な全画面で遊べます）', t);
   }
 
@@ -54,7 +56,9 @@ export class UI {
   pause() {
     if (!G.p || G.titleOn) return;
     this.open('メニュー', 'PAUSE', (b, api) => {
-      this.row(b, '画質', `現在：${QUALITY[G.gfx.qName].label}（ウルトラは端末の最大解像度で描画。星空・惑星の解像度は再起動後に反映）`, null, Object.keys(QUALITY).map((k) => ({ label: QUALITY[k].label, cls: k === G.gfx.qName ? 'gold' : '', fn: () => { G.setQuality(k); api.refresh(); } })));
+      this.row(b, '解像度', `現在：${RES[G.gfx.res]}（固定。重いときは下げ、きれいにしたいときは上げてください。ディテールは変わりません）`, null, Object.keys(RES).map((k) => ({ label: RES[k], cls: +k === G.gfx.res ? 'gold' : '', fn: () => { G.setRes(+k); api.refresh(); } })).sort((a, b2) => (a.label === '最大') - (b2.label === '最大')));
+      this.row(b, '描画距離', `現在：${DIST[G.distName][0]}（遠くの建物や木々を描く範囲）`, null, Object.keys(DIST).map((k) => ({ label: DIST[k][0], cls: k === G.distName ? 'gold' : '', fn: () => { G.setDist(k); api.refresh(); } })));
+      this.row(b, '画質', `現在：${QUALITY[G.gfx.qName].label}（影・反射・アンチエイリアスの品質。星空・惑星の解像度は再起動後に反映）`, null, Object.keys(QUALITY).map((k) => ({ label: QUALITY[k].label, cls: k === G.gfx.qName ? 'gold' : '', fn: () => { G.setQuality(k); api.refresh(); } })));
       this.row(b, '操縦の上下', G.p.invertY ? 'フライトスティック式（上で機首下げ）' : '標準（上で機首上げ）', null, [{ label: '切り替え', fn: () => { G.p.invertY = !G.p.invertY; save(); api.refresh(); } }]);
       this.row(b, 'サウンド', G.p.sound ? 'ON' : 'OFF', null, [{ label: '切り替え', fn: () => { G.p.sound = !G.p.sound; G.audio?.setOn(G.p.sound); save(); api.refresh(); } }]);
       this.row(b, '全画面表示', '横向き全画面に切り替えます', null, [{ label: '全画面', fn: () => G.fullscreen(true) }]);
@@ -97,6 +101,7 @@ export class UI {
         ...sp.enemies.filter((e) => e.state !== 'gone').map((e) => ({ type: 'enemy', id: e.def.id, name: e.def.name, sub: `敵影${e.state === 'disabled' ? '（航行不能）' : ''}／${body(e.def.body).name}宙域　賞金 ${e.def.bounty.toLocaleString()} Cr`, pos: e.uni.toArray(), col: '#ff5a4a' }))];
       const draw = () => {
         const r = left.getBoundingClientRect(), W = G.portrait ? r.height : r.width, H = G.portrait ? r.width : r.height, s = Math.min(window.devicePixelRatio || 1, 2);
+        if (W < 60 || H < 60) return;
         cv.width = W * s; cv.height = H * s; const x = cv.getContext('2d'); x.scale(s, s);
         const cx = W / 2, cy = H / 2, k = (Math.min(W, H) / 2 - 16) / 7.7e7, P = (p) => [cx + p[0] * k, cy + p[2] * k];
         const gr = x.createRadialGradient(cx, cy, 0, cx, cy, 40); gr.addColorStop(0, '#fff6d0'); gr.addColorStop(0.3, '#ffb040'); gr.addColorStop(1, 'rgba(255,120,0,0)'); x.fillStyle = gr; x.fillRect(cx - 40, cy - 40, 80, 80);
