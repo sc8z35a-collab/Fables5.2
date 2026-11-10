@@ -31,7 +31,7 @@ export class SpaceMode {
     this.enemies = ENEMIES.map((def) => ({ def, kind: 'enemy', uni: V(...def.pos), anchor: V(...def.pos), quat: new THREE.Quaternion(), vel: V(), m: null, state: 'idle', hull: def.hull, maxHull: def.hull, shield: def.shield, maxShield: def.shield,
       fireT: 2, burst: 0, breakT: 0, breakDir: V(), gi: 0, ph: def.idx * 1.7, dis: 90, lastHit: -99, dist: 1e9 }));
     this.missiles = []; this.misPool = [];
-    for (let i = 0; i < 8; i++) { const g = new THREE.Group(), b = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 2.4, 8).rotateX(Math.PI / 2), mat('hull', { color: 0xdddddd, metal: 0.3, rough: 0.6 })); g.add(b, Object.assign(makeGlowSprite('#ffb060', 5, 4), { position: V(0, 0, 1.6) })); g.visible = false; s.add(g); this.misPool.push(g); }
+    for (let i = 0; i < 8; i++) { const g = new THREE.Group(), b = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 2.4, 8).rotateX(Math.PI / 2), mat('hull', { color: 0xdddddd, metal: 0.3, rough: 0.6 })); const gs = makeGlowSprite('#ffb060', 5, 4); gs.position.set(0, 0, 1.6); g.add(b, gs); g.visible = false; s.add(g); this.misPool.push(g); }
     this.pl = { m: null, id: null, vel: V(), av: V(), thr: 0.5, sc: { on: false, speed: 0, charge: 0 }, auto: null, docked: null, gi: 0, fireT: 0, lastHit: -99, view: 0, camQ: new THREE.Quaternion(), target: null, misT: 0, shake: 0 };
     this.nav = null; this.time = 0; this.title = false; this.heat = 0; this.warp = 0; this.said = {};
     this._asteroids();
@@ -77,7 +77,7 @@ export class SpaceMode {
 
   enter(o = {}) {
     const p = this.pl; this.title = !!o.title;
-    for (const e of this.enemies) if (G.p.done[e.def.id] && e.state !== 'gone') { e.state = 'gone'; if (e.m) e.m.obj.visible = false; }
+    for (const e of this.enemies) if (G.p.done[e.def.id] && e.state !== 'gone' && !e.fate) { e.state = 'gone'; if (e.m) e.m.obj.visible = false; }
     if (!o.resume) {
       this.setShip(G.p.ship); this.refit();
       this.bolts.clear(); this.parts.clear(); p.auto = null; p.docked = null; p.dead = false; p.target = null; p.sc.on = false; p.sc.speed = 0;
@@ -98,7 +98,7 @@ export class SpaceMode {
       }
     }
     this.camera.aspect = G.W / G.H; this.camera.updateProjectionMatrix();
-    G.hud.setMode(this.title ? 'title' : 'space'); G.hud.show(!this.title);
+    G.hud.setMode(this.title ? 'title' : 'space'); G.hud.show(!this.title); G.gfx.look(0.62, 1.0, 1);
     this._buttons(); this._cam(1, true);
     G.audio?.music('space');
   }
@@ -349,6 +349,17 @@ export class SpaceMode {
     earn(e.def.bounty); const sal = addCargo('salvage', 1 + e.def.tier);
     G.hud.msg(`${e.def.name} 撃沈　賞金 ${e.def.bounty.toLocaleString()} Cr${sal ? `／回収部品 ×${sal}` : ''}　残存 ${remaining()} 隻`, 'good', 7);
     event('kill'); save(); G.checkVictory?.();
+  }
+  /** 乗り込み後: 拿捕なら曳航 (ワープアウト)、略奪なら自沈 */
+  afterBoard(e) {
+    const p = this.pl; if (p.docked === e) this.undock();
+    setTimeout(() => {
+      const pos = e.m.obj.position;
+      if (e.fate === 'capture') { this.shocks.spawn(pos, '#8cf', e.m.radius * 6, 0.9, 1); this.parts.burst(pos, 90, 70, C('#9fe8ff'), 2.2, 1.1); G.audio?.sfx('warp'); G.hud.msg(`${e.def.name} は防衛軍の回収艇に曳航されていった。残存 ${remaining()} 隻`, 'good', 7); }
+      else { this.explode(pos, e.m.radius, e.vel); G.hud.msg(`${e.def.name} は自沈した。残存 ${remaining()} 隻`, 'good', 7); }
+      e.state = 'gone'; e.fate = null; e.m.obj.visible = false; if (p.target === e) p.target = null; if (this.nav?.ref === e) this.nav = null; if (p.docked === e) p.docked = null;
+      G.checkVictory?.();
+    }, 2800);
   }
   _combat(dt) {
     const p = this.pl, ppos = p.pos, pr = p.st.radius * 0.5;

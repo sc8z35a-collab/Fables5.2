@@ -65,6 +65,14 @@ export const PRICES = {
   bastion: { food: 1.2, water: 1.2, ore: 0.9, alloy: 1.4, elec: 1.2, med: 1.5, cell: 1.2, lux: 1.0, gas: 0.6, salvage: 1.2, data: 1.2 },
   rogue: { food: 1.5, water: 1.6, ore: 0.7, alloy: 1.0, elec: 1.1, med: 1.6, cell: 1.1, lux: 1.6, magma: 0.6, contra: 1.0, salvage: 1.6, spice: 1.6, ice: 1.5 },
 };
+// 惑星拠点の現地価格 (特産品が安い)
+Object.assign(PRICES, {
+  terra: { food: 0.7, water: 0.75, elec: 0.8, med: 0.85, lux: 0.7, cell: 1.0, ore: 1.35, alloy: 1.25, magma: 1.6, ice: 1.5, spice: 1.5, gas: 1.35 },
+  ignis: { magma: 0.45, ore: 0.55, alloy: 0.8, food: 1.6, water: 1.8, med: 1.5, cell: 1.2 },
+  sahar: { spice: 0.45, food: 1.5, water: 1.9, ore: 0.9, lux: 1.4, elec: 1.3, med: 1.3 },
+  zephyr: { gas: 0.45, cell: 0.7, food: 1.4, lux: 1.5, elec: 1.2, water: 1.2 },
+  glacies: { ice: 0.45, water: 0.4, food: 1.6, med: 1.2, elec: 1.4, cell: 1.4, lux: 1.3 },
+});
 export const UPGRADES = [
   { id: 'laser', name: 'レーザー出力', desc: '主砲の威力 +18%/Lv', base: 900 },
   { id: 'shield', name: 'シールド発生器', desc: 'シールド容量 +20%/Lv', base: 800 },

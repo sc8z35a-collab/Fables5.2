@@ -82,6 +82,7 @@ export class Gfx {
     this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.62, 0.72, 1.0);
     this.final = new ShaderPass(FINAL); this.final.uniforms = FINAL.uniforms; this.final.material.uniforms = FINAL.uniforms;
     c.addPass(this.pFar); c.addPass(this.pNear); c.addPass(this.bloom); c.addPass(this.final);
+    if (this._look) this.look(...this._look);
   }
   resize(W, H) {
     this.W = W; this.H = H;
@@ -103,6 +104,8 @@ export class Gfx {
     d = clamp(d, 0.55, 1);
     if (Math.abs(d - this.dyn) > 0.01) { this.dyn = d; this.resize(this.W, this.H); }
   }
+  /** モードごとの画作り: ブルーム強度・しきい値・露出 */
+  look(strength = 0.62, threshold = 1.0, exposure = 1) { this.bloom.strength = strength; this.bloom.threshold = threshold; this.fx.uExposure.value = exposure; this._look = [strength, threshold, exposure]; }
   envFromScene(scene, blur = 0.02) { return this.pmrem.fromScene(scene, blur, 0.1, 1000).texture; }
   render(dt, scene, camera, far) {
     this.time += dt; this.fx.uTime.value = this.time % 1000;
@@ -129,7 +132,6 @@ export class Mirror {
     if (this.rt && this.rt.width === w && this.rt.height === h) return;
     this.rt?.dispose();
     this.rt = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter });
-    this.u.tMirror.value = this.rt.texture;
   }
   render(scene, camera) {
     this.enabled = this.gfx.q.mirror > 0;
@@ -148,10 +150,10 @@ export class Mirror {
     this.matrix.set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1).multiply(v.projectionMatrix).multiply(v.matrixWorldInverse);
     const r = this.gfx.renderer, prev = r.getRenderTarget(), sh = r.shadowMap.autoUpdate;
     for (const o of this.hide) o.visible = false;
-    this.u.uMirrorOn.value = 0; r.shadowMap.autoUpdate = false;
+    this.u.uMirrorOn.value = 0; this.u.tMirror.value = null; r.shadowMap.autoUpdate = false; // 自己参照 (フィードバックループ) を避ける
     r.setRenderTarget(this.rt); r.clear(); r.render(scene, v);
     r.setRenderTarget(prev); r.shadowMap.autoUpdate = sh;
-    this.u.uMirrorOn.value = 1;
+    this.u.uMirrorOn.value = 1; this.u.tMirror.value = this.rt.texture;
     for (const o of this.hide) o.visible = true;
   }
   /** MeshStandardMaterial に反射サンプリングを注入 */

@@ -77,6 +77,12 @@ export class Builder {
   }
 }
 
+/** 基準行列を掛けてから親 Builder に追加する (小道具の配置用) */
+export class Placer extends Builder {
+  constructor(b, base) { super(); this.b = b; this.base = base; }
+  add(mat, geo, matrix, uvs) { this.b.add(mat, geo, matrix ? new THREE.Matrix4().multiplyMatrices(this.base, matrix) : this.base.clone(), uvs); return this; }
+}
+
 /**
  * 断面ロフト。secs: [{z, w, t, b, y, e}]  w=半幅 t=上半高 b=下半高 e=スーパー楕円指数
  * 前方 = -Z。滑らかな機体外皮を作る。
