@@ -46,7 +46,7 @@ if(sFa>.02&&vTw.y>1.){vec2 fp=mat2(.955,-.296,.296,.955)*vTw.xz;vec2 fc=floor(fp
   crop=mix(crop,vec3(.1,.36,.08),step(.84,fh)*smoothstep(.47,.45,length(ff-.5)));
   float ed=smoothstep(0.,.035,min(min(ff.x,1.-ff.x),min(ff.y,1.-ff.y)));
   diffuseColor.rgb=mix(diffuseColor.rgb,mix(vec3(.2,.16,.1),crop*rows,ed)*(.75+.5*tn2),sFa*smoothstep(1.,4.,vTw.y)*(1.-smoothstep(.2,.4,slope)));}
-if(sSn>.02){float line=smoothstep(170.,330.,vTw.y+tn1*160.);vec3 sc=mix(vec3(.82,.87,.95),vec3(.2,.19,.2)*(.7+.6*tn2),smoothstep(.34,.62,slope+tn2*.12));
+if(sSn>.02){float line=smoothstep(40.,150.,vTw.y+tn1*90.);vec3 sc=mix(vec3(.82,.87,.95),vec3(.2,.19,.2)*(.7+.6*tn2),smoothstep(.34,.62,slope+tn2*.12));
   diffuseColor.rgb=mix(diffuseColor.rgb,sc,sSn*line);
   float pf=smoothstep(uCan*.72,uCan*1.02,td)*sSn*step(20.,vTw.y)*smoothstep(560.,470.,vTw.y)*smoothstep(.6,.4,slope);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.035,.075,.055),pf*smoothstep(.5,.66,vn2(vTw.xz*.045))*.7);
   diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.46,.64,.78)*(.8+.3*tn2),smoothstep(250.,205.,length(vTw.xz-vec2(-360.,-5450.))));}
@@ -184,7 +184,7 @@ function cityBlocked(x, z) { if (mCity(x, z) < 0.5 || Math.hypot(x, z) < 214) re
 
 export function terra() {
   const r = rng(2077), grp = new THREE.Group(), B = new Builder(), anim = [], cols = [], rects = [], obbs = [], decks = [], items = [], beacons = [], tiles = [];
-  const sunDir = V3(-0.78, 0.2, 0.6).normalize(), fog = [COL('#2a2440'), 0.00021], fogDen = { value: fog[1] }, canU = { value: 1250 }, SKY = { zen: '#0a1238', hor: '#c8603a', sunCol: '#ffb070' };
+  const sunDir = V3(-0.78, 0.27, 0.6).normalize(), fog = [COL('#4a3046'), 0.00016], fogDen = { value: fog[1] }, canU = { value: 1250 }, SKY = { zen: '#0a1238', hor: '#c8603a', sunCol: '#ffb070' };
   const sky = makeSky({ sun: sunDir, zen: SKY.zen, hor: SKY.hor, ground: '#141018', sunCol: '#ff9a50', cloudCol: '#e08a6a', cloud: 0.5, stars: 0.5, haze: 0.9, sunSize: 0.9993 });
   const tm = gridTerrain(H, (x, z, h, sl, c) => {
     const n = fbm(x * 0.004, z * 0.004, 3, 5), ju = mJungle(x, z), fa = mFarm(x, z), sn = mSnow(x, z);
@@ -197,7 +197,7 @@ export function terra() {
   }, { size: EDGE * 2, seg: 340, rough: 0.95, frag: TERRA_FRAG, head: TERRA_HEAD, uniforms: { uCan: canU }, key: 'terra', uv: 0.05 });
   grp.add(tm);
   const hAt = tm.heightAt, heightAt = (x, z) => { const h = hAt(x, z); return mCity(x, z) >= 0.5 && !cityBlocked(x, z) ? Math.max(h, 0.02) : h; };
-  grp.add(ocean((x, z) => (Math.abs(x) >= EDGE || Math.abs(z) >= EDGE ? -42 : hAt(x, z)), { sun: sunDir, sunCol: SKY.sunCol, zen: SKY.zen, hor: SKY.hor, fog, fogDen, size: 46000, seg: 170, level: SEA }));
+  grp.add(ocean((x, z) => (Math.abs(x) >= EDGE || Math.abs(z) >= EDGE ? -42 : hAt(x, z)), { sun: sunDir, sunCol: SKY.sunCol, zen: SKY.zen, hor: SKY.hor, fog, fogDen, size: 46000, seg: 170, level: SEA, shallow: '#0f3a44', deep: '#020f1e' }));
   // ── 都市の地面 (濡れた路面・平面反射) ──
   const road = mat('concrete', { color: 0x3a3c44, rough: 0.6, metal: 0.25, uvs: 0.08, floor: 1 }); roadPatch(road); road.polygonOffset = true; road.polygonOffsetFactor = 0; road.polygonOffsetUnits = -6; // 遠景でも地形とちらつかない
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(6400, 6400).rotateX(-HP), road); ground.geometry.attributes.uv.array.forEach((v, i, a) => { a[i] = v * 790; }); ground.position.set(0, 0.02, -500); ground.receiveShadow = true; ground.frustumCulled = false; grp.add(ground);
@@ -273,6 +273,28 @@ export function terra() {
     if (l.air) { x = l.ax ? s * l.dir : l.k * 110 + l.lat; z = l.ax ? l.k * 110 + l.lat - 500 : s * l.dir - 500; hd = l.ax ? (l.dir > 0 ? -HP : HP) : l.dir > 0 ? Math.PI : 0; }
     else { const qa = l.k * BS - l.lat, qs = s * l.dir, p = l.ax ? invQ(qs, qa, _o) : invQ(qa, qs - 500, _o); x = p[0]; z = p[1]; const p2 = l.ax ? invQ(qs + 3 * l.dir, qa, _o2) : invQ(qa, qs - 500 + 3 * l.dir, _o2); hd = Math.atan2(-(p2[0] - x), -(p2[1] - z)); }
     const hide = !l.air && (Math.hypot(x, z) < 214 || mCity(x, z) < 0.6 || cityBlocked(x, z)); o3.position.set(x, hide ? -60 : l.alt, z); o3.rotation.set(0, hd, 0); o3.updateMatrix(); cars.setMatrixAt(i, o3.matrix); } cars.instanceMatrix.needsUpdate = true; });
+  // ── モノレール: 大通りの中央を走る高架。駅と行き交う列車 ──
+  { const dir = [Math.cos(0.55), Math.sin(0.55)], MT = mat('concrete', { color: 0x70747e, rough: 0.8, metal: 0.2 }), at = (sv, lat = 0) => [300 + dir[0] * sv - dir[1] * lat, -300 + dir[1] * sv + dir[0] * lat];
+    let s0 = -3400, s1 = 3400; while (s0 < 0 && mCity(...at(s0)) < 0.62) s0 += 20; while (s1 > 0 && mCity(...at(s1)) < 0.62) s1 -= 20;
+    const L = s1 - s0, mid = (s0 + s1) / 2, TY = 14;
+    for (const lat of [-3.2, 3.2]) { const [bx, bz] = at(mid, lat); B.box(MT, L, 1.3, 1.0, bx, TY, bz, -0.55); }
+    for (let sv = s0 + 12; sv < s1; sv += 46) { const [px, pz] = at(sv); if (Math.abs(px - riverX(pz)) < 50) continue; B.box(MT, 1.7, TY - 0.6, 1.7, px, (TY - 0.6) / 2, pz, -0.55); B.box(MT, 1.5, 1.1, 8.6, px, TY - 1, pz, -0.55); cols.push({ x: px, z: pz, r: 1.3 }); }
+    for (const sv of [-1500, -300, 900, 2000]) { if (sv < s0 + 80 || sv > s1 - 80) continue; const [px, pz] = at(sv); B.box(W, 64, 0.5, 15, px, TY + 0.9, pz, -0.55); B.box(D, 66, 0.5, 16, px, TY + 5.6, pz, -0.55); B.box(glow('#4df0ff', 2.4), 64, 0.16, 0.3, px, TY + 5.25, pz, -0.55);
+      for (const lat of [-7.3, 7.3]) { const [gx, gz] = at(sv, lat); B.box(GLS, 64, 3.6, 0.2, gx, TY + 3, gz, -0.55); } for (const d2 of [-28, 0, 28]) { const [cx2, cz2] = at(sv + d2); B.box(D, 0.5, 4.6, 0.5, cx2, TY + 3.3, cz2, -0.55); }
+      const [ex, ez] = at(sv, 11); B.box(D, 5, TY + 1, 4, ex, (TY + 1) / 2, ez, -0.55); cols.push({ x: ex, z: ez, r: 3.4 }); const sg = signMesh('モノレール', '#4df0ff', 2.2, { double: true, intensity: 2.2 }); sg.position.set(px, TY + 7.4, pz); sg.rotation.y = -0.55; grp.add(sg); }
+    const carG = colorGeo([[new THREE.BoxGeometry(2.7, 2.7, 13).translate(0, 1.9, 0), 0xe6e8ec], [new THREE.BoxGeometry(2.74, 0.9, 12.2).translate(0, 2.4, 0), new THREE.Color(2.6, 2.2, 1.5)], [new THREE.BoxGeometry(2.76, 0.3, 13.02).translate(0, 0.9, 0), new THREE.Color(0.1, 1.6, 2.2)], [new THREE.BoxGeometry(1.2, 0.9, 1.6).translate(0, 0.25, 0), 0x2a2e36]]);
+    const NT = 12, tr = new THREE.InstancedMesh(carG, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.4, metalness: 0.5 }), NT), o4 = new THREE.Object3D(), ry = Math.atan2(dir[0], dir[1]); tr.frustumCulled = false; grp.add(tr);
+    anim.push((dt, t) => { for (let i = 0; i < NT; i++) { const tn = Math.floor(i / 4), sd = tn % 2 ? -1 : 1, sv = s0 + ((((t * 24 * sd + tn * L * 0.37 + (i % 4) * 13.6 * sd) % L) + L) % L), q = at(sv, sd * 3.2); o4.position.set(q[0], TY + 0.6, q[1]); o4.rotation.set(0, ry, 0); o4.updateMatrix(); tr.setMatrixAt(i, o4.matrix); } tr.instanceMatrix.needsUpdate = true; }); }
+  // ── 歩行者: カメラの近くの歩道を行き交う (横断歩道を渡り、川と宇宙港の構内には入らない) ──
+  { const pedG = (c1, c2, c3) => colorGeo([[new THREE.BoxGeometry(0.44, 0.62, 0.25).translate(0, 1.16, 0), c1], [new THREE.BoxGeometry(0.17, 0.84, 0.19).translate(-0.11, 0.42, 0), c2], [new THREE.BoxGeometry(0.17, 0.84, 0.19).translate(0.11, 0.42, 0), c2], [new THREE.BoxGeometry(0.12, 0.6, 0.15).translate(-0.3, 1.15, 0), c1], [new THREE.BoxGeometry(0.12, 0.6, 0.15).translate(0.3, 1.15, 0), c1], [new THREE.SphereGeometry(0.125, 8, 6).translate(0, 1.63, 0), c3], [new THREE.BoxGeometry(0.27, 0.11, 0.28).translate(0, 1.73, -0.01), 0x16120e]]);
+    const PM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0 }); PM.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance+=diffuseColor.rgb*vec3(.5,.38,.26);'); }; PM.customProgramCacheKey = () => 'ped';
+    const sets = [[0xb8452e, 0x22242a, 0xd8a888], [0x2e5a8a, 0x3a3a40, 0x8a5a3c], [0xd8d4c8, 0x4a3a2a, 0xe0b898], [0x3a3a44, 0x18181c, 0xc89878], [0xe8d030, 0x22242a, 0xd8a888], [0x7a3a8a, 0x2a2a30, 0x6a4830]].map(([a, b2, c]) => { const im = new THREE.InstancedMesh(pedG(a, b2, c), PM, 40); im.frustumCulled = false; im.castShadow = true; grp.add(im); return im; });
+    const NP = sets.length * 40, pl = [], qc = [0, 0], o5 = new THREE.Object3D(), Lp = 300; for (let i = 0; i < NP; i++) pl.push({ ax: i % 2, lane: (Math.floor(i / 2) % 5) - 2, dir: r() < 0.5 ? 1 : -1, sd: r() < 0.5 ? 1 : -1, off: r() * Lp, sp: rr(r, 1.1, 1.9), inn: rr(r, 1.3, 4.1), ph: r() * 6, sc: rr(r, 0.92, 1.08) });
+    anim.push((dt, t, cam) => { const show = !!cam && cam.y < 330 && mCity(cam.x, cam.z) > 0.3; for (const im of sets) im.visible = show; if (!show) return; Q(cam.x, cam.z, qc); const ck = [Math.round(qc[0] / BS), Math.round(qc[1] / BS)];
+      for (let i = 0; i < NP; i++) { const l = pl[i], k = ck[l.ax ? 1 : 0] + l.lane, cs = qc[l.ax ? 0 : 1], sv = ((((t * l.sp * l.dir + l.off - cs) % Lp) + Lp) % Lp) - Lp / 2 + cs, lat = k * BS + l.sd * (hwid(k) + l.inn);
+        const q = l.ax ? invQ(sv, lat, _o) : invQ(lat, sv, _o), x = q[0], z = q[1], q2 = l.ax ? invQ(sv + l.dir, lat, _o2) : invQ(lat, sv + l.dir, _o2), hide = Math.hypot(x, z) < 216 || mCity(x, z) < 0.6 || cityBlocked(x, z) || blvD(x, z) < 15;
+        o5.position.set(x, hide ? -40 : 0.03 + Math.abs(Math.sin(t * l.sp * 3.4 + l.ph)) * 0.045, z); o5.rotation.set(0, Math.atan2(q2[0] - x, q2[1] - z), Math.sin(t * l.sp * 3.4 + l.ph) * 0.03); o5.scale.setScalar(l.sc); o5.updateMatrix(); sets[i % sets.length].setMatrixAt(Math.floor(i / sets.length), o5.matrix); }
+      for (const im of sets) im.instanceMatrix.needsUpdate = true; }); }
   // ── 宇宙港 ──
   pad(B, 1.0, 36, '#4df0ff');
   B.cyl(D, 5, 7, 70, -78, 35, 46, 'y', 12); B.cyl(W, 13, 9, 10, -78, 75, 46, 'y', 12); B.cyl(GLS, 13.4, 12, 4, -78, 77.5, 46, 'y', 12, true); B.cyl(glow('#4df0ff', 3), 13.5, 13.5, 0.5, -78, 80.4, 46, 'y', 12, true); B.cyl(D, 14, 13, 1.2, -78, 81, 46, 'y', 12); B.cyl(D, 0.5, 0.5, 30, -78, 96, 46, 'y', 6);
@@ -355,5 +377,5 @@ export function terra() {
   const RAIN = V3(6, -46, 2), SNOWV = V3(4, -7, 2), zone = (x, z) => { const sn = mSnow(x, z), ju = mJungle(x, z), ci = mCity(x, z); return sn > 0.4 ? [SNOWV, 0.75 * sn, '#ffffff'] : ju > 0.4 ? [RAIN, 0.7 * ju, '#9fb8c8'] : [RAIN, 0.45 * ci, '#9fb8ff']; };
   const region = (x, z) => (mSnow(x, z) > 0.5 ? '雪国' : mJungle(x, z) > 0.5 ? 'ジャングル' : mFarm(x, z) > 0.5 ? '農園地帯' : mCity(x, z) > 0.5 ? '巨大都市' : mSea(x, z) > 0.5 || Math.max(Math.abs(x), Math.abs(z)) > EDGE - 1300 ? '大洋' : '郊外');
   const pois = [{ x: 880, y: 40, z: coast(880) + 80, name: '港' }, ...(fh[0] ? [{ x: fh[0][0], y: fh[0][1] + 30, z: fh[0][2], name: '農園地帯' }] : []), { x: VILLAGE[0], y: vy + 40, z: VILLAGE[1], name: '雪見の里' }, { x: TEMPLE[0], y: hAt(TEMPLE[0], TEMPLE[1]) + 70, z: TEMPLE[1], name: '古代遺跡' }];
-  return { id: 'terra', group: grp, sky, H, heightAt, sunDir, sunCol: '#ffb078', sunInt: 2.5, hemi: ['#6a6aa8', '#2a2030', 1.15], fog, fogDen, cols, rects, obbs, decks, items, anim, beacons, nodes, tiles, veg: [vf, uf], zone, region, pois, blocked: cityBlocked, padY: 1.1, mirror: [road, 1.6], mirrorOn: (x, y, z) => y < 700 && mCity(x, z) > 0.2, rain: [RAIN, 0.45, '#9fb8ff'], walkR: 1e9, bounds: EDGE - 800, far: 34000, safeAlt: 780, door: [50, 30, -HP], foot: [0, 42], look: [0.42, 1.15, 0.95], music: 'neon', water: SEA, start: [320, 1500, 4300] };
+  return { id: 'terra', group: grp, sky, H, heightAt, sunDir, sunCol: '#ffb078', sunInt: 3.0, hemi: ['#6a6aa8', '#2a2030', 1.25], expo: (x, z) => lerp(1.32, 0.95, mCity(x, z)), fog, fogDen, cols, rects, obbs, decks, items, anim, beacons, nodes, tiles, veg: [vf, uf], zone, region, pois, blocked: cityBlocked, padY: 1.1, mirror: [road, 1.6], mirrorOn: (x, y, z) => y < 700 && mCity(x, z) > 0.2, rain: [RAIN, 0.45, '#9fb8ff'], walkR: 1e9, bounds: EDGE - 800, far: 34000, safeAlt: 780, door: [50, 30, -HP], foot: [0, 42], look: [0.42, 1.15, 0.95], music: 'neon', water: SEA, start: [320, 1500, 4300] };
 }

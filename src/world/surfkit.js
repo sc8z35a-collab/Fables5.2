@@ -109,37 +109,59 @@ const beacon = (list, x, y, z, c, s = 6, blink = 0) => list.push({ p: V3(x, y, z
 
 // ───────────────────────── 森林 (板ポリゴンの木をタイル単位でインスタンス描画) ─────────────────────────
 const TREES = {};
-/** 木のアトラス: 左半分=側面, 右半分=真上から見た樹冠 */
+/** 葉のシェーディング: 両面で法線を反転させず (裏面が真っ黒になるのを防ぐ)、根元ほど暗くする */
+const leafFrag = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>', 'float faceDirection=1.;vec3 normal=normalize(vNormal);vec3 nonPerturbedNormal=normal;').replace('#include <map_fragment>', '#include <map_fragment>\ndiffuseColor.rgb*=.6+.6*vMapUv.y;'); };
+/** 木のアトラス (1024×512): 左半分=側面, 右半分=真上から見た樹冠。葉むら・枝・羽状の葉を描き込む */
 function treeTex(kind) {
   if (TREES[kind]) return TREES[kind];
-  const c = cv(512, 256), x = c.getContext('2d'), r = rng(kind.length * 97 + kind.charCodeAt(0)), snow = kind === 'pine';
-  const leaf = (px, py, rad, g0, g1) => { const gr = x.createRadialGradient(px - rad * 0.3, py - rad * 0.3, 0, px, py, rad); gr.addColorStop(0, g1); gr.addColorStop(1, g0); x.fillStyle = gr; x.beginPath(); x.arc(px, py, rad, 0, 7); x.fill(); };
+  const c = cv(1024, 512), x = c.getContext('2d'), r = rng(kind.length * 97 + kind.charCodeAt(0));
+  const PAL = { oak: [['#173a1a', '#1f4a20'], ['#2f6b2a', '#3f8a34', '#58a13f'], ['#7ab653', '#96c866']], jungle: [['#0b2812', '#12381a'], ['#1c5a24', '#2a7a2e', '#3c9436'], ['#5cab46', '#7cc25a']], bush: [['#16361a', '#1e4a1e'], ['#2c6428', '#3f8032', '#55983c'], ['#74ae4e', '#8cc060']] }[kind];
+  const clump = (px, py, rad, sq = 0.78) => { // 葉むら: 暗い芯 → 中間色の葉 → 上側に光の当たった葉
+    x.fillStyle = PAL[0][(r() * 2) | 0]; x.beginPath(); x.ellipse(px, py, rad, rad * sq, 0, 0, 7); x.fill();
+    for (let i = 0; i < 46; i++) { const a = r() * 6.28, d = Math.sqrt(r()) * rad * 1.05, sz = rad * (0.1 + r() * 0.13); x.fillStyle = PAL[1][(r() * 3) | 0]; x.beginPath(); x.ellipse(px + Math.cos(a) * d, py + Math.sin(a) * d * sq, sz, sz * 0.62, r() * 3.1, 0, 7); x.fill(); }
+    for (let i = 0; i < 22; i++) { const a = -Math.PI * r(), d = Math.sqrt(r()) * rad, sz = rad * (0.07 + r() * 0.09); x.fillStyle = PAL[2][(r() * 2) | 0]; x.beginPath(); x.ellipse(px + Math.cos(a) * d - rad * 0.12, py + Math.sin(a) * d * sq - rad * 0.08, sz, sz * 0.6, r() * 3.1, 0, 7); x.fill(); }
+  };
+  const limb = (x0, y0, x1, y1, w0, w1, col) => { const n = 14; x.strokeStyle = col; for (let i = 0; i < n; i++) { const t0 = i / n, t1 = (i + 1) / n; x.lineWidth = w0 + (w1 - w0) * t0; x.beginPath(); x.moveTo(x0 + (x1 - x0) * t0 + Math.sin(t0 * 3) * 4, y0 + (y1 - y0) * t0); x.lineTo(x0 + (x1 - x0) * t1 + Math.sin(t1 * 3) * 4, y0 + (y1 - y0) * t1); x.stroke(); } };
+  const frond = (x0, y0, a, len, bend, cols, w = 5, lf = 26) => { // 羽状の葉 (ヤシ・シダ)
+    const n = 22; let px = x0, py = y0;
+    for (let i = 1; i <= n; i++) { const t = i / n, ang = a + bend * t * t, nx = px + Math.cos(ang) * len / n, ny = py + Math.sin(ang) * len / n, l = lf * Math.sin(Math.min(1, t * 1.25) * Math.PI) + 3;
+      x.strokeStyle = cols[i % cols.length]; x.lineWidth = w * (1 - t * 0.6); for (const sd of [-1, 1]) { x.beginPath(); x.moveTo(nx, ny); x.lineTo(nx + Math.cos(ang + sd * 1.15) * l, ny + Math.sin(ang + sd * 1.15) * l); x.stroke(); }
+      x.strokeStyle = cols[0]; x.lineWidth = w * 0.8 * (1 - t * 0.7); x.beginPath(); x.moveTo(px, py); x.lineTo(nx, ny); x.stroke(); px = nx; py = ny; }
+  };
+  const half = (k, fn) => { x.save(); x.beginPath(); x.rect(k * 512 + 2, 2, 508, 508); x.clip(); fn(); x.restore(); };
+  x.lineCap = 'round';
   if (kind === 'pine') {
-    x.fillStyle = '#3a2a1c'; x.fillRect(122, 150, 12, 106);
-    for (let i = 0; i < 7; i++) { const y = 22 + i * 30, w = 22 + i * 15; x.fillStyle = `rgb(${18 + i * 2},${50 + i * 5},${34 + i * 3})`; x.beginPath(); x.moveTo(128, y - 22); x.lineTo(128 + w, y + 30); x.lineTo(128 - w, y + 30); x.fill(); if (snow) { x.fillStyle = 'rgba(235,242,250,.92)'; x.beginPath(); x.moveTo(128, y - 22); x.lineTo(128 + w * 0.62, y + 12); x.lineTo(128 + w * 0.2, y + 4); x.lineTo(128 - w * 0.3, y + 14); x.lineTo(128 - w * 0.62, y + 12); x.fill(); } }
-    for (let i = 0; i < 9; i++) { const a = i * 0.7; x.fillStyle = i % 2 ? '#16402a' : '#e8f0f8'; x.beginPath(); x.moveTo(384, 128); x.lineTo(384 + Math.cos(a - 0.3) * 118, 128 + Math.sin(a - 0.3) * 118); x.lineTo(384 + Math.cos(a + 0.3) * 118, 128 + Math.sin(a + 0.3) * 118); x.fill(); } leaf(384, 128, 46, '#1c4a30', '#f2f6fa');
+    half(0, () => { limb(256, 512, 256, 60, 20, 4, '#3a2a1c');
+      for (let i = 0; i < 9; i++) { const y = 46 + i * 46, w = 34 + i * 23; // 段ごとの枝: 針葉の束 + 上面に積もった雪
+        for (let k = 0; k < 70; k++) { const u = r() * 2 - 1, bx = 256 + u * w, by = y + Math.abs(u) * 34 + r() * 22 - 4; x.strokeStyle = ['#12301e', '#1a4428', '#225434'][(r() * 3) | 0]; x.lineWidth = 5 + r() * 4; x.beginPath(); x.moveTo(bx, by); x.lineTo(bx + u * 12, by + 14 + r() * 12); x.stroke(); }
+        for (let k = 0; k < 34; k++) { const u = (r() * 2 - 1) * 0.86, bx = 256 + u * w, by = y + Math.abs(u) * 34 - 6 + r() * 6; x.strokeStyle = r() < 0.3 ? '#c8d6e6' : '#eef3f9'; x.lineWidth = 6 + r() * 5; x.beginPath(); x.moveTo(bx - 7, by); x.lineTo(bx + 7, by + Math.sign(u) * 2); x.stroke(); } } });
+    half(1, () => { for (let i = 0; i < 40; i++) { const a = i * 0.157, l = 150 + r() * 90; x.strokeStyle = i % 3 ? '#1a4428' : '#e8f0f8'; x.lineWidth = 16 + r() * 8; x.beginPath(); x.moveTo(768, 256); x.lineTo(768 + Math.cos(a) * l, 256 + Math.sin(a) * l); x.stroke(); } x.fillStyle = '#f2f6fa'; x.beginPath(); x.arc(768, 256, 70, 0, 7); x.fill(); });
   } else if (kind === 'palm') {
-    x.strokeStyle = '#6a5238'; x.lineWidth = 11; x.beginPath(); x.moveTo(120, 256); x.quadraticCurveTo(108, 150, 132, 70); x.stroke();
-    for (let i = 0; i < 9; i++) { const a = -Math.PI / 2 + (i - 4) * 0.42, l = 96 + r() * 20; x.strokeStyle = i % 2 ? '#2f7a2a' : '#4a9a34'; x.lineWidth = 15; x.lineCap = 'round'; x.beginPath(); x.moveTo(132, 70); x.quadraticCurveTo(132 + Math.cos(a) * l * 0.7, 70 + Math.sin(a) * l * 0.7 - 26, 132 + Math.cos(a) * l, 70 + Math.sin(a) * l * 0.5 + 28); x.stroke(); }
-    for (let i = 0; i < 10; i++) { const a = i * 0.628; x.strokeStyle = i % 2 ? '#2f7a2a' : '#4a9a34'; x.lineWidth = 20; x.beginPath(); x.moveTo(384, 128); x.lineTo(384 + Math.cos(a) * 116, 128 + Math.sin(a) * 116); x.stroke(); }
+    const G3 = ['#2a6a26', '#3c8a30', '#57a23c'], tx = (t) => 236 + Math.sin(t * 1.4) * 30;
+    half(0, () => { for (let i = 0; i < 26; i++) { const t0 = i / 26, t1 = (i + 1) / 26; x.strokeStyle = i % 2 ? '#6a5238' : '#7c6244'; x.lineWidth = 20 - t0 * 8; x.beginPath(); x.moveTo(tx(t0), 512 - t0 * 372); x.lineTo(tx(t1), 512 - t1 * 372); x.stroke(); }
+      const hx = tx(1), hy = 140; for (let i = 0; i < 11; i++) { const a = -Math.PI / 2 + (i - 5) * 0.52; frond(hx, hy, a, 190 + r() * 34, (i - 5) * 0.16 + (i > 5 ? 0.9 : i < 5 ? -0.9 : 0), G3, 6, 30); }
+      for (let i = 0; i < 4; i++) { x.fillStyle = '#4a3a22'; x.beginPath(); x.arc(hx - 12 + i * 8, hy + 12 + (i % 2) * 6, 9, 0, 7); x.fill(); } });
+    half(1, () => { for (let i = 0; i < 12; i++) frond(768, 256, i * 0.5236 + r() * 0.1, 232, 0, G3, 7, 34); });
   } else if (kind === 'fern') {
-    x.lineCap = 'round';
-    for (let i = 0; i < 15; i++) { const a = -Math.PI / 2 + (i - 7) * 0.19 + (r() - 0.5) * 0.08, l = 150 + r() * 80; x.strokeStyle = i % 3 === 0 ? '#16521c' : i % 3 === 1 ? '#2f8a2a' : '#4aa838'; x.lineWidth = 9 + r() * 6; x.beginPath(); x.moveTo(128, 256); x.quadraticCurveTo(128 + Math.cos(a) * l * 0.45, 256 + Math.sin(a) * l, 128 + Math.cos(a) * l * 1.05, 256 + Math.sin(a) * l * 0.6); x.stroke(); }
-    for (let i = 0; i < 14; i++) { const a = i * 0.449 + r() * 0.2; x.strokeStyle = i % 2 ? '#1e6a22' : '#3c9a30'; x.lineWidth = 15; x.beginPath(); x.moveTo(384, 128); x.lineTo(384 + Math.cos(a) * 114, 128 + Math.sin(a) * 114); x.stroke(); }
-  } else if (kind === 'bush') {
-    for (let i = 0; i < 40; i++) { const a = r() * 6.28, d = Math.sqrt(r()) * 96, px = 128 + Math.cos(a) * d, py = 168 + Math.sin(a) * d * 0.66; if (py > 244) continue; leaf(px, py, 14 + r() * 20, '#1c4a1a', '#5a9a3a'); }
-    for (let i = 0; i < 50; i++) { const a = r() * 6.28, d = Math.sqrt(r()) * 100; leaf(384 + Math.cos(a) * d, 128 + Math.sin(a) * d, 14 + r() * 18, '#1c4a1a', '#5a9a3a'); }
+    const G3 = ['#1c5a20', '#2f8a2a', '#4aa838'];
+    half(0, () => { for (let i = 0; i < 13; i++) { const a = -Math.PI / 2 + (i - 6) * 0.2 + (r() - 0.5) * 0.08; frond(256, 512, a, 320 + r() * 150, (i - 6) * 0.13, G3, 5, 30); } });
+    half(1, () => { for (let i = 0; i < 12; i++) frond(768, 256, i * 0.5236 + r() * 0.15, 232, 0, G3, 6, 34); });
   } else {
-    const jungle = kind === 'jungle', g0 = jungle ? '#0c3a16' : '#1e5a1c', g1 = jungle ? '#3a8a2c' : '#6aaa3c';
-    x.fillStyle = jungle ? '#3a2c1c' : '#4a3626'; x.fillRect(118, 130, jungle ? 18 : 22, 126); if (jungle) { x.strokeStyle = '#2a4a1c'; x.lineWidth = 3; for (let i = 0; i < 5; i++) { x.beginPath(); x.moveTo(90 + i * 18, 110); x.quadraticCurveTo(96 + i * 16, 170, 92 + i * 17, 200 + r() * 40); x.stroke(); } }
-    for (let i = 0; i < 46; i++) { const a = r() * 6.28, d = Math.sqrt(r()) * (jungle ? 104 : 92), px = 128 + Math.cos(a) * d, py = (jungle ? 84 : 92) + Math.sin(a) * d * (jungle ? 0.62 : 0.78); leaf(px, py, 16 + r() * 22, g0, g1); }
-    for (let i = 0; i < 60; i++) { const a = r() * 6.28, d = Math.sqrt(r()) * 104; leaf(384 + Math.cos(a) * d, 128 + Math.sin(a) * d, 14 + r() * 20, g0, g1); }
+    const jungle = kind === 'jungle', bush = kind === 'bush', bark = jungle ? '#3a2c1c' : '#4a3626';
+    half(0, () => {
+      if (!bush) { limb(256, 512, 256, 250, jungle ? 30 : 36, 16, bark); for (const [bx, by] of [[150, 190], [362, 200], [206, 130], [310, 120], [256, 100]]) limb(256, 300, bx, by, 14, 5, bark);
+        if (jungle) { limb(256, 512, 212, 440, 22, 6, bark); limb(256, 512, 300, 436, 22, 6, bark); x.strokeStyle = '#24401c'; x.lineWidth = 3; for (let i = 0; i < 6; i++) { x.beginPath(); x.moveTo(130 + i * 50, 210); x.quadraticCurveTo(140 + i * 46, 330, 132 + i * 48, 380 + r() * 90); x.stroke(); } } }
+      const cy = bush ? 340 : jungle ? 168 : 178, rx = bush ? 190 : jungle ? 200 : 186, ry = bush ? 130 : jungle ? 122 : 140, pts = [];
+      for (let i = 0; i < (bush ? 16 : 22); i++) { const a = r() * 6.28, d = Math.sqrt(r()); pts.push([256 + Math.cos(a) * d * rx * 0.8, cy + Math.sin(a) * d * ry * 0.8, 48 + r() * 32]); }
+      pts.sort((a, b) => b[1] - a[1]); for (const q of pts) clump(q[0], Math.min(q[1], bush ? 462 : 400), q[2]); });
+    half(1, () => { for (let i = 0; i < 26; i++) { const a = r() * 6.28, d = Math.sqrt(r()) * 170; clump(768 + Math.cos(a) * d, 256 + Math.sin(a) * d, 44 + r() * 34, 1); } });
   }
-  const t = ctex(c, true, false), m = new THREE.MeshLambertMaterial({ map: t, alphaTest: 0.5, side: THREE.DoubleSide }); m.color.setScalar(1.5);
+  const t = ctex(c, true, false), m = new THREE.MeshLambertMaterial({ map: t, alphaTest: 0.42, side: THREE.DoubleSide }); m.color.setScalar(1.75); m.onBeforeCompile = leafFrag; m.customProgramCacheKey = () => 'leaf';
+  // 3 枚の板を 60° ずつ交差 + 樹冠を上から覆う板。法線は外向き+上向きに傾け、日の当たる側が明るくなるようにする
   const g = new THREE.BufferGeometry(), P = [], U = [], Nn = [], I = [];
-  const quad = (pts, u0) => { const b = P.length / 3; pts.forEach(([px, py, pz, u, v]) => { P.push(px, py, pz); U.push(u0 + u * 0.5, v); Nn.push(0, 1, 0); }); I.push(b, b + 1, b + 2, b, b + 2, b + 3); };
-  quad([[-0.5, 0, 0, 0, 0], [0.5, 0, 0, 1, 0], [0.5, 1, 0, 1, 1], [-0.5, 1, 0, 0, 1]], 0); quad([[0, 0, -0.5, 0, 0], [0, 0, 0.5, 1, 0], [0, 1, 0.5, 1, 1], [0, 1, -0.5, 0, 1]], 0);
-  const ty = kind === 'pine' ? 0.42 : kind === 'palm' ? 0.74 : kind === 'fern' ? 0.38 : kind === 'bush' ? 0.55 : 0.7, ts = kind === 'pine' ? 0.42 : 0.5; quad([[-ts, ty, -ts, 0, 0], [ts, ty, -ts, 1, 0], [ts, ty, ts, 1, 1], [-ts, ty, ts, 0, 1]], 0.5);
+  const quad = (pts, u0) => { const b = P.length / 3; pts.forEach(([px, py, pz, u, v]) => { P.push(px, py, pz); U.push(u0 + u * 0.5, v); const l = Math.hypot(px * 1.7, 0.75, pz * 1.7); Nn.push(px * 1.7 / l, 0.75 / l, pz * 1.7 / l); }); I.push(b, b + 1, b + 2, b, b + 2, b + 3); };
+  for (let k = 0; k < 3; k++) { const a = k * Math.PI / 3 + 0.3, cx = Math.cos(a) * 0.5, sz = Math.sin(a) * 0.5; quad([[-cx, 0, -sz, 0, 0], [cx, 0, sz, 1, 0], [cx, 1, sz, 1, 1], [-cx, 1, -sz, 0, 1]], 0); }
+  const ty = kind === 'pine' ? 0.42 : kind === 'palm' ? 0.72 : kind === 'fern' ? 0.36 : kind === 'bush' ? 0.42 : 0.68, ts = kind === 'pine' ? 0.42 : 0.5; quad([[-ts, ty, -ts, 0, 0], [ts, ty, -ts, 1, 0], [ts, ty, ts, 1, 1], [-ts, ty, ts, 0, 1]], 0.5);
   g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setAttribute('normal', new THREE.Float32BufferAttribute(Nn, 3)); g.setIndex(I);
   return (TREES[kind] = { g, m });
 }
@@ -167,7 +189,7 @@ class VegField {
     this.grp = grp; this.at = at; this.tile = o.tile || 400; this.step = o.step || 14; this.range = o.range || 1200; this.map = new Map(); this.u = { value: this.range }; this.frame = 0;
     const sway = (o.sway ?? 0.012).toFixed(4);
     this.sets = VEG_KINDS.map((k) => { const { g, m } = treeTex(k), c = m.clone();
-      c.onBeforeCompile = (sh) => { sh.uniforms.uVegR = this.u; sh.uniforms.uVegT = fxTime;
+      c.onBeforeCompile = (sh) => { leafFrag(sh); sh.uniforms.uVegR = this.u; sh.uniforms.uVegT = fxTime;
         sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uVegR,uVegT;').replace('#include <begin_vertex>', 'vec3 transformed=vec3(position);\n#ifdef USE_INSTANCING\n{vec3 ip=(modelMatrix*instanceMatrix*vec4(0.,0.,0.,1.)).xyz;transformed*=smoothstep(uVegR,uVegR*.8,distance(ip.xz,cameraPosition.xz));transformed.x+=sin(uVegT*1.1+ip.x*.31+ip.z*.17)*position.y*position.y*' + sway + ';}\n#endif'); };
       c.customProgramCacheKey = () => 'veg' + sway; return { g, m: c }; });
   }
@@ -225,7 +247,7 @@ void main(){
   vec3 col=mix(water,skyc,fr);
   col+=uSunCol*pow(max(dot(R,uSun),0.),420.)*22.*smoothstep(0.,.05,uSun.y+.02);
   float crest=smoothstep(.62,.9,n0)*smoothstep(600.,20.,dist)*.25;
-  float foam=max(smoothstep(2.6,0.,depth)*smoothstep(.3,.7,fbm2(p*.45+vec2(uTime*.28,uTime*.11))),crest);
+  float foam=max(smoothstep(1.3,0.,depth)*smoothstep(.3,.7,fbm2(p*.45+vec2(uTime*.28,uTime*.11))),crest*smoothstep(4.,12.,depth));
   col=mix(col,vec3(.92,.96,1.)*(.35+1.5*max(uSun.y,.05)),foam*step(-.6,vD));
   col=mix(col,uFogCol,1.-exp(-uFogDen*uFogDen*dist*dist));
   gl_FragColor=vec4(col,1.);
@@ -236,7 +258,7 @@ function ocean(H, o) {
   for (let iz = 0; iz < n; iz++) for (let ix = 0; ix < n; ix++) { const k = iz * n + ix; pos[k * 3] = xs[ix]; pos[k * 3 + 1] = 0; pos[k * 3 + 2] = xs[iz]; dep[k] = lvl - H(xs[ix], xs[iz]); }
   let q = 0; for (let iz = 0; iz < seg; iz++) for (let ix = 0; ix < seg; ix++) { const a = iz * n + ix, b = a + 1, cc = a + n, d = cc + 1; idx[q++] = a; idx[q++] = cc; idx[q++] = b; idx[q++] = b; idx[q++] = cc; idx[q++] = d; }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aDepth', new THREE.BufferAttribute(dep, 1)); g.setIndex(new THREE.BufferAttribute(idx, 1));
-  const u = { uTime: fxTime, uSun: { value: o.sun }, uSunCol: { value: COL(o.sunCol) }, uZen: { value: COL(o.zen) }, uHor: { value: COL(o.hor) }, uFogCol: { value: o.fog[0] }, uFogDen: o.fogDen || { value: o.fog[1] }, uDeep: { value: COL(o.deep || '#03182c') }, uShallow: { value: COL(o.shallow || '#1a6a72') } };
+  const u = { uTime: fxTime, uSun: { value: o.sun }, uSunCol: { value: COL(o.sunCol) }, uZen: { value: COL(o.zen) }, uHor: { value: COL(o.hor) }, uFogCol: { value: o.fog[0] }, uFogDen: o.fogDen || { value: o.fog[1] }, uDeep: { value: COL(o.deep || '#03182c') }, uShallow: { value: COL(o.shallow || '#12464e') } };
   const m = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: u, vertexShader: 'attribute float aDepth;varying vec3 vW;varying float vD;void main(){vD=aDepth;vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}', fragmentShader: OCEAN_FS, polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: 6 }));
   m.frustumCulled = false; m.position.y = lvl;
   return m;
