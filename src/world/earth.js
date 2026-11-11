@@ -4,7 +4,7 @@ import { Builder, mx, rockGeo, loft } from '../gfx/builder.js';
 import { mat, glow, texSet, signMesh } from '../gfx/textures.js';
 import { rng, rr, fbm, ridge, smooth, clamp, lerp, pick } from '../core/util.js';
 import { fxTime, makeGlowSprite } from '../gfx/fx.js';
-import { HP, V3, COL, N2, makeSky, gridTerrain, scatter, pad, node, beacon, forest, colorGeo, ocean, VegField, propGeo, landmarks } from './surfkit.js';
+import { HP, V3, COL, N2, makeSky, gridTerrain, scatter, pad, node, beacon, forest, colorGeo, ocean, VegField, propGeo, landmarks, hs2 } from './surfkit.js';
 
 // ── 地域マスク (CPU と GLSL で同じ式を使う) ──
 const coast = (x) => 1650 + 260 * Math.sin(x * 0.0011) + 140 * Math.sin(x * 0.0027 + 1);
@@ -17,6 +17,9 @@ const mCity = (x, z) => smooth(2650, 2450, Math.hypot(x * 0.9, z + 500)) * (1 - 
 const VILLAGE = [420, -5300], LAKE = [-360, -5450], TEMPLE = [-4400, 250], jr = (z) => -4150 + 300 * Math.sin(z * 0.0015), SEA = -1.2, EDGE = 12000;
 /** 農地の区画座標 (シェーダと同じ式)。畦 (区画の縁) なら true */
 const fieldEdge = (x, z) => { const fx = (0.955 * x + 0.296 * z) / 190, fz = (-0.296 * x + 0.955 * z) / 130; return Math.abs(fx - Math.floor(fx) - 0.5) > 0.465 || Math.abs(fz - Math.floor(fz) - 0.5) > 0.465; };
+// 畑ごとの作物の種類。同じ表をシェーダにも渡すので、地面の色と立体の作物が必ず一致する
+const FN = 128, FIELD = new Uint8Array(FN * FN); for (let j = 0; j < FN; j++) for (let i = 0; i < FN; i++) FIELD[j * FN + i] = Math.floor(hs2(i - FN / 2, j - FN / 2, 5) * 255);
+const fieldType = (x, z) => { const cx = Math.floor((0.955 * x + 0.296 * z) / 190), cz = Math.floor((-0.296 * x + 0.955 * z) / 130); return FIELD[(((cz + FN / 2) % FN + FN) % FN) * FN + ((cx + FN / 2) % FN + FN) % FN] / 255; };
 function H(x, z) {
   const sea = mSea(x, z), sn = mSnow(x, z), ju = mJungle(x, z), fa = mFarm(x, z), c = coast(x);
   let h = 3 + fbm(x * 0.0005, z * 0.0005, 4, 2) * 26 + ridge(x * 0.0017, z * 0.0017, 3, 9) * 15 + fbm(x * 0.003, z * 0.003, 3, 19) * 8; // なだらかな丘と小さな起伏
@@ -35,12 +38,12 @@ function H(x, z) {
   return lerp(h, -42, smooth(EDGE - 1900, EDGE - 250, Math.max(Math.abs(x), Math.abs(z)))); // 四方を海に囲まれた大地
 }
 // 地形の追加シェーダ: 農地の区画・雪線・砂浜・凍った湖
-const TERRA_HEAD = 'uniform float uCan;';
+const TERRA_HEAD = 'uniform float uCan;uniform sampler2D uField;';
 const TERRA_FRAG = /* glsl */`
 float slope=1.-vTn.y,cst=1650.+260.*sin(vTw.x*.0011)+140.*sin(vTw.x*.0027+1.);
 float sSn=smoothstep(-3300.+500.*sin(vTw.x*.0008),-4500.+500.*sin(vTw.x*.0008),vTw.z);
 float sFa=smoothstep(2600.+300.*sin(vTw.z*.0012),3600.+300.*sin(vTw.z*.0012),vTw.x)*(1.-sSn);
-if(sFa>.02&&vTw.y>1.){vec2 fp=mat2(.955,-.296,.296,.955)*vTw.xz;vec2 fc=floor(fp/vec2(190.,130.)),ff=fract(fp/vec2(190.,130.));float fh=h21(fc);
+if(sFa>.02&&vTw.y>1.){vec2 fp=mat2(.955,-.296,.296,.955)*vTw.xz;vec2 fc=floor(fp/vec2(190.,130.)),ff=fract(fp/vec2(190.,130.));float fh=texture2D(uField,(fc+vec2(64.5))/128.).r;
   vec3 crop=fh<.22?vec3(.5,.42,.13):fh<.45?vec3(.12,.3,.06):fh<.62?vec3(.26,.17,.09):fh<.78?vec3(.62,.56,.08):vec3(.17,.34,.1);
   float rows=.8+.2*sin((fh>.5?fp.x:fp.y)*1.7);
   crop=mix(crop,vec3(.1,.36,.08),step(.84,fh)*smoothstep(.47,.45,length(ff-.5)));
@@ -194,7 +197,7 @@ export function terra() {
     R = lerp(R, 0.16 + n * 0.05, sn); G2 = lerp(G2, 0.19 + n * 0.05, sn); B2 = lerp(B2, 0.13, sn);
     if (h < -1.2) { R = 0.05; G2 = 0.07; B2 = 0.07; }
     c[0] = R; c[1] = G2; c[2] = B2;
-  }, { size: EDGE * 2, seg: 340, rough: 0.95, frag: TERRA_FRAG, head: TERRA_HEAD, uniforms: { uCan: canU }, key: 'terra', uv: 0.05 });
+  }, { size: EDGE * 2, seg: 340, rough: 0.95, frag: TERRA_FRAG, head: TERRA_HEAD, uniforms: { uCan: canU, uField: { value: (() => { const t = new THREE.DataTexture(FIELD, FN, FN, THREE.RedFormat); t.magFilter = t.minFilter = THREE.NearestFilter; t.needsUpdate = true; return t; })() } }, key: 'terra', uv: 0.05 });
   grp.add(tm);
   const hAt = tm.heightAt, heightAt = (x, z) => { const h = hAt(x, z); return mCity(x, z) >= 0.5 && !cityBlocked(x, z) ? Math.max(h, 0.02) : h; };
   grp.add(ocean((x, z) => (Math.abs(x) >= EDGE || Math.abs(z) >= EDGE ? -42 : hAt(x, z)), { sun: sunDir, sunCol: SKY.sunCol, zen: SKY.zen, hor: SKY.hor, fog, fogDen, size: 46000, seg: 170, level: SEA, shallow: '#0f3a44', deep: '#020f1e' }));
@@ -369,7 +372,7 @@ export function terra() {
   const underAt = (x, z, u, v, o) => {
     if (mSea(x, z) > 0.02 || mCity(x, z) > 0.25 || mSnow(x, z) > 0.3) return false; const ju = mJungle(x, z);
     if (ju > 0.3) { if (u > 0.66 || Math.hypot(x - TEMPLE[0], z - TEMPLE[1]) < 62) return false; const h = hAt(x, z); if (h < 0.5) return false; o[0] = 4; o[1] = 1.5 + v * 2.8; o[2] = 2.6 + v * 3.2; o[3] = h - 0.12; return true; }
-    if (u > 0.2 || (mFarm(x, z) > 0.5 && !fieldEdge(x, z))) return false; const h = hAt(x, z); if (h < 1.2) return false; o[0] = 5; o[1] = 1.1 + v * 1.7; o[2] = 1.8 + v * 2.6; o[3] = h - 0.1; return true;
+    if (mFarm(x, z) > 0.5 && !fieldEdge(x, z)) { if (fieldType(x, z) < 0.78 || u > 0.3) return false; } else if (u > 0.2) return false; const h = hAt(x, z); if (h < 1.2) return false; o[0] = 5; o[1] = 1.1 + v * 1.7; o[2] = 1.8 + v * 2.6; o[3] = h - 0.1; return true;
   };
   const vf = new VegField(grp, vegAt, { tile: 400, step: 14, range: 1250, sway: 0.012, solid: true }), uf = new VegField(grp, underAt, { tile: 90, step: 4.5, range: 165, sway: 0.03 }); vf.u = canU;
   // ── 何もない場所をなくす ──
@@ -396,7 +399,7 @@ export function terra() {
     if (sn > 0.4) { if (Math.hypot(x - VILLAGE[0], z - VILLAGE[1]) < 225 || Math.hypot(x - LAKE[0], z - LAKE[1]) < 245) return false; k = v < 0.7 ? 1 : 2; d = h > 520 ? 0.5 : 0.2; s1 = 7; }
     else if (ju > 0.4) { if (Math.hypot(x - TEMPLE[0], z - TEMPLE[1]) < 60) return false; k = v < 0.8 ? 3 : 6; d = 0.14; s0 = k === 6 ? 0.8 : 0.5; s1 = k === 6 ? 2.6 : 5; }
     else if (mFarm(x, z) > 0.5) { for (const f of fh) if (Math.abs(f[0] - x) < 50 && Math.abs(f[2] - z) < 50) return false;
-      if (fbm(x * 0.004, z * 0.004, 2, 91) > 0.62 && !fieldEdge(x, z)) { if (u > 0.3) return false; o[0] = 4; o[1] = 0.9 + v * 0.3; o[2] = o[1]; o[3] = h; return true; } k = v < 0.5 ? 5 : 0; d = 0.04; s0 = k === 5 ? 1 : 0.4; s1 = k === 5 ? 1.01 : 2.2; }
+      const t = fieldType(x, z), ed = fieldEdge(x, z); if (t >= 0.78 && !ed) { if (u > 0.1) return false; o[0] = 4; o[1] = 0.9 + v * 0.3; o[2] = o[1]; o[3] = h; return true; } if (ed) { k = 0; d = 0.05; s0 = 0.4; s1 = 1.6; } else if (t >= 0.45 && t < 0.62) { k = 5; d = 0.05; s0 = 1; s1 = 1.01; } else return false; }
     else { if (hf && hf.hit(x, z)) return false; k = v < 0.6 ? 0 : 2; d = 0.1; }
     if (u >= d) return false; const q = u / d, sz = s0 + q * q * q * (s1 - s0); o[0] = k; o[1] = sz * (0.8 + v * 0.4); o[2] = sz; o[3] = h; return true;
   };
@@ -406,6 +409,10 @@ export function terra() {
   const houseA = colorGeo([[new THREE.BoxGeometry(11, 5.5, 8).translate(0, 2.75, 0), 0xd8d2c4], [new THREE.CylinderGeometry(0.01, 7.2, 4.4, 4, 1).rotateY(Math.PI / 4).scale(1, 1, 0.74).translate(0, 7.7, 0), 0x5a4a4a], [new THREE.BoxGeometry(1.2, 3.4, 1.2).translate(3.4, 8.6, 1), 0x6a5a50], [new THREE.BoxGeometry(1.3, 2.3, 0.12).translate(0, 1.15, 4.02), 0x4a3020], [new THREE.BoxGeometry(1.5, 1.3, 0.1).translate(-3, 3, 4.03), WIN], [new THREE.BoxGeometry(1.5, 1.3, 0.1).translate(3, 3, 4.03), WIN], [new THREE.BoxGeometry(0.1, 1.3, 1.5).translate(5.53, 3, -1), WIN], [new THREE.BoxGeometry(1.5, 1.3, 0.1).translate(2, 3, -4.03), WIN2], [new THREE.BoxGeometry(12, 0.5, 9).translate(0, 0.05, 0), 0x8a8478]]);
   const houseB = colorGeo([[new THREE.BoxGeometry(9, 8, 9).translate(0, 4, 0), 0xb8b0a4], [new THREE.BoxGeometry(9.6, 0.5, 9.6).translate(0, 8.2, 0), 0x3a3a40], [new THREE.BoxGeometry(5, 3.2, 4).translate(6.4, 1.6, 1), 0xa89c8c], [new THREE.BoxGeometry(5.4, 0.3, 4.4).translate(6.4, 3.3, 1), 0x3a3a40], [new THREE.BoxGeometry(1.3, 2.3, 0.12).translate(-1.6, 1.15, 4.52), 0x3a2a20], [new THREE.BoxGeometry(1.6, 1.4, 0.1).translate(2, 2.6, 4.53), WIN], [new THREE.BoxGeometry(1.6, 1.4, 0.1).translate(-2, 6, 4.53), WIN], [new THREE.BoxGeometry(1.6, 1.4, 0.1).translate(2, 6, 4.53), WIN2], [new THREE.BoxGeometry(0.1, 1.4, 1.6).translate(-4.53, 6, 0), WIN], [new THREE.BoxGeometry(0.1, 1.4, 1.6).translate(4.53, 6, -2), WIN], [new THREE.BoxGeometry(10, 0.5, 10).translate(0, 0.05, 0), 0x8a8478]]);
   const houseAt = (x, z, u, v, o) => { if (u > 0.55 || mSea(x, z) > 0.02 || mCity(x, z) > 0.3 || mSnow(x, z) > 0.2 || mJungle(x, z) > 0.2 || mFarm(x, z) > 0.3 || fbm(x * 0.0021, z * 0.0021, 2, 77) > 0.5) return false; const h = hAt(x, z); if (h < 1.6 || Math.abs(hAt(x + 7, z) - h) > 2.2 || Math.abs(hAt(x, z + 7) - h) > 2.2 || Math.abs(hAt(x - 7, z) - h) > 2.2) return false; o[0] = v < 0.55 ? 0 : 1; o[1] = 1; o[2] = 1; o[3] = h - 0.25; return true; };
+  // 畑の作物: 麦ととうもろこしを足元に立体で生やす (種類は地面の色と同じ表から決まる)
+  const cropAt = (x, z, u, v, o) => { if (mFarm(x, z) < 0.6 || fieldEdge(x, z)) return false; const t = fieldType(x, z); if ((t >= 0.45 && t < 0.62) || t >= 0.78) return false; const h = hAt(x, z); if (h < 2) return false; for (const f of fh) if (Math.abs(f[0] - x) < 46 && Math.abs(f[2] - z) < 46) return false;
+    if (t < 0.22 || t >= 0.62) { o[0] = 6; o[1] = 1.0 + v * 0.35; o[2] = 3.1; } else { o[0] = 7; o[1] = 2.1 + v * 0.5; o[2] = 3.0; } o[3] = h - 0.05; return true; };
+  const cf = new VegField(grp, cropAt, { tile: 78, step: 2.6, range: 120, sway: 0.03 });
   hf = new VegField(grp, houseAt, { sets: [{ g: houseA, m: CM(), key: 'v' }, { g: houseB, m: CM(), key: 'v' }], tile: 340, step: 34, range: 1700, solid: 7 });
   // ── 海を行く小型船 (航行灯つき) と、各地の空を舞う鳥の群れ ──
   { const boatG = colorGeo([[new THREE.BoxGeometry(3.4, 1.7, 9).translate(0, 0.35, 0.6), 0xe8e4da], [new THREE.ConeGeometry(1.7, 3.6, 4).rotateY(Math.PI / 4).scale(1, 1, 0.47).rotateX(-HP).translate(0, 0.35, -5.6), 0xe8e4da], [new THREE.BoxGeometry(3.5, 0.3, 9.1).translate(0, -0.2, 0.6), 0x8a2a20], [new THREE.BoxGeometry(2.5, 1.7, 3.4).translate(0, 2.0, 2), 0xf4f2ec], [new THREE.BoxGeometry(2.56, 0.6, 3.46).translate(0, 2.3, 2), new THREE.Color(1.6, 1.3, 0.8)], [new THREE.CylinderGeometry(0.06, 0.06, 4.4, 5).translate(0, 5, 1.4), 0x888888], [new THREE.SphereGeometry(0.24, 6, 5).translate(0, 7.2, 1.4), new THREE.Color(7, 6, 4)], [new THREE.SphereGeometry(0.16, 6, 5).translate(-1.6, 1.4, -3), new THREE.Color(6, 0.3, 0.2)], [new THREE.SphereGeometry(0.16, 6, 5).translate(1.6, 1.4, -3), new THREE.Color(0.3, 6, 0.6)]]);
@@ -427,5 +434,5 @@ export function terra() {
   const place = (x, z) => { if (Math.hypot(x, z) < 260) return 'ネオン・ベイ宇宙港'; if (Math.hypot(x - VILLAGE[0], z - VILLAGE[1]) < 420) return '雪見の里'; if (Math.hypot(x - TEMPLE[0], z - TEMPLE[1]) < 320) return '古代遺跡'; if (mSnow(x, z) > 0.5) return '白嶺山地'; if (mJungle(x, z) > 0.5) return '翠の密林'; if (mFarm(x, z) > 0.5) return 'みのり平原';
     if (mCity(x, z) > 0.5) return z > coast(x) - 260 && x > 300 && x < 1500 ? 'ネオン・ベイ港' : 'ネオン・ベイ市街'; return mSea(x, z) > 0.5 || Math.max(Math.abs(x), Math.abs(z)) > EDGE - 1300 ? '大洋' : 'ネオン・ベイ郊外'; };
   const pois = [{ x: 880, y: 40, z: coast(880) + 80, name: '港' }, ...(fh[0] ? [{ x: fh[0][0], y: fh[0][1] + 30, z: fh[0][2], name: '農園地帯' }] : []), { x: VILLAGE[0], y: vy + 40, z: VILLAGE[1], name: '雪見の里' }, { x: TEMPLE[0], y: hAt(TEMPLE[0], TEMPLE[1]) + 70, z: TEMPLE[1], name: '古代遺跡' }];
-  return { id: 'terra', group: grp, sky, H, heightAt, sunDir, sunCol: '#ffb078', sunInt: 3.0, hemi: ['#6a6aa8', '#2a2030', 1.25], expo: (x, z) => lerp(1.32, 0.95, mCity(x, z)), fog, fogDen, cols, rects, obbs, decks, items, anim, beacons, nodes, tiles, veg: [vf, uf, pf, hf], zone, region, place, pois, blocked: cityBlocked, padY: 1.1, mirror: [road, 1.6], mirrorOn: (x, y, z) => y < 700 && mCity(x, z) > 0.2, rain: [RAIN, 0.45, '#9fb8ff'], walkR: 1e9, bounds: EDGE - 800, far: 34000, safeAlt: 780, door: [50, 30, -HP], foot: [0, 42], look: [0.42, 1.15, 0.95], music: 'neon', water: SEA, start: [320, 1500, 4300] };
+  return { id: 'terra', group: grp, sky, H, heightAt, sunDir, sunCol: '#ffb078', sunInt: 3.0, hemi: ['#6a6aa8', '#2a2030', 1.25], expo: (x, z) => lerp(1.32, 0.95, mCity(x, z)), fog, fogDen, cols, rects, obbs, decks, items, anim, beacons, nodes, tiles, veg: [vf, uf, pf, hf, cf], zone, region, place, pois, blocked: cityBlocked, padY: 1.1, mirror: [road, 1.6], mirrorOn: (x, y, z) => y < 700 && mCity(x, z) > 0.2, rain: [RAIN, 0.45, '#9fb8ff'], walkR: 1e9, bounds: EDGE - 800, far: 34000, safeAlt: 780, door: [50, 30, -HP], foot: [0, 42], look: [0.42, 1.15, 0.95], music: 'neon', water: SEA, start: [320, 1500, 4300] };
 }

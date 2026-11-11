@@ -144,6 +144,12 @@ function treeTex(kind) {
       const hx = tx(1), hy = 140; for (let i = 0; i < 11; i++) { const a = -Math.PI / 2 + (i - 5) * 0.52; frond(hx, hy, a, 190 + r() * 34, (i - 5) * 0.16 + (i > 5 ? 0.9 : i < 5 ? -0.9 : 0), G3, 6, 30); }
       for (let i = 0; i < 4; i++) { x.fillStyle = '#4a3a22'; x.beginPath(); x.arc(hx - 12 + i * 8, hy + 12 + (i % 2) * 6, 9, 0, 7); x.fill(); } });
     half(1, () => { for (let i = 0; i < 12; i++) frond(768, 256, i * 0.5236 + r() * 0.1, 232, 0, G3, 7, 34); });
+  } else if (kind === 'wheat') { // 麦の株: 細い茎と穂
+    half(0, () => { for (let i = 0; i < 96; i++) { const bx = 16 + r() * 480, tip = 40 + r() * 130, lean = (r() - 0.5) * 56; x.strokeStyle = ['#b89a3c', '#d2b450', '#a08430'][(r() * 3) | 0]; x.lineWidth = 3 + r() * 2; x.beginPath(); x.moveTo(bx, 512); x.quadraticCurveTo(bx + lean * 0.3, 300, bx + lean, tip + 64); x.stroke(); x.strokeStyle = r() < 0.5 ? '#e8cc6a' : '#d8b854'; x.lineWidth = 9; x.beginPath(); x.moveTo(bx + lean, tip + 64); x.lineTo(bx + lean * 1.15, tip); x.stroke(); } });
+    half(1, () => { for (let i = 0; i < 170; i++) { x.fillStyle = ['#b89a3c', '#d2b450', '#e8cc6a'][(r() * 3) | 0]; x.beginPath(); x.arc(532 + r() * 472, 20 + r() * 472, 8 + r() * 9, 0, 7); x.fill(); } });
+  } else if (kind === 'corn') { // とうもろこしの列: 茎・左右に垂れる葉・雄穂
+    half(0, () => { for (let i = 0; i < 7; i++) { const bx = 44 + i * 68 + r() * 20; x.strokeStyle = '#3a6a26'; x.lineWidth = 9; x.beginPath(); x.moveTo(bx, 512); x.lineTo(bx + (r() - 0.5) * 16, 40); x.stroke(); for (let k = 0; k < 7; k++) { const y = 446 - k * 58, sd = k % 2 ? 1 : -1; x.strokeStyle = ['#3f8a30', '#57a23c', '#2f6f28'][(r() * 3) | 0]; x.lineWidth = 12; x.beginPath(); x.moveTo(bx, y); x.quadraticCurveTo(bx + sd * 34, y - 44, bx + sd * 62, y + 10); x.stroke(); } x.strokeStyle = '#d8c070'; x.lineWidth = 6; x.beginPath(); x.moveTo(bx, 44); x.lineTo(bx, 14); x.stroke(); } });
+    half(1, () => { for (let i = 0; i < 50; i++) { const a = r() * 6.28, cx2 = 580 + (i % 5) * 92, cy2 = 70 + (Math.floor(i / 5) % 5) * 94; x.strokeStyle = ['#3f8a30', '#57a23c'][(r() * 2) | 0]; x.lineWidth = 13; x.beginPath(); x.moveTo(cx2, cy2); x.lineTo(cx2 + Math.cos(a) * 52, cy2 + Math.sin(a) * 52); x.stroke(); } });
   } else if (kind === 'fern') {
     const G3 = ['#1c5a20', '#2f8a2a', '#4aa838'];
     half(0, () => { for (let i = 0; i < 13; i++) { const a = -Math.PI / 2 + (i - 6) * 0.2 + (r() - 0.5) * 0.08; frond(256, 512, a, 320 + r() * 150, (i - 6) * 0.13, G3, 5, 30); } });
@@ -163,7 +169,7 @@ function treeTex(kind) {
   const g = new THREE.BufferGeometry(), P = [], U = [], Nn = [], I = [];
   const quad = (pts, u0) => { const b = P.length / 3; pts.forEach(([px, py, pz, u, v]) => { P.push(px, py, pz); U.push(u0 + u * 0.5, v); const l = Math.hypot(px * 1.7, 0.75, pz * 1.7); Nn.push(px * 1.7 / l, 0.75 / l, pz * 1.7 / l); }); I.push(b, b + 1, b + 2, b, b + 2, b + 3); };
   for (let k = 0; k < 3; k++) { const a = k * Math.PI / 3 + 0.3, cx = Math.cos(a) * 0.5, sz = Math.sin(a) * 0.5; quad([[-cx, 0, -sz, 0, 0], [cx, 0, sz, 1, 0], [cx, 1, sz, 1, 1], [-cx, 1, -sz, 0, 1]], 0); }
-  const ty = kind === 'pine' ? 0.42 : kind === 'palm' ? 0.72 : kind === 'fern' ? 0.36 : kind === 'bush' ? 0.42 : 0.68, ts = kind === 'pine' ? 0.42 : 0.5; quad([[-ts, ty, -ts, 0, 0], [ts, ty, -ts, 1, 0], [ts, ty, ts, 1, 1], [-ts, ty, ts, 0, 1]], 0.5);
+  const ty = kind === 'pine' ? 0.42 : kind === 'palm' ? 0.72 : kind === 'fern' ? 0.36 : kind === 'bush' ? 0.42 : kind === 'wheat' ? 0.8 : kind === 'corn' ? 0.78 : 0.68, ts = kind === 'pine' ? 0.42 : 0.5; quad([[-ts, ty, -ts, 0, 0], [ts, ty, -ts, 1, 0], [ts, ty, ts, 1, 1], [-ts, ty, ts, 0, 1]], 0.5);
   g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setAttribute('normal', new THREE.Float32BufferAttribute(Nn, 3)); g.setIndex(I);
   return (TREES[kind] = { g, m });
 }
@@ -179,7 +185,7 @@ function forest(grp, pts, kind, tile = 900, range = 3800) {
   return tiles;
 }
 // ───────────────────────── 植生フィールド (カメラの周囲だけ生成し、遠方・視界外は描画しない) ─────────────────────────
-const VEG_KINDS = ['pine', 'palm', 'jungle', 'oak', 'fern', 'bush'];
+const VEG_KINDS = ['pine', 'palm', 'jungle', 'oak', 'fern', 'bush', 'wheat', 'corn'];
 const hs2 = (a, b, s) => { const n = Math.sin(a * 127.1 + b * 311.7 + s * 74.7) * 43758.5453; return n - Math.floor(n); };
 const _vo = new THREE.Object3D(), _vc = new THREE.Color(), _vh = [0, 0, 0, 0];
 /**
@@ -218,7 +224,7 @@ class VegField {
     for (let a = 0; a < n; a++) for (let b = 0; b < n; b++) { const gi = i * n + a, gj = j * n + b; this._pos(gi, gj, S, p); if (!this.at(p[0], p[1], hs2(gi, gj, 3), hs2(gi, gj, 4), out)) continue; L[out[0]].push(p[0], out[3], p[1], out[1], out[2]); }
     const meshes = [];
     L.forEach((P, k) => { const c = P.length / 5; if (!c) return; const s = this.sets[k], im = new THREE.InstancedMesh(s.g, s.m, c);
-      for (let q = 0; q < c; q++) { const x = P[q * 5], z = P[q * 5 + 2], sy = P[q * 5 + 3]; _vo.position.set(x, P[q * 5 + 1] - sy * s.sink, z); if (s.tumble) _vo.rotation.set(hs2(x, z, 7) * 6.28 * s.tumble, hs2(x, z, 8) * 6.28, hs2(x, z, 9) * 6.28 * s.tumble); else _vo.rotation.set(0, (x * 1.7 + z * 0.9) % 6.28, 0); _vo.scale.set(P[q * 5 + 4], sy, P[q * 5 + 4]); _vo.updateMatrix(); im.setMatrixAt(q, _vo.matrix);
+      for (let q = 0; q < c; q++) { const x = P[q * 5], z = P[q * 5 + 2], sy = P[q * 5 + 3]; _vo.position.set(x, P[q * 5 + 1] - sy * (s.sink || 0), z); if (s.tumble) _vo.rotation.set(hs2(x, z, 7) * 6.28 * s.tumble, hs2(x, z, 8) * 6.28, hs2(x, z, 9) * 6.28 * s.tumble); else _vo.rotation.set(0, (x * 1.7 + z * 0.9) % 6.28, 0); _vo.scale.set(P[q * 5 + 4], sy, P[q * 5 + 4]); _vo.updateMatrix(); im.setMatrixAt(q, _vo.matrix);
         const v = cu ? 0.82 + hs2(x, z, 5) * 0.3 : 0.72 + hs2(x, z, 5) * 0.5; im.setColorAt(q, cu ? _vc.setRGB(v * tn[0], v * tn[1], v * tn[2]) : _vc.setRGB(v * tn[0], v * (0.9 + hs2(x, z, 6) * 0.16) * tn[1], v * 0.88 * tn[2])); }
       im.computeBoundingSphere(); im.castShadow = cu; im.receiveShadow = cu; this.grp.add(im); meshes.push(im); });
     return { meshes, f: this.frame };
@@ -271,7 +277,7 @@ function landmarks(env, geo, material, list, o = {}) {
   im.castShadow = o.shadow ?? true; im.receiveShadow = true; im.frustumCulled = false; env.grp.add(im); return im;
 }
 /** 岩や小物を地形に撒く at 関数。dens(x,z,h) → [密度 0..1, 種類番号]。大きさは小さいものほど多い */
-const scatterAt = (hAt, dens, s0, s1) => { const d2 = [0, 0]; return (x, z, u, v, o) => { const h = hAt(x, z); dens(x, z, h, v, d2); if (u >= d2[0]) return false; const q = u / d2[0], sz = s0 + q * q * q * (s1 - s0); o[0] = d2[1]; o[1] = sz * (0.75 + v * 0.5); o[2] = sz; o[3] = h; return true; }; };
+const scatterAt = (hAt, dens, s0, s1) => { const d2 = [0, 0]; return (x, z, u, v, o) => { const h = hAt(x, z); dens(x, z, h, v, d2); if (u >= d2[0]) return false; const q = u / d2[0], sz = s0 + q * q * (s1 - s0); o[0] = d2[1]; o[1] = sz * (0.75 + v * 0.5); o[2] = sz; o[3] = h; return true; }; };
 /** 部品ごとに色を持つ結合ジオメトリ (頂点カラー)。InstancedMesh で大量配置する小物用 */
 function colorGeo(parts) {
   const P = [], Nn = [], Cc = []; for (const [geo, col, matrix] of parts) { const q = geo.index ? geo.toNonIndexed() : geo; if (matrix) q.applyMatrix4(matrix); if (!q.attributes.normal) q.computeVertexNormals(); const c = new THREE.Color(col); P.push(...q.attributes.position.array); Nn.push(...q.attributes.normal.array); for (let i = 0; i < q.attributes.position.count; i++) Cc.push(c.r, c.g, c.b); }
