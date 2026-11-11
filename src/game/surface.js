@@ -87,7 +87,7 @@ export class SurfaceMode {
   /** 水面か (桟橋・屋上・パッドの上は除く) */
   wet(x, z) { const e = this.env; return e.water != null && this.ground(x, z) <= e.water + 0.01; }
   /** 地域名・BGM (地球は場所によって変わる) */
-  _region() { const e = this.env, p = this.foot ? this.fp : this.ship.pos; this.reg = e.region ? e.region(p.x, p.z) : e.sub; const mk = !e.region || this.reg === '巨大都市' || this.reg === '郊外' ? e.music : 'surface'; if (mk !== this._mk) { this._mk = mk; G.audio?.music(mk); } }
+  _region() { const e = this.env, p = this.foot ? this.fp : this.ship.pos; this.reg = e.region ? e.region(p.x, p.z) : e.sub; this.place = e.place ? e.place(p.x, p.z) : e.name; const mk = !e.region || this.reg === '巨大都市' || this.reg === '郊外' ? e.music : 'surface'; if (mk !== this._mk) { this._mk = mk; G.audio?.music(mk); } }
   /** 遠方のタイルを非表示にし、カメラ周辺の植生を生成する */
   _cull(prime) {
     const e = this.env, cp = this.camera.position, k = G.drawDist;
@@ -165,7 +165,7 @@ export class SurfaceMode {
     const s = this.ship, e = this.env; s.landed = true; s.auto = null; s.speed = 0; s.vy = 0; s.pitch = 0; G.input.setThr(0); if (s.m.gear) s.m.gear.visible = true; s.m.tilt.rotation.set(0, 0, 0); this._engines(false);
     this.parts.burst(_a.copy(s.pos).setY(s.pos.y - s.clear + 0.3), 50, 14, _col.set('#cfd8e0'), 2.2, 1.0, null, 1.2); G.audio?.sfx('land'); this.shake = 0.4;
     const first = !G.p.stats.lands[e.id]; G.p.stats.lands[e.id] = (G.p.stats.lands[e.id] || 0) + 1; G.p.day++; save();
-    this._region(); G.hud.banner('着陸完了', (Math.hypot(s.pos.x, s.pos.z) < 260 || !e.region ? e.name : `${body(e.id).name}・${this.reg}`) + (first ? ' — 初到達' : '')); if (first) { G.p.credits += 1500; G.hud.msg(`探査ボーナス：${body(e.id).name} 初着陸 +1,500 Cr`, 'good', 7); }
+    this._region(); G.hud.banner('着陸完了', (this.place || e.name) + (first ? ' — 初到達' : '')); if (first) { G.p.credits += 1500; G.hud.msg(`探査ボーナス：${body(e.id).name} 初着陸 +1,500 Cr`, 'good', 7); }
   }
   /** 箱型障害物 (ビルなど) の側面にぶつかったら押し戻し、壁に沿って滑らせる */
   _bump(fwd) {
@@ -256,7 +256,7 @@ export class SurfaceMode {
   }
   _hud() {
     const h = G.hud, s = this.ship, e = this.env, pl = G.space.pl, c = this.camera;
-    h.begin(); h.setLoc(e.name, `${body(e.id).name} — ${this.reg || e.sub}`);
+    h.begin(); h.setLoc(this.place || e.name, `${body(e.id).name} — ${this.reg || e.sub}`);
     const ms = G.p.missions.find((m) => m.type === 'survey' && m.body === e.id) || G.p.missions[0];
     h.setObj(`<b>ヴォイド艦隊</b> 残存 ${remaining()}/20${ms ? `<br>任務：${ms.title} (${ms.prog}/${ms.need})` : ''}`);
     if (this.foot) {
@@ -279,7 +279,8 @@ export class SurfaceMode {
     h.setCtx(L);
   }
   render(dt) {
-    const e = this.env, cp = this.camera.position; if (e.mirror && (!e.mirrorOn || e.mirrorOn(cp.x, cp.y, cp.z))) this.mirror.render(this.scene, this.camera); else this.mirror.u.uMirrorOn.value = 0; // 路面が見えない場所では反射を描かない
+    const e = this.env, cp = this.camera.position; if (!e) return G.gfx.render(dt, this.scene, this.camera, null); // 地表の生成が終わるまでは空のシーンを描く
+    if (e.mirror && (!e.mirrorOn || e.mirrorOn(cp.x, cp.y, cp.z))) this.mirror.render(this.scene, this.camera); else this.mirror.u.uMirrorOn.value = 0; // 路面が見えない場所では反射を描かない
     G.gfx.render(dt, this.scene, this.camera, null);
   }
 }
