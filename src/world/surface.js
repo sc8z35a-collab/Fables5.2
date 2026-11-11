@@ -62,7 +62,7 @@ function ignis() {
   const s1 = signMesh('フォージ採掘基地', '#ff8a2a', 3.2, { double: true, intensity: 3 }); s1.position.set(52.6, 17.4, -10); s1.rotation.y = -HP; grp.add(s1);
   const nodes = []; for (let i = 0; i < 7; i++) { const a = i * 0.9 + 0.2, d = 110 + (i % 3) * 60; let x = Math.cos(a) * d - 30, z = Math.sin(a) * d; const n = node('#ff5a1e', 1.2, 60 + i); n.position.set(x, Math.max(H(x, z), -3), z); grp.add(n); nodes.push({ g: n, x, z, item: 'magma', label: 'マグマ晶を採取する' }); }
   // ── 全域を埋める: 黒曜石の尖塔・玄武岩のアーチと台地・マグマ結晶・噴気孔・放棄された採掘リグ・残骸 + 足元の岩場 ──
-  const obbs = [], hA = TM.heightAt, env2 = { grp, obbs, cols }, OB = mat('rock', { color: 0x4a4450, rough: 0.28, metal: 0.6, uvs: 0, ns: 1.6 }), RK2 = mat('rock', { color: 0x7a5a4a, rough: 0.85, metal: 0.15, uvs: 0, ns: 1.4 }), MC = glowMat('#ff5a1e', 1.5); // 暗い大地でも輪郭が分かる明るさにする
+  const obbs = [], hA = TM.heightAt, env2 = { grp, obbs, cols }, OB = mat('rock', { color: 0x4a4450, rough: 0.28, metal: 0.6, uvs: 0, ns: 1.6 }).clone(), RK2 = mat('rock', { color: 0x7a5a4a, rough: 0.85, metal: 0.15, uvs: 0, ns: 1.4 }).clone(), MC = glowMat('#ff5a1e', 1.5); OB.emissive.set(0x5a1c0c); OB.emissiveIntensity = 0.55; RK2.emissive.set(0x4a1808); RK2.emissiveIntensity = 0.5; // 溶岩の照り返しで岩の形が読めるように // 暗い大地でも輪郭が分かる明るさにする
   const inBase = (x, z) => Math.hypot(x, z) < 125 || (x > 44 && x < 116 && z > -48 && z < 60);
   strew(env2, r, hA, { free: (x, z, h) => h > 1.5 && !inBase(x, z), spire: { n: 320, m: OB, h1: 66 }, arch: { n: 46, m: RK2, w: 80 }, butte: { n: 40, m: RK2 }, crys: { n: 70, m: MC } });
   for (const c of CONES) { const y = H(c[0], c[1]); B.cyl(G, c[2] * 0.17, c[2] * 0.17, 3, c[0], y + 4, c[1], 'y', 20); beacon(beacons, c[0], y + 30, c[1], '#ff6a1e', c[2] * 0.5); }
@@ -72,7 +72,7 @@ function ignis() {
   const veg = groundCover(grp, hA, [{ g: propGeo('boulder'), m: OB, tumble: 1, sink: 0.3, key: 'a' }, { g: propGeo('boulder2'), m: RK2, tumble: 1, sink: 0.25, key: 'b' }, { g: propGeo('slab'), m: RK2, tumble: 0.12, sink: 0.3, key: 'c' }, { g: propGeo('crystal'), m: MC, sink: 0.03, key: 'd' }],
     (x, z, h, v, d) => { d[0] = h < 0.6 || Math.hypot(x, z) < 46 || (x > 46 && x < 114 && z > -46 && z < 58) ? 0 : 0.22 + 0.5 * smooth(0.35, 0.7, fbm(x * 0.006, z * 0.006, 2, 15)); d[1] = v < 0.34 ? 0 : v < 0.62 ? 1 : v < 0.82 ? 2 : 3; }, { s1: 7 }); // 暗い大地なので発光する結晶を多めに
   grp.add(B.build());
-  return { id: 'ignis', group: grp, sky, H, heightAt: TM.heightAt, sunDir, sunCol: '#ff7a40', sunInt: 2.2, hemi: ['#6a2a18', '#3a0c04', 1.2], fog: [COL('#280a05'), 0.00042], cols, rects, obbs, veg, items, anim, beacons, nodes, padY: 8.2, rain: [V3(3, 9, 1), 0.5, '#ff8a4a'], walkR: 3000, door: [49, -10, -HP], foot: [0, 40], look: [0.7, 0.95, 1.0], heat: 0.12, music: 'hostile', smoke: [-2600, 760, -1900], hazard: (x, z, h) => h < -2.5 };
+  return { id: 'ignis', group: grp, sky, H, heightAt: TM.heightAt, sunDir, sunCol: '#ff7a40', sunInt: 2.8, hemi: ['#8a3a20', '#5a1808', 2.0], fog: [COL('#2c0c06'), 0.00038], cols, rects, obbs, veg, items, anim, beacons, nodes, padY: 8.2, rain: [V3(3, 9, 1), 0.5, '#ff8a4a'], walkR: 3000, door: [49, -10, -HP], foot: [0, 40], look: [0.7, 0.95, 1.3], heat: 0.12, music: 'hostile', smoke: [-2600, 760, -1900], hazard: (x, z, h) => h < -2.5 };
 }
 
 // ───────────────────────── 砂漠の星 ─────────────────────────
