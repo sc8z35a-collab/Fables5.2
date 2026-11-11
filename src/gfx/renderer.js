@@ -47,9 +47,10 @@ void main(){
   vec2 off=c*(uCA+uWarp*.014+uDamage*.004)*(.3+r2*4.);
   vec3 col=vec3(texture2D(tDiffuse,uv+off).r,texture2D(tDiffuse,uv).g,texture2D(tDiffuse,uv-off).b);
   if(uSharp>0.){vec3 bl=(texture2D(tDiffuse,uv+vec2(uPx.x,0.)).rgb+texture2D(tDiffuse,uv-vec2(uPx.x,0.)).rgb+texture2D(tDiffuse,uv+vec2(0.,uPx.y)).rgb+texture2D(tDiffuse,uv-vec2(0.,uPx.y)).rgb)*.25;col=max(col+clamp(col-bl,-.4,.4)*uSharp,0.);}
+  float sOcc=1.;if(uSun.z>.001){vec2 s0=uSun.xy*.5+.5;sOcc=0.;for(int i=0;i<5;i++){vec2 o=vec2(float(i==1)-float(i==2),float(i==3)-float(i==4))*uPx*4.;sOcc+=smoothstep(1.,3.,dot(texture2D(tDiffuse,clamp(s0+o,0.,1.)).rgb,vec3(.333)));}sOcc*=.2;} // 太陽が建物などに隠れていれば光条を出さない
   if(uSun.z>.001&&uRays>0.){vec2 sp=uSun.xy*.5+.5,dl=uv-sp;float jit=hash(vUv*913.+fract(uTime)*7.3),w=1.,ws=0.;vec3 acc=vec3(0.);
     for(int i=0;i<14;i++){vec3 sm=texture2D(tDiffuse,uv-dl*((float(i)+jit)/14.)*.94).rgb;acc+=min(max(sm-1.5,0.),vec3(10.))*w;ws+=w;w*=.93;}
-    col+=acc/ws*uRays*.2*uSun.z;}
+    col+=acc/ws*uRays*.2*uSun.z*(.25+.75*sOcc);}
   if(uSun.z>.001&&uFlare>0.){vec2 sp2=uSun.xy*.5+.5;float occ=0.;for(int i=0;i<5;i++){vec2 o=vec2(float(i==1)-float(i==2),float(i==3)-float(i==4))*uPx*3.;occ+=smoothstep(1.2,4.,dot(texture2D(tDiffuse,clamp(sp2+o,0.,1.)).rgb,vec3(.333)));}
     vec2 a=vec2(uAspect,1.);col+=flare(c*2.*a,uSun.xy*a)*uSun.z*uFlare*occ*.2;}
   col+=uHeat*vec3(1.,.33,.07)*pow(r2*2.6,1.2)*1.6;
@@ -119,6 +120,7 @@ export class Gfx {
 }
 
 // ───────────────────────── 平面反射 (濡れた路面・磨かれた床) ─────────────────────────
+const _pl = new THREE.Plane(), _cl = new THREE.Vector4(), _qv = new THREE.Vector4();
 const _n = new THREE.Vector3(0, 1, 0), _cp = new THREE.Vector3(), _look = new THREE.Vector3(), _view = new THREE.Vector3(), _tgt = new THREE.Vector3(), _rot = new THREE.Matrix4(), _pp = new THREE.Vector3();
 export class Mirror {
   constructor(gfx, y = 0) {
@@ -148,6 +150,9 @@ export class Mirror {
     const v = this.cam; v.position.copy(_view); v.up.set(0, 1, 0).applyMatrix4(_rot).reflect(_n); v.lookAt(_tgt);
     v.near = camera.near; v.far = camera.far; v.updateMatrixWorld(); v.projectionMatrix.copy(camera.projectionMatrix); v.projectionMatrixInverse.copy(camera.projectionMatrixInverse);
     this.matrix.set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1).multiply(v.projectionMatrix).multiply(v.matrixWorldInverse);
+    // 斜めの近クリップ面: 鏡面より下 (路面の下の護岸・桟橋・地形) を反射に写さない
+    _pl.setFromNormalAndCoplanarPoint(_n, _pp).applyMatrix4(v.matrixWorldInverse); _cl.set(_pl.normal.x, _pl.normal.y, _pl.normal.z, _pl.constant);
+    { const e = v.projectionMatrix.elements; _qv.set((Math.sign(_cl.x) + e[8]) / e[0], (Math.sign(_cl.y) + e[9]) / e[5], -1, (1 + e[10]) / e[14]); _cl.multiplyScalar(2 / _cl.dot(_qv)); e[2] = _cl.x; e[6] = _cl.y; e[10] = _cl.z + 1 - 0.003; e[14] = _cl.w; v.projectionMatrixInverse.copy(v.projectionMatrix).invert(); }
     const r = this.gfx.renderer, prev = r.getRenderTarget(), sh = r.shadowMap.autoUpdate;
     for (const o of this.hide) o.visible = false;
     this.u.uMirrorOn.value = 0; this.u.tMirror.value = null; r.shadowMap.autoUpdate = false; // 自己参照 (フィードバックループ) を避ける
@@ -170,7 +175,7 @@ export class Mirror {
           vec2 muv=vMirror.xy/vMirror.w+normal.xz*.035;
           float fr=pow(1.-saturate(dot(normal,normalize(vViewPosition))),3.);
           float gl=saturate(1.-roughnessFactor*1.15);
-          vec3 rf=textureLod(tMirror,muv,roughnessFactor*7.).rgb;
+          vec3 rf=min(textureLod(tMirror,muv,roughnessFactor*7.).rgb,vec3(3.5)); // 太陽などの映り込みが白飛びしないよう上限
           outgoingLight+=rf*uMirrorK*gl*mix(.22,1.,fr);
         }
         #include <opaque_fragment>`);

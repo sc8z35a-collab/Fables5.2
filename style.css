@@ -46,7 +46,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .tgt .b { height: calc(var(--u) * .9); background: rgba(255, 255, 255, .12); margin-top: calc(var(--u) * .6); position: relative; }
 .tgt .b b { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c); }
 .tgt .b.h b { background: var(--bad); }
-.msgs { position: absolute; left: calc(var(--u) * 3.5); top: calc(var(--u) * 21); width: 42%; font-size: calc(var(--u) * 2.6); line-height: 1.5; }
+.msgs { position: absolute; left: calc(var(--u) * 3.5); top: calc(var(--u) * 21); width: 46%; font-size: calc(var(--u) * 2.6); line-height: 1.5; text-wrap: pretty; line-break: strict; }
 .msgs div { background: linear-gradient(90deg, rgba(4, 12, 22, .75), transparent); border-left: 3px solid var(--c); padding: calc(var(--u) * .5) calc(var(--u) * 1.4); margin-bottom: calc(var(--u) * .6); animation: msgIn .25s; transition: opacity .6s; }
 .msgs div.warn { border-color: var(--bad); color: #ffd0c8; }
 .msgs div.good { border-color: var(--ok); color: #d6ffe8; }
