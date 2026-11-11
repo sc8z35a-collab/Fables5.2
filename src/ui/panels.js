@@ -105,16 +105,19 @@ export class UI {
         cv.width = W * s; cv.height = H * s; const x = cv.getContext('2d'); x.scale(s, s);
         const cx = W / 2, cy = H / 2, k = (Math.min(W, H) / 2 - 16) / 7.7e7, P = (p) => [cx + p[0] * k, cy + p[2] * k];
         const gr = x.createRadialGradient(cx, cy, 0, cx, cy, 40); gr.addColorStop(0, '#fff6d0'); gr.addColorStop(0.3, '#ffb040'); gr.addColorStop(1, 'rgba(255,120,0,0)'); x.fillStyle = gr; x.fillRect(cx - 40, cy - 40, 80, 80);
-        x.textAlign = 'center'; x.font = `${G.H * 0.022}px sans-serif`;
+        x.textAlign = 'center'; x.font = `${G.H * 0.022}px "Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif`; x.lineJoin = 'round';
+        const label = (t, tx, ty, c) => { x.lineWidth = 3.5; x.strokeStyle = 'rgba(2,8,16,.92)'; x.strokeText(t, tx, ty); x.fillStyle = c; x.fillText(t, tx, ty); }; // 恒星の光の上でも読めるように縁取り
         for (const bd of BODIES) { if (bd.type === 'sun') continue; const rr = Math.hypot(bd.pos[0], bd.pos[2]) * k, [px, py] = P(bd.pos);
           x.strokeStyle = 'rgba(111,232,255,.22)'; x.lineWidth = 1; x.beginPath(); x.arc(cx, cy, rr, 0, 7); x.stroke();
           x.fillStyle = bd.color; x.shadowColor = bd.color; x.shadowBlur = 12; x.beginPath(); x.arc(px, py, 4 + Math.log10(bd.R / 1e4) * 4, 0, 7); x.fill(); x.shadowBlur = 0;
           if (bd.ring) { x.strokeStyle = '#e8c890'; x.beginPath(); x.ellipse(px, py, 16, 5, -0.3, 0, 7); x.stroke(); }
-          x.fillStyle = '#dff6ff'; x.fillText(bd.name, px, py - 16);
-          const n = sp.enemies.filter((e) => e.def.body === bd.id && e.state !== 'gone').length; if (n) { x.fillStyle = '#ff5a4a'; x.fillText(`敵 ${n}`, px, py + 26); } }
+          label(bd.name, px, py - 16, '#dff6ff');
+          const n = sp.enemies.filter((e) => e.def.body === bd.id && e.state !== 'gone').length; if (n) label(`敵 ${n}`, px, py + 26, '#ff6a5a'); }
         for (const st of STATIONS) { const [px, py] = P(st.pos); x.strokeStyle = st.color; x.lineWidth = 1.5; x.strokeRect(px + 9, py - 3, 6, 6); }
         if (sel) { const it = items.find((i) => i.type === sel.type && i.id === sel.id); if (it) { const [px, py] = P(it.pos); x.strokeStyle = '#ffd27a'; x.lineWidth = 2; x.beginPath(); x.arc(px, py, 20, 0, 7); x.stroke(); const [mx, my] = P([me.x, 0, me.z]); x.setLineDash([5, 5]); x.beginPath(); x.moveTo(mx, my); x.lineTo(px, py); x.stroke(); x.setLineDash([]); } }
-        const [mx, my] = P([me.x, 0, me.z]); x.fillStyle = '#fff'; x.beginPath(); x.moveTo(mx, my - 8); x.lineTo(mx + 6, my + 6); x.lineTo(mx - 6, my + 6); x.fill(); x.fillText('現在地', mx, my + 22);
+        const [mx, my] = P([me.x, 0, me.z]), tri = (tx, ty, s2) => { x.beginPath(); x.moveTo(tx, ty - s2 * 1.3); x.lineTo(tx + s2, ty + s2); x.lineTo(tx - s2, ty + s2); x.closePath(); };
+        x.lineWidth = 3; x.strokeStyle = 'rgba(2,8,16,.92)'; tri(mx, my, 6); x.stroke(); x.fillStyle = '#fff'; tri(mx, my, 6); x.fill();
+        x.textAlign = 'left'; tri(18, 20, 5); x.fill(); label('現在地', 30, 21, '#fff'); x.textAlign = 'center'; // 惑星の表示と重ならないよう凡例に
       };
       const list = () => {
         side.innerHTML = '';
@@ -179,6 +182,7 @@ export class UI {
       if (!L.length) this.note(b, '現在募集中の任務はありません。別の拠点を訪ねるか、時間を置いてください。');
       for (const m of L) this.row(b, m.title, m.desc, fmtCr(m.reward), [{ label: '受注', off: G.p.missions.length >= 4, fn: () => { if (accept(m)) { SFX('nav'); G.hud.msg(`任務受注：${m.title}`, 'good'); } else { SFX('deny'); G.hud.msg('貨物室に空きがありません', 'warn'); } api.refresh(); } }]);
       el('h3', '', `受注中 (${G.p.missions.length}/4)`, b);
+      if (!G.p.missions.length) this.note(b, '受注中の任務はありません。上の一覧から「受注」を押してください。');
       for (const m of G.p.missions) this.row(b, m.title, m.desc, `${m.prog}/${m.need}`, [{ label: '破棄', cls: 'red', fn: () => { if (m.type === 'deliver') takeCargo(m.cargo, m.qty); G.p.missions.splice(G.p.missions.indexOf(m), 1); api.refresh(); } }]);
     });
   }

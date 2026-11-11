@@ -96,7 +96,8 @@ export class InteriorMode {
   exit() { G.hud.setPrompt(''); G.hud.setCtx([]); G.hud.damage(0); this._sky?.(false); }
   onQuality() { this.cache.forEach((it) => { it.env = null; }); }
   /** 惑星上では空ドームを背景に使う */
-  _sky(on, bodyId) { const sm = G.modes.surface; if (!on) { if (this.skyM) { this.scene.remove(this.skyM); sm.reclaimSky(this.skyM); this.skyM = null; } return; } const m = sm?.skyMesh?.(bodyId); if (m) { this.scene.add(m); this.skyM = m; } }
+  /** 地上の建物・着陸中の船内: 窓の外に地表の空を描く。空の球 (半径 9000m) は室内カメラの描画距離 (400m) を超えて切り取られ窓が真っ黒になるので、室内では縮めて使う */
+  _sky(on, bodyId) { const sm = G.modes.surface; if (!on) { if (this.skyM) { this.skyM.scale.setScalar(1); this.scene.remove(this.skyM); sm.reclaimSky(this.skyM); this.skyM = null; } return; } const m = sm?.skyMesh?.(bodyId); if (m) { m.scale.setScalar(0.03); this.scene.add(m); this.skyM = m; } }
   /** 格納庫に自機を置く */
   _slot() {
     const it = this.cur; if (this.shipObj) { this.shipObj.parent?.remove(this.shipObj); this.shipObj = null; }
@@ -255,7 +256,7 @@ export class InteriorMode {
       const hit = Math.hypot(m.x - p.x, m.z - p.z) < 0.5 && m.y > 0.2 && m.y < 1.9;
       let wall = true; for (const w of it.walk) if (m.x >= w[0] - 0.3 && m.x <= w[2] + 0.3 && m.z >= w[1] - 0.3 && m.z <= w[3] + 0.3) { wall = false; break; }
       if (hit) this.hurt(s.dmg);
-      if (hit || wall || s.life <= 0 || m.y < 0.05) { s.life = 0; s.m.visible = false; this.parts.burst(m, 8, 3, _col.set('#ff7040'), 0.12, 0.3, null, 2); }
+      if (hit || wall || s.life <= 0 || m.y < 0.05) { s.life = 0; s.m.visible = false; if (!hit) this.parts.burst(m, 8, 3, _col.set('#ff7040'), 0.12, 0.3, null, 2); } // 自分への命中はカメラの中で火花が弾けるので出さない (被弾表示は画面の赤みで行う)
     }
     // 自分の射撃
     this.fireT -= dt; this.tracer.visible = this.tracer.visible && this.fireT > 0.14;

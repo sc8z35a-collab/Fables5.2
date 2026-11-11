@@ -13,7 +13,7 @@ const MM = () => _M || (_M = {
   wd: mat('wood', { rough: 0.75, metal: 0 }), lf: mat('flat', { color: 0x256b2a, rough: 0.85, metal: 0 }), lf2: mat('flat', { color: 0x4f9a3a, rough: 0.85, metal: 0 }), tr: mat('flat', { color: 0x4a3524, rough: 0.9, metal: 0 }),
   so: mat('flat', { color: 0x2a1e14, rough: 1, metal: 0 }),
 });
-const fab = (c) => mat('carpet', { color: c, rough: 1, metal: 0 });
+const fab = (c) => mat('padded', { color: c, rough: 0.8, metal: 0.02 }); // 椅子・ソファの張り地 (絨毯の細かい粒状模様だと砂のように見えるため)
 const crateM = (c) => mat('rib', { color: c, metal: 0.35, rough: 0.8 });
 const flat = (c, r = 0.5, m = 0.2) => mat('flat', { color: c, rough: r, metal: m });
 const CRATE = [0xb8452e, 0x2e7ab8, 0xc9a22e, 0x3aa86a, 0x7a808a, 0x8a4ab8];

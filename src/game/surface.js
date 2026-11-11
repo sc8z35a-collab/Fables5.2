@@ -106,7 +106,7 @@ export class SurfaceMode {
     const zr = e.zone ? e.zone(cp.x, cp.z) : e.rain; this.rainA = e.zone ? damp(this.rainA, zr[1] * smooth(2600, 1500, cp.y), 2, dt) : zr[1]; if (zr[2] !== this._rc) { this._rc = zr[2]; this.streaks.u.uCol.value.set(zr[2]); }
     this.streaks.update(dt, _a.copy(cv).sub(zr[0]), 0.02, this.rainA, 3.2);
     if (++this.tick % 4 === 0) { this._cull(); if (this.tick % 20 === 0) this._region(); }
-    if (e.expo) { const t = e.expo(cp.x, cp.z); this.ex = this.ex == null ? t : damp(this.ex, t, 0.8, dt); G.gfx.fx.uExposure.value = this.ex; } // 地域に合わせて露出をなめらかに変える
+    if (e.expo) { const t = e.expo(cp.x, cp.z); this.ex = this.ex == null ? t : damp(this.ex, t, 0.35, dt); G.gfx.fx.uExposure.value = this.ex; } // 地域に合わせて露出をなめらかに変える
     if (e.smoke && Math.random() < dt * 40) this.parts.emit(e.smoke[0] + (Math.random() - 0.5) * 200, e.smoke[1], e.smoke[2] + (Math.random() - 0.5) * 200, (Math.random() - 0.5) * 60, 120 + Math.random() * 160, (Math.random() - 0.5) * 60, 3, 0.9, 0.2, 160 + Math.random() * 200, 5, 0.25, 12);
     this.parts.update(dt, G.gfx.ph / (2 * Math.tan(this.camera.fov * Math.PI / 360))); this.debris.update(dt, 9.8, (x, z) => this.ground(x, z));
     // 光源は対象に追従
@@ -246,7 +246,11 @@ export class SurfaceMode {
       if (snap) s.camQ.copy(s.q); else s.camQ.slerp(s.q, 1 - Math.exp(-4 * dt));
       if (s.view === 1 && !s.landed) { c.position.copy(s.m.cockpit).applyQuaternion(s.q).add(s.pos); c.quaternion.copy(s.q); s.m.body.visible = false; }
       else { s.m.body.visible = true; const k = clamp(s.speed / 430, 0, 1), d = s.m.cam.d * (s.landed ? 1.25 : 1 + k * 0.2); c.position.set(0, s.m.cam.h * (s.landed ? 0.75 : 1), d).applyQuaternion(s.camQ).add(s.pos); c.quaternion.copy(s.camQ); c.rotateX(-0.07);
-        const gy = this.ground(c.position.x, c.position.z) + 1.5; if (c.position.y < gy) c.position.y = gy; }
+        const gy = this.ground(c.position.x, c.position.z) + 1.5; if (c.position.y < gy) c.position.y = gy;
+        // 機体とカメラの間に建物があれば、カメラを建物の手前まで寄せる
+        if (this.grid.size) { const sx = s.pos.x, sy = s.pos.y, sz = s.pos.z, dx = c.position.x - sx, dy = c.position.y - sy, dz = c.position.z - sz; let tmin = 1;
+          for (let i = 1; i <= 12; i++) { const t = i / 12, x = sx + dx * t, y = sy + dy * t, z = sz + dz * t, b = this._box(x, z, 1.2); if (b && y < b[6] + 1) { tmin = Math.max(0.12, (i - 1) / 12); break; } }
+          if (tmin < 1) c.position.set(sx + dx * tmin, Math.max(sy + dy * tmin, this.ground(sx + dx * tmin, sz + dz * tmin) + 1.5), sz + dz * tmin); } }
       c.fov = damp(c.fov, 64 + clamp(s.speed / 430, 0, 1) * 12, 4, dt || 1);
     }
     if (this.shake > 0.01) { this.shake *= Math.exp(-4 * (dt || 0.016)); c.position.x += (Math.random() - 0.5) * this.shake; c.position.y += (Math.random() - 0.5) * this.shake; }

@@ -525,9 +525,10 @@ export class SpaceMode {
     h.bar('sh', p.shield / st.shield); h.bar('hull', p.hull / st.hull); h.bar('en', p.energy / st.energy);
     const sp = p.vel.length();
     h.setSpeed(fmtSpeed(sp), p.sc.on ? 'SUPERCRUISE' : p.docked ? 'DOCKED' : p.auto?.type === 'dock' ? 'AUTO DOCK' : p.auto?.type === 'nav' ? 'AUTOPILOT' : `MSL ${p.missiles}`);
-    const nb = this.nb || (this.nb = this.nearBody());
+    const nb = (this.nb = p.docked || !this.nb ? this.nearBody() : this.nb); // ドッキング中は飛行処理が走らないのでここで更新
     h.setLoc(nb.alt < nb.b.R * 6 ? `${nb.b.def.name} 軌道` : '惑星間空間', nb.alt < nb.b.R * 6 ? `高度 ${fmtDist(nb.alt)}` : 'DEEP SPACE');
     G.input.active('sc', p.sc.on || p.sc.charge > 0); G.input.active('ap', p.auto?.type === 'nav');
+    { const fly = !p.docked; for (const id of ['fire', 'mis', 'boost', 'tgt', 'rl', 'rr', 'sc', 'ap']) G.input.show(id, fly); G.input.thrEl.style.visibility = fly ? '' : 'hidden'; } // ドッキング中は操縦ボタンを隠す
     h.begin();
     const fwd = _a.copy(FWD).applyQuaternion(p.quat);
     if (!p.docked) { const [rx, ry, rf] = h.project(_b.copy(p.pos).addScaledVector(fwd, 2000), cam); if (rf) h.reticle(rx, ry, '#6fe8ff'); }

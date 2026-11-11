@@ -61,7 +61,7 @@ function gridTerrain(H, colorFn, o = {}) {
   let q = 0; for (let iz = 0; iz < seg; iz++) for (let ix = 0; ix < seg; ix++) { const a = iz * n + ix, b = a + 1, cc = a + n, d = cc + 1; idx[q++] = a; idx[q++] = cc; idx[q++] = b; idx[q++] = b; idx[q++] = cc; idx[q++] = d; }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(new THREE.BufferAttribute(idx, 1)); g.computeVertexNormals();
   const s = texSet(o.tex || 'rock'), m = new THREE.MeshStandardMaterial({ vertexColors: true, map: s.map, normalMap: s.normalMap, roughnessMap: s.roughnessMap, roughness: o.rough ?? 1, metalness: o.metal ?? 0.05 });
-  m.normalScale.setScalar(o.ns ?? 1.2); m.envMapIntensity = o.env ?? 0.5; m.color.setScalar(o.gain ?? 2.3); terrainPatch(m, o.frag || '', o.key || 'std', o.head || '', o.uniforms);
+  m.normalScale.setScalar(o.ns ?? 1.2); m.envMapIntensity = o.env ?? 0.5; m.color.setScalar(o.gain ?? 2.3); terrainPatch(m, o.frag || '', o.key || 'std', o.head || '', o.uniforms, us);
   const mesh = new THREE.Mesh(g, m); mesh.receiveShadow = true; mesh.frustumCulled = false;
   const find = (v) => { let lo = 0, hi = seg; while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (xs[mid] <= v) lo = mid; else hi = mid; } return lo; };
   mesh.heightAt = (x, z) => {
@@ -72,14 +72,17 @@ function gridTerrain(H, colorFn, o = {}) {
   return mesh;
 }
 /** 地形マテリアルの拡張: 多重スケールの色むら・近接ディテール法線・惑星別の追加シェーダ */
-function terrainPatch(m, frag, key, head = '', uniforms = null) {
+function terrainPatch(m, frag, key, head = '', uniforms = null, us = 0.045) {
+  const tri = `#ifdef USE_MAP
+{vec3 bw=pow(abs(normalize(vTn)),vec3(6.));bw/=bw.x+bw.y+bw.z;float s_=${us.toFixed(4)};diffuseColor*=texture2D(map,vTw.zy*s_)*bw.x+texture2D(map,vTw.xz*s_)*bw.y+texture2D(map,vTw.xy*s_)*bw.z;}
+#endif`; // 崖でテクスチャが縦に引き伸ばされないよう三方向から投影
   const nf = THREE.ShaderChunk.normal_fragment_maps.replace('vec3 mapN = texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0;', 'vec3 mapN = texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0; { float tdn = length( vViewPosition ); vec3 mN2 = texture2D( normalMap, vNormalMapUv * 7.3 ).xyz * 2.0 - 1.0; vec3 mN3 = texture2D( normalMap, vNormalMapUv * 0.17 ).xyz * 2.0 - 1.0; mapN = normalize( vec3( mapN.xy * smoothstep( 1400.0, 80.0, tdn ) + mN2.xy * smoothstep( 160.0, 8.0, tdn ) * 0.9 + mN3.xy * 0.7, mapN.z ) ); }');
   m.onBeforeCompile = (sh) => {
     if (uniforms) Object.assign(sh.uniforms, uniforms);
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vTw,vTn;').replace('#include <project_vertex>', '#include <project_vertex>\nvTw=(modelMatrix*vec4(transformed,1.)).xyz;vTn=normalize(mat3(modelMatrix)*objectNormal);');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vTw,vTn;\n' + N2 + head)
       .replace('#include <color_fragment>', '#include <color_fragment>\n{float td=length(vViewPosition);float tn1=fbm2(vTw.xz*.011),tn2=fbm2(vTw.xz*.17+7.);vec3 tfar=texture2D(map,vMapUv*.093).rgb;\ndiffuseColor.rgb*=(.74+.52*tn1)*(.88+.24*tn2)*mix(vec3(1.),tfar*2.3,.4*smoothstep(40.,500.,td));\n' + frag + '}')
-      .replace('#include <normal_fragment_maps>', nf);
+      .replace('#include <normal_fragment_maps>', nf).replace('#include <map_fragment>', tri);
   };
   m.customProgramCacheKey = () => 'terrain' + key;
 }
@@ -91,11 +94,11 @@ function scatter(geo, material, n, place, shadow = true) {
 }
 /** 着陸パッド */
 function pad(B, y = 0, r = 34, col = '#fc4') {
-  const D = mat('hull', { color: 0x3a3f48, rough: 0.7, metal: 0.6 }), P = mat('plate', { color: 0x8a9099, rough: 0.5, metal: 0.6, uvs: 0.25 });
+  const D = mat('hull', { color: 0x3a3f48, rough: 0.7, metal: 0.6 }), P = mat('plate', { color: 0x8a9099, rough: 0.72, metal: 0.35, uvs: 0.25 }); // 低い太陽の照り返しが白い帯にならない程度の粗さ
   B.cyl(D, r + 1.5, r + 3, 1.2, 0, y - 0.6, 0, 'y', 48); B.cyl(P, r, r, 0.12, 0, y + 0.02, 0, 'y', 48);
-  B.add(glow(col, 2.4), new THREE.RingGeometry(r - 2.2, r - 1.6, 64).rotateX(-HP), mx(0, y + 0.1, 0), 0); B.add(glow(col, 2.4), new THREE.RingGeometry(r * 0.45, r * 0.45 + 0.5, 48).rotateX(-HP), mx(0, y + 0.1, 0), 0);
-  for (const a of [0, HP, Math.PI, -HP]) B.add(glow(col, 2.2), new THREE.PlaneGeometry(0.7, r * 0.42).rotateX(-HP), mx(Math.cos(a) * r * 0.72, y + 0.1, Math.sin(a) * r * 0.72, 0, -a + HP, 0), 0);
-  for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8; B.box(D, 0.4, 0.5, 0.4, Math.cos(a) * (r + 0.6), y + 0.25, Math.sin(a) * (r + 0.6)); B.sph(glow(i % 2 ? '#4f8' : '#fff', 5), 0.16, Math.cos(a) * (r + 0.6), y + 0.6, Math.sin(a) * (r + 0.6), 1, 1, 1, 8); }
+  B.add(glow(col, 1.15), new THREE.RingGeometry(r - 2.2, r - 1.6, 64).rotateX(-HP), mx(0, y + 0.1, 0), 0); B.add(glow(col, 1.15), new THREE.RingGeometry(r * 0.45, r * 0.45 + 0.5, 48).rotateX(-HP), mx(0, y + 0.1, 0), 0); // 発光が強すぎると色が飛んで白い光の帯に見える
+  for (const a of [0, HP, Math.PI, -HP]) B.add(glow(col, 1.05), new THREE.PlaneGeometry(0.7, r * 0.42).rotateX(-HP), mx(Math.cos(a) * r * 0.72, y + 0.1, Math.sin(a) * r * 0.72, 0, -a + HP, 0), 0);
+  for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8; B.cyl(D, 0.2, 0.26, 0.42, Math.cos(a) * (r + 0.6), y + 0.21, Math.sin(a) * (r + 0.6), 'y', 10); B.sph(glow(i % 2 ? '#4f8' : '#ffe6c8', 2), 0.13, Math.cos(a) * (r + 0.6), y + 0.6, Math.sin(a) * (r + 0.6), 1, 1, 1, 8); }
 }
 /** 採取できる資源結晶 */
 function node(color, s = 1, seed = 1) {

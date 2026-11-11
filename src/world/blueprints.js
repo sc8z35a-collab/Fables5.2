@@ -142,7 +142,7 @@ const rogue = () => ({
 
 // ───────────────────────── 主人公機の船内 (3 隻とも構造が異なる) ─────────────────────────
 const hayate = () => ({
-  name: 'ハヤテ 船内', sub: '高機動迎撃機', seed: 61, spawn: [2.5, 3.7, 0], view: [0, -1], music: 'interior',
+  name: 'ハヤテ 船内', sub: '高機動迎撃機', seed: 61, spawn: [1.75, 3.5, 0], view: [0, -1], music: 'interior',
   theme: { wall: ['smooth', 0xc4cad2, 0.6, 0.3], floor: ['plate', 0x7a8088, 0.5, 0.7], ceil: ['rib', 0x6a7078], trim: '#ff8a2a', lamp: '#fff0e0', amb: [0xffe0c0, 0x34383c, 0.8], gloss: 0.5, door3: 'hatch', trims: 'low', lamps: 'tube', deco: ['cables'] },
   rooms: [
     { id: 'cockpit', name: 'コックピット', x: 0, z: 0, w: 5, d: 5, h: 2.5, deco: [], win: [['n', 0.5, 4.5, 1.0, 2.2], ['w', 0.5, 3.6, 1.1, 2.15], ['e', 0.5, 3.6, 1.1, 2.15]],
@@ -202,7 +202,7 @@ const OUT = {
     rooms: [
       { id: 'lobby', name: '到着ロビー', x: 0, z: 0, w: 22, d: 16, h: 7, win: [['n', 2, 20, 0.5, 6.2]], deco: ['columns'],
         props: [T('交易所', 'market', 19.5, 3.5, 3, { c: '#4df0ff' }), ['seatrow', 7, 8, 0, { n: 5, c: 0x2a2a5a }], ['seatrow', 7, 9.2, 2, { n: 5, c: 0x2a2a5a }], ['seatrow', 15, 8, 0, { n: 5, c: 0x2a2a5a }], ['seatrow', 15, 9.2, 2, { n: 5, c: 0x2a2a5a }], ['vending', 21.3, 12, 3], ['vending', 21.3, 13.3, 3, { c: '#f4c', title: 'SNACK' }],
-          ['hoload', 11, 4, 0, { text: '到着 ARRIVALS', c: '#4df0ff', y: 4.4, h: 0.9 }], S('NEON BAY', 11, 0.3, 0, { h: 1.0, y: 5.4, c: '#4df0ff', frame: 1 }), ['plant', 1.2, 14.6, 0, { s: 1.4, dark: 1 }], ['plant', 20.8, 14.8, 0, { s: 1.4, dark: 1 }], ['exit', 11, 15.8, 2, { label: '外へ出る', sign: '出口 EXIT', w: 3 }], N('旅行者', 'talk:tourist', 13, 5.6, 2.4, 0x3a6ea8), S('← ラーメン', 0.3, 12.4, 1, { h: 0.5, y: 3.2, c: '#ffb347' }), S('GAME →', 21.7, 4.8, 3, { h: 0.5, y: 3.2, c: '#4df0ff' })] },
+          ['hoload', 11, 4, 0, { text: '到着 ARRIVALS', c: '#4df0ff', y: 4.4, h: 0.9 }], S('NEON BAY', 11, 0.3, 0, { h: 0.9, y: 6.2, c: '#4df0ff', frame: 1 }), ['plant', 1.2, 14.6, 0, { s: 1.4, dark: 1 }], ['plant', 20.8, 14.8, 0, { s: 1.4, dark: 1 }], ['exit', 11, 15.8, 2, { label: '外へ出る', sign: '出口 EXIT', w: 3 }], N('旅行者', 'talk:tourist', 13, 5.6, 2.4, 0x3a6ea8), S('← ラーメン', 0.3, 12.4, 1, { h: 0.5, y: 3.2, c: '#ffb347' }), S('GAME →', 21.7, 4.8, 3, { h: 0.5, y: 3.2, c: '#4df0ff' })] },
       { id: 'ramen', name: 'ラーメン横丁', x: -9, z: 4, w: 9, d: 8, h: 3.2, wall: ['shoji', 0xfff0d8, 0.9, 0], floor: ['wood', 0xb89068, 0.5, 0], ceil: ['wood', 0x6a4a30], ceil3: 'flat', nobeam: 1, deco: ['beams', 'lanterns'], lamps: 'lantern', trims: 'none', lamp: '#ffb880',
         props: [['barcounter', 4.5, 2.3, 0, { w: 6, c: '#ffb347' }], N('ラーメン屋の店主', 'ramen', 4.5, 1.2, 0, 0xc04a2a, { visor: '#ffb347' }), S('ラーメン', 4.5, 0.3, 0, { h: 0.6, y: 2.75, c: '#ffb347', frame: 1 }), ['poster', 0.25, 5.4, 1, { text: '星屑\nトンコツ', c: '#ff5a3a', h: 1.1, y: 1.8 }], ['table', 2.4, 6, 0, { wood: 1, n: 3 }], ['barrel', 7.8, 7, 0]] },
       { id: 'shop', name: 'アーケード街', x: 22, z: 2, w: 12, d: 12, h: 5, trim: '#4df0ff', floor: ['carpet', 0x2a1a4a, 1, 0], ceil3: 'flat', nobeam: 1, deco: ['lanterns'],
