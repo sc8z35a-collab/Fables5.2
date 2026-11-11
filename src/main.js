@@ -47,7 +47,7 @@ G.go = async (name, params = {}, o = {}) => {
   await G.fade(0, o.flash ? 1.0 : 0.35, o.flash);
   G.mode?.exit?.(name);
   if (o.flash) { G.gfx.fx.uFade.value = 0; }
-  G.mode = G.modes[name]; G.modeName = name;
+  G.mode = G.modes[name]; G.modeName = name; G.hud.begin(); G.hud.setCtx([]);
   try { await G.mode.enter(params); } catch (e) { console.error(e); }
   G.busy = false;
   if (o.flash) { G.gfx.fx.uFade.value = 1; await G.fade(1, 0.9, true); } else await G.fade(1, 0.5);

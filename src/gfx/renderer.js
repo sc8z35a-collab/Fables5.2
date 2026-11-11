@@ -50,7 +50,8 @@ void main(){
   if(uSun.z>.001&&uRays>0.){vec2 sp=uSun.xy*.5+.5,dl=uv-sp;float jit=hash(vUv*913.+fract(uTime)*7.3),w=1.,ws=0.;vec3 acc=vec3(0.);
     for(int i=0;i<14;i++){vec3 sm=texture2D(tDiffuse,uv-dl*((float(i)+jit)/14.)*.94).rgb;acc+=min(max(sm-1.5,0.),vec3(10.))*w;ws+=w;w*=.93;}
     col+=acc/ws*uRays*.2*uSun.z;}
-  if(uSun.z>.001&&uFlare>0.){vec2 a=vec2(uAspect,1.);col+=flare(c*2.*a,uSun.xy*a)*uSun.z*uFlare;}
+  if(uSun.z>.001&&uFlare>0.){vec2 sp2=uSun.xy*.5+.5;float occ=0.;for(int i=0;i<5;i++){vec2 o=vec2(float(i==1)-float(i==2),float(i==3)-float(i==4))*uPx*3.;occ+=smoothstep(1.2,4.,dot(texture2D(tDiffuse,clamp(sp2+o,0.,1.)).rgb,vec3(.333)));}
+    vec2 a=vec2(uAspect,1.);col+=flare(c*2.*a,uSun.xy*a)*uSun.z*uFlare*occ*.2;}
   col+=uHeat*vec3(1.,.33,.07)*pow(r2*2.6,1.2)*1.6;
   col+=uWarp*vec3(.25,.45,1.)*pow(r2*2.4,1.6)*.5;
   col=aces(col*uExposure);

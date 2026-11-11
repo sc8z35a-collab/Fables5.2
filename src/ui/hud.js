@@ -31,7 +31,7 @@ export class Hud {
   }
   show(on) { this.root.classList.toggle('hide', !on); }
   setMode(m) {
-    this.mode = m; const f = m === 'space' || m === 'atmo';
+    this.mode = m; const f = m === 'space' || m === 'atmo'; this.root.classList.toggle('title', m === 'title');
     this.bars.style.display = m === 'title' ? 'none' : ''; this.speed.style.display = f ? '' : 'none';
     this.cross.style.display = m === 'fps' ? 'block' : 'none'; if (m !== 'fps') this.prompt.style.display = 'none';
     this.tgt.style.display = 'none'; this.cockpit.style.display = 'none';
@@ -65,7 +65,7 @@ export class Hud {
   setPrompt(text) { if (text !== this._pr) { this._pr = text; this.prompt.style.display = text ? 'block' : 'none'; this.prompt.textContent = text || ''; } }
   damage(k) { this.vign.style.opacity = clamp(k, 0, 1); }
   // ── キャンバス描画 ──
-  begin() { const x = this.x; x.setTransform(this.s, 0, 0, this.s, 0, 0); x.clearRect(0, 0, G.W, G.H); x.lineWidth = 1.5; x.textAlign = 'center'; x.textBaseline = 'middle'; this.font(2.2); }
+  begin() { this.lbl = []; const x = this.x; x.setTransform(this.s, 0, 0, this.s, 0, 0); x.clearRect(0, 0, G.W, G.H); x.lineWidth = 1.5; x.textAlign = 'center'; x.textBaseline = 'middle'; this.font(2.2); }
   font(k, bold) { this.x.font = `${bold ? '700 ' : ''}${this.u * k}px "Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif`; }
   /** ワールド座標 → 画面座標。戻り値 [x, y, 前方か] */
   project(p, cam) {
@@ -74,24 +74,29 @@ export class Hud {
   }
   /** 画面外なら縁に寄せて矢印を出す。戻り値 [x,y,onScreen] */
   edge(px, py, front) {
-    const m = this.u * 7, cx = G.W / 2, cy = G.H / 2; let dx = px - cx, dy = py - cy;
+    // 画面端の矢印は HUD (左上の地名・右上のボタン・右端の推力・左下のゲージ) と重ならない枠の内側に置く
+    const u = this.u, L = u * 7, R = G.W - u * (this.mode === 'fps' ? 9 : 17), T = u * 13, Bm = G.H - u * 25, cx = G.W / 2, cy = G.H / 2; let dx = px - cx, dy = py - cy;
     if (!front) { dx = -dx; dy = -dy; }
-    const on = front && px > m && px < G.W - m && py > m && py < G.H - m;
+    const on = front && px > u * 4 && px < G.W - u * 4 && py > u * 4 && py < G.H - u * 4;
     if (on) return [px, py, true];
-    const k = Math.min((cx - m) / Math.abs(dx || 1e-6), (cy - m) / Math.abs(dy || 1e-6));
+    const k = Math.min(dx > 0 ? (R - cx) / dx : dx < 0 ? (L - cx) / dx : 1e9, dy > 0 ? (Bm - cy) / dy : dy < 0 ? (T - cy) / dy : 1e9);
     return [cx + dx * k, cy + dy * k, false, Math.atan2(dy, dx)];
   }
   marker(px, py, front, color, label, sub, shape = 'diamond', size = 1.6) {
     const x = this.x, u = this.u, [mx, my, on, ang] = this.edge(px, py, front), s = u * size;
     x.strokeStyle = x.fillStyle = color; x.globalAlpha = 0.95;
-    if (!on) { x.save(); x.translate(mx, my); x.rotate(ang); x.beginPath(); x.moveTo(s * 1.4, 0); x.lineTo(-s * 0.6, s * 0.9); x.lineTo(-s * 0.6, -s * 0.9); x.closePath(); x.fill(); x.restore(); }
+    if (!on) { const s = Math.min(this.u * 1.6 * size, this.u * 2.6); x.save(); x.translate(mx, my); x.rotate(ang); x.beginPath(); x.moveTo(s * 1.4, 0); x.lineTo(-s * 0.6, s * 0.9); x.lineTo(-s * 0.6, -s * 0.9); x.closePath(); x.fill(); x.restore(); }
     else if (shape === 'diamond') { x.beginPath(); x.moveTo(mx, my - s); x.lineTo(mx + s, my); x.lineTo(mx, my + s); x.lineTo(mx - s, my); x.closePath(); x.stroke(); }
     else if (shape === 'bracket') { const q = s * 0.45; x.beginPath(); for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { x.moveTo(mx + sx * s, my + sy * (s - q)); x.lineTo(mx + sx * s, my + sy * s); x.lineTo(mx + sx * (s - q), my + sy * s); } x.stroke(); }
     else if (shape === 'circle') { x.beginPath(); x.arc(mx, my, s, 0, 7); x.stroke(); }
     if (label) {
-      const ty = on ? my + s + u * 2 : my + u * 3 * (my > G.H / 2 ? -1 : 1);
-      this.font(2.1, true); x.shadowColor = '#000'; x.shadowBlur = 4; x.fillText(label, clamp(mx, u * 12, G.W - u * 12), ty);
-      if (sub) { this.font(1.9); x.globalAlpha = 0.8; x.fillText(sub, clamp(mx, u * 12, G.W - u * 12), ty + u * 2.5); }
+      this.font(2.1, true); const up = !on && my > G.H / 2, lh = u * (sub ? 5 : 2.6), w = Math.max(x.measureText(label).width, sub ? x.measureText(sub).width : 0) + u, lx = clamp(mx, w / 2 + u * 1.5, G.W - w / 2 - u * 1.5);
+      let ty = on ? my + s + u * 2 : my + u * 3 * (up ? -1 : 1);
+      // 既に描いたラベルと重なる場合は、重ならなくなるまで上下にずらす
+      for (let i = 0; i < 8; i++) { const hit = this.lbl.find((b) => Math.abs(b[0] - lx) < (b[2] + w) / 2 && Math.abs(b[1] - ty) < lh * 0.5 + b[3] * 0.5); if (!hit) break; ty = up ? hit[1] - (hit[3] + lh) * 0.5 - u * 0.4 : hit[1] + (hit[3] + lh) * 0.5 + u * 0.4; }
+      this.lbl.push([lx, ty + (sub ? u * 1.25 : 0), w, lh]);
+      x.shadowColor = '#000'; x.shadowBlur = 4; x.fillText(label, lx, ty);
+      if (sub) { this.font(1.9); x.globalAlpha = 0.8; x.fillText(sub, lx, ty + u * 2.5); }
       x.shadowBlur = 0;
     }
     x.globalAlpha = 1;

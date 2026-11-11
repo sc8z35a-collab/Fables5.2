@@ -7,14 +7,14 @@ export class Input {
     this.look = { x: 0, y: 0 };  // 右ドラッグの移動量 (フレーム毎にリセット)
     this.thr = 0.5; this.roll = 0; this.vert = 0;
     this.btn = {}; this.keys = {}; this.tapped = {};
-    this.mode = 'none';
+    this.mode = null;
     this.touchUI = el('div', 'touch', '', app);
     this.stickBase = el('div', 'stick-base', '<div class="stick-knob"></div>', this.touchUI);
     this.knob = this.stickBase.firstChild; this.stickBase.style.display = 'none';
     this.zoneL = el('div', 'zone zone-l', '', this.touchUI);
     this.zoneR = el('div', 'zone zone-r', '', this.touchUI);
     this.buttons = el('div', 'btns', '', this.touchUI);
-    this.thrEl = el('div', 'thr', '<div class="thr-fill"></div><div class="thr-knob"></div><span>推力</span>', this.touchUI);
+    this.thrEl = el('div', 'thr', '<div class="thr-fill"></div><div class="thr-knob"></div><span>推<br>力</span>', this.touchUI);
     this.sid = null; this.lid = null; this.tid = null; this.s0 = [0, 0]; this.l0 = [0, 0];
     const P = (e) => G.toLocal(e.clientX, e.clientY);
     const opt = { passive: false };

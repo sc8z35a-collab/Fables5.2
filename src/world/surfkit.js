@@ -61,7 +61,7 @@ function gridTerrain(H, colorFn, o = {}) {
   let q = 0; for (let iz = 0; iz < seg; iz++) for (let ix = 0; ix < seg; ix++) { const a = iz * n + ix, b = a + 1, cc = a + n, d = cc + 1; idx[q++] = a; idx[q++] = cc; idx[q++] = b; idx[q++] = b; idx[q++] = cc; idx[q++] = d; }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(new THREE.BufferAttribute(idx, 1)); g.computeVertexNormals();
   const s = texSet(o.tex || 'rock'), m = new THREE.MeshStandardMaterial({ vertexColors: true, map: s.map, normalMap: s.normalMap, roughnessMap: s.roughnessMap, roughness: o.rough ?? 1, metalness: o.metal ?? 0.05 });
-  m.normalScale.setScalar(o.ns ?? 1.2); m.envMapIntensity = o.env ?? 0.5; m.color.setScalar(o.gain ?? 2.3); terrainPatch(m, o.frag || '', o.key || 'std', o.head || '', o.uniforms);
+  m.normalScale.setScalar(o.ns ?? 1.2); m.envMapIntensity = o.env ?? 0.5; m.color.setScalar(o.gain ?? 2.3); terrainPatch(m, o.frag || '', o.key || 'std', o.head || '', o.uniforms, us);
   const mesh = new THREE.Mesh(g, m); mesh.receiveShadow = true; mesh.frustumCulled = false;
   const find = (v) => { let lo = 0, hi = seg; while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (xs[mid] <= v) lo = mid; else hi = mid; } return lo; };
   mesh.heightAt = (x, z) => {
@@ -72,14 +72,17 @@ function gridTerrain(H, colorFn, o = {}) {
   return mesh;
 }
 /** 地形マテリアルの拡張: 多重スケールの色むら・近接ディテール法線・惑星別の追加シェーダ */
-function terrainPatch(m, frag, key, head = '', uniforms = null) {
+function terrainPatch(m, frag, key, head = '', uniforms = null, us = 0.045) {
+  const tri = `#ifdef USE_MAP
+{vec3 bw=pow(abs(normalize(vTn)),vec3(6.));bw/=bw.x+bw.y+bw.z;float s_=${us.toFixed(4)};diffuseColor*=texture2D(map,vTw.zy*s_)*bw.x+texture2D(map,vTw.xz*s_)*bw.y+texture2D(map,vTw.xy*s_)*bw.z;}
+#endif`; // 崖でテクスチャが縦に引き伸ばされないよう三方向から投影
   const nf = THREE.ShaderChunk.normal_fragment_maps.replace('vec3 mapN = texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0;', 'vec3 mapN = texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0; { float tdn = length( vViewPosition ); vec3 mN2 = texture2D( normalMap, vNormalMapUv * 7.3 ).xyz * 2.0 - 1.0; vec3 mN3 = texture2D( normalMap, vNormalMapUv * 0.17 ).xyz * 2.0 - 1.0; mapN = normalize( vec3( mapN.xy * smoothstep( 1400.0, 80.0, tdn ) + mN2.xy * smoothstep( 160.0, 8.0, tdn ) * 0.9 + mN3.xy * 0.7, mapN.z ) ); }');
   m.onBeforeCompile = (sh) => {
     if (uniforms) Object.assign(sh.uniforms, uniforms);
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vTw,vTn;').replace('#include <project_vertex>', '#include <project_vertex>\nvTw=(modelMatrix*vec4(transformed,1.)).xyz;vTn=normalize(mat3(modelMatrix)*objectNormal);');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vTw,vTn;\n' + N2 + head)
       .replace('#include <color_fragment>', '#include <color_fragment>\n{float td=length(vViewPosition);float tn1=fbm2(vTw.xz*.011),tn2=fbm2(vTw.xz*.17+7.);vec3 tfar=texture2D(map,vMapUv*.093).rgb;\ndiffuseColor.rgb*=(.74+.52*tn1)*(.88+.24*tn2)*mix(vec3(1.),tfar*2.3,.4*smoothstep(40.,500.,td));\n' + frag + '}')
-      .replace('#include <normal_fragment_maps>', nf);
+      .replace('#include <normal_fragment_maps>', nf).replace('#include <map_fragment>', tri);
   };
   m.customProgramCacheKey = () => 'terrain' + key;
 }
