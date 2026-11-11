@@ -110,7 +110,9 @@ const beacon = (list, x, y, z, c, s = 6, blink = 0) => list.push({ p: V3(x, y, z
 // ───────────────────────── 森林 (板ポリゴンの木をタイル単位でインスタンス描画) ─────────────────────────
 const TREES = {};
 /** 葉のシェーディング: 両面で法線を反転させず (裏面が真っ黒になるのを防ぐ)、根元ほど暗くする */
-const leafFrag = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>', 'float faceDirection=1.;vec3 normal=normalize(vNormal);vec3 nonPerturbedNormal=normal;').replace('#include <map_fragment>', '#include <map_fragment>\ndiffuseColor.rgb*=.6+.6*vMapUv.y;'); };
+const leafFrag = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>', 'float faceDirection=1.;vec3 normal=normalize(vNormal);vec3 nonPerturbedNormal=normal;').replace('#include <map_fragment>', '#include <map_fragment>\ndiffuseColor.rgb*=.6+.6*vMapUv.y;');
+  // 樹冠を上から覆う板は、カメラが樹冠より低いときは畳む (林の中から見上げたときに水平の板が見えないように)
+  sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', 'vec3 transformed=vec3(position);\n#ifdef USE_INSTANCING\n{vec3 ip=(modelMatrix*instanceMatrix*vec4(0.,0.,0.,1.)).xyz;if(uv.x>.5&&cameraPosition.y<ip.y+position.y*length(instanceMatrix[1].xyz)+1.5)transformed=vec3(0.);/*veg*/}\n#endif'); };
 /** 木のアトラス (1024×512): 左半分=側面, 右半分=真上から見た樹冠。葉むら・枝・羽状の葉を描き込む */
 function treeTex(kind) {
   if (TREES[kind]) return TREES[kind];
@@ -190,8 +192,10 @@ class VegField {
     const sway = (o.sway ?? 0.012).toFixed(4);
     this.sets = VEG_KINDS.map((k) => { const { g, m } = treeTex(k), c = m.clone();
       c.onBeforeCompile = (sh) => { leafFrag(sh); sh.uniforms.uVegR = this.u; sh.uniforms.uVegT = fxTime;
-        sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uVegR,uVegT;').replace('#include <begin_vertex>', 'vec3 transformed=vec3(position);\n#ifdef USE_INSTANCING\n{vec3 ip=(modelMatrix*instanceMatrix*vec4(0.,0.,0.,1.)).xyz;transformed*=smoothstep(uVegR,uVegR*.8,distance(ip.xz,cameraPosition.xz));transformed.x+=sin(uVegT*1.1+ip.x*.31+ip.z*.17)*position.y*position.y*' + sway + ';}\n#endif'); };
+        sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uVegR,uVegT;').replace('/*veg*/', 'transformed*=smoothstep(uVegR,uVegR*.8,distance(ip.xz,cameraPosition.xz));transformed.x+=sin(uVegT*1.1+ip.x*.31+ip.z*.17)*position.y*position.y*' + sway + ';'); };
       c.customProgramCacheKey = () => 'veg' + sway; return { g, m: c }; });
+    // 各種類を 1 本ずつ地中に置いておき、シェーダを最初の描画でまとめて用意する (歩いている途中で引っかからないように)
+    for (const st of this.sets) { const im = new THREE.InstancedMesh(st.g, st.m, 1); _vo.position.set(0, -9000, 0); _vo.rotation.set(0, 0, 0); _vo.scale.setScalar(0.01); _vo.updateMatrix(); im.setMatrixAt(0, _vo.matrix); im.setColorAt(0, _vc.setRGB(1, 1, 1)); im.frustumCulled = false; grp.add(im); }
   }
   _pos(gi, gj, S, o) { o[0] = (gi + 0.15 + hs2(gi, gj, 1) * 0.7) * S; o[1] = (gj + 0.15 + hs2(gi, gj, 2) * 0.7) * S; return o; }
   /** カメラ位置 (cx,cz) の周囲 range×k を満たすようにタイルを生成・破棄する。1 回の呼び出しで作るのは budget 枚まで */

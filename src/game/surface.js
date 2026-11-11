@@ -50,7 +50,7 @@ export class SurfaceMode {
   async enter(o = {}) {
     const s = this.ship;
     if (!o.resume) {
-      if (this.bodyId !== o.body || !this.env) this.load(o.body); else for (const [i, n] of this.env.nodes.entries()) n.g.visible = G.p.flags[`n_${o.body}_${i}`] !== G.p.day;
+      if (this.bodyId !== o.body || !this.env) { G.hud.show(true); G.hud.banner('大気圏突入', `${body(o.body).name} の地表を展開中…`, 8); await new Promise((r) => setTimeout(r, 90)); this.load(o.body); } else for (const [i, n] of this.env.nodes.entries()) n.g.visible = G.p.flags[`n_${o.body}_${i}`] !== G.p.day;
       if (s.m) this.scene.remove(s.m.obj);
       s.m = this.model(G.p.ship); s.id = G.p.ship; this.scene.add(s.m.obj); if (s.m.gear) s.m.gear.visible = false; this._engines(true);
       s.clear = -(new THREE.Box3().setFromObject(s.m.gear || s.m.body).min.y - s.m.obj.position.y) + 0.05;
@@ -176,7 +176,7 @@ export class SurfaceMode {
       s.pos.x = b[0] + lx * b[4] - lz * b[5]; s.pos.z = b[1] + lx * b[5] + lz * b[4];
       const vn = -(fwd.x * nx + fwd.z * nz) * s.speed; if (vn <= 0) continue;
       const k = vn / Math.max(s.speed, 1), fx = fwd.x + nx * k, fz = fwd.z + nz * k; if (Math.hypot(fx, fz) > 0.05) s.yaw = Math.atan2(-fx, -fz);
-      if (vn > 14) { s.speed *= 0.45; if (this.time - (this._bt || -9) > 0.5) { this._bt = this.time; this._hull(vn * 0.45, '建造物に衝突！'); this._crash(clamp(vn * 0.03, 1.4, 6), true); this.shake = 1; this.parts.burst(s.pos, 40, 30, _col.set('#ffd9a0'), 1.2, 0.8); G.audio?.sfx('hit'); } }
+      if (vn > 14) { s.speed *= 0.45; if (this.time - (this._bt || -9) > 0.5) { this._bt = this.time; this._hull(vn * 0.3, '建造物に衝突！'); this._crash(clamp(vn * 0.03, 1.4, 6), true); this.shake = 1; this.parts.burst(s.pos, 40, 30, _col.set('#ffd9a0'), 1.2, 0.8); G.audio?.sfx('hit'); } }
     }
   }
   /** 衝撃で機体が凹む (front: 機首, それ以外: 下面) */
