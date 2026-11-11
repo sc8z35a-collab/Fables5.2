@@ -189,8 +189,14 @@ const _vo = new THREE.Object3D(), _vc = new THREE.Color(), _vh = [0, 0, 0, 0];
 class VegField {
   constructor(grp, at, o = {}) {
     this.grp = grp; this.at = at; this.tile = o.tile || 400; this.step = o.step || 14; this.range = o.range || 1200; this.map = new Map(); this.u = { value: this.range }; this.frame = 0;
+    this.solid = o.solid || 0; this.tint = o.tint || [1, 1, 1]; this.custom = !!o.sets; // solid: true=幹 (半径 0.8m) / 数値=幅×係数 の円で徒歩を遮る
     const sway = (o.sway ?? 0.012).toFixed(4);
-    this.sets = VEG_KINDS.map((k) => { const { g, m } = treeTex(k), c = m.clone();
+    if (o.sets) this.sets = o.sets.map((st) => { const c = st.m.clone(); // 岩・結晶・建物など任意の形: 遠くでは地面から生えるように現れ、1.2 を超える頂点色は発光として扱う
+      c.onBeforeCompile = (sh) => { sh.uniforms.uVegR = this.u;
+        sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uVegR;').replace('#include <begin_vertex>', 'vec3 transformed=vec3(position);\n#ifdef USE_INSTANCING\n{vec3 ip=(modelMatrix*instanceMatrix*vec4(0.,0.,0.,1.)).xyz;transformed*=smoothstep(uVegR,uVegR*.82,distance(ip.xz,cameraPosition.xz));}\n#endif');
+        sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n#if defined(USE_COLOR)||defined(USE_INSTANCING_COLOR)\ntotalEmissiveRadiance+=max(vColor.rgb-vec3(1.25),vec3(0.));\n#endif'); };
+      c.customProgramCacheKey = () => 'fld' + (st.key || ''); return { g: st.g, m: c, tumble: st.tumble, sink: st.sink || 0 }; });
+    else this.sets = VEG_KINDS.map((k) => { const { g, m } = treeTex(k), c = m.clone();
       c.onBeforeCompile = (sh) => { leafFrag(sh); sh.uniforms.uVegR = this.u; sh.uniforms.uVegT = fxTime;
         sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uVegR,uVegT;').replace('/*veg*/', 'transformed*=smoothstep(uVegR,uVegR*.8,distance(ip.xz,cameraPosition.xz));transformed.x+=sin(uVegT*1.1+ip.x*.31+ip.z*.17)*position.y*position.y*' + sway + ';'); };
       c.customProgramCacheKey = () => 'veg' + sway; return { g, m: c }; });
@@ -208,22 +214,64 @@ class VegField {
     return need.length;
   }
   _build(i, j) {
-    const T = this.tile, n = Math.max(1, Math.round(T / this.step)), S = T / n, L = VEG_KINDS.map(() => []), out = [0, 0, 0, 0], p = [0, 0];
+    const T = this.tile, n = Math.max(1, Math.round(T / this.step)), S = T / n, L = this.sets.map(() => []), out = [0, 0, 0, 0], p = [0, 0], tn = this.tint, cu = this.custom;
     for (let a = 0; a < n; a++) for (let b = 0; b < n; b++) { const gi = i * n + a, gj = j * n + b; this._pos(gi, gj, S, p); if (!this.at(p[0], p[1], hs2(gi, gj, 3), hs2(gi, gj, 4), out)) continue; L[out[0]].push(p[0], out[3], p[1], out[1], out[2]); }
     const meshes = [];
     L.forEach((P, k) => { const c = P.length / 5; if (!c) return; const s = this.sets[k], im = new THREE.InstancedMesh(s.g, s.m, c);
-      for (let q = 0; q < c; q++) { const x = P[q * 5], z = P[q * 5 + 2]; _vo.position.set(x, P[q * 5 + 1], z); _vo.rotation.set(0, (x * 1.7 + z * 0.9) % 6.28, 0); _vo.scale.set(P[q * 5 + 4], P[q * 5 + 3], P[q * 5 + 4]); _vo.updateMatrix(); im.setMatrixAt(q, _vo.matrix); const v = 0.72 + hs2(x, z, 5) * 0.5; im.setColorAt(q, _vc.setRGB(v, v * (0.9 + hs2(x, z, 6) * 0.16), v * 0.88)); }
-      im.computeBoundingSphere(); im.castShadow = false; im.receiveShadow = false; this.grp.add(im); meshes.push(im); });
+      for (let q = 0; q < c; q++) { const x = P[q * 5], z = P[q * 5 + 2], sy = P[q * 5 + 3]; _vo.position.set(x, P[q * 5 + 1] - sy * s.sink, z); if (s.tumble) _vo.rotation.set(hs2(x, z, 7) * 6.28 * s.tumble, hs2(x, z, 8) * 6.28, hs2(x, z, 9) * 6.28 * s.tumble); else _vo.rotation.set(0, (x * 1.7 + z * 0.9) % 6.28, 0); _vo.scale.set(P[q * 5 + 4], sy, P[q * 5 + 4]); _vo.updateMatrix(); im.setMatrixAt(q, _vo.matrix);
+        const v = cu ? 0.82 + hs2(x, z, 5) * 0.3 : 0.72 + hs2(x, z, 5) * 0.5; im.setColorAt(q, cu ? _vc.setRGB(v * tn[0], v * tn[1], v * tn[2]) : _vc.setRGB(v * tn[0], v * (0.9 + hs2(x, z, 6) * 0.16) * tn[1], v * 0.88 * tn[2])); }
+      im.computeBoundingSphere(); im.castShadow = cu; im.receiveShadow = cu; this.grp.add(im); meshes.push(im); });
     return { meshes, f: this.frame };
   }
-  /** (x,z) が幹にぶつかるか (徒歩の当たり判定) */
-  hit(x, z, rad = 0.8) {
-    const n = Math.max(1, Math.round(this.tile / this.step)), S = this.tile / n, g0 = Math.floor(x / S), h0 = Math.floor(z / S), p = [0, 0];
-    for (let gi = g0 - 1; gi <= g0 + 1; gi++) for (let gj = h0 - 1; gj <= h0 + 1; gj++) { this._pos(gi, gj, S, p); const dx = p[0] - x, dz = p[1] - z; if (dx * dx + dz * dz < rad * rad && this.at(p[0], p[1], hs2(gi, gj, 3), hs2(gi, gj, 4), _vh)) return true; }
+  /** (x,z) が幹や岩にぶつかるか (徒歩の当たり判定) */
+  hit(x, z) {
+    const n = Math.max(1, Math.round(this.tile / this.step)), S = this.tile / n, g0 = Math.floor(x / S), h0 = Math.floor(z / S), p = [0, 0], k = this.solid, mx2 = k === true ? 0.64 : S * S;
+    for (let gi = g0 - 1; gi <= g0 + 1; gi++) for (let gj = h0 - 1; gj <= h0 + 1; gj++) { this._pos(gi, gj, S, p); const dx = p[0] - x, dz = p[1] - z, d2 = dx * dx + dz * dz; if (d2 > mx2 || !this.at(p[0], p[1], hs2(gi, gj, 3), hs2(gi, gj, 4), _vh)) continue; if (k === true) return true; const rad = _vh[2] * k; if (rad > 0.25 && d2 < rad * rad) return true; }
     return false;
   }
   clear() { for (const t of this.map.values()) for (const m of t.meshes) { this.grp.remove(m); m.dispose(); } this.map.clear(); }
 }
+// ───────────────────────── 目印になる大型の造形と、足元を埋める小物 ─────────────────────────
+/** 位置に基づく値ノイズで頂点を法線方向へずらす (同じ位置は同じ量だけ動くので継ぎ目が割れない) */
+function roughen(geo, amp, freq = 3, seed = 1) {
+  const p = geo.attributes.position, nr = geo.attributes.normal, hh = (x, y, z) => { const n = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719 + seed * 3.17) * 43758.5453; return n - Math.floor(n); };
+  const ns = (x, y, z) => { const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), xf = x - xi, yf = y - yi, zf = z - zi, l = (a, b, t) => a + (b - a) * t; return l(l(l(hh(xi, yi, zi), hh(xi + 1, yi, zi), xf), l(hh(xi, yi + 1, zi), hh(xi + 1, yi + 1, zi), xf), yf), l(l(hh(xi, yi, zi + 1), hh(xi + 1, yi, zi + 1), xf), l(hh(xi, yi + 1, zi + 1), hh(xi + 1, yi + 1, zi + 1), xf), yf), zf); };
+  for (let i = 0; i < p.count; i++) { const x = Math.round(p.getX(i) * 1e4) / 1e4, y = Math.round(p.getY(i) * 1e4) / 1e4, z = Math.round(p.getZ(i) * 1e4) / 1e4, d = (ns(x * freq + 3, y * freq, z * freq) - 0.5) * 2 * amp + (ns(x * freq * 2.7, y * freq * 2.7 + 5, z * freq * 2.7) - 0.5) * amp * 0.6; p.setXYZ(i, x + nr.getX(i) * d, y + nr.getY(i) * d, z + nr.getZ(i) * d); }
+  geo.computeVertexNormals(); return geo;
+}
+const PG = {};
+/** 単位サイズの造形 (高さ 1・足元 y=0 が基準。boulder/slab は中心が原点) */
+function propGeo(name) {
+  if (PG[name]) return PG[name]; let g;
+  if (name === 'spire') g = rockGeo(1, 2, 31, 0.42).scale(0.3, 0.56, 0.3).translate(0, 0.46, 0);
+  else if (name === 'spire2') g = rockGeo(1, 2, 47, 0.5).scale(0.36, 0.56, 0.26).translate(0.03, 0.46, 0);
+  else if (name === 'boulder') g = rockGeo(1, 2, 5, 0.4);
+  else if (name === 'boulder2') g = rockGeo(1, 1, 19, 0.5).scale(1.2, 0.8, 0.9);
+  else if (name === 'slab') g = rockGeo(1, 1, 23, 0.3).scale(1.3, 0.26, 0.85);
+  else if (name === 'arch') g = roughen(new THREE.TorusGeometry(0.5, 0.12, 9, 18, Math.PI), 0.045, 5, 3);
+  else if (name === 'butte') { g = new THREE.CylinderGeometry(0.4, 0.5, 1, 14, 5).translate(0, 0.5, 0); const top = []; for (let i = 0; i < g.attributes.position.count; i++) if (g.attributes.position.getY(i) > 0.999) top.push(i); roughen(g, 0.05, 4, 7); for (const i of top) g.attributes.position.setY(i, 1); g.computeVertexNormals(); } // 上面は平らなまま (着陸できる)
+  else if (name === 'blob') g = rockGeo(1, 2, 77, 0.24);
+  else if (name === 'crystal') { const r = rng(9), parts = []; for (let i = 0; i < 7; i++) { const h = i ? rr(r, 0.4, 0.9) : 1, a = r() * 6.28, d = i ? rr(r, 0.1, 0.3) : 0, c = new THREE.CylinderGeometry(0.004, rr(r, 0.06, 0.11), h, 5).translate(0, h / 2, 0); c.applyMatrix4(mx(Math.cos(a) * d, -0.04, Math.sin(a) * d, i ? rr(r, -0.5, 0.5) : 0, a, i ? rr(r, -0.5, 0.5) : 0)); parts.push(c.toNonIndexed()); }
+    g = new THREE.BufferGeometry(); const P = [], N = []; for (const c of parts) { P.push(...c.attributes.position.array); N.push(...c.attributes.normal.array); } g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(P.length / 3 * 2), 2)); }
+  return (PG[name] = g);
+}
+/** 衝突クレーター群による高さの増減 (縁が盛り上がり、中がくぼむ) */
+function craters(x, z, cell, seed, depth, fill = 0.5) {
+  const cx = Math.floor(x / cell), cz = Math.floor(z / cell); let h = 0;
+  for (let i = cx - 1; i <= cx + 1; i++) for (let j = cz - 1; j <= cz + 1; j++) { const w = hs2(i, j, seed + 2); if (w > fill) continue; const px = (i + 0.2 + hs2(i, j, seed) * 0.6) * cell, pz = (j + 0.2 + hs2(i, j, seed + 1) * 0.6) * cell, R = cell * (0.14 + w / fill * 0.2), d = Math.hypot(x - px, z - pz) / R; if (d < 1.7) h += depth * (R / 200) * (d < 1 ? d * d * 1.3 - 0.95 : 0.35 * Math.exp(-(d - 1) * 5)); }
+  return h;
+}
+/**
+ * 大型の目印をまとめて置く。list: [[x, 足元y, z, 幅, 高さ, 回転Y, 傾き]]。
+ * o.solid: 当たり判定の半幅 (幅×係数)。o.land: 上面に着陸できる (台地など)
+ */
+function landmarks(env, geo, material, list, o = {}) {
+  if (!list.length) return null; const im = new THREE.InstancedMesh(geo, material, list.length), ob = new THREE.Object3D();
+  list.forEach((q, i) => { ob.position.set(q[0], q[1], q[2]); ob.rotation.set(q[6] || 0, q[5] || 0, 0); ob.scale.set(q[3], q[4], q[3]); ob.updateMatrix(); im.setMatrixAt(i, ob.matrix); if (o.solid) env.obbs.push(o.land ? [q[0], q[2], q[3] * o.solid, q[3] * o.solid, 1, 0, q[1] + q[4]] : [q[0], q[2], q[3] * o.solid, q[3] * o.solid, 1, 0, q[1] + q[4] * 0.9, 1]); });
+  im.castShadow = o.shadow ?? true; im.receiveShadow = true; im.frustumCulled = false; env.grp.add(im); return im;
+}
+/** 岩や小物を地形に撒く at 関数。dens(x,z,h) → [密度 0..1, 種類番号]。大きさは小さいものほど多い */
+const scatterAt = (hAt, dens, s0, s1) => { const d2 = [0, 0]; return (x, z, u, v, o) => { const h = hAt(x, z); dens(x, z, h, v, d2); if (u >= d2[0]) return false; const q = u / d2[0], sz = s0 + q * q * q * (s1 - s0); o[0] = d2[1]; o[1] = sz * (0.75 + v * 0.5); o[2] = sz; o[3] = h; return true; }; };
 /** 部品ごとに色を持つ結合ジオメトリ (頂点カラー)。InstancedMesh で大量配置する小物用 */
 function colorGeo(parts) {
   const P = [], Nn = [], Cc = []; for (const [geo, col, matrix] of parts) { const q = geo.index ? geo.toNonIndexed() : geo; if (matrix) q.applyMatrix4(matrix); if (!q.attributes.normal) q.computeVertexNormals(); const c = new THREE.Color(col); P.push(...q.attributes.position.array); Nn.push(...q.attributes.normal.array); for (let i = 0; i < q.attributes.position.count; i++) Cc.push(c.r, c.g, c.b); }
@@ -268,4 +316,4 @@ function ocean(H, o) {
   return m;
 }
 
-export { HP, V3, COL, N2, makeSky, gridTerrain, terrainPatch, scatter, pad, node, beacon, forest, colorGeo, ocean, treeTex, VegField };
+export { HP, V3, COL, N2, makeSky, gridTerrain, terrainPatch, scatter, pad, node, beacon, forest, colorGeo, ocean, treeTex, VegField, roughen, propGeo, craters, landmarks, scatterAt, hs2 };

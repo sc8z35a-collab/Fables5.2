@@ -196,7 +196,7 @@ export class SurfaceMode {
     const L = this.grid.get(gk(x, z)); if (L) for (const b of L) { if (b[6] <= y + (b[7] ? 0.5 : 1.6)) continue; const dx = x - b[0], dz = z - b[1]; if (Math.abs(dx * b[4] + dz * b[5]) < b[2] + 0.4 && Math.abs(-dx * b[5] + dz * b[4]) < b[3] + 0.4) return false; }
     const g = this.ground(x, z, y); if (g < y - 3.2) return false; // 屋上や桟橋の縁からは落ちない
     if (e.water != null && g <= e.water + 0.01 && this.terrain(x, z) < e.water - 0.35 && Math.hypot(x, z) > PAD_R) return false;
-    if (e.veg && e.veg[0].hit(x, z)) return false; // 木の幹
+    if (e.veg) for (const v of e.veg) if (v.solid && v.hit(x, z)) return false; // 木の幹・岩
     return true;
   }
   /** 船のそばで立てる場所を探し、徒歩の開始位置にする */
