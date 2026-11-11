@@ -1,0 +1,13 @@
+{
+  "name": "STARFABLE",
+  "short_name": "STARFABLE",
+  "description": "ブラウザで動く 3D 宇宙アドベンチャー。5 つの宇宙ステーション、地球と 4 つの惑星、3 隻の自機、20 隻の敵艦 — すべて中に入れます。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#02040a",
+  "theme_color": "#02040a",
+  "lang": "ja",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

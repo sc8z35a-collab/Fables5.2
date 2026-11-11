@@ -1,0 +1,57 @@
+// 共有ユーティリティ
+export const G = {}; // グローバルなゲーム状態レジストリ（循環依存の回避用）
+
+export const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+export const lerp = (a, b, t) => a + (b - a) * t;
+export const damp = (a, b, l, dt) => a + (b - a) * (1 - Math.exp(-l * dt));
+export const smooth = (a, b, x) => { x = clamp((x - a) / (b - a), 0, 1); return x * x * (3 - 2 * x); };
+export const TAU = Math.PI * 2;
+
+export function rng(seed) {
+  let s = (seed >>> 0) || 1;
+  return () => {
+    s = (s + 0x6D2B79F5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+export const pick = (r, arr) => arr[Math.floor(r() * arr.length) % arr.length];
+export const rr = (r, a, b) => a + (b - a) * r();
+
+function h2(x, y, s) { const n = Math.sin(x * 127.1 + y * 311.7 + s * 74.7) * 43758.5453; return n - Math.floor(n); }
+export function vnoise(x, y, s = 0) {
+  const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+  const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+  return lerp(lerp(h2(xi, yi, s), h2(xi + 1, yi, s), u), lerp(h2(xi, yi + 1, s), h2(xi + 1, yi + 1, s), u), v);
+}
+export function fbm(x, y, o = 5, s = 0) {
+  let a = 0.5, f = 1, t = 0;
+  for (let i = 0; i < o; i++) { t += a * vnoise(x * f, y * f, s + i * 13); a *= 0.5; f *= 2.03; }
+  return t;
+}
+export function ridge(x, y, o = 5, s = 0) {
+  let a = 0.5, f = 1, t = 0;
+  for (let i = 0; i < o; i++) { const n = 1 - Math.abs(vnoise(x * f, y * f, s + i * 17) * 2 - 1); t += a * n * n; a *= 0.5; f *= 2.07; }
+  return t;
+}
+
+export function fmtDist(m) {
+  if (m < 1000) return m.toFixed(0) + ' m';
+  if (m < 1e6) return (m / 1000).toFixed(m < 1e4 ? 2 : 1) + ' km';
+  return (m / 1e6).toFixed(m < 1e7 ? 2 : 1) + ' Mm';
+}
+export function fmtSpeed(v) {
+  if (v < 2000) return v.toFixed(0) + ' m/s';
+  if (v < 1e6) return (v / 1000).toFixed(1) + ' km/s';
+  return (v / 1e6).toFixed(2) + ' Mm/s';
+}
+export const fmtCr = (n) => Math.round(n).toLocaleString('ja-JP') + ' Cr';
+
+export function el(tag, cls, html, parent) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html != null) e.innerHTML = html;
+  if (parent) parent.appendChild(e);
+  return e;
+}
