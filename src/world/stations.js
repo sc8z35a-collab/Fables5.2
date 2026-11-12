@@ -1,36 +1,10 @@
-// 宇宙ステーション 5 基の外観 (それぞれ全く異なる構造)
+// 宇宙ステーション 9 基の外観 (それぞれ全く異なる構造)。追加の 4 基 (アトラス / メガトン / ファイザー / ウェポン) は stations2.js
 import * as THREE from 'three';
 import { Builder, mx, rockGeo, loft } from '../gfx/builder.js';
-import { mat, glow, texSet, windowsTex, signMesh } from '../gfx/textures.js';
-import { makeGlowSprite } from '../gfx/fx.js';
+import { mat, glow } from '../gfx/textures.js';
 import { rng, rr } from '../core/util.js';
-
-const V = (x, y, z) => new THREE.Vector3(x, y, z);
-const WM = new Map();
-function winMat(color = 0xd4dae2, glowCol = 0xffffff, k = 2.4) {
-  const key = color + '_' + glowCol + '_' + k; let m = WM.get(key); if (m) return m;
-  const s = texSet('hull'), e = windowsTex().clone(); e.repeat.set(0.3, 0.3); e.needsUpdate = true;
-  m = new THREE.MeshStandardMaterial({ color, map: s.map, normalMap: s.normalMap, roughnessMap: s.roughnessMap, roughness: 0.65, metalness: 0.3, emissiveMap: e, emissive: glowCol, emissiveIntensity: k });
-  m.userData.uvs = 0.09; WM.set(key, m);
-  return m;
-}
-/** ドッキングポート (襟 + 誘導灯)。dir は外向き単位ベクトル */
-function port(b, D, p, dir, col = '#6ff') {
-  const q = new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), dir), M = (g, off) => b.add(g[0], g[1], new THREE.Matrix4().compose(p.clone().addScaledVector(dir, off), q, V(1, 1, 1)), g[2]);
-  M([D, new THREE.CylinderGeometry(7, 9, 6, 24, 1, true)], -3); M([D, new THREE.CylinderGeometry(9.6, 9.6, 1.2, 24)], -5.5);
-  M([glow(col, 4), new THREE.TorusGeometry(7.4, 0.25, 6, 40).rotateX(Math.PI / 2), 0], 0.1);
-  M([glow(col, 2), new THREE.TorusGeometry(5.2, 0.12, 6, 32).rotateX(Math.PI / 2), 0], -1.5);
-  M([D, new THREE.CylinderGeometry(5, 5, 0.4, 24)], -4);
-  return { p: p.clone(), dir: dir.clone() };
-}
-function done(b, o) {
-  const obj = new THREE.Group(); obj.add(b.build());
-  o.obj = obj; o.anim = o.anim || [];
-  for (const l of o.lights || []) { const s = makeGlowSprite(l.c, l.s, l.k ?? 2); s.position.copy(l.p); (l.parent || obj).add(s); if (l.blink) o.anim.push((t) => { s.material.opacity = (t * l.blink + l.ph) % 1 < 0.12 ? 1 : 0.04; }); }
-  for (const s of o.signs || []) obj.add(s);
-  return o;
-}
-const sign = (text, color, h, x, y, z, ry = 0, rx = 0, o = {}) => { const m = signMesh(text, color, h, { double: true, intensity: 2.6, ...o }); m.position.set(x, y, z); m.rotation.set(rx, ry, 0, 'YXZ'); return m; };
+import { V, winMat, port, done, sign, sdBox } from './stationkit.js';
+import { BUILD2, SDF2 } from './stations2.js';
 
 // ───────────────────────── 1. ヘイヴン・リング (交易ハブ) ─────────────────────────
 function haven() {
@@ -181,11 +155,10 @@ function rogue() {
   return o;
 }
 
-const BUILD = { haven, vulcan, aurora, bastion, rogue };
+const BUILD = { haven, vulcan, aurora, bastion, rogue, ...BUILD2 };
 export function buildStation(def) { const o = BUILD[def.id](); o.def = def; return o; }
 
 // ── 衝突判定用の近似距離関数 (ステーションのローカル座標) ──
-const sdBox = (x, y, z, cx, cy, cz, hx, hy, hz) => { const dx = Math.abs(x - cx) - hx, dy = Math.abs(y - cy) - hy, dz = Math.abs(z - cz) - hz; return Math.hypot(Math.max(dx, 0), Math.max(dy, 0), Math.max(dz, 0)) + Math.min(Math.max(dx, dy, dz), 0); };
 const SDF = {
   haven: (x, y, z) => Math.min(Math.hypot(Math.hypot(x, y) - 250, z) - 28, Math.max(Math.hypot(x, y) - 50, Math.abs(z) - 100)),
   vulcan: (x, y, z) => Math.min(sdBox(x, y, z, 0, 0, 0, 362, 12, 14), sdBox(x, y, z, -215, -62, 0, 82, 64, 50), sdBox(x, y, z, 0, -62, 0, 82, 64, 50), sdBox(x, y, z, 215, -62, 0, 82, 64, 50), sdBox(x, y, z, 392, 40, 0, 32, 66, 26)),
@@ -193,4 +166,5 @@ const SDF = {
   bastion: (x, y, z) => Math.min(Math.max(Math.hypot(x, z) - 158, Math.abs(y) - 64), Math.max(Math.hypot(x, z) - 74, Math.abs(y - 106) - 44), sdBox(x, y, z, 0, 0, 190, 10, 10, 60)),
   rogue: (x, y, z) => Math.min((Math.hypot(x / 212, y / 145, z / 170) - 1) * 145, Math.hypot(x, y - 30, Math.max(Math.abs(z - 235) - 66, 0)) - 12),
 };
+Object.assign(SDF, SDF2);
 export function stationSDF(id, x, y, z) { return SDF[id](x, y, z); }

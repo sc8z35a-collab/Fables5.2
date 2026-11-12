@@ -96,7 +96,7 @@ async function boot() {
   G.p = load() || newGame(); G.p.quality = G.gfx.qName;
   await prog(0.66, '艦隊を配備中…');
   G.space = G.modes.space = new SpaceMode();
-  n = 0; while (G.space.buildStations()) await prog(0.66 + ++n * 0.05, 'ステーションを建造中… ' + n + '/5');
+  n = 0; while (G.space.buildStations()) await prog(0.66 + ++n * 0.029, 'ステーションを建造中… ' + n + '/9');
   await prog(0.93, '各施設を準備中…');
   G.modes.interior = new InteriorMode(); G.modes.surface = new SurfaceMode();
   await prog(1, '発進準備完了');

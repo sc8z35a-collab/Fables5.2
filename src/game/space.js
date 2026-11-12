@@ -102,6 +102,7 @@ export class SpaceMode {
       }
     }
     if (o.resume) syncDamage(p.m, p.id);
+    if (G.rescueLaunch) { G.rescueLaunch = false; this.rescueT0 = this.time + 2.5; } // アトラスから救助船が順に発進する
     this.camera.aspect = G.W / G.H; this.camera.updateProjectionMatrix();
     G.hud.setMode(this.title ? 'title' : 'space'); G.hud.show(!this.title); G.gfx.look(0.62, 1.0, 1); G.gfx.fx.uFlare.value = 1;
     this._buttons(); this._cam(1, true);
@@ -516,7 +517,7 @@ export class SpaceMode {
     for (const e of this.enemies) { if (e.state === 'gone' || !e.m || e.dist > 400) continue; const o = e.m.obj.position, R = sr + e.m.radius * 0.36, d = o.distanceTo(p.pos); if (d >= R || d < 1e-3) continue;
       const n = _b.subVectors(p.pos, o).multiplyScalar(1 / d), imp = bump(n, R - d, e.vel, e.def.name); if (imp > 8) { const h = this._precise(e.m, _a.copy(o).addScaledVector(n, e.m.radius * 1.6), _c.copy(n).negate(), false, e.m.radius * 3.2); if (h) this._wound(e.m, h, clamp(imp * 0.045, 1.2, 6), 0.6, e.vel, e.def.glow); e.vel.addScaledVector(n, -imp * 0.4); this.hitEnemy(e, imp * 0.3, p.pos); } }
     if (this.rocks.visible && this.rocks.position.distanceToSquared(p.pos) < 4.3e7) { const g = this.rocks.position; for (const r of this.rockList) { const dx = p.pos.x - g.x - r[0], dy = p.pos.y - g.y - r[1], dz = p.pos.z - g.z - r[2], R = r[3] + sr, d2 = dx * dx + dy * dy + dz * dz; if (d2 >= R * R) continue; const d = Math.sqrt(d2) || 1; bump(_b.set(dx / d, dy / d, dz / d), R - d, null, '小惑星'); } }
-    for (const s of this.stations) { if (!s.m || s.dist > s.m.radius * 1.4 + 200) continue; const o = s.m.obj, l = _a.copy(p.pos).sub(o.position), f = (x, y, z) => stationSDF(s.def.id, x, y, z), d = f(l.x, l.y, l.z); if (d >= sr) continue;
+    for (const s of this.stations) { if (!s.m || s.dist > (s.m.reach || s.m.radius * 1.4) + 200) continue; const o = s.m.obj, l = _a.copy(p.pos).sub(o.position), f = (x, y, z) => stationSDF(s.def.id, x, y, z), d = f(l.x, l.y, l.z); if (d >= sr) continue;
       const n = _b.set(f(l.x + 1, l.y, l.z) - f(l.x - 1, l.y, l.z), f(l.x, l.y + 1, l.z) - f(l.x, l.y - 1, l.z), f(l.x, l.y, l.z + 1) - f(l.x, l.y, l.z - 1)); if (n.lengthSq() < 1e-8) n.copy(l); n.normalize(); bump(n, sr - d, null, s.def.name); }
   }
   // ── HUD ──
@@ -577,7 +578,7 @@ export class SpaceMode {
     } else if (p.auto?.type === 'dock') L.push({ label: '誘導を中止', cls: 'bad', fn: () => { p.auto = null; if (p.m.gear) p.m.gear.visible = false; } });
     else if (!p.sc.on) {
       const hostile = this.enemies.some((e) => e.state === 'attack' && e.dist < 6000);
-      const st = this.stations.filter((s) => s.m && s.dist < 3500).sort((a, b) => a.dist - b.dist)[0];
+      const st = this.stations.filter((s) => s.m && s.dist < (s.m.dockR || 3500)).sort((a, b) => a.dist - b.dist)[0];
       const dis = this.enemies.filter((e) => e.state === 'disabled' && e.dist < 1500).sort((a, b) => a.dist - b.dist)[0];
       if (st) L.push({ label: 'ドッキング要請', fn: () => this.requestDock(st) });
       if (dis) L.push({ label: '接舷する', cls: 'alt', fn: () => this.requestDock(dis) });

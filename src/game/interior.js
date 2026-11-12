@@ -10,7 +10,7 @@ import { Particles, makeGlowSprite } from '../gfx/fx.js';
 import { syncDamage } from '../gfx/damage.js';
 import { mat, glow, aoMat } from '../gfx/textures.js';
 import { ENEMIES, SHIPS, BASES, station, body } from '../world/defs.js';
-import { stats, save, earn, addCargo, event, remaining } from './state.js';
+import { stats, save, earn, addCargo, event, remaining, rescueState, disaster } from './state.js';
 
 const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3(), _q = new THREE.Quaternion();
 const TALK = {
@@ -33,6 +33,66 @@ const TALK = {
   lib: ['「ここには星系の航海記録がすべて残っています。静かにどうぞ」', '「グラキエスのオーロラは、地磁気ではなく氷床下の結晶が発光源だという説があるのですよ」'],
   staff: ['「ヴォイド艦隊は星ごとに小隊を置いている。脅威度の低い地球宙域から叩くのが定石だ」', '「敵艦を拿捕すれば賞金は二倍。制御コアは必ず艦橋の中央にある」'],
   ice: ['「今夜はオーロラが特に強い。外に出て空を見てごらん」', '「氷晶は青く光る柱だ。天文台のラボに持ち込めば喜ばれるよ」'],
+  // ── アトラス救難基地 ──
+  atlasmech: ['「ようこそアトラスへ。うちは戦う基地じゃない、助ける基地だ。奥の大格納庫に救助船が 15 機並んでる。見ていけ」', '「ミケーネは 4 基の揚力ファンで、ビルの谷間にも垂直に降りられる。操縦は全部ボット任せさ」'],
+  guidebot: ['「アトラス救難基地 ヘ ヨウコソ。ホールノ天球儀ヲ中心ニ、東ガ指令室、西ガ救命救急センター、南ガ ミケーネ格納庫 デス」', '「救助船ハ 最大 15 機マデ 同時ニ出動デキマス。発令ハ 指令室ノ 司令ニ オ申シ付ケクダサイ」'],
+  rescuer: ['「出動がかかれば 7 分で発進、15 分でネオン・ベイに降りる。それが俺たちの誇りだ」', '「地球に降りたら、広場に描かれた緑の十字を探してみな。あれが俺たちの緊急着陸帯だ。街じゅうに 15 か所ある」'],
+  atlasglobe: ['黄金の腕に支えられた地球のホログラム。軌道の環を回る緑の光点が、待機中の救助船ミケーネだ。出動すると、光点は橙色に変わって都市の上で瞬く。', '神話の巨人アトラスは天球を肩に担いだ。この基地が担いでいるのは、足もとの地球に暮らす人々の命だ。'],
+  atlasops: ['「地球の災害は気象・地殻・交通を 24 時間監視しています。警報が出たら、司令が出動機数を決めます」', '「東の窓から地球が見えるでしょう。あの夜側の灯りのひとつひとつに、人が暮らしているんです」'],
+  atlasdoc: ['「重傷者は船内の救護室で応急処置をして、ここへ運ぶ。手術台のロボットアームは 0.1 ミリの精度で動くよ」', '「怪我をしているなら医療ポッドへ。遠慮はいらない、ここは誰でも診る」'],
+  scan: ['全身スキャナが静かに回っている。寝台に横たわれば、数秒で骨の一本一本まで映し出されるという。'],
+  quarter: ['「水、食料、毛布、医薬品。出動のたびにミケーネ 1 機あたり 2 トン積み込むんだ。余ってる物資があれば高く買い取るよ」', '「医薬品はサハル軌道のファイザーが安い。向こうで仕入れてここへ運べば、人助けと商売が両立するぞ」'],
+  offduty: ['「非番でも呼び出しはかかる。だから飯は食えるときに食う。あんたも食っていけ」', '「前回は豪雨の浸水だった。屋上に取り残された人を、ホイストで 40 人吊り上げたよ」'],
+  atlasbrief: ['「ネオン・ベイには緊急着陸帯が 15 か所。出動機数が多いほど、広い範囲を一度に救える」', '「災害警報が出ているときは、必要な機数を揃えて 1 日以上活動させること。早すぎる帰還では収拾にならない」'],
+  baybot: ['「格納庫管制 デス。全機ノ 推進剤・医療資材・避難者用座席ヲ 常時 点検シテイマス」', () => (rescueState().n ? `「現在 ${rescueState().n} 機ガ 地球ニ 出動中。残リノ機体ハ 予備トシテ 待機シテイマス」` : '「全 15 機、発進準備 完了。発令ガ アレバ A 列カラ 順ニ 発進シマス」')],
+  baybot2: ['「揚力ファン ノ 軸受ケ、異常ナシ」', '「後部ランプ カラ 機内ニ 入レマス。操縦室ニハ ミケ ト ネア ガ 座ッテイマス」', '「探照灯ノ 光軸調整、完了。夜ノ 街デモ 要救助者ヲ 見逃シマセン」'],
+  rescuechief: ['「ミケーネ隊の隊長だ。機体は 15、操縦はボット、だが行くと決めるのは人間だ」', '「機内を見たければ好きな機体のランプから入れ。救護室と避難者キャビン、どれも実戦仕様だ」'],
+  // ── 救助船ミケーネ ──
+  pilotbot: [() => (G.modes.interior.ctx.from === 'surface' ? '「操縦ボット ミケ デス。現在 ネオン・ベイ ノ 緊急着陸帯ニ 着陸中。揚力ファン ハ 即時再始動 デキル状態デ 待機シテイマス」' : '「操縦ボット ミケ デス。アトラス格納庫デ 待機中。発令カラ 7 分デ 発進シマス」'), '「コノ機体ハ 全長 27 メートル、避難者 16 名ト 重傷者 4 名ヲ 同時ニ 運ベマス」', '「操縦桿ハ 私ガ 握ッテイマス。ドウゾ 安心シテ オ乗リクダサイ」'],
+  copilot: [() => `「副操縦ボット ネア デス。現在ノ 出動機数ハ ${rescueState().n} / 15。${disaster() && !disaster().done ? `警報：${disaster().name}` : '災害警報ハ 出テイマセン'}」`, '「航法ト 通信ハ 私ノ 担当デス。着陸帯ノ 緑ノ十字ヲ 見ツケタラ、ミケ ガ 垂直ニ 降ロシマス」', '「頭上ノ スイッチハ 触ラナイデ クダサイネ」'],
+  medbot: ['「医療ボット デス。脈拍・血圧・体温、スベテ 正常。……アナタハ 健康デス」', '「止血、点滴、除細動。応急処置ハ 飛行中デモ 可能デス」'],
+  loader: ['「荷役ボット。水 400 リットル、食料 300 食、毛布 120 枚。積ミ込ミ 完了」', '「ランプ付近デハ 足元ニ ゴ注意クダサイ」'],
+  bot: ['「救難ボット デス。何カ オ困リデスカ」'],
+  evacuee: ['「家の一階が水に浸かって…このボットたちが屋上まで迎えに来てくれたんです」', '「アトラスって、空のあの光ですよね。ずっと見守られていたなんて」'],
+  evacuee2: ['「子どもたちは先に運んでもらいました。本当に助かりました」'],
+  evacuee3: ['「毛布と温かい飲み物をもらった。ロボットなのに、手つきがやさしいんだ」'],
+  // ── メガトン ──
+  megadock: ['「メガトンへようこそ。全長 3 キロ、人口は百万。迷ったらアトリウムの案内係に聞け」', '「ここの合金と燃料電池は星系一安い。代わりに食料と水はいつも足りない。運んでくれば儲かるぞ」'],
+  megaguide: ['「ここはグランド・アトリウム。ガラスの天井の向こうは宇宙でございます。東に取引所と駅とホテル、西に空中庭園と重工区画、突き当たりがメガトン炉でございます」', '「頭上を走っているのは連絡列車です。吹き抜けの端から端まで 40 秒で結んでおります」'],
+  megacitizen: ['「生まれも育ちもメガトンさ。地球？ 行ったことはないけど、空が青いんだって？」', '「炉が止まった日は一度もない。あの音が聞こえないと、かえって眠れないよ」'],
+  megacitizen2: ['「庭園の池の鯉、もう三代目なんですよ。ゼファーの環を眺めながら餌をやるのが日課で」', '「アペックスの展望ラウンジには行きました？ 環が窓いっぱいに広がるんです」'],
+  megatrader: ['「取引所の電光掲示を見たか。希ガスは今が買いだ…いや、売りか？」', '「ゼファーの雲海で採れた希ガスを、ここが星系じゅうに流している。メガトンは巨大な心臓さ」'],
+  megaeng: ['「これがメガトン炉。18 基の超伝導コイルで、1 億度のプラズマを宙に浮かせている。居住筒もリングも、全部この炉の電力で回っているんだ」', '「環の中を流れる光が見えるだろう。あれが止まれば百万人が凍える。だから私たちは交代で、ひと晩じゅう見ている」'],
+  megaeng2: ['「重工区画では、船の竜骨になる合金を鋳込んでいる。熱いから近寄りすぎるなよ」'],
+  megastudent: ['「工学院の課題で、採光ミラーの角度を計算してるんです。1 枚が 1 キロ以上あるんですよ」'],
+  megacore: ['真鍮と銅のコイルに抱かれて、光の環がゆっくりと流れている。足もとの床が、かすかに震えている。', '中心の柱の頂から、ときおり青白い放電がコイルへ走る。星ひとつぶんの熱が、ここに閉じ込められている。'],
+  corestat: ['炉心温度 1.02 億 K ／ 閉じ込め時間 定格 ／ 出力 4.8 GW。表示はすべて緑だ。', '冷却材流量 正常。次回の定期点検まで 312 日。'],
+  megabroker: ['「いらっしゃいませ。卓の端末でご注文を。メガトンは合金・電子部品・燃料電池が安うございます」'],
+  megatycoon: ['「金は巡るものだ。地球の食料をここへ、ここの合金を造船廠へ。君の船倉も、巡りのひとつにすぎんよ」', '「メガトンの株主は星系じゅうにいる。この窓の景色が、その配当というわけだ」'],
+  megagardener: ['「この木は種から育てて 40 年。回転重力でも、ちゃんと上へ伸びるんです」', '「池の灯籠は、地球の古い様式を真似たものでね。夜の照明に切り替わると、いちばん綺麗ですよ」'],
+  megastation: ['「2 番線はリング線、前部リング行きです。炉心線は点検のため運休しております」'],
+  megaforge: ['「取鍋ひとつで 30 トン。注ぎ損ねたら床が抜ける。だからロボットより先に、人間が腹を決めるんだ」', '「船の改修なら、そこの端末で受けるぞ。材料は目の前で鋳込んでる」'],
+  megamusician: ['「一曲いかがです？ ピアノはご自由に。ここの客は、環を見ながら聴くのが好きでね」'],
+  megahotel: ['「いらっしゃいませ。カプセルは 16 室、灯りが緑の部屋が空いております」'],
+  atom: ['真鍮の軌道環が、輝く核のまわりを音もなく回っている。台座の銘板 ─「力は、人を暖めるために」。'],
+  // ── ファイザー ──
+  fizerquar: ['「ようこそ。ここから先は清浄区画です。除染ゲートで紫外線と薬霧を浴びてからお進みください」', '「靴の裏まで滅菌されますから、ご心配なく」'],
+  fizerbot: ['「除染ボット デス。微生物 検出数 0。通過ヲ 許可シマス」'],
+  fizerrecept: ['「ファイザーは星系の医薬品のほとんどを作っています。東が創薬ラボ、西が培養ドーム、南が診療室です」', '「中央の像は生命の設計図、二重らせんです。10 塩基でひと回りするのも本物と同じなんですよ」'],
+  dna: ['白い二本の鎖が、4 色の塩基対でつながれて、ゆっくりと回っている。下から見上げると、どこまでも続くはしごのようだ。'],
+  fizersci: ['「サハルの砂漠香料から、新しい鎮痛成分が見つかったんです。持っていたら高く買い取りますよ」', '「標本槽のクラゲは、グラキエスの氷の下の海で採れたものです。光るのは求愛のためらしい」'],
+  fizerpharm: ['「1 分間に 1,200 錠。打錠、検査、包装まで人の手は触れません。医薬品はここで買うのが一番安いですよ」', '「アトラスの救難隊が、いつも大量に持っていきます。災害の多い時期は生産が追いつかなくて」'],
+  fizerbotan: ['「紫の光は、薬草がいちばん育つ波長なんです。人間の目には少し落ち着かないけれど」'],
+  specimen: ['円筒の水槽の中を、淡く光るクラゲがゆっくりと昇り降りしている。傘が閉じるたび、光が脈打つ。'],
+  fizerdoc: ['「手術台へどうぞ。アームが 3 本、麻酔も自動です。傷は残りません」', '「全身スキャナで健康診断もできますよ。宇宙線を浴びる仕事でしょう？」'],
+  cryotech: ['「ここで眠っているのは、治療法を待つ患者さんたちです。温度はマイナス 196 度。起こすときは、三日かけてゆっくり温めます」', '「静かにお願いします。…いえ、聞こえはしませんが、気持ちの問題で」'],
+  // ── ウェポン ──
+  weapondeck: ['「ここは兵器試験場ウェポン。ステーション全体が一門の砲だ。試射の間隔は 20 秒ちょっと。外では絶対に射線へ入るなよ」', '「砲身に沿って飛ぶと、加速環が順に光るのが見える。見物するなら真横からにしろ」'],
+  weaponarm: ['「ミサイルならいくらでも持っていけ。試験の余りだ。そこの端末で満載にしてやる」', '「架に立っているのは強化外骨格の試作機だ。動かすには免許がいる。触るなよ」'],
+  weaponsgt: ['「標的は左右に動く。正面に来た瞬間に引き金を絞れ。早撃ちより、待てる奴が当てる」', '「中心に当てれば 10 点、輪に当たれば 5 点だ。腕に覚えがあるなら撃っていけ」'],
+  weaponcmd: ['「ヴォイド艦隊の動きは、この卓ですべて追っている。賞金首の位置が知りたければ、ホロに触れろ」', '「我々の砲は 1,500 メートル先の標的を外さない。問題は、敵がじっとしていてくれないことだ」'],
+  weaponeng: ['「2 本のレールに 600 万アンペア。弾体は 0.1 秒でこの部屋を駆け抜ける。試射したければ、そこの制御卓の赤いボタンだ」', '「撃った直後は砲尾が後座する。警戒線の内側には立つなよ」'],
+  weaponoff: ['「砲声が腹に響くだろ。慣れると、あれがないと飯がうまくないんだ」'],
 };
 
 export class InteriorMode {
@@ -56,6 +116,7 @@ export class InteriorMode {
   dropShip(id) { const m = this.ships[id]; if (m) { m.obj.parent?.remove(m.obj); delete this.ships[id]; } }
 
   async enter(o) {
+    if (typeof o.at === 'string') o.at = o.at.split(',').map(Number); if (o.type === 'rescue') { o.id = o.from === 'surface' ? 'mycenae-d' : 'mycenae'; if (o.from !== 'surface') o.from = 'station'; }
     this.ctx = o; const id = o.type === 'ship' ? G.p.ship : o.id || o.body, key = o.type + ':' + id;
     if (this.cur) this.scene.remove(this.cur.group);
     let it = this.cache.get(key);
@@ -66,13 +127,14 @@ export class InteriorMode {
       if (bp.drones) for (const [x, z] of bp.drones) { const g = makeDrone(def.glow); it.group.add(g); it.drones.push({ g, x, z, hx: x, hz: z, hp: 34 + def.tier * 16, alive: true, fireT: 1 + Math.random() * 2, ph: x * 3 + z, alert: false }); }
       if (o.type !== 'enemy') { this.cache.set(key, it); if (this.cache.size > 4) { const k = this.cache.keys().next().value, old = this.cache.get(k); this.cache.delete(k); old.group.traverse((n) => n.geometry?.dispose()); } }
     } else if (it.drones.length) for (const d of it.drones) { d.alive = true; d.g.visible = true; }
-    this.cur = it; this.scene.add(it.group);
+    this.cur = it; this.scene.add(it.group); for (const f of it.hooks || []) f(); // 出動状況などを反映
     const th = it.bp.theme; this.hemi.color.set(th.amb[0]); this.hemi.groundColor.set(th.amb[1]); this.hemi.intensity = th.amb[2];
     // 遠景の向き: 船内=実際の機首方向 / ステーション=主窓が惑星を向く
     const sp = G.space; this.far = true; this._sky?.(false);
     if (o.type === 'station') { const st = sp.station(id), b = body(st.def.body); this.camU.copy(st.uni); const v = it.bp.view || [0, -1]; this.frameQ.setFromUnitVectors(_a.set(v[0], 0, v[1]).normalize(), _b.fromArray(b.pos).sub(st.uni).normalize()); }
     else if (o.type === 'enemy') { const e = sp.enemies.find((x) => x.def.id === id); this.enemy = e; this.camU.copy(e.uni); this.frameQ.copy(e.quat); }
     else if (o.type === 'ship' && o.from !== 'surface') { sp.uni(sp.pl.pos, this.camU); this.frameQ.copy(sp.pl.quat); }
+    else if (o.type === 'rescue' && o.from !== 'surface') { const st = sp.station('atlas'), b = body('terra'); this.camU.copy(st.uni); const v = it.bp.view || [0, -1]; this.frameQ.setFromUnitVectors(_a.set(v[0], 0, v[1]).normalize(), _b.fromArray(b.pos).sub(st.uni).normalize()); } // 格納庫の発進口の先に地球
     else { this.far = false; this._sky?.(true, o.body || G.modes.surface.bodyId); }
     // 出現位置
     const s = o.at || it.bp.spawn; this.pos.set(s[0], 0, s[1]); this.yaw = s[2] ?? 0; this.pitch = 0;
@@ -90,7 +152,8 @@ export class InteriorMode {
     G.input.setButtons([{ id: 'run', label: '走る', cls: 'sm p-run', key: 'ShiftLeft,ShiftRight' }, ...(this.hostile ? [{ id: 'ffire', label: '射撃', cls: 'big p-ffire', key: 'Space' }] : [])], this.hostile ? 'fpsH' : 'fps');
     G.audio?.music(it.bp.music || 'interior'); G.audio?.engine(0, 0, 0);
     if (this.hostile) { G.hud.banner(it.bp.name, '艦橋の制御コアを掌握せよ', 3.5); G.hud.msg('警備ドローンが巡回中。「射撃」で撃破し、通路の奥の艦橋を目指せ。', 'warn', 8); }
-    else G.hud.banner(it.bp.name, it.bp.sub, 2.6);
+    else G.hud.banner(o.type === 'rescue' && o.idx != null ? `${it.bp.name} ${o.idx + 1} 号機` : it.bp.name, it.bp.sub, 2.6);
+    if (o.type === 'station' && id === 'atlas') { const dz = disaster(), st = rescueState(); if (dz && !dz.done && !this._dz) { this._dz = 1; setTimeout(() => { this._dz = 0; }, 60000); G.hud.msg(`災害警報：${dz.name}。${st.n >= dz.need ? `ミケーネ ${st.n} 機が対応中。` : `指令室から救助船 ${dz.need} 機を出動させよ。`}`, 'warn', 9); } }
     this._cam(0); this._far(0);
   }
   exit() { G.hud.setPrompt(''); G.hud.setCtx([]); G.hud.damage(0); this._sky?.(false); }
@@ -168,8 +231,9 @@ export class InteriorMode {
 
   // ───────────────────────── インタラクション ─────────────────────────
   act(i) {
-    const c = this.ctx, sid = c.type === 'station' ? c.id : c.type === 'outpost' ? c.body : 'haven', ui = G.ui, a = i.act;
-    if (a.startsWith('talk:')) { const L = TALK[a.slice(5)] || ['「……」']; return ui.talk(i.label, L[Math.floor(Math.random() * L.length)]); }
+    const c = this.ctx, sid = c.type === 'station' ? c.id : c.type === 'outpost' ? c.body : c.type === 'rescue' ? 'atlas' : 'haven', ui = G.ui, a = i.act;
+    if (typeof i.fn === 'function') return i.fn(i); // 小道具が自前の動作を持つ場合 (試射・射撃など)
+    if (a.startsWith('talk:')) { const L = TALK[a.slice(5)] || ['「……」'], q = L[Math.floor(Math.random() * L.length)]; return ui.talk(i.label, typeof q === 'function' ? q() : q); }
     switch (a) {
       case 'shipyard': return ui.shipyard(sid);
       case 'yard': return ui.shipyard(sid, 0.75);
@@ -196,6 +260,10 @@ export class InteriorMode {
       case 'exit': return this.exitDoor();
       case 'ramp': return ui.talk(SHIPS[G.p.ship].name, `${SHIPS[G.p.ship].cls}「${SHIPS[G.p.ship].name}」。いつでも発進できる。`, [{ label: '船内に入る', fn: () => G.go('interior', { type: 'ship', from: 'station', station: c.id, via: 'airlock' }) }, { label: '発進する', cls: 'gold', fn: () => G.go('space', { undock: c.id }) }, { label: 'やめる' }]);
       case 'core': return this.hack();
+      case 'rescue': return ui.rescue();
+      case 'mycenae': return ui.talk(`救助船 ミケーネ ${i.idx + 1} 号機`, '後部ランプが下りている。機内では救難ボットが発進に備えて待機している。', [{ label: '機内に入る', cls: 'gold', fn: () => G.go('interior', { type: 'rescue', from: 'station', idx: i.idx, back: [i.x, i.z, Math.PI] }) }, { label: 'やめる' }]);
+      case 'rearm': { const p = G.space.pl, f = stats().missiles; if (p.missiles >= f) return G.hud.msg('ミサイルは満載です。'); p.missiles = f; G.audio?.sfx('buy'); return G.hud.msg(`兵装庫の試験弾でミサイルを満載にした (${f} 発)。代金は不要だ。`, 'good'); }
+      case 'checkup': G.p.hp = 100; this.suit = 60; G.audio?.sfx('reward'); return ui.talk('全身スキャナ', `走査完了。骨格・循環器・神経、すべて異常なし。体力が全快した。<br>被曝線量：年間許容値の ${12 + (G.p.day * 7) % 30}%　／　撃沈 ${G.p.stats.kills} ・拿捕 ${G.p.stats.captures} の戦歴にしては、驚くほど健康だ。`);
       case 'loot': { const k = 'l' + i.id; if (G.p.flags[k]) return G.hud.msg('ここはもう空っぽだ。'); G.p.flags[k] = 1; const cr = 900 + this.cur.def.tier * 500; earn(cr); const n = addCargo('salvage', 2); G.audio?.sfx('reward'); return G.hud.msg(`貨物を略奪した：${cr.toLocaleString()} Cr${n ? `／回収部品 ×${n}` : ''}`, 'good'); }
       default: return G.hud.msg('（反応がない）');
     }
@@ -208,6 +276,7 @@ export class InteriorMode {
   }
   exitDoor() {
     const c = this.ctx, sp = G.space;
+    if (c.type === 'rescue') return c.from === 'surface' ? G.go('surface', { resume: true, foot: true, at: c.back }) : G.go('interior', { type: 'station', id: 'atlas', at: c.back });
     if (c.type === 'enemy') return G.go('space', { resume: true });
     if (c.type === 'outpost') return G.go('surface', { resume: true, foot: true, door: true });
     if (c.from === 'station') return G.go('interior', { type: 'station', id: c.station });

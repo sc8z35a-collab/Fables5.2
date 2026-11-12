@@ -7,7 +7,10 @@ import { Mirror } from '../gfx/renderer.js';
 import { Particles, Streaks, makeGlowSprite } from '../gfx/fx.js';
 import { syncDamage, rayHit, applyDamage, logDamage, Debris } from '../gfx/damage.js';
 import { SHIPS, BASES, body } from '../world/defs.js';
-import { save, addCargo, event, remaining, commodity } from './state.js';
+import { save, addCargo, event, remaining, commodity, rescueState } from './state.js';
+import { buildMycenae, cloneShared, makeBot } from '../world/rescue.js';
+import { Builder, mx } from '../gfx/builder.js';
+import { mat, glow, aoMat } from '../gfx/textures.js';
 
 const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3(), _q = new THREE.Quaternion(), _e = new THREE.Euler(0, 0, 0, 'YXZ'), _col = new THREE.Color();
 const PAD_R = 34, CS = 64, gk = (x, z) => Math.floor(x / CS) * 4096 + Math.floor(z / CS);
@@ -59,15 +62,68 @@ export class SurfaceMode {
       const first = !G.p.stats.lands[o.body]; G.hud.banner(this.env.name, `${body(o.body).name} — ${this.env.sub}`, 4);
       setTimeout(() => G.hud.msg(first ? `${body(o.body).name} に初めて降り立つ。「オートランド」で着陸パッドへ自動着陸できる。` : '着陸パッドへ接近中。「オートランド」が使えます。', 'good', 8), 1500);
     } else {
-      if (o.foot) { this.foot = true; const e = this.env; if (o.door) { this.fp.set(e.door[0], 0, e.door[1]); this.fp.y = this.ground(e.door[0], e.door[1], 3); this.fyaw = e.door[2] + Math.PI; } else if (!this._disembark()) this.foot = false; this.fpitch = 0; }
+      if (o.foot) { this.foot = true; const e = this.env; if (o.door) { this.fp.set(e.door[0], 0, e.door[1]); this.fp.y = this.ground(e.door[0], e.door[1], 3); this.fyaw = e.door[2] + Math.PI; } else if (o.at) { this.fp.set(o.at[0], 0, o.at[1]); this.fp.y = this.ground(o.at[0], o.at[1], 3); this.fyaw = o.at[2] ?? 0; } else if (!this._disembark()) this.foot = false; this.fpitch = 0; }
       else this.foot = false;
     }
+    this._rescue();
     const e = this.env; G.gfx.look(...e.look); this.ex = null; G.gfx.fx.uHeat.value = e.heat || 0; G.gfx.fx.uWarp.value = 0; G.gfx.fx.uSun.value.z = 0; G.gfx.fx.uFlare.value = 0;
     this.camera.aspect = G.W / G.H; this.camera.updateProjectionMatrix();
     this._mode(); G.hud.show(true); G.hud.setTarget(null); this._mk = null; this._region();
     this._cam(0, true); this._cull(true);
   }
   exit() { G.gfx.fx.uHeat.value = 0; G.hud.setCtx([]); G.hud.setPrompt(''); G.audio?.engine(0, 0, 0); G.hud.damage(0); }
+
+  // ───────────────────────── 救助船ミケーネ (地球の緊急着陸帯) ─────────────────────────
+  /** 出動状況を地表へ反映する: 出動中の機数ぶん、都市の緊急着陸帯に機体・救難ボット・救護テントを置く */
+  _rescue() {
+    const e = this.env; if (!e || !e.rescueSites) return; const n = Math.min(rescueState().n, e.rescueSites.length), R = e.rs || (e.rs = { objs: [], n: -1 });
+    if (R.n === n) return; R.n = n;
+    e.cols = e.cols.filter((c) => !c.rs); e.items = e.items.filter((i) => i.act !== 'rescue'); for (const L of this.grid.values()) for (let i = L.length - 1; i >= 0; i--) if (L[i].rs) L.splice(i, 1);
+    if (!this.myc) this.myc = buildMycenae({ landed: true });
+    e.rescueSites.forEach((s, i) => {
+      let o = R.objs[i]; const on = i < n; if (on && !o) o = R.objs[i] = this._rescueSite(s, i); if (o) o.g.visible = on; if (!on) return;
+      const c = Math.cos(s.th), sn = Math.sin(s.th), W = (lx, lz) => [s.x + lx * c - lz * sn, s.z + lx * sn + lz * c];
+      const b = [s.x, s.z, 3.7, 14, c, sn, s.y + 6.9]; b.rs = 1; const rad = Math.hypot(b[2], b[3]) + 14; // 胴体 = 飛行・徒歩の両方で障害物
+      for (let u = Math.floor((b[0] - rad) / CS); u <= Math.floor((b[0] + rad) / CS); u++) for (let v = Math.floor((b[1] - rad) / CS); v <= Math.floor((b[1] + rad) / CS); v++) { const k = u * 4096 + v; let a = this.grid.get(k); if (!a) this.grid.set(k, (a = [])); a.push(b); }
+      const [rx, rz] = W(0, 15.5); e.cols.push({ x: rx, z: rz, r: 2.3, rs: 1 }); for (const q of o.solid) e.cols.push({ x: q[0], z: q[1], r: q[2], rs: 1 });
+      const [ix, iz] = W(0, 21.4); e.items.push({ x: ix, z: iz, r: 4.4, label: `ミケーネ ${i + 1} 号機に乗り込む`, act: 'rescue', idx: i, name: `救助船 ミケーネ ${String(i + 1).padStart(2, '0')}`, near: 700, wide: 1 });
+    });
+  }
+  _rescueSite(s, i) {
+    const g = new THREE.Group(), near = new THREE.Group(), botG = new THREE.Group(), c = Math.cos(s.th), sn = Math.sin(s.th), W = (lx, lz) => [s.x + lx * c - lz * sn, s.z + lx * sn + lz * c], y = s.y, solid = [];
+    const ship = cloneShared(this.myc); ship.position.set(s.x, y + 3.7, s.z); ship.rotation.y = s.yaw; near.add(ship);
+    const sh = new THREE.Mesh(new THREE.PlaneGeometry(27, 37).rotateX(-Math.PI / 2), aoMat('blob')); sh.position.set(s.x, y + 0.04, s.z); sh.rotation.y = s.yaw; sh.renderOrder = 2; near.add(sh);
+    // 救護テント・救援物資・投光器・規制線 (静的。材質ごとに 1 メッシュ)
+    const B = new Builder(), OR = mat('flat', { color: 0xff6a1e, rough: 0.8, metal: 0 }), WH = mat('flat', { color: 0xf0f2f0, rough: 0.8, metal: 0 }), DK = mat('hull', { color: 0x30353d, rough: 0.8, metal: 0.6 }), BL = mat('rib', { color: 0x2a6ab8, metal: 0.35, rough: 0.8 }), CR = mat('rib', { color: 0xf0f2f0, metal: 0.3, rough: 0.7 }), GX = glow('#35ff8a', 2), LW = glow('#fff2d8', 3.2);
+    const P = (m, geo, lx, ly, lz, ry = 0, rx = 0) => { const [x, z] = W(lx, lz); B.add(m, geo, mx(x, y + ly, z, rx, s.yaw + ry, 0)); return [x, z]; };
+    for (const sx of [-1, 1]) { // テント (両脇)
+      const [tx, tz] = P(OR, new THREE.BoxGeometry(4.8, 2.5, 4.8), sx * 9.4, 1.25, 19); P(WH, new THREE.ConeGeometry(3.8, 1.6, 4), sx * 9.4, 3.3, 19, 0.785); P(DK, new THREE.BoxGeometry(1.7, 1.9, 0.06), sx * 9.4, 0.95, 16.585); P(LW, new THREE.BoxGeometry(1.5, 1.7, 0.04), sx * 9.4, 0.93, 16.555); // 明かりの漏れる入口
+      P(GX, new THREE.BoxGeometry(0.5, 0.16, 0.05), sx * 9.4, 2.2, 16.57); P(GX, new THREE.BoxGeometry(0.16, 0.5, 0.05), sx * 9.4, 2.2, 16.565); solid.push([tx, tz, 3.2]);
+      for (const [dx, dz] of [[-2.2, -2.2], [2.2, -2.2], [-2.2, 2.2], [2.2, 2.2]]) P(DK, new THREE.CylinderGeometry(0.05, 0.05, 2.6, 5), sx * 9.4 + dx, 1.3, 19 + dz);
+      // 投光器 (三脚)
+      const [fx, fz] = P(DK, new THREE.CylinderGeometry(0.05, 0.07, 3.4, 6), sx * 12.5, 1.7, 9); P(DK, new THREE.BoxGeometry(1.1, 0.7, 0.2), sx * 12.5, 3.5, 9, sx * -1.1, 0.3); P(LW, new THREE.BoxGeometry(0.95, 0.56, 0.05), sx * 12.5 - sx * 0.1, 3.47, 9.06, sx * -1.1, 0.3); for (let k = 0; k < 3; k++) P(DK, new THREE.CylinderGeometry(0.03, 0.03, 1.4, 5), sx * 12.5 + Math.cos(k * 2.094) * 0.4, 0.6, 9 + Math.sin(k * 2.094) * 0.4, 0, 0.5); solid.push([fx, fz, 0.5]);
+    }
+    for (const [lx, lz, sz, k] of [[-4.6, 21.2, 0.9, 0], [-5.4, 22.4, 0.8, 1], [-4.5, 22.5, 0.7, 0], [4.8, 22, 0.9, 1], [5.8, 21.1, 0.75, 0], [5.2, 23.1, 0.7, 0]]) { const [x, z] = P(CR, new THREE.BoxGeometry(sz, sz * 0.85, sz), lx, sz * 0.425, lz, k * 0.4); P(GX, new THREE.BoxGeometry(sz * 0.4, sz * 0.12, 0.02), lx, sz * 0.43, lz + sz / 2 + 0.012, 0); P(GX, new THREE.BoxGeometry(sz * 0.12, sz * 0.4, 0.02), lx, sz * 0.43, lz + sz / 2 + 0.012, 0); if (k === 0) solid.push([x, z, 0.75]); }
+    for (const [lx, lz] of [[-6.6, 21.4], [-7.3, 21.9], [6.9, 22.6]]) { P(BL, new THREE.CylinderGeometry(0.3, 0.3, 0.9, 12), lx, 0.45, lz); P(DK, new THREE.CylinderGeometry(0.32, 0.32, 0.06, 12), lx, 0.7, lz); }
+    P(WH, new THREE.BoxGeometry(0.7, 0.1, 1.9), -9.4, 0.5, 23.2); P(OR, new THREE.BoxGeometry(0.72, 0.06, 1.1), -9.4, 0.58, 23.5); for (const dz of [-0.8, 0.8]) P(DK, new THREE.BoxGeometry(0.6, 0.45, 0.05), -9.4, 0.23, 23.2 + dz); // 担架
+    for (let k = 0; k < 14; k++) { const a = k / 14 * Math.PI * 2 + 0.2, lx = Math.cos(a) * 24, lz = Math.sin(a) * 24 + 3; P(OR, new THREE.ConeGeometry(0.2, 0.62, 8), lx, 0.31, lz); P(WH, new THREE.CylinderGeometry(0.13, 0.15, 0.1, 8), lx, 0.34, lz); P(DK, new THREE.BoxGeometry(0.44, 0.04, 0.44), lx, 0.02, lz); } // 規制コーン
+    const st = B.build(); near.add(st);
+    // 救難ボット 2 体 (誘導役と救護役)
+    const bots = [[3.4, 22.6, 0, {}], [-5.8, 15.4, Math.PI / 2, { accent: 0x2a8a5a }]].map(([lx, lz, ry, o]) => { const bg = makeBot({ pose: 'stand', ph: i * 1.7 + lx, ...o }), [x, z] = W(lx, lz); bg.position.set(x, y, z); bg.rotation.y = s.yaw + ry; botG.add(bg); solid.push([x, z, 0.4]); return { g: bg, x, z, yaw: s.yaw + ry }; });
+    // 屋根の警光灯 (赤・青が交互に閃く) と、遠くからでも見える緑の光柱
+    const bl = [[-0.9, '#ff2a1e'], [0.9, '#2a6cff']].map(([lx, col]) => { const sp = makeGlowSprite(col, 9, 3); const [x, z] = W(lx, -6.55); sp.position.set(x, y + 6.9, z); sp.material.fog = false; g.add(sp); return sp; });
+    if (!this.beamM) this.beamM = new THREE.ShaderMaterial({ uniforms: { uCol: { value: new THREE.Color('#35ff8a').multiplyScalar(0.55) } }, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false,
+      vertexShader: 'varying vec2 vUv;varying vec3 vN,vV;void main(){vUv=uv;vec4 mv=modelViewMatrix*vec4(position,1.);vN=normalize(normalMatrix*normal);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}', fragmentShader: 'uniform vec3 uCol;varying vec2 vUv;varying vec3 vN,vV;void main(){float a=pow(abs(dot(vN,vV)),2.)*pow(1.-vUv.y,1.3);gl_FragColor=vec4(uCol*a,1.);}' });
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(9, 2.2, 900, 16, 1, true), this.beamM); beam.position.set(s.x, y + 458, s.z); g.add(beam);
+    g.add(near, botG); this.env.group.add(g);
+    return { g, near, botG, bots, bl, solid, s };
+  }
+  _rescueTick(dt) {
+    const R = this.env?.rs; if (!R || R.n <= 0) return; const p = this.foot ? this.fp : this.ship.pos, t = this.time;
+    for (let i = 0; i < R.n; i++) { const o = R.objs[i]; if (!o) continue; const d = Math.hypot(o.s.x - p.x, o.s.z - p.z), nb = d < 180; o.near.visible = d < 1500 * G.drawDist; o.botG.visible = nb;
+      const k = (t * 1.5 + i * 0.37) % 1; o.bl[0].material.opacity = k < 0.22 ? 1 : 0.04; o.bl[1].material.opacity = k > 0.5 && k < 0.72 ? 1 : 0.04;
+      if (nb) for (const b of o.bots) { const dx = p.x - b.x, dz = p.z - b.z; let a = Math.atan2(dx, dz) - b.yaw; a = Math.atan2(Math.sin(a), Math.cos(a)); b.g.userData.tick(dt, t, this.foot ? a : null, Math.hypot(dx, dz)); } }
+  }
   _mode() {
     if (this.foot) { G.hud.setMode('fps'); G.input.setButtons([{ id: 'run', label: '走る', cls: 'sm p-run', key: 'ShiftLeft,ShiftRight' }], 'fps'); }
     else { G.hud.setMode('atmo'); G.input.setButtons([{ id: 'boost', label: 'ブースト', cls: 'p-boost', key: 'ShiftLeft,ShiftRight' }, { id: 'up', label: '▲<br>上昇', cls: 'p-up', key: 'KeyR,Space' }, { id: 'dn', label: '▼<br>下降', cls: 'p-dn', key: 'KeyF,KeyC' }, { id: 'view', label: '視点', cls: 'sm p-view', key: 'KeyV' }], 'atmo'); }
@@ -100,6 +156,7 @@ export class SurfaceMode {
     for (const f of e.anim) f(dt, this.time, this.camera.position);
     for (const sp of this.sprites) if (sp.userData.blink) sp.material.opacity = (this.time * sp.userData.blink) % 1 < 0.15 ? 1 : 0.05;
     if (this.foot) this._walk(dt); else this._fly(dt);
+    this._rescueTick(dt);
     this._cam(dt);
     // 降水・降灰・砂塵
     const cv = this._cv || (this._cv = new THREE.Vector3()), cp = this.camera.position; if (this._lp) cv.copy(cp).sub(this._lp).multiplyScalar(1 / Math.max(dt, 1e-3)); else this._lp = new THREE.Vector3(); this._lp.copy(cp);
@@ -224,6 +281,7 @@ export class SurfaceMode {
   act(i) {
     const e = this.env;
     if (i.act === 'outpost') return G.go('interior', { type: 'outpost', body: e.id });
+    if (i.act === 'rescue') return G.ui.talk(`救助船 ミケーネ ${i.idx + 1} 号機`, '緊急着陸帯に降りた救助船。後部ランプが下り、救難ボットが避難してきた人々を機内へ誘導している。', [{ label: '機内に入る', cls: 'gold', fn: () => G.go('interior', { type: 'rescue', from: 'surface', idx: i.idx, back: [this.fp.x, this.fp.z, this.fyaw] }) }, { label: 'やめる' }]);
     if (i.act === 'rest') return G.ui.talk('雪見の里', '丸太小屋に囲まれた広場で、焚き火がぱちぱちと音を立てている。村人が温かいスープを差し出してくれた。', [{ label: '焚き火で暖まる (体力全快)', cls: 'gold', fn: () => { G.p.hp = 100; G.audio?.sfx('pickup'); G.hud.msg('体が芯から温まった。体力が全快した。', 'good'); save(); } }, { label: '立ち去る' }]);
     if (i.act === 'ruins') { const first = !G.p.flags.ruins, fresh = G.p.flags.ruinsDay !== G.p.day;
       return G.ui.talk('古代遺跡', first ? '苔むした石段の先で、翠色の紋様が脈打つように光っている。壁一面に、見たことのない星図が刻まれていた…。' : '翠色の紋様は今も静かに脈打っている。星図の刻印にはまだ読み解けていない部分がある。', [{ label: first ? '星図を記録する' : '刻印を調べる', cls: 'gold', fn: () => {
@@ -266,7 +324,7 @@ export class SurfaceMode {
     if (this.foot) {
       h.bar('sh', 1); h.bar('hull', G.p.hp / 100); h.damage(G.p.hp < 35 ? 0.4 : 0); G.p.hp = Math.min(100, G.p.hp + dtHeal);
       const sp = _a.copy(s.pos); let [x, y, f] = h.project(sp, c); h.marker(x, y, f, '#6fe8ff', SHIPS[s.id].name, fmtDist(Math.hypot(s.pos.x - this.fp.x, s.pos.z - this.fp.z)), 'diamond', 1.4);
-      for (const it of e.items) { if (Math.hypot(it.x - this.fp.x, it.z - this.fp.z) > 3500) continue; const p = _b.set(it.x, this.ground(it.x, it.z) + 3, it.z); [x, y, f] = h.project(p, c); h.marker(x, y, f, '#ffd27a', it.name || BASES[e.id].name, fmtDist(Math.hypot(it.x - this.fp.x, it.z - this.fp.z)), 'diamond', 1.2); }
+      for (const it of e.items) { if (Math.hypot(it.x - this.fp.x, it.z - this.fp.z) > (it.near || 3500)) continue; const p = _b.set(it.x, this.ground(it.x, it.z) + 3, it.z); [x, y, f] = h.project(p, c); h.marker(x, y, f, '#ffd27a', it.name || BASES[e.id].name, fmtDist(Math.hypot(it.x - this.fp.x, it.z - this.fp.z)), 'diamond', 1.2); }
       for (const n of e.nodes) { if (!n.g.visible) continue; const d = Math.hypot(n.x - this.fp.x, n.z - this.fp.z); if (d > 420) continue; [x, y, f] = h.project(_b.set(n.x, this.ground(n.x, n.z) + 2.4, n.z), c); if (f) h.marker(x, y, f, '#6dffb0', d < 60 ? '資源' : '', fmtDist(d), 'circle', 0.9); }
       return;
     }
@@ -274,6 +332,7 @@ export class SurfaceMode {
     h.setSpeed(`${Math.round(s.speed)} m/s`, s.landed ? 'LANDED' : s.auto ? 'AUTO LAND' : `高度 ${Math.max(0, s.alt || 0).toFixed(0)} m`);
     const pd = Math.hypot(s.pos.x, s.pos.z, s.pos.y - e.padY); let [x, y, f] = h.project(_a.set(0, e.padY + 2, 0), c);
     if (!s.landed && e.pois) for (const q of e.pois) { const [px, py, pf] = h.project(_b.set(q.x, q.y, q.z), c); if (pf) h.marker(px, py, pf, '#9fd0ff', q.name, fmtDist(Math.hypot(q.x - s.pos.x, q.z - s.pos.z)), 'circle', 1.0); }
+    if (!s.landed && e.rs && e.rs.n > 0) for (let i = 0; i < e.rs.n; i++) { const q = e.rescueSites[i], d = Math.hypot(q.x - s.pos.x, q.z - s.pos.z); if (d > 3000) continue; const [px, py, pf] = h.project(_b.set(q.x, q.y + 12, q.z), c); if (pf) h.marker(px, py, pf, '#35ff8a', `ミケーネ ${String(i + 1).padStart(2, '0')}`, fmtDist(d), 'circle', 1.0); }
     if (!s.landed) { h.marker(x, y, f, '#ffd27a', '着陸パッド', fmtDist(pd), 'diamond', 1.8); if (s.view === 0) { [x, y, f] = h.project(_b.set(0, 0, -1).applyQuaternion(s.q).multiplyScalar(800).add(s.pos), c); if (f) h.reticle(x, y, '#6fe8ff', 0.8); } }
     if (s.pos.y > 3800 && !s.landed) h.text(`軌道離脱まで ${(5200 - s.pos.y).toFixed(0)} m`, G.W / 2, G.H * 0.26, '#8cf', 2.6, true);
     const L = [];

@@ -1,6 +1,6 @@
 // プレイヤーデータ・セーブ・経済・任務
 import { G, rng, pick } from '../core/util.js';
-import { SHIPS, COMMODITIES, PRICES, ENEMIES, STATIONS, BODIES, BASES } from '../world/defs.js';
+import { SHIPS, COMMODITIES, PRICES, ENEMIES, STATIONS, BODIES, BASES, RESCUE, DISASTERS } from '../world/defs.js';
 
 const KEY = 'starfable-save-v1';
 export function newGame(ship = 'hayate') {
@@ -61,4 +61,22 @@ export function event(type, data = {}) {
       G.hud?.msg(`任務達成：${m.title}　報酬 ${m.reward.toLocaleString()} Cr`, 'good', 7); G.audio?.sfx('reward');
     } else G.hud?.msg(`任務進行：${m.title} (${m.prog}/${m.need})`, 'good');
   }
+}
+
+// ── 救助船ミケーネの出動 (アトラス救難基地) ──
+const hsh = (n) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+export const rescueState = () => (G.p.flags.rescue || (G.p.flags.rescue = { n: 0, day: 0 }));
+/** いま地球で起きている災害 (4 日ごとに入れ替わる)。なければ null */
+export function disaster(day = G.p.day) {
+  const blk = Math.floor(day / 4); if (day < 2 || hsh(blk * 3 + 1) > 0.62) return null;
+  return { ...DISASTERS[Math.floor(hsh(blk * 7 + 5) * DISASTERS.length) % DISASTERS.length], blk, done: !!G.p.flags['dz' + blk] };
+}
+/** 救助船 n 機を地球の都市へ出動させる */
+export function dispatch(n) { const st = rescueState(); st.n = Math.max(0, Math.min(RESCUE.max, n)); st.day = G.p.day; G.rescueLaunch = true; save(); return st.n; }
+/** 全機を呼び戻す。活動日数ぶんの報奨金と、災害を収拾できたときの特別報奨を返す */
+export function recall() {
+  const st = rescueState(), n = st.n, days = Math.max(0, G.p.day - st.day), dz = disaster(), pay = n * 260 * Math.min(days, 3);
+  let bonus = 0; if (dz && !dz.done && n >= dz.need && days >= 1) { bonus = dz.need * 1400; G.p.flags['dz' + dz.blk] = 1; }
+  st.n = 0; st.day = G.p.day; G.rescueLaunch = false; earn(pay + bonus); save();
+  return { n, days, pay, bonus, name: bonus ? dz.name : '' };
 }

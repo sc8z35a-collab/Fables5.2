@@ -38,6 +38,15 @@ export const STATIONS = [
     desc: 'ゼファーの環を見下ろす軍事要塞。賞金首の情報が集まる。' },
   { id: 'rogue', name: 'ローグズ・デン', sub: '無法者の巣', body: 'ignis', kind: 'pirate', alt: 21e3, yaw: -1.0, pitch: 0.3, color: '#ff4df0',
     desc: '小惑星をくり抜いた闇市とカジノ。何でも売り買いできる。' },
+  // ── 追加の 4 基 (既存の 5 基より後ろに置くこと: 敵艦の配置は各惑星の「最初の」ステーションを基準にしている) ──
+  { id: 'atlas', name: 'アトラス救難基地', sub: '救難・災害対応', body: 'terra', kind: 'rescue', alt: 30e3, yaw: -0.62, pitch: 0.32, color: '#5dffa8',
+    desc: '天球を担ぐ巨人の名を持つ救難拠点。救助船「ミケーネ」15 機を地球の都市へ緊急出動させる。' },
+  { id: 'megaton', name: 'メガトン', sub: '巨大軌道都市', body: 'zephyr', kind: 'mega', alt: 135e3, yaw: -0.55, pitch: 0.2, color: '#ffd27a',
+    desc: '全長 3km を超える星系最大の建造物。核融合炉「メガトン炉」と百万都市を抱える回転居住筒。' },
+  { id: 'fizer', name: 'ファイザー', sub: '医療・創薬研究', body: 'sahar', kind: 'medical', alt: 26e3, yaw: 0.7, pitch: 0.34, color: '#b48cff',
+    desc: '二重らせんの形をした創薬研究ステーション。星系の医薬品はここで作られる。' },
+  { id: 'weapon', name: 'ウェポン', sub: '兵器試験場', body: 'ignis', kind: 'arsenal', alt: 27e3, yaw: 0.75, pitch: 0.22, color: '#ffe14d',
+    desc: 'ステーションそのものが一門の巨大電磁投射砲。定期的に標的小惑星へ試射を行う。' },
 ].map((s) => { const b = body(s.body); return { ...s, pos: orbitPos(b, s.alt, s.yaw, s.pitch).toArray() }; });
 export const station = (id) => STATIONS.find((s) => s.id === id);
 
@@ -64,6 +73,10 @@ export const PRICES = {
   aurora: { food: 1.4, water: 0.6, ore: 1.0, alloy: 1.2, elec: 1.4, med: 0.8, cell: 1.3, lux: 1.3, magma: 1.6, ice: 0.6, spice: 1.3, gas: 1.1, data: 1.6 },
   bastion: { food: 1.2, water: 1.2, ore: 0.9, alloy: 1.4, elec: 1.2, med: 1.5, cell: 1.2, lux: 1.0, gas: 0.6, salvage: 1.2, data: 1.2 },
   rogue: { food: 1.5, water: 1.6, ore: 0.7, alloy: 1.0, elec: 1.1, med: 1.6, cell: 1.1, lux: 1.6, magma: 0.6, contra: 1.0, salvage: 1.6, spice: 1.6, ice: 1.5 },
+  atlas: { food: 1.3, water: 1.35, med: 1.5, cell: 1.25, elec: 1.15, alloy: 1.1, lux: 0.85, salvage: 1.15, data: 1.1 },
+  megaton: { food: 1.5, water: 1.45, ore: 1.45, alloy: 0.7, elec: 0.75, cell: 0.55, lux: 0.9, gas: 1.5, magma: 1.4, ice: 1.3, spice: 1.35, med: 1.2, salvage: 1.3, data: 1.1 },
+  fizer: { med: 0.5, spice: 1.65, ice: 1.55, water: 1.3, food: 1.3, elec: 1.25, data: 1.35, gas: 1.2, cell: 1.1 },
+  weapon: { alloy: 1.5, magma: 1.55, elec: 1.35, cell: 1.3, ore: 1.2, salvage: 0.6, food: 1.4, med: 1.4, gas: 1.25 },
 };
 // 惑星拠点の現地価格 (特産品が安い)
 Object.assign(PRICES, {
@@ -107,3 +120,11 @@ export const BASES = {
   terra: { name: 'ネオン・ベイ宇宙港', sub: '巨大都市' }, ignis: { name: 'フォージ採掘基地', sub: '溶岩平原' }, sahar: { name: 'オアシス・コロニー', sub: '砂漠の居住区' },
   zephyr: { name: 'クラウドデッキ', sub: '雲海採取プラットフォーム' }, glacies: { name: '氷床研究所', sub: 'オーロラ観測拠点' },
 };
+
+/** アトラス所属の救助船「ミケーネ」: 最大 15 機を地球の都市へ出動できる */
+export const RESCUE = { max: 15, name: 'ミケーネ', cls: '多目的救助船' };
+/** 地球で起こる災害 (日替わり)。need = 収拾に必要な救助船の数 */
+export const DISASTERS = [
+  { name: 'ネオン・ベイ湾岸部の高潮', need: 5 }, { name: '市街中心部の大規模停電', need: 10 }, { name: 'ネオン・ベイ全域の豪雨浸水', need: 15 },
+  { name: 'モノレール高架の崩落事故', need: 5 }, { name: '港湾コンテナ火災', need: 10 }, { name: '軌道デブリの落下', need: 15 },
+];

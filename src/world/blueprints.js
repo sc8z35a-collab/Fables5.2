@@ -1,9 +1,10 @@
-// 内装の設計図 v2: ステーション 5 / 主人公機 3 / 惑星拠点 5 / 敵艦 (シード生成・3 種の間取り)
+// 内装の設計図 v2: ステーション 5 (+ 追加の 4 基と救助船ミケーネは blueprints2.js) / 主人公機 3 / 惑星拠点 5 / 敵艦 (シード生成・3 種の間取り)
 // 部屋: {id,x,z,w,d,h, shape:'round', ceil3:'vault|truss|coffer|rock|dome', lamps, deco[], plat[], rug[], win[]}
 // 小道具: [種類, x, z, 向き(90°単位), オプション] (部屋の左上隅からの相対座標)  扉: [部屋A, 部屋B, 位置, 幅, 高さ, 種類]
 import * as THREE from 'three';
 import { rng, rr, pick } from '../core/util.js';
 import { mat, glow } from '../gfx/textures.js';
+import { BP2, ALL2 } from './blueprints2.js';
 
 const T = (label, use, x, z, rot, o = {}) => ['terminal', x, z, rot, { label, use, ...o }];
 const N = (label, use, x, z, rot, suit, o = {}) => ['npc', x, z, rot, { label, use, suit, ...o }];
@@ -308,10 +309,10 @@ function enemyBP(def) {
   return { name: def.name, sub: '敵艦内 — 制御コアを掌握せよ', seed: def.seed, spawn: [0, 3.2, 0], view: [0, -1], music: 'hostile', hostile: true, theme, rooms, doors, drones };
 }
 
-const BP = { 'station:haven': haven, 'station:vulcan': vulcan, 'station:aurora': aurora, 'station:bastion': bastion, 'station:rogue': rogue, 'ship:hayate': hayate, 'ship:raiden': raiden, 'ship:amatsu': amatsu };
+const BP = { 'station:haven': haven, 'station:vulcan': vulcan, 'station:aurora': aurora, 'station:bastion': bastion, 'station:rogue': rogue, 'ship:hayate': hayate, 'ship:raiden': raiden, 'ship:amatsu': amatsu, ...BP2 };
 export function blueprint(type, id, def) {
   if (type === 'enemy') return enemyBP(def);
   if (type === 'outpost') return OUT[id]();
   return BP[type + ':' + id]();
 }
-export const ALL_BLUEPRINTS = [['station', 'haven'], ['station', 'vulcan'], ['station', 'aurora'], ['station', 'bastion'], ['station', 'rogue'], ['ship', 'hayate'], ['ship', 'raiden'], ['ship', 'amatsu'], ['outpost', 'terra'], ['outpost', 'ignis'], ['outpost', 'sahar'], ['outpost', 'zephyr'], ['outpost', 'glacies']];
+export const ALL_BLUEPRINTS = [['station', 'haven'], ['station', 'vulcan'], ['station', 'aurora'], ['station', 'bastion'], ['station', 'rogue'], ['ship', 'hayate'], ['ship', 'raiden'], ['ship', 'amatsu'], ['outpost', 'terra'], ['outpost', 'ignis'], ['outpost', 'sahar'], ['outpost', 'zephyr'], ['outpost', 'glacies'], ...ALL2];

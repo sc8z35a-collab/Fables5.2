@@ -7,21 +7,21 @@ import { holoMat, glassMat } from './interior.js';
 
 const HP = Math.PI / 2;
 let _M;
-const MM = () => _M || (_M = {
+export const MM = () => _M || (_M = {
   dk: mat('hull', { color: 0x30343c, rough: 0.8, metal: 0.6 }), st: mat('rib', { color: 0x9aa2ad, metal: 0.7, rough: 0.7 }), wh: mat('flat', { color: 0xe6eaef, rough: 0.3, metal: 0.1 }),
   bk: mat('flat', { color: 0x0e1014, rough: 0.4, metal: 0.5 }), ch: mat('flat', { color: 0xd0d5db, rough: 0.12, metal: 1 }), gd: mat('flat', { color: 0xd4a84a, rough: 0.25, metal: 1 }),
   wd: mat('wood', { rough: 0.75, metal: 0 }), lf: mat('flat', { color: 0x256b2a, rough: 0.85, metal: 0 }), lf2: mat('flat', { color: 0x4f9a3a, rough: 0.85, metal: 0 }), tr: mat('flat', { color: 0x4a3524, rough: 0.9, metal: 0 }),
   so: mat('flat', { color: 0x2a1e14, rough: 1, metal: 0 }),
 });
-const fab = (c) => mat('padded', { color: c, rough: 0.8, metal: 0.02 }); // 椅子・ソファの張り地 (絨毯の細かい粒状模様だと砂のように見えるため)
-const crateM = (c) => mat('rib', { color: c, metal: 0.35, rough: 0.8 });
-const flat = (c, r = 0.5, m = 0.2) => mat('flat', { color: c, rough: r, metal: m });
-const CRATE = [0xb8452e, 0x2e7ab8, 0xc9a22e, 0x3aa86a, 0x7a808a, 0x8a4ab8];
-const scr = (P, kind, c, title, w, h, x, y, z, rx = 0, k = 1.5) => P.add(screenMat(kind, c, title, k), new THREE.PlaneGeometry(w, h), mx(x, y, z, rx, 0, 0));
-const blob = (P, m, r, x, y, z, seed, sy = 1) => P.add(m, rockGeo(r, 1, seed, 0.45), mx(x, y, z, 0, seed, 0, 1, sy, 1), 0);
+export const fab = (c) => mat('padded', { color: c, rough: 0.8, metal: 0.02 }); // 椅子・ソファの張り地 (絨毯の細かい粒状模様だと砂のように見えるため)
+export const crateM = (c) => mat('rib', { color: c, metal: 0.35, rough: 0.8 });
+export const flat = (c, r = 0.5, m = 0.2) => mat('flat', { color: c, rough: r, metal: m });
+export const CRATE = [0xb8452e, 0x2e7ab8, 0xc9a22e, 0x3aa86a, 0x7a808a, 0x8a4ab8];
+export const scr = (P, kind, c, title, w, h, x, y, z, rx = 0, k = 1.5) => P.add(screenMat(kind, c, title, k), new THREE.PlaneGeometry(w, h), mx(x, y, z, rx, 0, 0));
+export const blob = (P, m, r, x, y, z, seed, sy = 1) => P.add(m, rockGeo(r, 1, seed, 0.45), mx(x, y, z, 0, seed, 0, 1, sy, 1), 0);
 const LEAF = [0xffffff, 0xd8f0c0, 0xb0d890];
 /** 葉カードの茂み (中に暗い芯を入れて透けを防ぐ) */
-const bush = (P, e, R, n, x, y, z, flat = 0.8) => { P.add(leafMat(LEAF[Math.floor(e.rnd() * 3)]), canopyGeo(R, n, e.rnd, flat), mx(x, y, z), 0); P.add(mat('flat', { color: 0x163a18, rough: 0.9, metal: 0 }), rockGeo(R * 0.5, 1, x * 7 + z, 0.3), mx(x, y, z, 0, 0, 0, 1, flat, 1), 0); };
+export const bush = (P, e, R, n, x, y, z, flat = 0.8) => { P.add(leafMat(LEAF[Math.floor(e.rnd() * 3)]), canopyGeo(R, n, e.rnd, flat), mx(x, y, z), 0); P.add(mat('flat', { color: 0x163a18, rough: 0.9, metal: 0 }), rockGeo(R * 0.5, 1, x * 7 + z, 0.3), mx(x, y, z, 0, 0, 0, 1, flat, 1), 0); };
 
 // ── ホログラム ──
 export function makeHolo(kind, color, s = 1) {

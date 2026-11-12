@@ -14,7 +14,7 @@ export function ctex(c, srgb = false, rep = true) {
   t.minFilter = THREE.LinearMipmapLinearFilter;
   return t;
 }
-const g = (v) => { v = v | 0; return `rgb(${v},${v},${v})`; };
+export const g = (v) => { v = v | 0; return `rgb(${v},${v},${v})`; };
 
 export function normalFromHeight(hc, strength = 2) {
   const w = hc.width, h = hc.height, src = hc.getContext('2d').getImageData(0, 0, w, h).data;
@@ -62,20 +62,20 @@ export function noiseCanvas(size, period, seed, oct, lo = 0, hi = 255, fn) {
   x.putImageData(im, 0, 0);
   return c;
 }
-function three(size, ab = 200, hb = 128, rb = 128) {
+export function three(size, ab = 200, hb = 128, rb = 128) {
   const A = cv(size), H = cv(size), R = cv(size), a = A.getContext('2d'), h = H.getContext('2d'), r = R.getContext('2d');
   a.fillStyle = g(ab); a.fillRect(0, 0, size, size); h.fillStyle = g(hb); h.fillRect(0, 0, size, size); r.fillStyle = g(rb); r.fillRect(0, 0, size, size);
   return [A, H, R, a, h, r];
 }
-function grime(a, r, size, seed, amt = 1) {
+export function grime(a, r, size, seed, amt = 1) {
   const n = noiseCanvas(256, 4, seed, 5, 140, 255);
   a.globalCompositeOperation = 'multiply'; a.globalAlpha = 0.6 * amt; a.drawImage(n, 0, 0, size, size);
   a.globalCompositeOperation = 'source-over'; a.globalAlpha = 1;
   const n2 = noiseCanvas(256, 8, seed + 5, 4, 70, 190);
   r.globalAlpha = 0.35 * amt; r.drawImage(n2, 0, 0, size, size); r.globalAlpha = 1;
 }
-function finish(A, H, R, ns = 2.5) { return { map: ctex(A, true), normalMap: ctex(normalFromHeight(H, ns)), roughnessMap: ctex(R) }; }
-function dot3(h, a, x, y, rad = 2) { h.fillStyle = g(255); h.beginPath(); h.arc(x, y, rad, 0, 7); h.fill(); a.fillStyle = 'rgba(235,235,240,.8)'; a.beginPath(); a.arc(x, y, rad * 0.8, 0, 7); a.fill(); }
+export function finish(A, H, R, ns = 2.5) { return { map: ctex(A, true), normalMap: ctex(normalFromHeight(H, ns)), roughnessMap: ctex(R) }; }
+export function dot3(h, a, x, y, rad = 2) { h.fillStyle = g(255); h.beginPath(); h.arc(x, y, rad, 0, 7); h.fill(); a.fillStyle = 'rgba(235,235,240,.8)'; a.beginPath(); a.arc(x, y, rad * 0.8, 0, 7); a.fill(); }
 
 // ── 宇宙船・ステーション外装パネル ─────────────────────────────
 function hullSet(seed = 1, size = 1024) {
@@ -383,6 +383,8 @@ const BUILDERS = { bulk: bulkSet, smooth: smoothSet, padded: paddedSet, brick: b
 const UVS = { bulk: 0.25, smooth: 0.25, padded: 0.5, brick: 0.5, plaster: 0.25, shoji: 0.5, marble: 0.33, grass: 0.33, hull: 0.11, wall: 0.25, plate: 0.5, grate: 1, hex: 0.5, tile: 0.5, carpet: 1, wood: 0.4, concrete: 0.25, rock: 0.2, solar: 0.25, rib: 0.5, ceil: 0.25, water: 0.05 };
 const SETS = {};
 export function texSet(name) { return SETS[name] || (SETS[name] = BUILDERS[name]()); }
+/** 追加のテクスチャ様式を登録する (textures2.js から)。uvs = 1m あたりの繰り返し数 */
+export function registerTex(name, builder, uvs = 0.25) { BUILDERS[name] = builder; UVS[name] = uvs; }
 
 const MATS = new Map();
 /** PBR マテリアル。uvs = 1m あたりのテクスチャ繰り返し数 (Builder が参照) */
