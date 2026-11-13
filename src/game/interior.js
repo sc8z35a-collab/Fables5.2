@@ -74,6 +74,7 @@ const TALK = {
   megaforge: ['「取鍋ひとつで 30 トン。注ぎ損ねたら床が抜ける。だからロボットより先に、人間が腹を決めるんだ」', '「船の改修なら、そこの端末で受けるぞ。材料は目の前で鋳込んでる」'],
   megamusician: ['「一曲いかがです？ ピアノはご自由に。ここの客は、環を見ながら聴くのが好きでね」'],
   megahotel: ['「いらっしゃいませ。カプセルは 16 室、灯りが緑の部屋が空いております」'],
+  megamodel: ['真鍮とガラスで組まれた、メガトンの 500 分の 1 模型。居住筒がゆっくり回り、3 枚の採光ミラーが小さな光を窓へ落としている。', '銘板 ─「全長 3,200 m ／ 居住筒直径 880 m ／ 人口 1,004,812 名。いま君が立っているのは、この筒の先端だ」'],
   atom: ['真鍮の軌道環が、輝く核のまわりを音もなく回っている。台座の銘板 ─「力は、人を暖めるために」。'],
   // ── ファイザー ──
   fizerquar: ['「ようこそ。ここから先は清浄区画です。除染ゲートで紫外線と薬霧を浴びてからお進みください」', '「靴の裏まで滅菌されますから、ご心配なく」'],
@@ -261,6 +262,7 @@ export class InteriorMode {
       case 'ramp': return ui.talk(SHIPS[G.p.ship].name, `${SHIPS[G.p.ship].cls}「${SHIPS[G.p.ship].name}」。いつでも発進できる。`, [{ label: '船内に入る', fn: () => G.go('interior', { type: 'ship', from: 'station', station: c.id, via: 'airlock' }) }, { label: '発進する', cls: 'gold', fn: () => G.go('space', { undock: c.id }) }, { label: 'やめる' }]);
       case 'core': return this.hack();
       case 'rescue': return ui.rescue();
+      case 'water': G.p.hp = Math.min(100, G.p.hp + 10); G.audio?.sfx('pickup'); return G.hud.msg('冷たい水を一杯飲んだ。体力 +10', 'good');
       case 'mycenae': return ui.talk(`救助船 ミケーネ ${i.idx + 1} 号機`, '後部ランプが下りている。機内では救難ボットが発進に備えて待機している。', [{ label: '機内に入る', cls: 'gold', fn: () => G.go('interior', { type: 'rescue', from: 'station', idx: i.idx, back: [i.x, i.z, Math.PI] }) }, { label: 'やめる' }]);
       case 'rearm': { const p = G.space.pl, f = stats().missiles; if (p.missiles >= f) return G.hud.msg('ミサイルは満載です。'); p.missiles = f; G.audio?.sfx('buy'); return G.hud.msg(`兵装庫の試験弾でミサイルを満載にした (${f} 発)。代金は不要だ。`, 'good'); }
       case 'checkup': G.p.hp = 100; this.suit = 60; G.audio?.sfx('reward'); return ui.talk('全身スキャナ', `走査完了。骨格・循環器・神経、すべて異常なし。体力が全快した。<br>被曝線量：年間許容値の ${12 + (G.p.day * 7) % 30}%　／　撃沈 ${G.p.stats.kills} ・拿捕 ${G.p.stats.captures} の戦歴にしては、驚くほど健康だ。`);

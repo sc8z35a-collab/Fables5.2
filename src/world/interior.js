@@ -8,6 +8,8 @@ import { fxTime } from '../gfx/fx.js';
 import { PROPS } from './props.js';
 import { PROPS2 } from './props2.js';
 import { PROPS3 } from './props3.js';
+import { PROPS4 } from './props4.js';
+import { PROPS5 } from './props5.js';
 import '../gfx/textures2.js';
 
 export const T = 0.2;      // 壁厚
@@ -282,7 +284,7 @@ export function buildInterior(bp) {
   for (const r of bp.rooms) room(BR[r.id], r, th, open[r.id], out, rnd);
   // 小道具
   for (const r of bp.rooms) for (const pr of r.props || []) {
-    const [type, lx, lz, rot = 0, o = {}] = pr, fn = PROPS[type] || PROPS2[type] || PROPS3[type]; if (!fn) { console.warn('未知の小道具', type); continue; }
+    const [type, lx, lz, rot = 0, o = {}] = pr, fn = PROPS[type] || PROPS2[type] || PROPS3[type] || PROPS4[type] || PROPS5[type]; if (!fn) { console.warn('未知の小道具', type); continue; }
     const wx = r.x + lx, wz = r.z + lz, ang = rot * HP, y0 = o.y0 || 0, base = mx(wx, y0, wz, 0, ang, 0), P = new Placer(BR[r.id], base), sw = Math.round(rot) % 2 !== 0;
     const env = {
       th, out, rnd, room: r, x: wx, z: wz, ang, y0,

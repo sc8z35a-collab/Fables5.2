@@ -20,7 +20,7 @@ const atlas = () => ({
   rooms: [
     { id: 'hangar', name: '到着ベイ', x: 0, z: 0, w: 46, d: 34, h: 17, floor: ['plate', 0x9aa4a8, 0.5, 0.6], wall: ['wall', 0xc0cac6, 0.75, 0.3], ceil: ['rib', 0x56605c], ceil3: 'truss', lamps: 'spot', ribs: true, trims: 'both', deco: ['ibeam', 'ducts'], win: [['n', 6, 40, 2, 13]], li: 1.5,
       props: [['shipslot', 23, 16, 0, { r: 12 }], T('格納庫サービス', 'shipyard', 40.5, 29, 0), ['gantry', 23, 5, 0, { w: 42, at: -14 }], ['crate', 5, 5, 0, { n: 6 }], ['crate', 41, 6, 0, { n: 5 }], ['cargo', 5, 25, 0, { c: 0xf0f2f0 }], ['barrel', 9.5, 30, 0], ['toolcart', 33, 8, 0.3, { c: 0xff6a1e }], ['toolcart', 12, 24, -0.4, { c: 0x2a8a5a }], ['workbench', 9, 33.2, 2],
-        ['supplyrack', 1.0, 9, 1, { w: 4 }], ['supplyrack', 1.0, 14.5, 1, { w: 4 }], ['hazard', 23, 32.6, 0, { w: 7, d: 0.5 }], ['suitlocker', 44.9, 12, 3, { n: 4 }], ['loaderbot', 10, 19.5, 1, { l: 7 }],
+        ['supplyrack', 1.0, 6, 1, { w: 4 }], ['supplyrack', 1.0, 11, 1, { w: 4 }], ['hazard', 23, 32.6, 0, { w: 7, d: 0.5 }], ['suitlocker', 44.9, 12, 3, { n: 4 }], ['loaderbot', 10, 19.5, 1, { l: 7 }],
         S('ATLAS', 23, 33.7, 2, { h: 1.8, y: 10.2 }), S('到着ベイ ─ 救難基地', 23, 33.7, 2, { h: 0.8, y: 8, c: '#ffb060' }), N('整備主任', 'talk:atlasmech', 31, 29, -1, 0xff6a1e, { visor: '#35ff8a' }), ['bot', 15.5, 29, 0.5, { label: '誘導ボット', use: 'talk:guidebot' }], ['steam', 36, 9, 0], ['alarm', 0.3, 20, 1, { c: '#ffb030' }]] },
     { id: 'hall', name: 'アトラス・ホール', x: 8, z: 34, w: 30, d: 30, h: 15, shape: 'round', sky: true, rug: [[15, 15, 0, 5.4, 'carpet', 0x1e4a3a]],
       props: [['earthholo', 15, 15, 0, { use: 'talk:atlasglobe', label: '天球儀' }], ['bench', 8.4, 8.4, 0.5], ['bench', 21.6, 8.4, -0.5], ['bench', 8.4, 21.6, 1.5], ['bench', 21.6, 21.6, 2.5], ['plant', 4.2, 11, 0, { s: 1.4 }], ['plant', 25.8, 19, 0, { s: 1.4 }], ['plant', 4.2, 19, 0, { s: 1.4 }], ['plant', 25.8, 11, 0, { s: 1.4 }],
@@ -29,7 +29,7 @@ const atlas = () => ({
     { id: 'ops', name: '救難指令室', x: 38, z: 38, w: 26, d: 22, h: 8, ceil3: 'coffer', lamps: 'spot', floor: ['hex', 0x8a9690, 0.3, 0.5], wall: ['smooth', 0x36423e, 0.6, 0.4], ceil: ['ceil', 0x202824], win: [['e', 3, 19, 1.4, 6.6]], plat: [[5, 12.4, 16, 7.4, 0.5, 'n', 0.35]], li: 0.85, deco: ['floorlights'],
       props: [['statusboard', 13, 0.3, 0, { w: 10, h: 4, y: 4.8 }], ['wallscreen', 3.6, 0.3, 0, { w: 4.6, h: 2.6, y: 4.3, kind: 'radar', title: '地球 災害監視' }], ['wallscreen', 22.4, 0.3, 0, { w: 4.6, h: 2.6, y: 4.3, kind: 'orbit', title: '軌道投入経路' }],
         T('緊急出動指令', 'rescue', 13, 8.6, 0, { c: '#ff5a3a', kind: 'radar' }), ['console', 9, 14.2, 0, { kind: 'radar', y0: 0.5 }], ['console', 13, 14.2, 0, { kind: 'graph', y0: 0.5 }], ['console', 17, 14.2, 0, { kind: 'bars', y0: 0.5 }], ['seat', 9, 15.8, 2, { y0: 0.5 }], ['seat', 13, 15.8, 2, { y0: 0.5 }], ['seat', 17, 15.8, 2, { y0: 0.5 }],
-        N('救難司令', 'rescue', 13, 18.2, 2, 0xff6a1e, { visor: '#35ff8a', y0: 0.5 }), N('通信士', 'talk:atlasops', 4.6, 8, 1, 0x2a6a5a), ['console', 2.2, 5.4, 1, { tall: 1, kind: 'data' }], ['console', 2.2, 10.6, 1, { tall: 1, kind: 'graph' }], ['earthholo', 21.6, 7.2, 0, { s: 0.42, y: 2.3 }],
+        N('救難司令', 'rescue', 13, 18.2, 2, 0xff6a1e, { visor: '#35ff8a', y0: 0.5 }), N('通信士', 'talk:atlasops', 4.4, 16.4, 1, 0x2a6a5a), ['console', 2.2, 5.4, 1, { tall: 1, kind: 'data' }], ['console', 2.2, 16.4, 1, { tall: 1, kind: 'graph' }], ['earthholo', 21.6, 7.2, 0, { s: 0.42, y: 2.3 }],
         ['alarm', 0.3, 2.4, 1, { c: '#ffb030' }], ['alarm', 0.3, 19.6, 1, { c: '#ffb030' }], ['rack', 24.6, 20.6, 2, { n: 2 }], S('RESCUE COMMAND ─ 救難指令室', 13, 21.7, 2, { h: 0.5, y: 6.6 })] },
     { id: 'bay', name: 'ミケーネ格納庫', x: -57, z: 64, w: 160, d: 130, h: 22, floor: ['concrete', 0x8a9490, 0.42, 0.3], wall: ['wall', 0xb4beba, 0.75, 0.3], ceil: ['rib', 0x4a5450], ceil3: 'truss', lamps: 'spot', ribs: true, trims: 'both', li: 1.7,
       win: [['s', 6, 34, 1.2, 19], ['s', 36, 64, 1.2, 19], ['s', 66, 94, 1.2, 19], ['s', 96, 124, 1.2, 19], ['s', 126, 154, 1.2, 19]], plat: [[52, 2, 14, 7.4, 1.4, 'e', 0.42]],
@@ -78,7 +78,7 @@ const megaton = () => {
           ['tree', 14.5, 21, 0, { s: 1.15 }], ['tree', 14.5, 63, 0], ['tree', 14.5, 91, 0, { s: 1.1 }], ['tree', 29.5, 21, 0], ['tree', 29.5, 49, 0, { s: 1.15 }], ['tree', 29.5, 77, 0], ['tree', 29.5, 105, 0, { s: 1.1 }], ['tree', 14.5, 105, 0],
           ['streetlamp', 16.5, 14, 0], ['streetlamp', 27.5, 14, 0], ['streetlamp', 16.5, 42, 0], ['streetlamp', 27.5, 42, 0], ['streetlamp', 16.5, 70, 0], ['streetlamp', 27.5, 70, 0], ['streetlamp', 16.5, 98, 0], ['streetlamp', 27.5, 98, 0],
           ['planter', 22, 42, 0, { w: 8, flowers: 1 }], ['planter', 22, 70, 0, { w: 8, flowers: 1 }], ['planter', 22, 14, 0, { w: 6, flowers: 1 }], ['planter', 22, 98, 0, { w: 6, flowers: 1 }], ['bench', 19, 35, 1], ['bench', 25, 35, 3], ['bench', 19, 77, 1], ['bench', 25, 77, 3], ['bench', 19, 49, 1], ['bench', 25, 63, 3],
-          ['stall', 17.6, 9.4, 1.3, { c: 0x2c5a4e }], ['stall', 26.6, 91.4, -1.6, { c: 0x8a2a20 }], ['stall', 33.6, 43, 3, { c: 0xc9a22e }], ['vending', 43.3, 9.2, 3], ['vending', 43.3, 10.5, 3, { c: '#ffd27a', title: 'TEA' }],
+          ['stall', 17.6, 9.4, 1.3, { c: 0x2c5a4e }], ['stall', 26.6, 91.4, -1.6, { c: 0x8a2a20 }], ['stall', 34.4, 49, 3, { c: 0xc9a22e }], ['vending', 43.3, 9.2, 3], ['vending', 43.3, 10.5, 3, { c: '#ffd27a', title: 'TEA' }],
           T('任務端末', 'missions', 16, 5.6, 0.4), T('星図', 'map', 28, 5.6, -0.4, { kind: 'orbit' }), ['hoload', 22, 9, 0, { text: 'MEGATON\nGRAND ATRIUM', c: '#ffd27a', y: 9, h: 2.2 }], ['hoload', 22, 104.4, 2, { text: 'メガトン炉 見学 ↓', c: '#ffb060', y: 7, h: 1.2 }],
           ['clock', 22, 111.6, 2, { r: 2.6, y: 13.6 }], S('GRAND ATRIUM', 22, 0.3, 0, { h: 1.7, y: 9.4 }), S('中央取引所 →', 43.6, 37.6, 3, { h: 0.7, y: 4.6 }), S('← 空中庭園', 0.4, 37.6, 1, { h: 0.7, y: 4.6, c: '#8aff9a' }), S('中央駅 →', 43.6, 79.6, 3, { h: 0.7, y: 4.6 }), S('← 重工区画', 0.4, 79.6, 1, { h: 0.7, y: 4.6, c: '#ffb060' }), S('カプセルホテル →', 43.6, 9.8, 3, { h: 0.55, y: 3.4, c: '#ffe8c0' }),
           N('案内係', 'talk:megaguide', 24.4, 7.4, -0.4, 0x2c5a4e, { visor: '#ffd27a' }), N('市民', 'talk:megacitizen', 18.6, 24, 1.4, 0x6a4a8a), N('観光客', 'talk:tourist', 26, 31, -2, 0x3a6ea8), N('商人', 'talk:megatrader', 30.4, 44.6, -1.2, 0xc9a22e), N('市民', 'talk:megacitizen2', 17.4, 58, 0.8, 0x8a3a3a),
@@ -165,7 +165,7 @@ const weapon = () => ({
       props: [['alarm', 5.7, 4, 3], ['alarm', 0.3, 15, 1], ['alarm', 5.7, 25, 3], S('兵装庫', 0.26, 5.4, 1, { h: 0.3, y: 2.2 }), S('射撃試験場', 0.26, 18.2, 1, { h: 0.3, y: 2.2 }), S('戦闘指揮所', 3, 27.74, 2, { h: 0.24, y: 3.12, c: '#ff5a3a' }), ['pipes', 5.6, 12, 3, { c: 0xc9a22e }]] },
     { id: 'armory', name: '兵装庫', x: -7, z: 28, w: 20, d: 16, h: 5.6, deco: ['girders', 'cables'],
       props: [['mech', 4, 3.4, 0, { s: 0.8 }], ['mech', 9.6, 3.4, 0, { s: 0.8, eye: '#ff5a3a', id: '12' }], ['weaponrack', 0.25, 8.6, 1, { c: '#ffe14d' }], ['weaponrack', 0.25, 12, 1, { c: '#ffe14d' }], ['missilerack', 5, 14.6, 2], ['missilerack', 9, 14.6, 2], ['shellrack', 14.6, 15.2, 2, { n: 6 }],
-        T('兵装整備・補給', 'rearm', 16.4, 4.2, -0.8, { c: '#ff5a3a' }), N('兵器廠長', 'talk:weaponarm', 15.4, 11.8, -1.2, 0x5a5a5a, { visor: '#ffe14d' }), ['ammobox', 13.6, 1.6, 0, { n: 4 }], ['workbench', 17, 0.7, 0], ['locker', 19.5, 12.6, 3, { n: 3 }], ['alarm', 19.7, 2.4, 3]] },
+        T('兵装整備・補給', 'rearm', 16.4, 4.2, -0.8, { c: '#ff5a3a' }), N('兵器廠長', 'talk:weaponarm', 15.4, 11.8, -1.2, 0x5a5a5a, { visor: '#ffe14d' }), ['ammobox', 13.6, 1.6, 0, { n: 4 }], ['weaponbench', 17, 0.7, 0], ['locker', 19.5, 12.6, 3, { n: 3 }], ['alarm', 19.7, 2.4, 3]] },
     { id: 'range', name: '射撃試験場', x: -11, z: 45, w: 24, d: 9, h: 4.6, deco: ['cables'], li: 0.8,
       props: [['range', 19, 4.5, 3, { d: 14.5, n: 2, w: 3.2, block: 8.6 }], N('射撃教官', 'talk:weaponsgt', 22.2, 1.5, 2.6, 0x4a5a3a, { visor: '#ff5a3a' }), ['weaponrack', 23.75, 6.6, 3, { c: '#ff5a3a' }], ['ammobox', 21.6, 7.9, 0, { n: 2 }], S('射撃試験場 RANGE', 21.6, 0.3, 0, { h: 0.3, y: 3.6, c: '#ff5a3a' })] },
     { id: 'cic', name: '戦闘指揮所', x: 7, z: 56, w: 18, d: 18, h: 6.5, shape: 'round', floor: ['hex', 0x3a3e46, 0.3, 0.6], wall: ['smooth', 0x2a2e36, 0.6, 0.4], ceil: ['flat', 0x101216], li: 0.5, lamp: '#ffb890', trim: '#ff5a3a', rug: [[9, 9, 0, 3.4, 'carpet', 0x2a1a1a]],
@@ -225,14 +225,74 @@ const mycenae = (deployed) => () => ({
       props: [['medpod', 0.95, 2.6, 0], ['medpod', 0.95, 6.4, 0], ['stretcher', 6.0, 2.7, 0], ['stretcher', 6.0, 6.3, 0, { c: 0x2a8a5a }], ['medbot', 1.3, 4.5, 0, { r: 0.35, y: 1.8 }], ['tank', 6.1, 8.7, 0, { c: '#35ff8a' }], ['cabinet', 0.5, 8.7, 1, { metal: 1, w: 1.2 }],
         S('救護室 TRIAGE', 3.5, 0.26, 0, { h: 0.2, y: 2.6, c: '#35ff8a' })] },
     { id: 'cabin', name: '避難者キャビン', x: 0, z: 15.5, w: 7, d: 9, h: 2.8, wall: ['quilt', 0xf0f0e8, 0.85, 0.02], win: [['w', 1, 8, 1.1, 2.2], ['e', 1, 8, 1.1, 2.2]], rug: [[2.4, 0.6, 2.2, 7.8, 'carpet', 0x8a3a1a]],
-      props: [['seatrow', 0.75, 2.5, 1, { n: 4, c: 0xff7a2a }], ['seatrow', 0.75, 6.4, 1, { n: 4, c: 0xff7a2a }], ['seatrow', 6.25, 2.5, 3, { n: 4, c: 0xff7a2a }], ['seatrow', 6.25, 6.4, 3, { n: 4, c: 0xff7a2a }], ['poster', 0.25, 4.45, 1, { text: '落ち着いて着席を', c: '#35ff8a', h: 0.34, y: 2.46 }], ['poster', 6.75, 4.45, 3, { text: 'まもなく安全な場所へ', c: '#ffb060', h: 0.34, y: 2.46 }],
+      props: [['evacseats', 0.62, 2.5, 1, { n: 4 }], ['evacseats', 0.62, 6.4, 1, { n: 4 }], ['evacseats', 6.38, 2.5, 3, { n: 4 }], ['evacseats', 6.38, 6.4, 3, { n: 4 }], ['poster', 0.25, 4.45, 1, { text: '落ち着いて着席を', c: '#35ff8a', h: 0.34, y: 2.46 }], ['poster', 6.75, 4.45, 3, { text: 'まもなく安全な場所へ', c: '#ffb060', h: 0.34, y: 2.46 }],
         ...(deployed ? [N('避難した市民', 'talk:evacuee', 1.7, 2.5, 1, 0x3a6ea8), N('避難した市民', 'talk:evacuee2', 5.3, 6.4, 3, 0x8a4a6a), N('避難した市民', 'talk:evacuee3', 1.7, 6.9, 1, 0x4a7a4a)] : [])] },
     { id: 'cargo', name: '物資庫・後部ランプ', x: 0, z: 24.5, w: 7, d: 6.5, h: 3.3, floor: ['plate', 0x6a7078, 0.5, 0.6], deco: ['cables'],
-      props: [['supplyrack', 6.2, 2.5, 3, { w: 3.6 }], ['loaderbot', 1.6, 2.6, 0, { l: 1.8 }], ['locker', 0.5, 5.2, 1, { n: 2 }], ['hazard', 3.5, 5.7, 0, { w: 3, d: 0.4 }], ['exit', 3.5, 6.3, 2, { label: '後部ランプから降りる', sign: 'RAMP', c: '#ff7a2a', w: 2.6 }], S('物資庫 CARGO', 3.5, 0.26, 0, { h: 0.24, y: 2.9 })] },
+      props: [['supplyrack', 6.2, 2.5, 3, { w: 3.6 }], ['hazard', 3.5, 5.7, 0, { w: 3, d: 0.4 }], ['exit', 3.5, 6.3, 2, { label: '後部ランプから降りる', sign: 'RAMP', c: '#ff7a2a', w: 2.6 }], S('物資庫 CARGO', 3.5, 0.26, 0, { h: 0.24, y: 2.9 })] },
   ],
   doors: [['cockpit', 'triage', 3.5, 1.5, 2.0, 'hatch'], ['triage', 'cabin', 3.5, 1.8, 2.3, 'slide'], ['cabin', 'cargo', 3.5, 2.2, 2.4, 'slide']],
   extra(B, out) { mycenaeOutside(B, out, deployed); },
 });
 
-export const BP2 = { 'station:atlas': atlas, 'station:megaton': megaton, 'station:fizer': fizer, 'station:weapon': weapon, 'rescue:mycenae': mycenae(false), 'rescue:mycenae-d': mycenae(true) };
+// ───────────────────────── 細部の作り込み: 壁の設備・掲示物・備品を部屋ごとに足す ─────────────────────────
+// 壁付けの小道具は壁から 0.22m の位置に、向き 0 = 北壁 / 1 = 西壁 / 2 = 南壁 / 3 = 東壁 で置く
+const DRESS = {
+  atlas: {
+    hangar: [['firstaid', 0.22, 22.6, 1], ['extinguisher', 0.22, 24.8, 1], ['wallpanel', 45.78, 7, 3, { text: '格納庫 電源' }], ['dronerack', 45.3, 24, 3, { n: 3 }], ['vent', 45.78, 29, 3, { y: 3.2, w: 1.4 }], ['cylinders', 14, 33.4, 2, { n: 5 }], ['gearwall', 30, 33.76, 2, { w: 3.2 }], ['floorhatch', 38, 20, 0], ['cabledrum', 6.4, 19.4, 0.4],
+      ['warnsign', 0.22, 2.4, 1, { text: '発進時\n退避' }], ['tally', 36.6, 33.76, 2, { w: 2.6, h: 1.3, y: 2.6 }]],
+    ops: [['mapwall', 13, 21.78, 2, { w: 7.4, h: 3.5, y: 2.9 }], ['tally', 0.22, 6.4, 1, { w: 2.4, h: 1.2, y: 2.5 }], ['extinguisher', 0.22, 13.6, 1], ['wallpanel', 25.78, 21, 3, { w: 1.2, h: 1.0, text: '非常電源' }], ['firstaid', 0.22, 20.8, 1]],
+    bay: [['gearwall', 90.6, 0.24, 0, { w: 3.2 }], ['tally', 86.6, 0.22, 0, { w: 2.6, h: 1.3, y: 2.7 }], ['dronerack', 70, 0.62, 0, { n: 4 }], ['dronerack', 117.2, 0.62, 0, { n: 3 }], ['cylinders', 74.6, 0.45, 0, { n: 4 }], ['extinguisher', 75.9, 0.22, 0, { y: 1.1 }], ['firstaid', 84.2, 0.22, 0],
+      ['wallpanel', 0.22, 44, 1, { w: 2.2, h: 1.5, text: '西壁 配電' }], ['wallpanel', 159.78, 44, 3, { w: 2.2, h: 1.5, text: '東壁 配電' }], ['cylinders', 0.5, 70, 1, { n: 6 }], ['cylinders', 159.5, 70, 3, { n: 6, k: 1 }], ['vent', 0.22, 52, 1, { y: 4, w: 2 }], ['vent', 159.78, 52, 3, { y: 4, w: 2 }],
+      ['floorhatch', 30, 26, 0], ['floorhatch', 130, 26, 0], ['cabledrum', 14, 16, 0.3], ['cabledrum', 150, 16, 1.2], ['warnsign', 0.22, 20, 1, { text: '発進口\n噴流注意', w: 1.4, h: 0.9, y: 2.4 }], ['warnsign', 159.78, 20, 3, { text: '発進口\n噴流注意', w: 1.4, h: 0.9, y: 2.4 }],
+      ['mapwall', 62, 0.22, 0, { w: 5.2, h: 2.6, y: 4.6 }], ['bulletin', 100.4, 0.22, 0, { w: 2.4, items: ['整備当番', '発進順 A→C', '点検記録', '燃料補給表', '安全第一', '訓練日程'] }]],
+    med: [['firstaid', 0.22, 19.6, 1], ['extinguisher', 27.78, 16.2, 3], ['cylinders', 22.6, 0.45, 0, { n: 4 }], ['stretcherrack', 27.0, 4.6, 2], ['wallpanel', 27.78, 23.8, 3, { w: 1.4, h: 1.1, text: '医療ガス' }], ['glassshelf', 23.6, 25.55, 2, { w: 2.4 }], ['incubator', 13.2, 0.62, 0, { c: '#35ff8a' }], ['dispenser', 26.9, 11.4, 3]],
+    supply: [['bulletin', 21.78, 4.4, 3, { w: 2, items: ['在庫表', '出庫記録', '賞味期限', '積込手順', '安全第一', '当番表'] }], ['extinguisher', 21.78, 17.4, 3], ['cylinders', 2, 25.5, 2, { n: 5 }], ['wallpanel', 0.22, 12.6, 1, { text: '冷蔵庫 電源' }], ['warnsign', 11, 25.78, 2, { text: '荷役中\n通行注意', w: 1.2, h: 0.8, y: 2.6 }]],
+    crew: [['painting', 16, 0.22, 0, { kind: 3, y: 2.2 }], ['bulletin', 4, 19.78, 2, { w: 2.4 }], ['firstaid', 0.22, 13, 1], ['extinguisher', 0.22, 14.6, 1], ['dispenser', 6.9, 0.45, 0], ['pennant', 13.6, 0.22, 0, { n: 3, y: 3.6, c: 0xc8501e }]],
+    brief: [['bulletin', 0.22, 5, 1, { w: 2.4, items: ['出動手順', '着陸帯 一覧', '気象通報', '無線符号', '訓練日程', '表彰'] }], ['painting', 6.4, 0.22, 0, { kind: 3, w: 1.4, h: 1.0 }]],
+  },
+  megaton: {
+    hangar: [['wallpanel', 0.22, 38, 1, { w: 2.4, h: 1.5, text: '第 7 ドック 配電' }], ['cylinders', 0.5, 24, 1, { n: 6 }], ['firstaid', 59.78, 29.4, 3], ['extinguisher', 59.78, 31.4, 3], ['cabledrum', 22, 8, 0.5], ['cabledrum', 24.4, 9.6, 1.4, { c: 0x2a6ab8 }],
+      ['billboard', 0.22, 12, 1, { w: 7, h: 3.2, y: 7.4, text: 'ZEPHYR GAS\n希ガスはメガトンへ', c: '#7fc8e8' }], ['billboard', 59.78, 44, 3, { w: 7, h: 3.2, y: 8, text: 'APEX LOUNGE\n展望ラウンジ', c: '#ffd27a' }], ['floorhatch', 16, 20, 0], ['warnsign', 22, 59.78, 2, { text: '荷役中\n頭上注意', w: 1.3, h: 0.85, y: 2.5 }]],
+    atrium: [['megamodel', 22, 19, 0, { use: 'talk:megamodel', label: 'メガトンの模型' }], ['infopillar', 22, 48.4, 0], ['infopillar', 22, 63.6, 0], ['newsstand', 34.4, 35, 3], ['newsstand', 9.6, 91, 1, { c: 0x8a2a20 }], ['stanchion', 36.4, 2.4, 0, { n: 3, gap: 1.9 }], ['stanchion', 36.4, 5.0, 0, { n: 3, gap: 1.9 }],
+      ['luggage', 41.6, 16.6, 0, { n: 5 }], ['luggage', 41.4, 87, 0, { n: 4 }], ['billboard', 8.4, 0.22, 0, { w: 8, h: 4, y: 7.4, text: 'ZEPHYR TEA\n雲海の一番摘み', c: '#8aff9a' }], ['billboard', 34.2, 0.22, 0, { w: 8, h: 4, y: 7.4, text: 'SKY SUSHI\n環を眺めて一貫', c: '#ff9ad8' }],
+      ['billboard', 9, 111.78, 2, { w: 8, h: 4, y: 7, text: 'MEGATON 炉\n出力 4.8 GW', c: '#ffb060' }], ['billboard', 35, 111.78, 2, { w: 8, h: 4, y: 7, text: 'NOVA MODE\n春の新作', c: '#c9a0ff' }], ['vase', 17.6, 51.6, 0, { s: 1.1 }], ['vase', 26.4, 51.6, 0, { s: 1.1, c: 0x8a2a20 }], ['vase', 17.6, 60.4, 0, { s: 1.1, c: 0x8a2a20 }], ['vase', 26.4, 60.4, 0, { s: 1.1 }]],
+    core: [['capbank', 22, 40.9, 2, { n: 4, c: '#ffb060' }], ['cabledrum', 6.4, 22, 0.2], ['cabledrum', 37.6, 22, 1.2, { c: 0x2a6ab8 }]],
+    exchange: [['decolamp', 9, 9, 0, { y: 7.2 }], ['decolamp', 23, 9, 0, { y: 7.2 }], ['decolamp', 9, 23, 0, { y: 7.2 }], ['decolamp', 23, 23, 0, { y: 7.2 }], ['vase', 12.6, 5.4, 0], ['vase', 19.4, 5.4, 0, { c: 0x8a2a20 }]],
+    transit: [['ticketgate', 6.4, 8, 1, { n: 3 }], ['stanchion', 6.4, 3.2, 1, { n: 4, gap: 1.5 }], ['infopillar', 20, 5.6, 0], ['newsstand', 39.6, 1.0, 0, { w: 2.6 }], ['luggage', 15.6, 1.5, 0, { n: 4 }], ['luggage', 34, 8.6, 0, { n: 5 }], ['bulletin', 43.78, 8, 3, { w: 2, items: ['時刻表', '運賃表', '遺失物', '工事予定', 'お知らせ', '路線図'] }],
+      ['billboard', 14.4, 0.22, 0, { w: 3.6, h: 1.8, y: 6.6, text: 'RING LINE\n前部リングまで 4 分', c: '#ffd27a' }], ['extinguisher', 43.78, 12, 3], ['decolamp', 12, 5, 0, { y: 5.6, s: 0.8 }], ['decolamp', 32, 5, 0, { y: 5.6, s: 0.8 }]],
+    forge: [['capbank', 37.0, 30.6, 3, { n: 4, c: '#ffb060' }], ['cabledrum', 3, 12, 0.4], ['warnsign', 0.22, 12, 1, { text: '高温注意\n溶融金属', w: 1.3, h: 0.85, y: 2.4 }], ['extinguisher', 37.78, 14.4, 3], ['wallpanel', 37.78, 6.4, 3, { w: 2, h: 1.4, text: '鋳造 制御盤' }], ['floorhatch', 16, 24, 0], ['cylinders', 14, 0.45, 0, { n: 6, k: 2 }], ['platestand', 30, 1.0, 0, { w: 2, h: 1.6, n: 3, t: 'II' }]],
+    apex: [['decolamp', 8, 20, 0, { y: 6.6 }], ['decolamp', 20, 22, 0, { y: 6.6 }], ['decolamp', 22, 6, 0, { y: 6.6 }], ['painting', 0.22, 5, 1, { kind: 0, w: 2.2, h: 1.5, y: 2.5 }], ['painting', 24.6, 29.78, 2, { kind: 1, w: 2.4, h: 1.6, y: 2.4 }], ['curtain', 31.72, 15, 3, { w: 26, h: 8.8, c: 0x2c5a4e }], ['curtain', 16, 0.28, 0, { w: 28, h: 8.8, c: 0x2c5a4e }],
+      ['vase', 2, 12.4, 0, { s: 1.1 }], ['vase', 2, 17.6, 0, { s: 1.1, c: 0x8a2a20 }]],
+    hotel: [['painting', 17.78, 6, 3, { kind: 2, w: 1.5, h: 1.0, y: 2.2 }], ['luggage', 13.6, 7.6, 0, { n: 4 }], ['bulletin', 0.22, 9.6, 1, { w: 1.6, items: ['館内案内', '朝食 6 時', '禁煙', '非常口'] }], ['extinguisher', 0.22, 3.6, 1]],
+    garden: [['vase', 37, 19.4, 0, { s: 1.2 }], ['vase', 37, 24.6, 0, { s: 1.2, c: 0x8a2a20 }], ['dispenser', 34.4, 1.2, 0]],
+  },
+  fizer: {
+    hangar: [['garmentrack', 3.4, 13, 1, { n: 5 }], ['cylinders', 37.5, 12, 3, { n: 5 }], ['wallpanel', 37.78, 18, 3, { text: '滅菌 制御盤' }], ['extinguisher', 37.78, 21.5, 3], ['firstaid', 0.22, 18, 1], ['warnsign', 22.8, 29.78, 2, { text: '清浄区画\n要除染' }], ['floorhatch', 30, 6, 0], ['vent', 0.22, 8, 1, { y: 3, w: 1.6 }]],
+    decon: [['warnsign', 0.22, 5.8, 1, { text: '紫外線\n直視禁止', w: 0.8, h: 0.52, y: 1.7 }], ['warnsign', 6.78, 10.2, 3, { text: '薬霧噴射\n立ち止まるな', w: 0.8, h: 0.52, y: 1.7 }], ['vent', 0.22, 14.4, 1, { y: 2.6, w: 0.8, h: 0.4 }]],
+    lab: [['incubator', 17.4, 21.3, 2], ['incubator', 18.6, 21.3, 2, { c: '#b48cff' }], ['freezer', 21.4, 21.3, 2, { n: 2 }], ['sequencer', 1.0, 5.4, 1], ['pipettebot', 1.1, 18.6, 1], ['glassshelf', 11.75, 0.4, 0, { w: 2.2 }], ['firstaid', 0.22, 13.6, 1], ['extinguisher', 0.22, 8.4, 1], ['bulletin', 23.78, 20.6, 3, { w: 1.6, items: ['実験予定', '廃液処理', '当番表', '安全第一'] }]],
+    pharma: [['freezer', 0.7, 12, 1, { n: 3 }], ['wallpanel', 0.22, 9, 1, { text: '製剤 制御盤' }], ['glassshelf', 6.5, 19.6, 2, { w: 3 }], ['extinguisher', 27.78, 17, 3], ['warnsign', 20, 0.22, 0, { text: '無塵衣\n着用区域' }], ['garmentrack', 26.6, 1.0, 0, { n: 3 }], ['floorhatch', 22, 10.4, 0]],
+    clinic: [['glassshelf', 0.4, 11.4, 1, { w: 2.4 }], ['firstaid', 23.78, 3, 3], ['cylinders', 23.5, 9.4, 3, { n: 3 }], ['dispenser', 22.6, 17.4, 2], ['painting', 6, 17.78, 2, { kind: 2, w: 1.4, h: 0.9, y: 2.6 }]],
+    cryo: [['warnsign', 6.6, 0.22, 0, { text: '極低温\n素手厳禁' }], ['cylinders', 20, 1.0, 0, { n: 3, k: 1 }], ['wallpanel', 2, 0.22, 0, { w: 1.4, h: 1.1, text: '液体窒素' }]],
+    bio: [['incubator', 3.4, 7.4, 0.8, { c: '#8aff9a' }]],
+  },
+  weapon: {
+    hangar: [['warnsign', 0.22, 9.6, 1, { text: '射線注意\n試射 22 秒毎', w: 1.3, h: 0.85, y: 2.4 }], ['wallpanel', 0.22, 16, 1, { w: 2, h: 1.4, text: '装甲ドック 配電' }], ['extinguisher', 0.22, 20, 1], ['cabledrum', 30, 9.6, 0.4], ['pennant', 26.6, 27.78, 2, { n: 3, y: 4.6 }], ['capbank', 33.2, 21, 3, { n: 3 }], ['floorhatch', 8, 12, 0], ['firstaid', 33.78, 17.4, 3]],
+    spine: [['extinguisher', 5.78, 20, 3], ['wallpanel', 5.78, 8, 3, { w: 1.2, h: 1.0, y: 1.5, text: '区画 B' }], ['warnsign', 5.78, 16, 3, { text: '走るな', w: 0.6, h: 0.4, y: 1.8 }], ['floorhatch', 3, 14, 0, { w: 1.0 }]],
+    armory: [['guncase', 6.6, 9.4, 0], ['guncase', 11, 9.4, 0, { text: '65 式 重粒子銃' }], ['platestand', 18.2, 15.0, 2, { w: 1.6, h: 1.5, n: 6, t: 'IV' }], ['warnsign', 19.78, 5.2, 3, { text: '実弾保管\n火気厳禁' }], ['pennant', 6.8, 0.22, 0, { n: 5, y: 5.0 }], ['shelldisplay', 13.2, 6.2, 0], ['extinguisher', 19.78, 10.4, 3]],
+    range: [['targetsheets', 21.6, 8.78, 2, { w: 3 }], ['extinguisher', 23.78, 1.2, 3], ['warnsign', 20.4, 0.22, 0, { text: '実射中\n耳栓着用', w: 0.8, h: 0.52, y: 2.6 }]],
+    breech: [['capbank', 15.2, 7.4, 3, { n: 4 }], ['capbank', 15.2, 43.6, 3, { n: 4 }], ['cabledrum', 2, 4, 0.3], ['cabledrum', 13.4, 2.2, 1.2, { c: 0x2a6ab8 }], ['warnsign', 0.22, 26, 1, { text: '強磁場\n金属持込禁止', w: 1.3, h: 0.85, y: 2.2 }], ['warnsign', 0.22, 36, 1, { text: '耳栓着用\n試射区画', w: 1.3, h: 0.85, y: 2.2 }],
+      ['wallpanel', 0.22, 12.6, 1, { w: 2.2, h: 1.5, text: '主砲 配電' }], ['extinguisher', 0.22, 33.6, 1], ['ladder', 0.3, 46, 1], ['platestand', 13, 46.6, 2, { w: 1.8, h: 1.8, n: 7, t: 'VI' }], ['floorhatch', 13, 38, 0]],
+    mag: [['warnsign', 13.78, 10.6, 3, { text: '火気厳禁' }], ['extinguisher', 13.78, 12, 3], ['wallpanel', 11.4, 13.78, 2, { w: 1.2, h: 1.0, text: '換気' }]],
+    bunk: [['bulletin', 8.4, 0.22, 0, { w: 2.2, items: ['当直表', '試射予定', '射撃成績', '食堂献立', '消灯 22 時', '郵便'] }], ['pennant', 6, 15.78, 2, { n: 3, y: 3.25 }], ['dispenser', 0.5, 2.2, 1], ['firstaid', 0.22, 5, 1], ['targetsheets', 0.22, 11.4, 1, { w: 1.6, y: 1.9 }]],
+  },
+  mycenae: {
+    triage: [['wallpanel', 6.78, 0.9, 3, { w: 0.9, h: 0.8, y: 1.6, text: '医療電源' }], ['cylinders', 0.85, 0.45, 0, { n: 3 }], ['handrail', 3.5, 9.26, 2, { w: 1.6, y: 2.45 }]],
+    cabin: [['oxygenmasks', 3.5, 4.5, 1, { w: 8, n: 10 }], ['dispenser', 6.5, 8.55, 3], ['extinguisher', 0.22, 8.6, 1]],
+    cargo: [['winch', 1.2, 0.9, 0], ['gearwall', 0.24, 4.9, 1, { w: 2.4 }], ['firstaid', 6.78, 5.4, 3], ['cylinders', 5.4, 6.05, 2, { n: 2 }], ['floorhatch', 3.5, 2.6, 0, { w: 1.4 }], ['dronerack', 6.36, 5.4, 3, { n: 1 }]],
+    cockpit: [['extinguisher', 3.5, 5.78, 2, { y: 0.9 }]],
+  },
+};
+const dress = (bp, k) => { for (const r of bp.rooms) if (DRESS[k][r.id]) r.props.push(...DRESS[k][r.id]); return bp; };
+
+export const BP2 = { 'station:atlas': () => dress(atlas(), 'atlas'), 'station:megaton': () => dress(megaton(), 'megaton'), 'station:fizer': () => dress(fizer(), 'fizer'), 'station:weapon': () => dress(weapon(), 'weapon'), 'rescue:mycenae': () => dress(mycenae(false)(), 'mycenae'), 'rescue:mycenae-d': () => dress(mycenae(true)(), 'mycenae') };
 export const ALL2 = [['station', 'atlas'], ['station', 'megaton'], ['station', 'fizer'], ['station', 'weapon'], ['rescue', 'mycenae'], ['rescue', 'mycenae-d']];
