@@ -1,8 +1,8 @@
 // メニュー / 端末 UI (星図・市場・造船所・任務・酒場・カジノ ほか)
 import { G, el, fmtCr, fmtDist, clamp } from '../core/util.js';
-import { BODIES, STATIONS, ENEMIES, SHIPS, COMMODITIES, UPGRADES, BASES, station, body } from '../world/defs.js';
+import { BODIES, STATIONS, ENEMIES, SHIPS, COMMODITIES, UPGRADES, BASES, RESCUE, station, body } from '../world/defs.js';
 import { QUALITY, RES, DIST } from '../gfx/renderer.js';
-import { stats, save, wipe, newGame, load, price, cargoUsed, addCargo, takeCargo, earn, commodity, missionBoard, accept, event, remaining } from '../game/state.js';
+import { stats, save, wipe, newGame, load, price, cargoUsed, addCargo, takeCargo, earn, commodity, missionBoard, accept, event, remaining, rescueState, disaster, dispatch, recall } from '../game/state.js';
 
 const SFX = (n) => G.audio?.sfx(n);
 export class UI {
@@ -49,7 +49,7 @@ export class UI {
     s.onclick = () => { const k = Object.keys(QUALITY), nx = k[(k.indexOf(G.gfx.qName) + 1) % k.length]; G.setQuality(nx); s.textContent = '画質：' + QUALITY[nx].label; SFX('ui'); };
     const rs = el('button', 'cb alt', '解像度：' + RES[G.gfx.res], menu);
     rs.onclick = () => { const k = [540, 720, 1080, 0], nx = k[(k.indexOf(G.gfx.res) + 1) % k.length]; G.setRes(nx); rs.textContent = '解像度：' + RES[nx]; SFX('ui'); };
-    el('div', 'hint', '機体を選んで出撃。5 つの宇宙ステーション、着陸できる 5 つの星、乗り込める敵艦 20 隻が待っている。<br>スマホは横向き全画面推奨（ホーム画面に追加すると完全な全画面で遊べます）', t);
+    el('div', 'hint', '機体を選んで出撃。9 つの宇宙ステーション、着陸できる 5 つの星、乗り込める敵艦 20 隻が待っている。<br>スマホは横向き全画面推奨（ホーム画面に追加すると完全な全画面で遊べます）', t);
   }
 
   // ───────────────────────── ポーズ / 設定 ─────────────────────────
@@ -69,7 +69,7 @@ export class UI {
   }
   help() {
     this.open('遊び方', 'HOW TO PLAY', (b) => {
-      this.note(b, '<b>目的</b>：星系を荒らす <em>ヴォイド艦隊 20 隻</em> を撃沈または拿捕し、5 つのステーションと 5 つの星を巡って交易・任務・探索を楽しもう。');
+      this.note(b, '<b>目的</b>：星系を荒らす <em>ヴォイド艦隊 20 隻</em> を撃沈または拿捕し、9 つのステーションと 5 つの星を巡って交易・任務・探索を楽しもう。アトラス救難基地では、救助船ミケーネを地球の都市へ出動させられる。');
       this.note(b, '<b>操縦</b>：左スティックで旋回、右端のスライダーで推力。<em>発射</em>・<em>ミサイル</em>（要ロック）・<em>ブースト</em>。⟲⟳ でロール。<br><b>超巡航</b>：惑星間の高速移動。<b>星図</b>で目的地を選び <em>自動航行</em> を押すと、到着まで自動で飛ぶ。');
       this.note(b, '<b>ドッキング</b>：ステーションに 3.5km まで近づき <em>ドッキング要請</em>。自動誘導で接続後、ステーション内を歩いて各施設を利用できる。<br><b>着陸</b>：惑星へ降下すると大気圏に突入。地表では <em>▲▼</em> で昇降し、<em>着陸</em> ボタンで接地。降りて歩ける。');
       this.note(b, '<b>敵艦への乗り込み</b>：船体を削ると <em>航行不能</em> になる。<em>接舷する</em> → <em>敵艦に突入</em> で艦内へ。警備ドローンを倒し、艦橋の制御コアを掌握すれば拿捕成功。');
@@ -233,6 +233,20 @@ export class UI {
       for (const id of ['magma', 'ice', 'spice', 'gas']) { const have = G.p.cargo[id] || 0; this.row(b, `${commodity(id).name} の解析`, `所持 ×${have}　→ 探査データ ×1 ＋ 研究協力金 400 Cr`, '', [{ label: '解析する', off: !have, fn: () => { takeCargo(id, 1); addCargo('data', 1); earn(400); SFX('reward'); api.refresh(); } }]); }
       const d = G.p.cargo.data || 0, pr = price(sid, 'data') || 900; this.row(b, '探査データの売却', `所持 ×${d}`, fmtCr(pr), [{ label: 'すべて売る', cls: 'gold', off: !d, fn: () => { earn(pr * takeCargo('data', 999)); SFX('reward'); api.refresh(); } }]);
       el('h3', '', '探査記録', b); for (const x of BODIES.filter((q) => q.type !== 'sun')) this.row(b, x.name, x.desc, G.p.stats.lands[x.id] ? `<span class="up">着陸 ${G.p.stats.lands[x.id]} 回</span>` : '<span class="dim">未踏</span>');
+    });
+  }
+  /** 救難指令 (アトラス): 救助船ミケーネを地球の都市へ出動させる / 呼び戻す */
+  rescue() {
+    const N = RESCUE.max, atAtlas = G.modeName === 'interior' && G.mode.ctx?.type === 'station' && G.mode.ctx.id === 'atlas', sync = () => { for (const f of G.modes.interior?.cur?.hooks || []) f(); };
+    this.open('救難指令', 'ATLAS RESCUE COMMAND ─ 救助船ミケーネ', (b, api) => {
+      const st = rescueState(), dz = disaster();
+      this.note(b, st.n ? `<b>出動中 ${st.n} / ${N} 機</b>　地球・ネオン・ベイの緊急着陸帯に展開している（出動 ${Math.max(0, G.p.day - st.day)} 日目）。現地で機体に近づけば乗り込める。` : `<b>全 ${N} 機 待機中</b>　発令すれば順に発進し、地球の都市の緊急着陸帯へ 1 機ずつ降りる。操縦はすべて救難ボットが行う。`);
+      this.note(b, dz ? `<em>災害警報</em>：<b>${dz.name}</b>　収拾に必要な救助船 <b>${dz.need} 機</b>${dz.done ? '（対応済み）' : '　─ 必要数を出動させ、1 日以上活動させてから帰還させると特別報奨が出る'}` : '現在、地球に災害警報は出ていない。出動は警戒待機として扱われ、活動日数に応じた報奨金が出る。');
+      if (!atAtlas) this.note(b, '出動と帰還の発令は、アトラス救難基地の指令室で行う。');
+      else if (!st.n) this.row(b, '緊急出動を発令する', '出動させる機数を選ぶ（最大 15 機）', null, [3, 5, 10, 15].map((n) => ({ label: `${n} 機`, cls: n === 15 ? 'red' : 'gold', fn: () => { dispatch(n); sync(); SFX('warp'); G.hud.banner('緊急出動', `救助船ミケーネ ${n} 機 ─ 地球へ`, 4); G.hud.msg('発進した機体は、アトラスを出たときに地球へ向かう姿を見送れる。', 'good', 8); api.refresh(); } })));
+      else this.row(b, '帰還を命じる', '全機をアトラスへ呼び戻す', null, [{ label: '全機帰還', cls: 'gold', fn: () => { const r = recall(); sync(); SFX(r.pay + r.bonus ? 'reward' : 'nav'); G.hud.msg(`ミケーネ ${r.n} 機が帰還した。${r.bonus ? `「${r.name}」を収拾 ─ 特別報奨 ${r.bonus.toLocaleString()} Cr。` : ''}${r.pay ? `活動報奨 ${r.pay.toLocaleString()} Cr` : r.bonus ? '' : '（活動 1 日未満のため報奨なし）'}`, 'good', 8); api.refresh(); } }]);
+      el('h3', '', '機体一覧', b);
+      for (let i = 0; i < N; i++) this.row(b, `ミケーネ ${String(i + 1).padStart(2, '0')} 号機`, i < st.n ? `ネオン・ベイ 第 ${i + 1} 緊急着陸帯` : `格納庫 ${'ABC'[Math.floor(i / 5)]}-${i % 5 + 1} 番`, i < st.n ? '<span class="dn">出動中</span>' : '<span class="up">待機</span>');
     });
   }
   rest(where = '') {

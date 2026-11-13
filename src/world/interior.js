@@ -6,6 +6,15 @@ import { mat, glow, aoMat } from '../gfx/textures.js';
 import { rng, vnoise } from '../core/util.js';
 import { fxTime } from '../gfx/fx.js';
 import { PROPS } from './props.js';
+import { PROPS2 } from './props2.js';
+import { PROPS3 } from './props3.js';
+import { PROPS4 } from './props4.js';
+import { PROPS5 } from './props5.js';
+import { PROPS6 } from './props6.js';
+
+/** 小道具 1 個の不具合で内装全体を巻き添えにしない: 例外は警告にとどめ、その小道具の動きだけ止める */
+const guard = (f, tag) => { let dead = false; return (...a) => { if (dead) return undefined; try { return f(...a); } catch (err) { dead = true; console.warn('[小道具]', tag, err); return undefined; } }; };
+import '../gfx/textures2.js';
 
 export const T = 0.2;      // 壁厚
 export const PR = 0.35;    // プレイヤー半径
@@ -97,6 +106,28 @@ function deco(B, r, th, out, kinds, rnd) {
     else if (k === 'stal') { const RK = mat(th.wall[0], { color: th.wall[1], rough: 1, metal: 0.05 }); for (let i = 0; i < r.w * r.d / 14; i++) { const x = x0 + 0.5 + rnd() * (r.w - 1.4), z = z0 + 0.5 + rnd() * (r.d - 1.4), l = 0.4 + rnd() * rnd() * Math.min(2.2, h * 0.3); B.add(RK, new THREE.ConeGeometry(0.1 + l * 0.14, l, 6).rotateX(Math.PI), mx(x, h - l / 2 - 0.1, z)); } }
     else if (k === 'boulders') { const RK = mat('rock', { color: th.wall[1], rough: 1, metal: 0.05, uvs: 0.3 }); for (let i = 0; i < (r.w + r.d) * 0.55; i++) { const side = Math.floor(rnd() * 4), t = rnd(), s = 0.5 + rnd() * rnd() * 1.6; let x = side < 2 ? x0 + t * (r.w - 0.4) : side === 2 ? x0 + s * 0.3 : x1 - s * 0.3, z = side < 2 ? (side ? z1 - s * 0.3 : z0 + s * 0.3) : z0 + t * (r.d - 0.4);
         if (out.doors.some((d) => Math.hypot(d.x - x, d.z - z) < d.dw / 2 + s + 0.9) || (out.slot && Math.hypot(out.slot.x - x, out.slot.z - z) < 12)) continue; B.add(RK, rockGeo(s, 1, i * 7 + r.x, 0.4), mx(x, s * 0.3, z, rnd(), rnd() * 6, rnd(), 1, 0.6 + rnd() * 0.9, 1), 0.3); out.cols.push({ x, z, r: s * 0.8 }); } }
+    else if (k === 'pilasters') { // 付け柱 (長辺の壁に並ぶ。柱頭と足元に灯り)
+      const PM = th.col ? flat(th.col, 0.3, 0.3) : mat('marble', { rough: 0.4, metal: 0.05 }), GM = flat(th.gilt ?? 0xc8a04a, 0.3, 1), off = (long ? r.d : r.w) / 2 - T - 0.2, step = r.pstep || 6, tr = glow(r.trim || th.trim, 2.6), hr = r.h;
+      const h = (r.ceil3 || th.cstyle) === 'gvault' ? hr - Math.min((long ? r.d : r.w) / 2 - T, hr * 0.42, hr - 2.65) : hr; // ガラスのヴォールトの下では壁の高さまで
+      for (let t = step / 2; t < L - 1.5; t += step) for (const s of [-1, 1]) { const [x, , z] = along(t, s * off, 0); if (out.doors.some((d) => Math.hypot(d.x - x, d.z - z) < d.dw / 2 + 1.1)) continue;
+        B.box(PM, long ? 0.9 : 0.4, h, long ? 0.4 : 0.9, x, h / 2, z); B.box(GM, long ? 1.1 : 0.5, 0.3, long ? 0.5 : 1.1, x, 0.15, z); B.box(GM, long ? 1.1 : 0.5, 0.22, long ? 0.5 : 1.1, x, h - 0.6, z); B.box(GM, long ? 1.3 : 0.6, 0.16, long ? 0.6 : 1.3, x, h - 0.38, z); B.box(GM, long ? 1.0 : 0.46, 0.08, long ? 0.46 : 1.0, x, 1.1, z);
+        const ix = long ? x : x - s * 0.21, iz = long ? z - s * 0.21 : z; B.box(tr, long ? 0.1 : 0.03, Math.max(0.5, h - 2.6), long ? 0.03 : 0.1, ix, h / 2 + 0.2, iz); B.add(glow(r.lamp || th.lamp, 3), new THREE.BoxGeometry(long ? 0.5 : 0.1, 0.06, long ? 0.1 : 0.5), mx(ix, h - 0.78, iz), 0); } }
+    else if (k === 'arches') { // 真鍮の大アーチ (部屋を横切る)。頂部に段飾り
+      const GM = flat(th.gilt ?? 0xc8a04a, 0.3, 1), span = (long ? r.d : r.w) / 2 - T, rise = Math.min(span, h * 0.42, h - 2.65), hs = h - rise, step = r.astep || 9;
+      for (let t = step / 2; t < L - 2; t += step) { const g = new THREE.TorusGeometry(1, 0.34 / span, 6, 40, Math.PI), p = along(t, 0, hs);
+        B.add(GM, g, long ? mx(p[0], hs, p[2], 0, HP, 0, span * 0.97, rise * 0.97, span) : mx(p[0], hs, p[2], 0, 0, 0, span * 0.97, rise * 0.97, span), 0.25);
+        for (let q = 0; q < 3; q++) B.box(GM, long ? 0.5 : 2.4 - q * 0.7, 0.26, long ? 2.4 - q * 0.7 : 0.5, p[0], h - 0.5 - q * 0.26, p[2]); B.sph(glow(r.lamp || th.lamp, 3.4), 0.3, p[0], h - 1.5, p[2], 1, 1.2, 1, 12); B.box(GM, 0.06, 0.5, 0.06, p[0], h - 1.2, p[2]);
+        for (const s of [-1, 1]) { const q = along(t, s * (span - 0.25), 0); B.box(GM, long ? 0.6 : 0.5, hs, long ? 0.5 : 0.6, q[0], hs / 2, q[2]); B.box(DK, long ? 0.8 : 0.66, 0.5, long ? 0.66 : 0.8, q[0], 0.25, q[2]); } } }
+    else if (k === 'girders') { // 重桁 (下面に警戒帯・赤色灯)
+      const HZ = mat('hazard', { rough: 0.7, metal: 0.2 }), step = r.gstep || 6;
+      for (let t = step / 2; t < L - 1; t += step) { const p = along(t, 0, h - 0.45); B.box(ST, long ? 0.5 : r.w - 2 * T, 0.9, long ? r.d - 2 * T : 0.5, ...p); B.box(DK, long ? 0.8 : r.w - 2 * T, 0.12, long ? r.d - 2 * T : 0.8, p[0], h - 0.94, p[2]); B.box(HZ, long ? 0.82 : r.w - 2 * T - 0.4, 0.03, long ? r.d - 2 * T - 0.4 : 0.82, p[0], h - 1.01, p[2]);
+        for (const s of [-1, 1]) { const q = along(t, s * ((long ? r.d : r.w) / 2 - T - 0.6), h - 1.1); B.sph(glow('#ff3a2a', 3.2), 0.07, q[0], q[1], q[2], 1, 1, 1, 8); B.add(ST, new THREE.BoxGeometry(long ? 0.4 : 1.6, 0.12, long ? 1.6 : 0.4), long ? mx(q[0], h - 1.35, q[2] - s * 0.5, s * 0.7, 0, 0) : mx(q[0] - s * 0.5, h - 1.35, q[2], 0, 0, -s * 0.7)); } } }
+    else if (k === 'floorlights') { // 壁際の床に埋めた誘導灯
+      const tr = glow(r.trim || th.trim, 2.2);
+      for (const s of [-1, 1]) { const off = s * ((long ? r.d : r.w) / 2 - T - 0.5); for (let t = 1; t < L - 1; t += 1.6) { const p = along(t, off, 0.012); if (out.doors.some((d) => Math.hypot(d.x - p[0], d.z - p[2]) < d.dw / 2 + 0.5)) continue; B.box(tr, long ? 0.9 : 0.07, 0.02, long ? 0.07 : 0.9, ...p); } } }
+    else if (k === 'coves') { // 天井際の間接照明 (壁をなめる光の帯)
+      const lm = glow(r.lamp || th.lamp, 2.4); B.box(DK, r.w - 2 * T, 0.12, 0.42, cx, h - 0.42, z0 + 0.21); B.box(DK, r.w - 2 * T, 0.12, 0.42, cx, h - 0.42, z1 - 0.21); B.box(DK, 0.42, 0.12, r.d - 2 * T, x0 + 0.21, h - 0.42, cz); B.box(DK, 0.42, 0.12, r.d - 2 * T, x1 - 0.21, h - 0.42, cz);
+      B.box(lm, r.w - 2 * T - 0.9, 0.04, 0.1, cx, h - 0.34, z0 + 0.3); B.box(lm, r.w - 2 * T - 0.9, 0.04, 0.1, cx, h - 0.34, z1 - 0.3); B.box(lm, 0.1, 0.04, r.d - 2 * T - 0.9, x0 + 0.3, h - 0.34, cz); B.box(lm, 0.1, 0.04, r.d - 2 * T - 0.9, x1 - 0.3, h - 0.34, cz); }
     else if (k === 'wains') { const W = mat('wood', { color: th.beam ?? 0x7a5a3a, rough: 0.8, metal: 0 }); B.box(W, r.w - 2 * T, 0.07, 0.07, cx, 1.05, z0 + 0.035); B.box(W, r.w - 2 * T, 0.07, 0.07, cx, 1.05, z1 - 0.035); B.box(W, 0.07, 0.07, r.d - 2 * T, x0 + 0.035, 1.05, cz); B.box(W, 0.07, 0.07, r.d - 2 * T, x1 - 0.035, 1.05, cz); }
   }
 }
@@ -110,15 +141,16 @@ function ceiling(B, r, th, CM, DK, out, rnd) {
     for (let x = x0 + T; x <= x0 + r.w - T + 0.01; x += (r.w - 2 * T) / Math.max(1, Math.round(r.w / 3.2))) B.box(DK, 0.14, 0.2, r.d, x, h, cz);
     for (let z = z0 + T; z <= z0 + r.d - T + 0.01; z += (r.d - 2 * T) / Math.max(1, Math.round(r.d / 3.2))) B.box(DK, r.w, 0.24, 0.14, cx, h + 0.02, z);
     pts = gridPts(r, h - 0.55); for (const [x, z] of pts) { B.box(DK, 0.05, 0.6, 0.05, x - 0.8, h - 0.3, z); B.box(DK, 0.05, 0.6, 0.05, x + 0.8, h - 0.3, z); }
-  } else if (st === 'vault' && Math.min((long ? r.d : r.w) / 2 - T, h * 0.42, h - 2.65) >= 0.35) {
-    const half = (long ? r.d : r.w) / 2 - T, len = (long ? r.w : r.d) - 2 * T, rise = Math.min(half, h * 0.42, h - 2.65), hs = h - rise;
-    B.add(CM, vaultGeo(len, half, rise), mx(cx, hs, cz, 0, long ? HP : 0, 0));
-    for (let t = 2; t < len - 1; t += 4) { const g = new THREE.TorusGeometry(1, 0.09 / half, 6, 24, Math.PI); B.add(DK, g, long ? mx(x0 + T + t, hs, cz, 0, HP, 0, half * 0.985, rise * 0.985, half) : mx(cx, hs, z0 + T + t, 0, 0, 0, half * 0.985, rise * 0.985, half), 0.25); }
-    B.box(tr, long ? len : 0.05, 0.04, long ? 0.05 : len, cx, h - 0.03, cz);
+  } else if ((st === 'vault' || st === 'gvault') && Math.min((long ? r.d : r.w) / 2 - T, h * 0.42, h - 2.65) >= 0.35) {
+    const half = (long ? r.d : r.w) / 2 - T, len = (long ? r.w : r.d) - 2 * T, rise = Math.min(half, h * 0.42, h - 2.65), hs = h - rise, gv = st === 'gvault';
+    B.add(gv ? GL : CM, vaultGeo(len, half, rise, gv ? 28 : 16), mx(cx, hs, cz, 0, long ? HP : 0, 0), gv ? 0 : undefined);
+    for (let t = 2; t < len - 1; t += gv ? 3.5 : 4) { const g = new THREE.TorusGeometry(1, (gv ? 0.16 : 0.09) / half, 6, gv ? 40 : 24, Math.PI); B.add(DK, g, long ? mx(x0 + T + t, hs, cz, 0, HP, 0, half * 0.985, rise * 0.985, half) : mx(cx, hs, z0 + T + t, 0, 0, 0, half * 0.985, rise * 0.985, half), 0.25); }
+    if (gv) for (let i = 1; i < 12; i++) { const a = Math.PI * i / 12, o2 = Math.cos(a) * half * 0.985, y = hs + Math.sin(a) * rise * 0.985; B.box(DK, long ? len : 0.12, 0.12, long ? 0.12 : len, long ? cx : cx + o2, y, long ? cz + o2 : cz); } // 棟木 (ガラスを受ける縦通材)
+    B.box(tr, long ? len : 0.05, 0.04, long ? 0.05 : len, cx, h - (gv ? 0.14 : 0.03), cz);
     const n = Math.max(1, Math.round(len / 6)); pts = []; for (let i = 0; i < n; i++) pts.push(long ? [x0 + T + (i + 0.5) * len / n, cz, h - 0.12, 0] : [cx, z0 + T + (i + 0.5) * len / n, h - 0.12, HP]);
-    if (lst === 'panel') lst = 'tube';
+    if (gv) { pts = gridPts(r, Math.min(hs, 9), 9); lst = 'strip'; } else if (lst === 'panel') lst = 'tube';
   } else if (st === 'truss') {
-    B.add(CM, new THREE.PlaneGeometry(r.w, r.d).rotateX(HP), mx(cx, h, cz)); const ST = mat('rib', { color: th.truss ?? 0x6a7078, metal: 0.7, rough: 0.6 }), span = long ? r.d : r.w, L = long ? r.w : r.d;
+    B.add(CM, new THREE.PlaneGeometry(r.w, r.d).rotateX(HP), mx(cx, h, cz)); const ST = mat('rib', { color: r.truss ?? th.truss ?? 0x6a7078, metal: 0.7, rough: 0.6 }), span = long ? r.d : r.w, L = long ? r.w : r.d;
     for (let t = 2.5; t < L - 1.5; t += 5) { const p = long ? [x0 + t, cz] : [cx, z0 + t], bx = (w, hh, y, off = 0, rz = 0) => B.add(ST, new THREE.BoxGeometry(long ? 0.14 : w, hh, long ? w : 0.14), long ? mx(p[0], y, p[1] + off, rz, 0, 0) : mx(p[0] + off, y, p[1], 0, 0, -rz));
       bx(span - 2 * T, 0.16, h - 0.12); bx(span - 2 * T, 0.16, h - 1.1); const n = Math.max(2, Math.round(span / 2.2)); for (let i = 0; i <= n; i++) { const o = -span / 2 + T + i * (span - 2 * T) / n; bx(0.1, 0.98, h - 0.61, o); if (i < n) bx(1.0 + (span - 2 * T) / n * 0.5, 0.08, h - 0.61, o + (span - 2 * T) / n / 2, (i % 2 ? 1 : -1) * Math.atan2(0.98, (span - 2 * T) / n)); } }
     pts = gridPts(r, h - 1.15, 8); if (lst === 'panel') lst = 'pendant';
@@ -165,8 +197,9 @@ function room(B, r, th, op, out, rnd) {
   if (r.shape === 'round') return round(B, r, th, op, out, rnd, WM, FM, CM, DK, trim);
   B.add(FM, new THREE.PlaneGeometry(r.w, r.d).rotateX(-HP), mx(cx, 0, cz));
   ceiling(B, r, th, CM, DK, out, rnd);
+  const gvR = (r.ceil3 || th.cstyle) === 'gvault' && !r.sky ? Math.min((r.w >= r.d ? r.d : r.w) / 2 - T, r.h * 0.42, r.h - 2.65) : 0;
   const wall = (side) => {
-    const hz = side === 'n' || side === 's', lo = hz ? x0 : z0 + T, hi = hz ? x1 : z1 - T, dir = side === 'n' || side === 'w' ? 1 : -1;
+    const hz = side === 'n' || side === 's', lo = hz ? x0 : z0 + T, hi = hz ? x1 : z1 - T, dir = side === 'n' || side === 'w' ? 1 : -1, h = gvR >= 0.35 && hz === (r.w >= r.d) ? r.h - gvR : r.h;
     const fix = side === 'n' ? z0 + T / 2 : side === 's' ? z1 - T / 2 : side === 'w' ? x0 + T / 2 : x1 - T / 2, inner = fix + dir * T / 2;
     const box = (m, a, b, ya, yb, tk = T, off = 0, uvs) => { if (b - a < 0.02 || yb - ya < 0.02) return; const g = hz ? new THREE.BoxGeometry(b - a, yb - ya, tk) : new THREE.BoxGeometry(tk, yb - ya, b - a); B.add(m, g, hz ? mx((a + b) / 2, (ya + yb) / 2, fix + off) : mx(fix + off, (ya + yb) / 2, (a + b) / 2), uvs); };
     const strips = (a, b) => { if (b - a < 0.6) return; if (tst === 'both' || tst === 'low') box(trim, a + 0.12, b - 0.12, 0.09, 0.14, 0.03, dir * (T / 2 + 0.012)); if (tst === 'both' || tst === 'high') box(trim, a + 0.12, b - 0.12, h - 0.2, h - 0.16, 0.03, dir * (T / 2 + 0.012)); if (tst === 'neon') { box(trim, a + 0.4, b - 0.4, 2.55, 2.6, 0.04, dir * (T / 2 + 0.03)); } box(DK, a, b, 0, 0.07, 0.06, dir * (T / 2 + 0.03)); };
@@ -234,7 +267,7 @@ function round(B, r, th, op, out, rnd, WM, FM, CM, DK, trim) {
 /** blueprint → 室内一式 */
 export function buildInterior(bp) {
   const th = bp.theme, B = new Builder(), rnd = rng(bp.seed || 7), BR = {}, groups = {};
-  const out = { bp, group: new THREE.Group(), walk: [], cols: [], rects: [], items: [], doors: [], lights: [], anim: [], npcs: [], drones: [], heights: [], floorMats: new Set(), slot: null, spawn: bp.spawn, rooms: bp.rooms, adj: {}, roomGroups: groups };
+  const out = { bp, group: new THREE.Group(), walk: [], cols: [], rects: [], items: [], doors: [], lights: [], anim: [], npcs: [], drones: [], heights: [], hooks: [], floorMats: new Set(), slot: null, spawn: bp.spawn, rooms: bp.rooms, adj: {}, roomGroups: groups };
   const open = {}, R = (id) => bp.rooms.find((r) => r.id === id);
   for (const r of bp.rooms) { open[r.id] = { n: [], s: [], w: [], e: [] }; BR[r.id] = new Builder(); groups[r.id] = new THREE.Group(); out.group.add(groups[r.id]); out.adj[r.id] = []; }
   for (const r of bp.rooms) for (const w of r.win || []) { if (typeof w[0] !== 'string') continue; const [side, a, b, y0 = 0.9, y1 = r.h - 0.5] = w, base = side === 'n' || side === 's' ? r.x : r.z; open[r.id][side].push({ a: base + a, b: base + b, y0, y1, type: 'win' }); }
@@ -255,7 +288,7 @@ export function buildInterior(bp) {
   for (const r of bp.rooms) room(BR[r.id], r, th, open[r.id], out, rnd);
   // 小道具
   for (const r of bp.rooms) for (const pr of r.props || []) {
-    const [type, lx, lz, rot = 0, o = {}] = pr, fn = PROPS[type]; if (!fn) { console.warn('未知の小道具', type); continue; }
+    const [type, lx, lz, rot = 0, o = {}] = pr, fn = PROPS[type] || PROPS2[type] || PROPS3[type] || PROPS4[type] || PROPS5[type] || PROPS6[type]; if (!fn) { console.warn('未知の小道具', type); continue; }
     const wx = r.x + lx, wz = r.z + lz, ang = rot * HP, y0 = o.y0 || 0, base = mx(wx, y0, wz, 0, ang, 0), P = new Placer(BR[r.id], base), sw = Math.round(rot) % 2 !== 0;
     const env = {
       th, out, rnd, room: r, x: wx, z: wz, ang, y0,
@@ -264,15 +297,15 @@ export function buildInterior(bp) {
       use: (label, act, range = 2.4, extra = {}) => { const it = { x: wx, z: wz, y: 1.2 + y0, r: range, label, act, room: r.id, ...extra }; out.items.push(it); return it; },
       dyn: (obj, x = 0, y = 0, z = 0) => { obj.position.set(x, y, z).applyMatrix4(base); obj.rotation.y += ang; groups[r.id].add(obj); return obj; },
       light: (c, i, y = 2, d = 12) => out.lights.push({ x: wx, y: y + y0, z: wz, c: new THREE.Color(c), i, d }),
-      anim: (f) => out.anim.push(f),
+      anim: (f) => out.anim.push(guard(f, type)),
     };
-    fn(P, o, env);
+    try { fn(P, o, env); } catch (err) { console.warn('[小道具] 設置に失敗:', type, 'in', r.id, err); }
   }
   // 小道具の接地影
   const BL = aoMat('blob'), rb = (x, z) => BR[roomAt(out, x, z)?.id] || B;
   for (const c of out.cols) { const d = c.r * 2 + 1.0; rb(c.x, c.z).add(BL, new THREE.PlaneGeometry(d, d).rotateX(-HP), mx(c.x, (c.y || 0) + 0.014, c.z), 0); }
   for (const q of out.rects) { const w = q[2] - q[0], d = q[3] - q[1]; if (w < 0.35 || d < 0.35) continue; rb((q[0] + q[2]) / 2, (q[1] + q[3]) / 2).add(BL, new THREE.PlaneGeometry(w + 0.9, d + 0.9).rotateX(-HP), mx((q[0] + q[2]) / 2, (q[4] || 0) + 0.014, (q[1] + q[3]) / 2), 0); }
-  bp.extra?.(B, out);
+  try { bp.extra?.(B, out); } catch (err) { console.warn('[内装] extra に失敗:', bp.name, err); }
   for (const r of bp.rooms) groups[r.id].add(BR[r.id].build({ shadow: false }));
   out.group.add(B.build({ shadow: false }));
   let minX = 1e9, minZ = 1e9, maxX = -1e9, maxZ = -1e9; for (const r of bp.rooms) { minX = Math.min(minX, r.x); minZ = Math.min(minZ, r.z); maxX = Math.max(maxX, r.x + r.w); maxZ = Math.max(maxZ, r.z + r.d); }
