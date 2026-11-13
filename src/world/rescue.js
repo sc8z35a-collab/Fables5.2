@@ -43,6 +43,7 @@ function duct(b, m, x, y, z, R, hh, fanGlow) {
  */
 export function buildMycenae(o = {}) {
   const m = MM(), b = new Builder(), GF = glow('#9fe8ff', 3.2), GE = glow('#7fd8ff', 6), GX = glow('#35ff8a', 1.5), E = 4.5;
+  const hx = (y) => 3.4 * Math.pow(1 - Math.pow(Math.abs(y) / (y > 0 ? 2.7 : 2.4), E), 1 / E) + 0.012; // 胴体中央部の側面の x (超楕円断面に沿わせる)
   const fus = [{ z: -13.2, w: 1.6, t: 1.0, b: 1.2, y: -0.4 }, { z: -12.2, w: 2.6, t: 1.7, b: 1.7, y: -0.25 }, { z: -10.4, w: 3.15, t: 2.3, b: 2.1, y: -0.1 }, { z: -8, w: 3.35, t: 2.6, b: 2.3 }, { z: -5, w: 3.4, t: 2.7, b: 2.4 }, { z: 6, w: 3.4, t: 2.7, b: 2.4 }, { z: 9.5, w: 3.3, t: 2.7, b: 2.1 }, { z: 12, w: 2.95, t: 2.6, b: 1.4 }, { z: 13.4, w: 2.5, t: 2.4, b: 0.7, y: 0.1 }].map((s) => ({ e: E, ...s }));
   b.add(m.H, loft(fus, 32));
   // 風防 (機首を包む大きな曲面ガラス) と窓枠
@@ -70,11 +71,12 @@ export function buildMycenae(o = {}) {
     for (let i = 0; i < 4; i++) { b.box(m.K, 0.1, 1.06, 1.56, s * 3.39, 1.12, 2.5 + i * 1.95); b.box(m.W, 0.12, 0.84, 1.34, s * 3.4, 1.12, 2.5 + i * 1.95); }
     b.box(GX, 0.06, 0.62, 1.9, s * 3.43, 0.65, -0.15); b.box(GX, 0.06, 1.9, 0.62, s * 3.43, 0.65, -0.15);
     b.add(livery('RESCUE 救難'), new THREE.PlaneGeometry(6.6, 1.03), mx(s * 3.436, -0.78, 5.4, 0, s * HP, 0), 0);
-    b.add(livery('MYCENAE　ミケーネ ─ ATLAS RESCUE FLEET', '#3a4048', 1024, 64, 700), new THREE.PlaneGeometry(7.4, 0.46), mx(s * 3.432, 2.06, 5.4, 0, s * HP, 0), 0);
+    b.add(livery('MYCENAE　ミケーネ ─ ATLAS RESCUE FLEET', '#3a4048', 1024, 64, 700), new THREE.PlaneGeometry(7.4, 0.46), mx(s * 3.432, 0.16, 5.4, 0, s * HP, 0), 0);
     // 側面扉 (左舷は乗降扉、右舷はホイスト扉)
-    for (const [dy, dz, hh, ww] of [[0.35, -5.55, 3.4, 0.08], [0.35, -2.55, 3.4, 0.08], [2.02, -4.05, 0.08, 3.08], [-1.32, -4.05, 0.08, 3.08]]) b.box(m.D, 0.07, hh, ww, s * 3.415, dy, dz);
+    for (const dz of [-5.55, -2.55]) { b.box(m.D, 0.07, 2.95, 0.08, s * 3.4, 0.125, dz); b.add(m.D, new THREE.BoxGeometry(0.07, 0.5, 0.08), mx(s * 3.262, 1.82, dz, 0, 0, s * 0.36)); } // 扉の枠 (肩の丸みに沿って内へ倒す)
+    b.box(m.D, 0.07, 0.08, 3.08, s * 3.2, 2.03, -4.05); b.box(m.D, 0.07, 0.08, 3.08, s * 3.375, -1.32, -4.05);
     b.box(m.K, 0.1, 0.9, 1.5, s * 3.39, 1.12, -4.05); b.box(m.W, 0.12, 0.7, 1.3, s * 3.4, 1.12, -4.05); b.box(m.C, 0.08, 0.1, 0.5, s * 3.44, 0.1, -3.0);
-    b.box(glow('#ffd23a', 1.4), 0.05, 0.12, 2.9, s * 3.44, -1.5, -4.05);
+    b.box(glow('#ffd23a', 1.4), 0.05, 0.12, 2.9, s * (hx(-1.5) + 0.02), -1.5, -4.05);
     // スキッド
     b.cyl(m.C, 0.15, 0.15, 15.5, s * 2.95, -3.55, -0.6, 'z', 10); b.add(m.C, new THREE.CylinderGeometry(0.15, 0.15, 1.5, 10), mx(s * 2.95, -3.28, -8.95, HP - 0.42, 0, 0)); b.add(m.C, new THREE.SphereGeometry(0.16, 10, 8), mx(s * 2.95, -2.96, -9.63));
     for (const z of [-6.4, -0.6, 5.2]) { b.add(m.D, new THREE.CylinderGeometry(0.11, 0.13, 1.5, 8), mx(s * 2.72, -2.92, z, 0, 0, s * -0.32)); b.box(m.K, 0.5, 0.16, 0.9, s * 2.95, -3.5, z); }
@@ -92,6 +94,24 @@ export function buildMycenae(o = {}) {
     b.add(m.D, new THREE.BoxGeometry(4.3, 0.2, 6.6), mx(0, -2.58, 15.75, 0.375, 0, 0)); b.add(mat('grate', { color: 0x8a9096, rough: 0.6, metal: 0.7 }), new THREE.BoxGeometry(3.7, 0.04, 6.4), mx(0, -2.46, 15.8, 0.375, 0, 0));
     for (const s of [-1, 1]) { b.add(glow('#ffd23a', 1.6), new THREE.BoxGeometry(0.16, 0.05, 6.4), mx(s * 2.0, -2.45, 15.8, 0.375, 0, 0)); b.add(m.C, new THREE.CylinderGeometry(0.06, 0.06, 3.5, 6), mx(s * 2.2, -1.0, 14.6, -0.75, 0, 0)); }
   } else b.add(m.A, new THREE.BoxGeometry(4.3, 0.2, 3.6), mx(0, 0.0, 13.75, 1.38, 0, 0));
+  // ── 細部: 外板の継ぎ目・歩行帯・注意書き・乗降ステップ・アンテナ・衝突防止灯・センサー球・カーゴフック ──
+  for (const s of [-1, 1]) {
+    b.box(m.D, 0.03, 0.035, 10.9, s * hx(-1.75), -1.75, 0.55); b.box(m.D, 0.03, 0.035, 8.4, s * hx(1.85), 1.85, 1.8); for (const z of [-1.85, 1.25]) b.box(m.D, 0.03, 2.5, 0.035, s * 3.405, -0.05, z);
+    b.box(m.K, 1.3, 0.02, 5.6, s * 4.35, 3.16, 0.6);
+    b.add(livery('NO STEP', '#30353d', 256, 64, 800), new THREE.PlaneGeometry(1.5, 0.38), mx(s * 5.9, 3.165, 3.0, -HP, 0, 0), 0);
+    b.add(livery('危険 DANGER', '#e04a0c', 512, 64, 800), new THREE.PlaneGeometry(2.2, 0.3), mx(s * 7.0, 3.165, -1.2, -HP, 0, 0), 0);
+    b.add(livery('非常時ここを切開 ▼ CUT HERE', '#e04a0c', 1024, 64, 700), new THREE.PlaneGeometry(2.9, 0.19), mx(s * (hx(-1.05) + 0.02), -1.05, -0.3, 0, s * HP, 0), 0);
+    for (const y of [-1.75, -2.15]) b.box(m.C, 0.3, 0.05, 0.6, s * (hx(y) + 0.13), y, -4.9);
+    b.cyl(m.C, 0.02, 0.02, 1.1, s * 3.46, 0.95, -5.9, 'y', 5); for (const y of [0.45, 1.45]) b.box(m.C, 0.07, 0.03, 0.03, s * 3.43, y, -5.9);
+    b.cyl(m.D, 0.022, 0.012, 0.9, s * 1.05, -0.2, -13.35, 'z', 5);
+    b.box(m.K, 0.02, 0.26, 0.5, s * 1.2, 3.31, -1.6);
+    for (const x of [4.6, 6.4, 8.2]) b.box(m.H, 0.3, 0.3, 2.2, s * x, 2.42, 2.4);
+    b.add(m.C, new THREE.TorusGeometry(0.93, 0.05, 6, 20), mx(s * 2.25, 1.35, 14.4));
+  }
+  b.box(m.K, 0.02, 0.3, 0.55, 0, 3.33, 2.5); b.cyl(m.K, 0.07, 0.09, 0.1, 0, 2.74, -3.4, 'y', 8); b.sph(glow('#ff2a1e', 5), 0.09, 0, 2.85, -3.4, 1, 1, 1, 8); b.sph(glow('#ff2a1e', 5), 0.09, 0, -2.5, 1.5, 1, 1, 1, 8);
+  b.cyl(m.D, 0.3, 0.3, 0.2, 0, -2.12, -10.2, 'y', 12); b.sph(m.K, 0.42, 0, -2.45, -10.2, 1, 1, 1, 14); b.add(m.GL, new THREE.SphereGeometry(0.2, 10, 8), mx(0, -2.6, -10.52), 0);
+  b.cyl(m.D, 0.12, 0.12, 0.3, 0, -2.5, 3.2, 'y', 8); b.add(m.C, new THREE.TorusGeometry(0.16, 0.04, 6, 14), mx(0, -2.74, 3.2, 0, HP, 0));
+  for (const x of [-1.6, 1.6]) for (const z of [-3, 6]) b.cyl(m.C, 0.015, 0.015, 0.3, x, -2.52, z, 'y', 4);
   const g = b.build(); g.userData.engines = [new THREE.Vector3(-2.25, 1.35, 14.6), new THREE.Vector3(2.25, 1.35, 14.6)]; g.userData.clear = 3.7;
   return g;
 }

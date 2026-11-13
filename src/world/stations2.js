@@ -11,6 +11,9 @@ import { G, rng, rr } from '../core/util.js';
 import { V, winMat, port, done, sign, sdBox } from './stationkit.js';
 import { buildMycenae, instanced, rescueN } from './rescue.js';
 import { body, station } from './defs.js';
+import { detailAtlas, detailMegaton, detailMegaRing } from './stationdetail.js';
+import { detailFizer, detailFizerHelix, detailWeapon } from './stationdetail2.js';
+import { lightField } from './stationparts.js';
 
 const HP = Math.PI / 2, TAU = Math.PI * 2, RAD = Math.PI / 180;
 export const NOISE = /* glsl */`
@@ -96,7 +99,8 @@ function atlas() {
     b.sph(A, 15, c * 150, 16, s * 150, 1, 0.7, 1, 16); b.sph(GD, 14, c * (SR + 2), CY, s * (SR + 2), 1, 1, 1, 16); b.sph(D, 11, pts[2].x, pts[2].y, pts[2].z, 1, 1, 1, 12);
     lights.push({ p: V(c * (SR + 18), CY, s * (SR + 18)), c: k % 2 ? '#3f6' : '#f33', s: 26, blink: 0.7, ph: k / 4 });
   }
-  signs.push(sign('ATLAS', '#5dffa8', 13, 0, -24, 147.5), sign('アトラス救難基地', '#ffe6c8', 6.5, 0, -24, -147.5, Math.PI), sign('ATLAS', '#5dffa8', 13, 147.5, -24, 0, HP), sign('RESCUE', '#ffb060', 13, -147.5, -24, 0, -HP), sign('救難', '#5dffa8', 8, 0, -42, 321.6, 0, 0));
+  signs.push(sign('ATLAS', '#5dffa8', 13, 0, -24, 147.5), sign('アトラス救難基地', '#ffe6c8', 6.5, 0, -24, -147.5, Math.PI), sign('ATLAS', '#5dffa8', 13, 147.5, -24, 0, HP), sign('RESCUE', '#ffb060', 13, -147.5, -24, 0, -HP), sign('救難', '#5dffa8', 5, 0, -31, 321.6, 0, 0));
+  const live = detailAtlas(b, { H, A, D, GD, signs }); // 艤装・灯火・交通 (stationdetail.js)
   const o = done(b, { ports: [p], radius: 480, lights, signs }), obj = o.obj;
   // 黄道環 (ゆっくり回る) と星
   const eb = new Builder(); eb.tor(GD, 216, 3.4, 0, 0, 0, HP, 0, 0, 160, 8); for (let i = 0; i < 12; i++) { const a = i * TAU / 12; eb.add(GD, new THREE.BoxGeometry(9, 9, 5), mx(Math.cos(a) * 216, 0, Math.sin(a) * 216, 0, -a, 0)); eb.add(glow(i % 3 ? '#ffe6a8' : '#8fe8ff', 4), new THREE.SphereGeometry(1.6, 8, 6), mx(Math.cos(a) * 222, 0, Math.sin(a) * 222), 0); }
@@ -123,6 +127,7 @@ function atlas() {
     fleet.userData.commit();
   });
   o.anim.push((t, dt) => { ecl.rotation.y += dt * 0.03; globe.rotation.y += dt * 0.06; });
+  live(o);
   return o;
 }
 
@@ -164,6 +169,8 @@ function megaton() {
     const a = a0 + rr(r, -25, 25) * RAD, z = rr(r, -1040, 1040), tall = r() < 0.12, w = rr(r, 14, 44), d = rr(r, 16, 64), h = tall ? rr(r, 44, 96) : rr(r, 8, 28), p = er(a).multiplyScalar(R + h / 2 - 3);
     if (Math.abs(a - a0) < 22 * RAD && Math.abs(z) < 350) continue; // 巨大な船名と背板の場所は空けておく
     b.add(r() < 0.72 ? WT : r() < 0.5 ? WT2 : D, new THREE.BoxGeometry(w, h, d), mx(p.x, p.y, z, 0, 0, a - HP));
+    if (h > 18) { const q = er(a).multiplyScalar(R + h - 1); b.add(D, new THREE.BoxGeometry(w * 0.5, 4, d * 0.45), mx(q.x, q.y, z, 0, 0, a - HP)); } // 屋上の機械室
+    if (tall) { const nc = glow(['#4de1ff', '#ff5ad2', '#ffd27a'][i % 3], 2.6); for (const s of [-1, 1]) { const q = er(a).multiplyScalar(R + h * 0.5 - 3).addScaledVector(et(a), s * (w / 2 + 0.3)); b.add(nc, new THREE.BoxGeometry(0.7, h * 0.86, 0.7), mx(q.x, q.y, z + s * (d / 2 + 0.3), 0, 0, a - HP)); } } // 塔の角のネオン
     if (tall) { const q = er(a).multiplyScalar(R + h + 8); b.add(D, new THREE.CylinderGeometry(0.8, 0.8, 22, 5), mx(q.x, q.y, z, 0, 0, a - HP)); lights.push({ p: V(q.x * 1.03, q.y * 1.03, z), c: '#f33', s: 22, blink: 0.5, ph: r() }); }
   }
   for (const a0 of LAND) for (const d of [-27, 27]) { const p = er(a0 + d * RAD).multiplyScalar(R + 4); b.add(H, new THREE.CylinderGeometry(5, 5, L - 60, 10), mx(p.x, p.y, 0, HP, 0, 0)); b.add(Y, new THREE.BoxGeometry(1.2, 1.2, L - 80), mx(p.x * 1.03, p.y * 1.03, 0)); }
@@ -216,16 +223,19 @@ function megaton() {
     rb.cyl(D, R + 14, R + 14, 84, 0, 0, 0, 'z', 72, true); rb.cyl(BR, R + 16, R + 16, 8, 0, 0, 36, 'z', 72, true); rb.cyl(BR, R + 16, R + 16, 8, 0, 0, -36, 'z', 72, true);
     for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3, e = er(a); rb.add(H, new THREE.CylinderGeometry(15, 20, 336, 14), mx(e.x * 430, e.y * 430, 0, 0, 0, a - HP)); rb.add(WT, new THREE.BoxGeometry(36, 52, 36), mx(e.x * 500, e.y * 500, 0, 0, 0, a - HP)); rb.add(D, new THREE.BoxGeometry(60, 70, 64), mx(e.x * 598, e.y * 598, 0, 0, 0, a - HP));
       for (const s of [-1, 1]) strut(rb, D, e.clone().multiplyScalar(R + 12).addScaledVector(et(a), s * 60), e.clone().multiplyScalar(590).addScaledVector(et(a), s * 12), 3); }
-    const g = rb.build(); g.position.z = z;
+    const RF = detailMegaRing(rb, { D, WT, BR, R, er, et, ez });
+    const g = rb.build(); g.position.z = z; g.add(lightField(RF));
     for (let i = 0; i < 12; i++) { const e = er(i * Math.PI / 6 + 0.26); lights.push({ p: e.multiplyScalar(RG + 62), c: i % 2 ? '#f44' : '#fff', s: 44, blink: 0.5, ph: i / 12, parent: g }); }
     return g;
   });
+  const live = detailMegaton(b, { H, D, WT, BR, Y, L, R, WIN, LAND, er, et, ez }); // 艤装・灯火・交通 (stationdetail.js)
   const o = done(b, { ports: [p], radius: 1800, reach: 2700, dockR: 4600, lights, signs }), obj = o.obj; obj.add(...rings);
   const core = new THREE.Mesh(new THREE.SphereGeometry(RR, 64, 40), plasmaMat()); core.position.z = Z0; obj.add(core); spr(obj, '#ff8a2a', 1500, 0.55, 0, 0, Z0); spr(obj, '#ffd9a0', 620, 0.7, 0, 0, Z0);
   // 筒の周りを行き交う連絡艇の灯
   const cars = []; for (let i = 0; i < 16; i++) cars.push({ s: spr(obj, i % 3 ? '#ffe2b0' : '#9fe0ff', 20, 2.2, 0, 0, 0), a: WIN[i % 3] + rr(r, -0.4, 0.4), rad: R + rr(r, 60, 150), sp: rr(r, 50, 120) * (i % 2 ? 1 : -1), ph: r() * 2600 });
   o.anim.push((t, dt) => { rings[0].rotation.z += dt * 0.018; rings[1].rotation.z -= dt * 0.018; core.rotation.z += dt * 0.02;
     for (const c of cars) { const z = ((((t * c.sp + c.ph) % 2600) + 2600) % 2600) - 1300; c.s.position.set(Math.cos(c.a) * c.rad, Math.sin(c.a) * c.rad, z); } });
+  live(o, rings, core);
   return o;
 }
 
@@ -243,14 +253,15 @@ function fizer() {
     const g = new THREE.TubeGeometry(new Helix(ph), 240, 8.5, 14, false), uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * LEN * U, uv.getY(i) * 53 * U); hb.add(W, g, null, 0);
     for (const t of [0, 1]) { const e = hp(t, ph); hb.sph(H, 12, e.x, e.y, e.z, 1, 1, 1, 18); hb.sph(GV, 2.2, e.x * 1.2, e.y + (t ? 9 : -9), e.z * 1.2, 1, 1, 1, 8); }
   }
-  const NR = 27;
+  const NR = 27, rungs = [];
   for (let i = 0; i < NR; i++) {
-    const t = (i + 0.5) / NR, a = hp(t, 0), c = hp(t, Math.PI), mid = a.clone().add(c).multiplyScalar(0.5), pr = PAIR[Math.floor(rnd() * 4)], ang = t * TURN;
+    const t = (i + 0.5) / NR, a = hp(t, 0), c = hp(t, Math.PI), mid = a.clone().add(c).multiplyScalar(0.5), pi = Math.floor(rnd() * 4), pr = PAIR[pi], ang = t * TURN; rungs.push({ a, c, mid, gc: pi % 2 === 1 });
     strut(hb, glow(pr[0], 1.7), a.clone().lerp(mid, 0.16), mid.clone().lerp(a, 0.24), 3.1, 3.1, 10); strut(hb, glow(pr[1], 1.7), c.clone().lerp(mid, 0.16), mid.clone().lerp(c, 0.24), 3.1, 3.1, 10);
     for (const e of [a, c]) { hb.add(W, new THREE.SphereGeometry(11.5, 16, 12), mx(e.x, e.y, e.z)); hb.add(D, new THREE.CylinderGeometry(4.2, 4.2, 8, 10), new THREE.Matrix4().makeRotationY(-ang).multiply(new THREE.Matrix4().makeRotationZ(HP)).setPosition(e.clone().lerp(mid, 0.14))); }
     hb.add(D, new THREE.CylinderGeometry(15.5, 15.5, 5, 20), mx(0, mid.y, 0));
   }
-  const helix = hb.build();
+  const HF = detailFizerHelix(hb, { H, D, hp, rungs }); // 鎖の継手・ドッキング口・水素結合の灯 (stationdetail2.js)
+  const helix = hb.build(); helix.add(lightField(HF));
   // ── 中心の培養管 (ガラスの塔に光る培養液) ──
   b.cyl(GT, 6.5, 6.5, Y1 - Y0 + 20, 0, 0, 0, 'y', 16); b.add(GLS, new THREE.CylinderGeometry(12.5, 12.5, Y1 - Y0 + 24, 28, 1, true), null, 0);
   for (let y = Y0 - 10; y <= Y1 + 10; y += 34) b.cyl(D, 13.4, 13.4, 2.2, 0, y, 0, 'y', 28);
@@ -277,8 +288,10 @@ function fizer() {
   const p = port(b, D, V(0, BY - 21, 0), V(0, -1, 0), '#c9a0ff');
   for (let i = 0; i < 6; i++) lights.push({ p: V(0, BY - 50 - i * 40, 0), c: '#4f8', s: 14, blink: 1, ph: 1 - i / 6 });
   signs.push(sign('FIZER', '#c9a0ff', 20, -30, CY + 12, CR + 1.4, 0, 0), sign('ファイザー 医療・創薬研究', '#ffffff', 6.5, -30, CY - 13, CR + 1.2, 0, 0), sign('FIZER', '#c9a0ff', 20, -30, CY + 12, -CR - 1.4, Math.PI, 0), sign('ファイザー 医療・創薬研究', '#ffffff', 6.5, -30, CY - 13, -CR - 1.2, Math.PI, 0));
+  const live = detailFizer(b, { H, D, VI, GDm, GV, GT, signs, NOISE, VS }); // 艤装・灯火・交通 (stationdetail2.js)
   const o = done(b, { ports: [p], radius: 330, lights, signs }); o.obj.add(helix); spr(o.obj, '#4dffd8', 300, 0.35, 0, 0, 0);
   o.anim.push((t, dt) => { helix.rotation.y -= dt * 0.045; });
+  live(o, helix);
   return o;
 }
 
@@ -287,7 +300,7 @@ function weapon() {
   const U = 0.05, b = new Builder(), r = rng(1337), H = mat('hull', { color: 0x4a505a, rough: 0.6, metal: 0.6, uvs: U }), D = mat('hull', { color: 0x1e2127, rough: 0.82, metal: 0.7, uvs: U }), Y = mat('hull', { color: 0xf2b90a, rough: 0.55, metal: 0.3, uvs: U }), W = winMat(0x40454e, 0xffd0a0, 2.2, U), RL = metal(0x8a929e, 0.34), CU = metal(0xc8743a, 0.32);
   const GR = glow('#ff3a2a', 4), lights = [], signs = [];
   // ── 砲身: 2 本のレールと 9 基の加速環 ──
-  const ZM = -300, ZB = -30, NRING = 9, ringM = [];
+  const ZM = -300, ZB = -30, NRING = 9, PERIOD = 22, ringM = [];
   for (const s of [-1, 1]) { b.box(RL, 7, 13, ZB - ZM, s * 9.5, 0, (ZM + ZB) / 2); b.box(D, 3, 17, ZB - ZM - 6, s * 14.5, 0, (ZM + ZB) / 2); b.box(CU, 1.2, 9, ZB - ZM - 4, s * 5.6, 0, (ZM + ZB) / 2); b.box(Y, 7.2, 13.2, 9, s * 9.5, 0, ZM + 4.5); }
   for (const y of [-1, 1]) { b.box(D, 22, 3, ZB - ZM - 10, 0, y * 10.5, (ZM + ZB) / 2 + 4); for (let z = ZM + 16; z < ZB; z += 18) b.box(H, 26, 1.6, 5, 0, y * 12.6, z); }
   const rg = new THREE.Group();
@@ -329,10 +342,11 @@ function weapon() {
   b.add(RK, rockGeo(60, 4, 91, 0.4), mx(0, 0, TZ)); for (let i = 0; i < 9; i++) b.add(RK, rockGeo(rr(r, 3, 12), 2, 40 + i, 0.4), mx(rr(r, -150, 150), rr(r, -110, 110), TZ + rr(r, -60, 140)));
   b.add(glow('#ff5a1e', 2.6), new THREE.CircleGeometry(15, 20), mx(0, 2, TZ + 55.5), 0); b.add(glow('#ffd9a0', 5), new THREE.CircleGeometry(5, 14), mx(0, 2, TZ + 55.8), 0);
   signs.push(sign('WEAPON', '#ffe14d', 14, 50.8, 7, 32, HP, 0), sign('WEAPON', '#ffe14d', 14, -50.8, 7, 32, -HP, 0), sign('兵器試験場', '#ffd0a0', 5.5, 50.8, -5, 32, HP, 0), sign('兵器試験場', '#ffd0a0', 5.5, -50.8, -5, 32, -HP, 0), sign('WEAPON', '#ffe14d', 12, 0, 60, 61.4, 0, 0), sign('⚠ 射線注意 FIRING LINE', '#ff5a3a', 7, 0, 30, ZM - 9.4, Math.PI, 0));
+  const live = detailWeapon(b, { H, D, Y, RL, CU, GR, RK, ZM, TZ, PERIOD, signs }); // 艤装・灯火・試射の演出 (stationdetail2.js)
   const o = done(b, { ports: [p], radius: 330, reach: 1700, lights, signs }), obj = o.obj; obj.add(rg);
   // 試射: 加速環が順に点灯 → 弾体が砲口から飛び出し、標的に着弾
   const beam = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 1, 8, 1, true).rotateX(HP), new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 6, 8), ...ADD, toneMapped: false, side: THREE.DoubleSide })), slug = spr(obj, '#cfefff', 60, 5, 0, 0, 0), muzzle = spr(obj, '#9fe0ff', 10, 4, 0, 0, ZM - 12), hit = spr(obj, '#ffb060', 10, 4, 0, 2, TZ + 60), heat = spr(obj, '#ff7a2a', 70, 0.7, 0, 2, TZ + 58);
-  beam.visible = slug.visible = false; obj.add(beam); const PERIOD = 22, D0 = TZ + 58 - ZM;
+  beam.visible = slug.visible = false; obj.add(beam); const D0 = TZ + 58 - ZM;
   let fired = false;
   o.anim.push((t) => {
     const k = t % PERIOD, ch = k > PERIOD - 4 ? (k - (PERIOD - 4)) / 4 : 0, f = k < 2.5 ? k : -1; // 充電 4 秒 → 発射
@@ -345,6 +359,7 @@ function weapon() {
     if (f >= 0 && !fired) { fired = true; const sp = G.space, pl = sp?.pl; if (pl && !pl.docked && G.mode === sp) { const l = pl.pos.clone().sub(obj.position); if (Math.hypot(l.x, l.y) < 26 && l.z < ZM && l.z > TZ) { sp.damagePlayer(140, null, false); G.hud.msg('ウェポン管制：「射線上に立ち入るな！」— 試射に巻き込まれた', 'warn', 7); } else if (l.length() < 4000) G.audio?.sfx('boom', Math.max(0.15, 1 - l.length() / 4000)); } }
     if (f < 0) fired = false;
   });
+  live(o);
   return o;
 }
 
@@ -355,10 +370,10 @@ const cylY = (x, y, z, R, y0, y1) => Math.max(Math.hypot(x, z) - R, Math.abs(y -
 const cylZ = (x, y, z, R, z0, z1) => Math.max(Math.hypot(x, y) - R, Math.abs(z - (z0 + z1) / 2) - (z1 - z0) / 2);
 const MER = [0, 1, 2].map((k) => [Math.cos(k * Math.PI / 3), Math.sin(k * Math.PI / 3)]);
 export const SDF2 = {
-  atlas: (x, y, z) => { const cy = y - 262; let d = Math.min(cylY(x, y, z, 276, -17, 17), cylY(x, y, z, 152, -66, -14), cylY(x, y, z, 205, -64, -20) + 0, cylY(x, y, z, 120, -190, -66), cylY(x, y, z, 80, 14, 182), Math.hypot(x, cy, z) - 65, Math.hypot(Math.hypot(x, z) - 200, cy) - 8, sdBox(x, y, z, 0, -42, 232, 12, 12, 92));
+  atlas: (x, y, z) => { const cy = y - 262; let d = Math.min(cylY(x, y, z, 276, -17, 17), cylY(x, y, z, 152, -66, -14), cylY(x, y, z, 205, -64, -20) + 0, cylY(x, y, z, 120, -190, -66), cylY(x, y, z, 80, 14, 182), Math.hypot(x, cy, z) - 65, Math.hypot(Math.hypot(x, z) - 200, cy) - 8, sdBox(x, y, z, 0, -42, 232, 12, 12, 92), sdBox(Math.abs(x), y, z, 188, -140, 0, 78, 14, 30));
     for (const [c, s] of MER) d = Math.min(d, Math.hypot(Math.hypot(x * c - z * s, cy) - 200, x * s + z * c) - 7); return d; },
   megaton: (x, y, z) => { const r = Math.hypot(x, y); let d = Math.min(Math.max(r - 268, Math.abs(z) - 1104), Math.max(r - 190, Math.abs(z) - 1232), Math.hypot(r - 640, Math.abs(z) - 940) - 60, Math.hypot(x, y, z + 1600) - 196, cylZ(x, y, z, 70, 1230, 1556), Math.hypot(r - 176, z - 1330) - 40, cylZ(x, y, z, 108, -1440, -1230), sdBox(x, y, z, 0, 0, -1320, 890, 8, 152), sdBox(x, y, z, 0, 0, -1320, 8, 610, 152));
     for (let k = 0; k < 3; k++) { const a = k * 2.0944, c = Math.cos(a), s = Math.sin(a), rho = x * c + y * s, tau = -x * s + y * c, u = (rho - 264) * 0.4695 - (z - 780) * 0.8829, v = (rho - 264) * 0.8829 + (z - 780) * 0.4695; d = Math.min(d, sdBox(u, v, tau, 575, 4, 0, 578, 9, 108)); } return d; },
   fizer: (x, y, z) => Math.min(cylY(x, y, z, 70, -186, 186), Math.hypot(Math.max(Math.abs(x) - 76, 0), y - 262, z) - 44, Math.hypot(Math.hypot(x, z) - 96, y + 222) - 28, cylY(x, y, z, 36, -240, -196), cylY(x, y, z, 24, 180, 222), sdBox(x, y, z, 0, 232, 0, 32, 3, 172)),
-  weapon: (x, y, z) => Math.min(sdBox(x, y, z, 0, 0, 32, 50, 36, 60), sdBox(x, y, z, 0, 0, -165, 24, 24, 146), sdBox(x, y, z, 0, 62, 44, 18, 30, 20), sdBox(x, y, z, 81, 0, 30, 28, 24, 50), sdBox(x, y, z, -81, 0, 30, 28, 24, 50), sdBox(x, y, z, 0, -48, 30, 28, 28, 40), sdBox(x, y, z, 140, -10, 30, 45, 12, 12), Math.hypot(x, y, z + 1500) - 62),
+  weapon: (x, y, z) => Math.min(sdBox(x, y, z, 0, 0, 32, 50, 36, 60), sdBox(x, y, z, 0, 0, -165, 24, 24, 146), sdBox(x, y, z, 0, 62, 44, 18, 30, 20), sdBox(x, y, z, 81, 0, 30, 28, 24, 50), sdBox(x, y, z, -81, 0, 30, 28, 24, 50), sdBox(x, y, z, 0, -48, 30, 28, 28, 40), sdBox(x, y, z, 140, -10, 30, 45, 12, 12), Math.hypot(x, y, z + 1500) - 62, sdBox(x, y, z, 0, 0, -153, 52, 3, 10), Math.hypot(x - 426, y + 154, z + 1376) - 44),
 };
