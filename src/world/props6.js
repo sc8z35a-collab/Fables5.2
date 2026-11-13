@@ -8,7 +8,7 @@ import { makeGlowSprite } from '../gfx/fx.js';
 import { G, rng } from '../core/util.js';
 import { glassMat } from './interior.js';
 import { MM, fab, flat, scr } from './props.js';
-import { basic, toPlayer } from './props2.js';
+import { basic, toPlayer, item } from './props2.js';
 import { rod } from './stationparts.js';
 
 const HP = Math.PI / 2, TAU = Math.PI * 2;
@@ -165,5 +165,34 @@ export const PROPS6 = {
     for (let i = 0; i < 5; i++) P.box(glow(i === 2 ? '#ff3a2a' : '#ffb060', 2.2), 0.08, 0.03, 0.08, -0.5 + i * 0.25, 1.02, 0.18); P.cyl(flat(0xc8201e, 0.4, 0.3), 0.07, 0.07, 0.05, 0.55, 1.03, -0.02, 'y', 14);
     let acc = 0; e.anim((dt) => { acc += dt; if (acc > 0.5) { acc = 0; if (toPlayer(e.x, e.z, e.ang)[1] < 16) L.redraw(); } });
     e.rect(1.5, 0.7); e.light('#ffb060', 4, 1.6, 5); e.use(o.label || '試射監視卓', o.use || 'talk:firewatch', 2.4);
+  },
+  // ───────────────────────── 救助船ミケーネ ─────────────────────────
+  /** 操縦室の細部: ヘッドアップディスプレイ・サイドスティック・ラダーペダル・タブレット・お守り・手招きする三毛の招き猫 (原点 = 前の壁の中央) */
+  cockpitkit(P, o, e) {
+    const m = MM(), A = flat(0xff5412, 0.5, 0.2), c = o.c || '#35ff8a', wh = flat(0xf6f2ea, 0.5, 0), og = flat(0xe07a1e, 0.6, 0), bk = flat(0x241c16, 0.6, 0), rd = flat(0xc8201e, 0.5, 0.1);
+    const L = litCanvas(256, 192, (x, W, H) => {
+      const t = G.time || 0, roll = Math.sin(t * 0.5) * 0.12, pit = Math.sin(t * 0.37) * 14; x.strokeStyle = c; x.fillStyle = c; x.lineWidth = 2; x.font = `700 15px ${JP}`; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.save(); x.translate(W / 2, H / 2); x.rotate(roll); x.beginPath(); x.moveTo(-90, pit); x.lineTo(-22, pit); x.moveTo(22, pit); x.lineTo(90, pit); for (const k of [-2, -1, 1, 2]) { x.moveTo(-28, pit + k * 26); x.lineTo(28, pit + k * 26); } x.stroke(); x.restore();
+      x.beginPath(); x.moveTo(W / 2 - 14, H / 2); x.lineTo(W / 2 - 5, H / 2); x.lineTo(W / 2, H / 2 + 6); x.lineTo(W / 2 + 5, H / 2); x.lineTo(W / 2 + 14, H / 2); x.stroke();
+      x.strokeRect(8, H / 2 - 12, 46, 24); x.strokeRect(W - 54, H / 2 - 12, 46, 24); x.fillText(String(180 + Math.round(Math.sin(t * 0.3) * 6)), 31, H / 2); x.fillText(String(1200 + Math.round(Math.sin(t * 0.21) * 40)), W - 31, H / 2); x.fillText('RESCUE ─ 着陸帯へ誘導中', W / 2, H - 16); x.fillText('090', W / 2, 14);
+    }, 1.6);
+    for (const s of [-1, 1]) {
+      P.add(glassMat(), new THREE.PlaneGeometry(0.5, 0.36), mx(s * 1.4, 1.42, 1.72, -0.25, 0, 0), 0); P.add(L.mat, new THREE.PlaneGeometry(0.46, 0.33), mx(s * 1.4, 1.42, 1.725, -0.25, 0, 0), 0); for (const dx of [-0.27, 0.27]) P.box(m.dk, 0.025, 0.025, 0.5, s * 1.4 + dx, 1.66, 1.52, 0, 0.5, 0); // HUD
+      P.box(m.dk, 0.42, 0.7, 1.3, s * 2.72, 0.35, 2.7); P.box(A, 0.44, 0.03, 1.32, s * 2.72, 0.715, 2.7); P.cyl(m.bk, 0.018, 0.022, 0.2, s * 2.68, 0.83, 2.35, 'y', 8); P.sph(m.bk, 0.035, s * 2.68, 0.95, 2.35, 1, 1.3, 1, 10);          // 側卓とサイドスティック
+      P.box(glow(c, 2), 0.2, 0.01, 0.1, s * 2.72, 0.735, 2.72); for (let k = 0; k < 3; k++) P.box(glow(k === 1 ? '#ffb060' : '#6fe8ff', 2.2), 0.03, 0.012, 0.03, s * 2.72 + (k - 1) * 0.07, 0.737, 2.9);
+      for (const dx of [-0.17, 0.17]) { P.box(m.ch, 0.11, 0.02, 0.18, s * 1.4 + dx, 0.2, 1.98, 0, -0.5, 0); P.box(m.dk, 0.02, 0.2, 0.02, s * 1.4 + dx, 0.1, 1.9); }                                                           // ラダーペダル
+    }
+    P.box(m.bk, 0.2, 0.012, 0.28, -2.72, 0.74, 3.12, 0.3); P.add(screenMat('data', c, '', 1.4), new THREE.PlaneGeometry(0.17, 0.25).rotateX(-HP), mx(-2.72, 0.748, 3.12, 0, 0.3, 0), 0);                                       // タブレット
+    { const cx = 2.72, cz = 3.15, y0 = 0.73;                                                                                                                                                                                  // 招き猫 (客室のほうを向く)
+      P.sph(wh, 0.07, cx, y0 + 0.07, cz, 1, 1.05, 0.95, 12); P.sph(wh, 0.058, cx, y0 + 0.175, cz, 1.1, 0.95, 1, 12); for (const sx of [-1, 1]) P.add(sx > 0 ? og : bk, new THREE.ConeGeometry(0.022, 0.04, 6), mx(cx + sx * 0.038, y0 + 0.235, cz));
+      P.sph(og, 0.03, cx + 0.04, y0 + 0.1, cz + 0.045, 1, 1, 0.5, 8); P.sph(bk, 0.026, cx - 0.045, y0 + 0.06, cz + 0.04, 1, 1, 0.5, 8); P.sph(og, 0.022, cx - 0.03, y0 + 0.2, cz + 0.04, 1, 1, 0.5, 8);
+      P.tor(rd, 0.05, 0.009, cx, y0 + 0.135, cz, HP, 0, 0, 14, 5); P.sph(m.gd, 0.013, cx, y0 + 0.125, cz + 0.052, 1, 1, 1, 6); for (const sx of [-1, 1]) P.sph(bk, 0.007, cx + sx * 0.022, y0 + 0.185, cz + 0.056, 1, 1, 1, 6);
+      const pg = new THREE.Group(), paw = new THREE.Group(), pb = new Builder(); pb.add(wh, new THREE.CapsuleGeometry(0.016, 0.05, 3, 8), mx(0, 0.035, 0), 0); pb.sph(wh, 0.02, 0, 0.075, 0.004, 1, 1, 1, 8); paw.add(pb.build({ shadow: false })); pg.add(paw); e.dyn(pg, cx + 0.062, y0 + 0.13, cz + 0.02);
+      e.anim((dt, t) => { paw.rotation.x = 0.5 + Math.sin(t * 3.2) * 0.45; }); item(e, cx, cz, 1.4, '招き猫', 'talk:maneki'); }
+    { const hang = new THREE.Group(), sw = new THREE.Group(), ob = new Builder();                                                                                                                                              // 風防の上から下がるお守り
+      ob.cyl(m.bk, 0.003, 0.003, 0.22, 0, -0.11, 0, 'y', 4); ob.box(flat(0xb8201e, 0.7, 0), 0.06, 0.095, 0.014, 0, -0.27, 0); ob.box(m.gd, 0.022, 0.06, 0.016, 0, -0.275, 0); ob.box(m.gd, 0.064, 0.008, 0.016, 0, -0.228, 0);
+      sw.add(ob.build({ shadow: false })); hang.add(sw); e.dyn(hang, 0.25, 2.42, 1.35); e.anim((dt, t) => { sw.rotation.z = Math.sin(t * 1.7) * 0.12; sw.rotation.x = Math.sin(t * 1.3 + 1) * 0.07; }); }
+    for (const s of [-1, 1]) e.rect(0.42, 1.3, s * 2.72, 2.7);
+    let acc = 0; e.anim((dt) => { acc += dt; if (acc > 0.12) { acc = 0; if (toPlayer(e.x, e.z, e.ang)[1] < 9) L.redraw(); } });
   },
 };

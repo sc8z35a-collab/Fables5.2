@@ -298,7 +298,7 @@ const HERO = {
   megaton: { apex: [['orrery', 16, 12, 0, { use: 'talk:orrery', label: '太陽系儀' }]], transit: [['departures', 24, 0.22, 0, { w: 5.2, y: 3.2 }]] },
   fizer: { lab: [['centrifuge', 15.4, 0.75, 0, { use: 'talk:centrifuge' }], ['microscope', 19.4, 8.6, 0, { use: 'talk:microscope' }]], pharma: [['bioreactor', 19.4, 2.5, 0, { use: 'talk:bioreactor', label: '培養槽 BR-1' }]] },
   weapon: { range: [['dummy', 6.5, 1.3, 1], ['dummy', 9.5, 7.7, 1], ['dummy', 3.4, 7.6, 1]], cic: [['firewatch', 11.4, 15.6, 2.22]] },
-  mycenae: {},
+  mycenae: { cockpit: [['cockpitkit', 3.5, 0, 0]] },
 };
 const dress = (bp, k) => { for (const r of bp.rooms) { if (DRESS[k][r.id]) r.props.push(...DRESS[k][r.id]); if (HERO[k][r.id]) r.props.push(...HERO[k][r.id]); } return bp; };
 
