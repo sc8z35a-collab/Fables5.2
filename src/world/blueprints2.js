@@ -292,7 +292,15 @@ const DRESS = {
     cockpit: [['extinguisher', 3.5, 5.78, 2, { y: 0.9 }]],
   },
 };
-const dress = (bp, k) => { for (const r of bp.rooms) if (DRESS[k][r.id]) r.props.push(...DRESS[k][r.id]); return bp; };
+// 各拠点の主役になる大物 (props6.js): 慰霊碑・操縦シミュレーター・培養槽・遠心機・電子顕微鏡・太陽系儀・発車標・訓練標的・試射監視卓
+const HERO = {
+  atlas: { hall: [['memorial', 9.8, 26.4, 1.73]], bay: [['simpod', 26, 12.6, 0], S('訓練コーナー ─ 操縦シミュレーター', 26, 0.3, 0, { h: 0.5, y: 6.2, c: '#35ff8a' })] },
+  megaton: { apex: [['orrery', 16, 12, 0, { use: 'talk:orrery', label: '太陽系儀' }]], transit: [['departures', 24, 0.22, 0, { w: 5.2, y: 3.2 }]] },
+  fizer: { lab: [['centrifuge', 15.4, 0.75, 0, { use: 'talk:centrifuge' }], ['microscope', 19.4, 8.6, 0, { use: 'talk:microscope' }]], pharma: [['bioreactor', 19.4, 2.5, 0, { use: 'talk:bioreactor', label: '培養槽 BR-1' }]] },
+  weapon: { range: [['dummy', 6.5, 1.3, 1], ['dummy', 9.5, 7.7, 1], ['dummy', 3.4, 7.6, 1]], cic: [['firewatch', 11.4, 15.6, 2.22]] },
+  mycenae: {},
+};
+const dress = (bp, k) => { for (const r of bp.rooms) { if (DRESS[k][r.id]) r.props.push(...DRESS[k][r.id]); if (HERO[k][r.id]) r.props.push(...HERO[k][r.id]); } return bp; };
 
 export const BP2 = { 'station:atlas': () => dress(atlas(), 'atlas'), 'station:megaton': () => dress(megaton(), 'megaton'), 'station:fizer': () => dress(fizer(), 'fizer'), 'station:weapon': () => dress(weapon(), 'weapon'), 'rescue:mycenae': () => dress(mycenae(false)(), 'mycenae'), 'rescue:mycenae-d': () => dress(mycenae(true)(), 'mycenae') };
 export const ALL2 = [['station', 'atlas'], ['station', 'megaton'], ['station', 'fizer'], ['station', 'weapon'], ['rescue', 'mycenae'], ['rescue', 'mycenae-d']];
