@@ -10,7 +10,7 @@ import { SHIPS, BASES, body } from '../world/defs.js';
 import { save, addCargo, event, remaining, commodity, rescueState } from './state.js';
 import { buildMycenae, cloneShared, makeBot } from '../world/rescue.js';
 import { Builder, mx } from '../gfx/builder.js';
-import { mat, glow, aoMat } from '../gfx/textures.js';
+import { mat, glow, aoMat, signMesh } from '../gfx/textures.js';
 
 const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3(), _q = new THREE.Quaternion(), _e = new THREE.Euler(0, 0, 0, 'YXZ'), _col = new THREE.Color();
 const PAD_R = 34, CS = 64, gk = (x, z) => Math.floor(x / CS) * 4096 + Math.floor(z / CS);
@@ -107,6 +107,37 @@ export class SurfaceMode {
     for (const [lx, lz] of [[-6.6, 21.4], [-7.3, 21.9], [6.9, 22.6]]) { P(BL, new THREE.CylinderGeometry(0.3, 0.3, 0.9, 12), lx, 0.45, lz); P(DK, new THREE.CylinderGeometry(0.32, 0.32, 0.06, 12), lx, 0.7, lz); }
     P(WH, new THREE.BoxGeometry(0.7, 0.1, 1.9), -9.4, 0.5, 23.2); P(OR, new THREE.BoxGeometry(0.72, 0.06, 1.1), -9.4, 0.58, 23.5); for (const dz of [-0.8, 0.8]) P(DK, new THREE.BoxGeometry(0.6, 0.45, 0.05), -9.4, 0.23, 23.2 + dz); // 担架
     for (let k = 0; k < 14; k++) { const a = k / 14 * Math.PI * 2 + 0.2, lx = Math.cos(a) * 24, lz = Math.sin(a) * 24 + 3; P(OR, new THREE.ConeGeometry(0.2, 0.62, 8), lx, 0.31, lz); P(WH, new THREE.CylinderGeometry(0.13, 0.15, 0.1, 8), lx, 0.34, lz); P(DK, new THREE.BoxGeometry(0.44, 0.04, 0.44), lx, 0.02, lz); } // 規制コーン
+    try { // 細部は未検証のため、失敗しても拠点そのものは建てる
+      // ── 細部: 発電機と配線・給水タンク・受付の机・簡易ベッド・衛星通信・電球の列・規制テープ・避難者の列・立て看板 ──
+      const YL = mat('flat', { color: 0xf2b90a, rough: 0.6, metal: 0.2 }), GN = mat('flat', { color: 0x2a8a5a, rough: 0.7, metal: 0.1 }), WD = mat('wood', { rough: 0.8, metal: 0 }), SK = mat('flat', { color: 0xe0b89a, rough: 0.8, metal: 0 }), LG = mat('flat', { color: 0x30343c, rough: 0.9, metal: 0 }), WB = glow('#ffd9a0', 3);
+      const P2 = (m, geo, lx, ly, lz, ry = 0, rx = 0) => P(m, geo, lx, ly - (Math.hypot(lx, lz) > 21 ? 0.14 : 0), lz, ry, rx); // 着陸帯の舗装 (14cm) の外では地面まで下げる
+      { const [gx, gz] = P(YL, new THREE.BoxGeometry(1.7, 1.0, 0.95), 14.6, 0.62, 10.6); P(DK, new THREE.BoxGeometry(1.8, 0.14, 1.05), 14.6, 0.07, 10.6); P(DK, new THREE.CylinderGeometry(0.05, 0.05, 0.7, 6), 15.2, 1.45, 10.3); P(LW, new THREE.BoxGeometry(0.3, 0.16, 0.02), 14.2, 0.8, 11.09); P(GX, new THREE.BoxGeometry(0.06, 0.06, 0.02), 14.75, 0.85, 11.09); solid.push([gx, gz, 1.1]);
+        for (const [x0, z0, x1, z1] of [[14.2, 10.1, 12.6, 9.2], [14.0, 11.1, 9.6, 16.5], [13.7, 10.6, -12.4, 9.2]]) P(DK, new THREE.BoxGeometry(0.06, 0.04, Math.hypot(x1 - x0, z1 - z0)), (x0 + x1) / 2, 0.02, (z0 + z1) / 2, Math.atan2(x1 - x0, z1 - z0)); } // 発電機と地を這う配線
+      { const [tx, tz] = P(WH, new THREE.CylinderGeometry(0.75, 0.75, 2.4, 16).rotateZ(Math.PI / 2), -14.8, 1.25, 10.4); P(BL, new THREE.CylinderGeometry(0.765, 0.765, 0.3, 16).rotateZ(Math.PI / 2), -14.8, 1.25, 10.4); for (const dx of [-0.8, 0.8]) P(DK, new THREE.BoxGeometry(0.12, 0.5, 1.5), -14.8 + dx, 0.25, 10.4);
+        P(DK, new THREE.CylinderGeometry(0.03, 0.03, 0.3, 6), -14.8, 0.75, 11.2, 0, Math.PI / 2); P(glow('#7fd8ff', 2), new THREE.BoxGeometry(0.5, 0.14, 0.02), -14.8, 1.5, 11.16); solid.push([tx, tz, 1.3]); } // 給水タンク
+      for (const sx of [-1, 1]) {
+        const tx = sx * 11.6; P(WD, new THREE.BoxGeometry(2.1, 0.06, 0.8), tx, 0.76, 15.2); for (const [dx, dz] of [[-0.95, -0.32], [0.95, -0.32], [-0.95, 0.32], [0.95, 0.32]]) P(DK, new THREE.CylinderGeometry(0.025, 0.025, 0.75, 5), tx + dx, 0.375, 15.2 + dz);
+        P(CR, new THREE.BoxGeometry(0.45, 0.3, 0.35), tx - 0.6, 0.94, 15.2); P(GN, new THREE.BoxGeometry(0.3, 0.2, 0.25), tx + 0.1, 0.89, 15.15); P(WB, new THREE.CylinderGeometry(0.06, 0.07, 0.16, 8), tx + 0.75, 0.87, 15.25); P(DK, new THREE.CylinderGeometry(0.075, 0.075, 0.03, 8), tx + 0.75, 0.965, 15.25); solid.push([...W(tx, 15.2), 1.1]); // 受付の机 (物資箱・救急箱・ランタン)
+        for (let k = 0; k <= 8; k++) { const t = k / 8; P(k % 2 ? LW : WB, new THREE.BoxGeometry(0.09, 0.11, 0.09), sx * (7.2 + 5.3 * t), 2.6 + 0.7 * t - 0.5 * Math.sin(Math.PI * t), 16.8 - 7.8 * t); } // テントから投光器へ渡した電球
+      }
+      for (let k = 0; k <= 12; k++) { const t = k / 12; P2(k % 2 ? LW : WB, new THREE.BoxGeometry(0.09, 0.11, 0.09), -7 + 14 * t, 3.25 - 0.5 * Math.sin(Math.PI * t), 21.3); } // 2 張りのテントの間 (頭上を通る)
+      for (let k = 0; k < 3; k++) { const cx = -12.9 - k * 1.2; P2(DK, new THREE.BoxGeometry(0.8, 0.05, 1.95), cx, 0.36, 18.2); for (const dz of [-0.7, 0.7]) P2(DK, new THREE.BoxGeometry(0.7, 0.34, 0.04), cx, 0.17, 18.2 + dz); P2(WH, new THREE.BoxGeometry(0.74, 0.08, 1.85), cx, 0.425, 18.2); P2(k % 2 ? OR : GN, new THREE.BoxGeometry(0.76, 0.05, 1.0), cx, 0.49, 18.6); P2(WH, new THREE.BoxGeometry(0.5, 0.09, 0.3), cx, 0.5, 17.45); } // 簡易ベッド
+      { P2(DK, new THREE.CylinderGeometry(0.04, 0.05, 2.2, 6), 13.2, 1.1, 20.2); for (let k = 0; k < 3; k++) P2(DK, new THREE.CylinderGeometry(0.025, 0.025, 1.2, 5), 13.2 + Math.cos(k * 2.094) * 0.35, 0.5, 20.2 + Math.sin(k * 2.094) * 0.35, 0, 0.5); P2(WH, new THREE.ConeGeometry(0.7, 0.28, 16), 13.2, 2.45, 20.2, 0.6, 1.0); P2(GX, new THREE.BoxGeometry(0.08, 0.08, 0.08), 13.2, 2.2, 20.2); solid.push([...W(13.2, 20.2), 0.5]); } // 衛星通信アンテナ
+      for (const [lx, lz] of [[-10.6, 23.6], [-10.2, 23.9]]) { P2(GN, new THREE.CylinderGeometry(0.11, 0.11, 0.9, 10), lx, 0.45, lz); P2(DK, new THREE.CylinderGeometry(0.04, 0.05, 0.12, 8), lx, 0.96, lz); } // 酸素ボンベ
+      for (let k = 0; k < 14; k++) { // 規制テープ (後ろ側だけ出入り口を空ける)
+        const a0 = k / 14 * Math.PI * 2 + 0.2, a1 = (k + 1) / 14 * Math.PI * 2 + 0.2; if (Math.abs((a0 + a1) / 2 - Math.PI / 2) < 0.3) continue;
+        const x0 = Math.cos(a0) * 24, z0 = Math.sin(a0) * 24 + 3, x1 = Math.cos(a1) * 24, z1 = Math.sin(a1) * 24 + 3; P2(OR, new THREE.BoxGeometry(0.03, 0.07, Math.hypot(x1 - x0, z1 - z0)), (x0 + x1) / 2, 0.52, (z0 + z1) / 2, Math.atan2(x1 - x0, z1 - z0));
+      }
+      [0x3a6ea8, 0x8a4a6a, 0x4a7a4a, 0xb89a5a, 0x5a5a66].forEach((col, k) => { // 乗り込みを待つ避難者の列 (当たり判定なし)
+        const lx = -1.7 + (k % 2) * 0.25, lz = 21.6 + k * 1.05, sc = k === 3 ? 0.68 : 1, cm = mat('flat', { color: col, rough: 0.85, metal: 0 });
+        P2(cm, new THREE.CapsuleGeometry(0.19 * sc, 0.62 * sc, 4, 8), lx, 1.02 * sc, lz); P2(LG, new THREE.CylinderGeometry(0.15 * sc, 0.13 * sc, 0.62 * sc, 8), lx, 0.31 * sc, lz); P2(SK, new THREE.SphereGeometry(0.125 * sc, 10, 8), lx, 1.62 * sc, lz); if (k === 1) P2(OR, new THREE.CylinderGeometry(0.24, 0.27, 0.5, 8), lx, 1.2, lz);
+      });
+      for (const [text, col, lx, lz] of [['救護所 FIRST AID', '#35ff8a', -6.3, 15.8], ['避難者 受付 ▶ 機内へ', '#ffb060', 2.6, 20.4], [`着陸帯 ${i + 1} ─ MYCENAE ${String(i + 1).padStart(2, '0')}`, '#9fe8ff', 6.6, 25.2]]) { // 立て看板
+        const off = Math.hypot(lx, lz) > 21 ? 0.14 : 0, sg = signMesh(text, col, 0.46, { bg: '#10141a', intensity: 1.5 }), [x, z] = W(lx, lz), w = sg.userData.w || 1.6;
+        sg.position.set(x, y + 0.86 - off, z); sg.rotation.set(-0.16, s.yaw, 0, 'YXZ'); near.add(sg);
+        P(DK, new THREE.BoxGeometry(w + 0.1, 0.56, 0.04), lx, 0.86 - off, lz - 0.035, 0, -0.16); for (const sx of [-1, 1]) { P(DK, new THREE.BoxGeometry(0.04, 1.16, 0.04), lx + sx * (w / 2), 0.57 - off, lz - 0.02, 0, -0.16); P(DK, new THREE.BoxGeometry(0.04, 1.16, 0.04), lx + sx * (w / 2), 0.57 - off, lz - 0.34, 0, 0.3); }
+      }
+    } catch (err) { console.warn('[救助拠点] 細部の設置に失敗:', err); }
     const st = B.build(); near.add(st);
     // 救難ボット 2 体 (誘導役と救護役)
     const bots = [[3.4, 22.6, 0, {}], [-5.8, 15.4, Math.PI / 2, { accent: 0x2a8a5a }]].map(([lx, lz, ry, o]) => { const bg = makeBot({ pose: 'stand', ph: i * 1.7 + lx, ...o }), [x, z] = W(lx, lz); bg.position.set(x, y, z); bg.rotation.y = s.yaw + ry; botG.add(bg); solid.push([x, z, 0.4]); return { g: bg, x, z, yaw: s.yaw + ry }; });
