@@ -30,6 +30,15 @@ function strut(b, m, a, c, r0, r1 = r0, seg = 8) { const d = c.clone().sub(a), l
 /** 任意の向きの看板。X = 文字の進む向き, Z = 面の法線 */
 function signOn(text, color, h, pos, X, Z, o = {}) { const m = sign(text, color, h, 0, 0, 0, 0, 0, o), y = Z.clone().cross(X); m.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(X, y, Z)); m.position.copy(pos); return m; }
 const spr = (obj, c, s, k, x, y, z) => { const p = makeGlowSprite(c, s, k); p.position.set(x, y, z); obj.add(p); return p; };
+// ── 外装ディテール (stationdetail*.js) の呼び出し。ディテール側の不具合で本体の建造や毎フレームの更新を巻き添えにしない ──
+const NOP = () => {};
+/** 静的な艤装を足す。失敗したら警告だけ出して素の船体のまま続行する。戻り値 = 動く部品を載せる関数 (or 灯火リスト) */
+function detail(fn, b, c, fallback = NOP) { try { return fn(b, c) || fallback; } catch (err) { console.warn('[外装ディテール]', fn.name, err); return fallback; } }
+/** 動く部品を載せる。追加されたアニメーションは例外が出たらそれ自身だけ止まる */
+function runLive(live, o, ...a) {
+  const n = o.anim.length; try { live(o, ...a); } catch (err) { console.warn('[外装ディテール] live', err); }
+  for (let i = n; i < o.anim.length; i++) { const f = o.anim[i]; let dead = false; o.anim[i] = (t, dt) => { if (dead) return; try { f(t, dt); } catch (err) { dead = true; console.warn('[外装ディテール] anim', err); } }; }
+}
 
 // ───────────────────────── 6. アトラス救難基地 ─────────────────────────
 /** ホログラムの地球儀: 大陸・経緯線・都市の灯 */
@@ -100,7 +109,7 @@ function atlas() {
     lights.push({ p: V(c * (SR + 18), CY, s * (SR + 18)), c: k % 2 ? '#3f6' : '#f33', s: 26, blink: 0.7, ph: k / 4 });
   }
   signs.push(sign('ATLAS', '#5dffa8', 13, 0, -24, 147.5), sign('アトラス救難基地', '#ffe6c8', 6.5, 0, -24, -147.5, Math.PI), sign('ATLAS', '#5dffa8', 13, 147.5, -24, 0, HP), sign('RESCUE', '#ffb060', 13, -147.5, -24, 0, -HP), sign('救難', '#5dffa8', 5, 0, -31, 321.6, 0, 0));
-  const live = detailAtlas(b, { H, A, D, GD, signs }); // 艤装・灯火・交通 (stationdetail.js)
+  const live = detail(detailAtlas, b, { H, A, D, GD, signs }); // 艤装・灯火・交通 (stationdetail.js)
   const o = done(b, { ports: [p], radius: 480, lights, signs }), obj = o.obj;
   // 黄道環 (ゆっくり回る) と星
   const eb = new Builder(); eb.tor(GD, 216, 3.4, 0, 0, 0, HP, 0, 0, 160, 8); for (let i = 0; i < 12; i++) { const a = i * TAU / 12; eb.add(GD, new THREE.BoxGeometry(9, 9, 5), mx(Math.cos(a) * 216, 0, Math.sin(a) * 216, 0, -a, 0)); eb.add(glow(i % 3 ? '#ffe6a8' : '#8fe8ff', 4), new THREE.SphereGeometry(1.6, 8, 6), mx(Math.cos(a) * 222, 0, Math.sin(a) * 222), 0); }
@@ -127,7 +136,7 @@ function atlas() {
     fleet.userData.commit();
   });
   o.anim.push((t, dt) => { ecl.rotation.y += dt * 0.03; globe.rotation.y += dt * 0.06; });
-  live(o);
+  runLive(live, o);
   return o;
 }
 
@@ -223,19 +232,19 @@ function megaton() {
     rb.cyl(D, R + 14, R + 14, 84, 0, 0, 0, 'z', 72, true); rb.cyl(BR, R + 16, R + 16, 8, 0, 0, 36, 'z', 72, true); rb.cyl(BR, R + 16, R + 16, 8, 0, 0, -36, 'z', 72, true);
     for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3, e = er(a); rb.add(H, new THREE.CylinderGeometry(15, 20, 336, 14), mx(e.x * 430, e.y * 430, 0, 0, 0, a - HP)); rb.add(WT, new THREE.BoxGeometry(36, 52, 36), mx(e.x * 500, e.y * 500, 0, 0, 0, a - HP)); rb.add(D, new THREE.BoxGeometry(60, 70, 64), mx(e.x * 598, e.y * 598, 0, 0, 0, a - HP));
       for (const s of [-1, 1]) strut(rb, D, e.clone().multiplyScalar(R + 12).addScaledVector(et(a), s * 60), e.clone().multiplyScalar(590).addScaledVector(et(a), s * 12), 3); }
-    const RF = detailMegaRing(rb, { D, WT, BR, R, er, et, ez });
-    const g = rb.build(); g.position.z = z; g.add(lightField(RF));
+    const RF = detail(detailMegaRing, rb, { D, WT, BR, R, er, et, ez }, []);
+    const g = rb.build(); g.position.z = z; if (RF.length) g.add(lightField(RF));
     for (let i = 0; i < 12; i++) { const e = er(i * Math.PI / 6 + 0.26); lights.push({ p: e.multiplyScalar(RG + 62), c: i % 2 ? '#f44' : '#fff', s: 44, blink: 0.5, ph: i / 12, parent: g }); }
     return g;
   });
-  const live = detailMegaton(b, { H, D, WT, BR, Y, L, R, WIN, LAND, er, et, ez }); // 艤装・灯火・交通 (stationdetail.js)
+  const live = detail(detailMegaton, b, { H, D, WT, BR, Y, L, R, WIN, LAND, er, et, ez }); // 艤装・灯火・交通 (stationdetail.js)
   const o = done(b, { ports: [p], radius: 1800, reach: 2700, dockR: 4600, lights, signs }), obj = o.obj; obj.add(...rings);
   const core = new THREE.Mesh(new THREE.SphereGeometry(RR, 64, 40), plasmaMat()); core.position.z = Z0; obj.add(core); spr(obj, '#ff8a2a', 1500, 0.55, 0, 0, Z0); spr(obj, '#ffd9a0', 620, 0.7, 0, 0, Z0);
   // 筒の周りを行き交う連絡艇の灯
   const cars = []; for (let i = 0; i < 16; i++) cars.push({ s: spr(obj, i % 3 ? '#ffe2b0' : '#9fe0ff', 20, 2.2, 0, 0, 0), a: WIN[i % 3] + rr(r, -0.4, 0.4), rad: R + rr(r, 60, 150), sp: rr(r, 50, 120) * (i % 2 ? 1 : -1), ph: r() * 2600 });
   o.anim.push((t, dt) => { rings[0].rotation.z += dt * 0.018; rings[1].rotation.z -= dt * 0.018; core.rotation.z += dt * 0.02;
     for (const c of cars) { const z = ((((t * c.sp + c.ph) % 2600) + 2600) % 2600) - 1300; c.s.position.set(Math.cos(c.a) * c.rad, Math.sin(c.a) * c.rad, z); } });
-  live(o, rings, core);
+  runLive(live, o, rings, core);
   return o;
 }
 
@@ -260,8 +269,8 @@ function fizer() {
     for (const e of [a, c]) { hb.add(W, new THREE.SphereGeometry(11.5, 16, 12), mx(e.x, e.y, e.z)); hb.add(D, new THREE.CylinderGeometry(4.2, 4.2, 8, 10), new THREE.Matrix4().makeRotationY(-ang).multiply(new THREE.Matrix4().makeRotationZ(HP)).setPosition(e.clone().lerp(mid, 0.14))); }
     hb.add(D, new THREE.CylinderGeometry(15.5, 15.5, 5, 20), mx(0, mid.y, 0));
   }
-  const HF = detailFizerHelix(hb, { H, D, hp, rungs }); // 鎖の継手・ドッキング口・水素結合の灯 (stationdetail2.js)
-  const helix = hb.build(); helix.add(lightField(HF));
+  const HF = detail(detailFizerHelix, hb, { H, D, hp, rungs }, []); // 鎖の継手・ドッキング口・水素結合の灯 (stationdetail2.js)
+  const helix = hb.build(); if (HF.length) helix.add(lightField(HF));
   // ── 中心の培養管 (ガラスの塔に光る培養液) ──
   b.cyl(GT, 6.5, 6.5, Y1 - Y0 + 20, 0, 0, 0, 'y', 16); b.add(GLS, new THREE.CylinderGeometry(12.5, 12.5, Y1 - Y0 + 24, 28, 1, true), null, 0);
   for (let y = Y0 - 10; y <= Y1 + 10; y += 34) b.cyl(D, 13.4, 13.4, 2.2, 0, y, 0, 'y', 28);
@@ -288,10 +297,10 @@ function fizer() {
   const p = port(b, D, V(0, BY - 21, 0), V(0, -1, 0), '#c9a0ff');
   for (let i = 0; i < 6; i++) lights.push({ p: V(0, BY - 50 - i * 40, 0), c: '#4f8', s: 14, blink: 1, ph: 1 - i / 6 });
   signs.push(sign('FIZER', '#c9a0ff', 20, -30, CY + 12, CR + 1.4, 0, 0), sign('ファイザー 医療・創薬研究', '#ffffff', 6.5, -30, CY - 13, CR + 1.2, 0, 0), sign('FIZER', '#c9a0ff', 20, -30, CY + 12, -CR - 1.4, Math.PI, 0), sign('ファイザー 医療・創薬研究', '#ffffff', 6.5, -30, CY - 13, -CR - 1.2, Math.PI, 0));
-  const live = detailFizer(b, { H, D, VI, GDm, GV, GT, signs, NOISE, VS }); // 艤装・灯火・交通 (stationdetail2.js)
+  const live = detail(detailFizer, b, { H, D, VI, GDm, GV, GT, signs, NOISE, VS }); // 艤装・灯火・交通 (stationdetail2.js)
   const o = done(b, { ports: [p], radius: 330, lights, signs }); o.obj.add(helix); spr(o.obj, '#4dffd8', 300, 0.35, 0, 0, 0);
   o.anim.push((t, dt) => { helix.rotation.y -= dt * 0.045; });
-  live(o, helix);
+  runLive(live, o, helix);
   return o;
 }
 
@@ -342,7 +351,7 @@ function weapon() {
   b.add(RK, rockGeo(60, 4, 91, 0.4), mx(0, 0, TZ)); for (let i = 0; i < 9; i++) b.add(RK, rockGeo(rr(r, 3, 12), 2, 40 + i, 0.4), mx(rr(r, -150, 150), rr(r, -110, 110), TZ + rr(r, -60, 140)));
   b.add(glow('#ff5a1e', 2.6), new THREE.CircleGeometry(15, 20), mx(0, 2, TZ + 55.5), 0); b.add(glow('#ffd9a0', 5), new THREE.CircleGeometry(5, 14), mx(0, 2, TZ + 55.8), 0);
   signs.push(sign('WEAPON', '#ffe14d', 14, 50.8, 7, 32, HP, 0), sign('WEAPON', '#ffe14d', 14, -50.8, 7, 32, -HP, 0), sign('兵器試験場', '#ffd0a0', 5.5, 50.8, -5, 32, HP, 0), sign('兵器試験場', '#ffd0a0', 5.5, -50.8, -5, 32, -HP, 0), sign('WEAPON', '#ffe14d', 12, 0, 60, 61.4, 0, 0), sign('⚠ 射線注意 FIRING LINE', '#ff5a3a', 7, 0, 30, ZM - 9.4, Math.PI, 0));
-  const live = detailWeapon(b, { H, D, Y, RL, CU, GR, RK, ZM, TZ, PERIOD, signs }); // 艤装・灯火・試射の演出 (stationdetail2.js)
+  const live = detail(detailWeapon, b, { H, D, Y, RL, CU, GR, RK, ZM, TZ, PERIOD, signs }); // 艤装・灯火・試射の演出 (stationdetail2.js)
   const o = done(b, { ports: [p], radius: 330, reach: 1700, lights, signs }), obj = o.obj; obj.add(rg);
   // 試射: 加速環が順に点灯 → 弾体が砲口から飛び出し、標的に着弾
   const beam = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 1, 8, 1, true).rotateX(HP), new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 6, 8), ...ADD, toneMapped: false, side: THREE.DoubleSide })), slug = spr(obj, '#cfefff', 60, 5, 0, 0, 0), muzzle = spr(obj, '#9fe0ff', 10, 4, 0, 0, ZM - 12), hit = spr(obj, '#ffb060', 10, 4, 0, 2, TZ + 60), heat = spr(obj, '#ff7a2a', 70, 0.7, 0, 2, TZ + 58);
@@ -359,7 +368,7 @@ function weapon() {
     if (f >= 0 && !fired) { fired = true; const sp = G.space, pl = sp?.pl; if (pl && !pl.docked && G.mode === sp) { const l = pl.pos.clone().sub(obj.position); if (Math.hypot(l.x, l.y) < 26 && l.z < ZM && l.z > TZ) { sp.damagePlayer(140, null, false); G.hud.msg('ウェポン管制：「射線上に立ち入るな！」— 試射に巻き込まれた', 'warn', 7); } else if (l.length() < 4000) G.audio?.sfx('boom', Math.max(0.15, 1 - l.length() / 4000)); } }
     if (f < 0) fired = false;
   });
-  live(o);
+  runLive(live, o);
   return o;
 }
 

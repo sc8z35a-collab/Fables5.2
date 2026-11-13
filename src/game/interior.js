@@ -128,7 +128,7 @@ export class InteriorMode {
       if (bp.drones) for (const [x, z] of bp.drones) { const g = makeDrone(def.glow); it.group.add(g); it.drones.push({ g, x, z, hx: x, hz: z, hp: 34 + def.tier * 16, alive: true, fireT: 1 + Math.random() * 2, ph: x * 3 + z, alert: false }); }
       if (o.type !== 'enemy') { this.cache.set(key, it); if (this.cache.size > 4) { const k = this.cache.keys().next().value, old = this.cache.get(k); this.cache.delete(k); old.group.traverse((n) => n.geometry?.dispose()); } }
     } else if (it.drones.length) for (const d of it.drones) { d.alive = true; d.g.visible = true; }
-    this.cur = it; this.scene.add(it.group); for (const f of it.hooks || []) f(); // 出動状況などを反映
+    this.cur = it; this.scene.add(it.group); for (const f of it.hooks || []) { try { f(); } catch (err) { console.warn('[内装] hook:', err); } } // 出動状況などを反映
     const th = it.bp.theme; this.hemi.color.set(th.amb[0]); this.hemi.groundColor.set(th.amb[1]); this.hemi.intensity = th.amb[2];
     // 遠景の向き: 船内=実際の機首方向 / ステーション=主窓が惑星を向く
     const sp = G.space; this.far = true; this._sky?.(false);
@@ -233,7 +233,7 @@ export class InteriorMode {
   // ───────────────────────── インタラクション ─────────────────────────
   act(i) {
     const c = this.ctx, sid = c.type === 'station' ? c.id : c.type === 'outpost' ? c.body : c.type === 'rescue' ? 'atlas' : 'haven', ui = G.ui, a = i.act;
-    if (typeof i.fn === 'function') return i.fn(i); // 小道具が自前の動作を持つ場合 (試射・射撃など)
+    if (typeof i.fn === 'function') { try { return i.fn(i); } catch (err) { console.warn('[内装] item.fn:', err); return undefined; } } // 小道具が自前の動作を持つ場合 (試射・射撃など)
     if (a.startsWith('talk:')) { const L = TALK[a.slice(5)] || ['「……」'], q = L[Math.floor(Math.random() * L.length)]; return ui.talk(i.label, typeof q === 'function' ? q() : q); }
     switch (a) {
       case 'shipyard': return ui.shipyard(sid);

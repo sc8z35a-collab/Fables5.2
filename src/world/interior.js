@@ -10,6 +10,9 @@ import { PROPS2 } from './props2.js';
 import { PROPS3 } from './props3.js';
 import { PROPS4 } from './props4.js';
 import { PROPS5 } from './props5.js';
+
+/** 小道具 1 個の不具合で内装全体を巻き添えにしない: 例外は警告にとどめ、その小道具の動きだけ止める */
+const guard = (f, tag) => { let dead = false; return (...a) => { if (dead) return undefined; try { return f(...a); } catch (err) { dead = true; console.warn('[小道具]', tag, err); return undefined; } }; };
 import '../gfx/textures2.js';
 
 export const T = 0.2;      // 壁厚
@@ -293,15 +296,15 @@ export function buildInterior(bp) {
       use: (label, act, range = 2.4, extra = {}) => { const it = { x: wx, z: wz, y: 1.2 + y0, r: range, label, act, room: r.id, ...extra }; out.items.push(it); return it; },
       dyn: (obj, x = 0, y = 0, z = 0) => { obj.position.set(x, y, z).applyMatrix4(base); obj.rotation.y += ang; groups[r.id].add(obj); return obj; },
       light: (c, i, y = 2, d = 12) => out.lights.push({ x: wx, y: y + y0, z: wz, c: new THREE.Color(c), i, d }),
-      anim: (f) => out.anim.push(f),
+      anim: (f) => out.anim.push(guard(f, type)),
     };
-    fn(P, o, env);
+    try { fn(P, o, env); } catch (err) { console.warn('[小道具] 設置に失敗:', type, 'in', r.id, err); }
   }
   // 小道具の接地影
   const BL = aoMat('blob'), rb = (x, z) => BR[roomAt(out, x, z)?.id] || B;
   for (const c of out.cols) { const d = c.r * 2 + 1.0; rb(c.x, c.z).add(BL, new THREE.PlaneGeometry(d, d).rotateX(-HP), mx(c.x, (c.y || 0) + 0.014, c.z), 0); }
   for (const q of out.rects) { const w = q[2] - q[0], d = q[3] - q[1]; if (w < 0.35 || d < 0.35) continue; rb((q[0] + q[2]) / 2, (q[1] + q[3]) / 2).add(BL, new THREE.PlaneGeometry(w + 0.9, d + 0.9).rotateX(-HP), mx((q[0] + q[2]) / 2, (q[4] || 0) + 0.014, (q[1] + q[3]) / 2), 0); }
-  bp.extra?.(B, out);
+  try { bp.extra?.(B, out); } catch (err) { console.warn('[内装] extra に失敗:', bp.name, err); }
   for (const r of bp.rooms) groups[r.id].add(BR[r.id].build({ shadow: false }));
   out.group.add(B.build({ shadow: false }));
   let minX = 1e9, minZ = 1e9, maxX = -1e9, maxZ = -1e9; for (const r of bp.rooms) { minX = Math.min(minX, r.x); minZ = Math.min(minZ, r.z); maxX = Math.max(maxX, r.x + r.w); maxZ = Math.max(maxZ, r.z + r.d); }
