@@ -275,8 +275,8 @@ export const PROPS2 = {
     const bar = e.dyn(new THREE.Mesh(new THREE.BoxGeometry(w - 0.3, 0.025, 0.05), basic(c, 6)), 0, 1, 0), sheet = e.dyn(new THREE.Mesh(new THREE.PlaneGeometry(w - 0.3, 0.7), basic(c, 0.35, { ...ADD, side: THREE.DoubleSide })), 0, 1, 0);
     const L = { x: e.x, y: 1.5, z: e.z, c: new THREE.Color(c), i: 16, d: 7 }; e.out.lights.push(L);
     const mist = [-1, 1].map((s) => e.dyn(makeGlowSprite('#e8e0ff', 1.2, 0.2), s * (w / 2 - 0.5), 1.2, 0.1));
-    e.anim((dt, t) => { const y = 0.25 + (0.5 + 0.5 * Math.sin(t * 1.1 + e.z)) * (h - 0.6); bar.position.y = y; sheet.position.y = y; L.y = y; L.i = 12 + 6 * Math.sin(t * 9);
-      mist.forEach((s, i) => { const k = (t * 0.5 + i * 0.5 + e.z) % 1; s.scale.setScalar(0.5 + k * 1.8); s.material.opacity = (1 - k) * 0.4; s.position.y = 0.6 + i * 1.2 + k * 0.3; }); });
+    e.anim((dt, t) => { const y = 0.25 + (0.5 + 0.5 * Math.sin(t * 1.1 + e.z)) * (h - 0.6); bar.position.y = e.y0 + y; sheet.position.y = e.y0 + y; L.y = e.y0 + y; L.i = 12 + 6 * Math.sin(t * 9);
+      mist.forEach((s, i) => { const k = (t * 0.5 + i * 0.5 + e.z) % 1; s.scale.setScalar(0.5 + k * 1.8); s.material.opacity = (1 - k) * 0.4; s.position.y = e.y0 + 0.6 + i * 1.2 + k * 0.3; }); });
     e.col(0.2, -w / 2, 0); e.col(0.2, w / 2, 0);
   },
   /** 大型の標本槽 (発光クラゲが漂う) */

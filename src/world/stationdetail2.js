@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { Builder, mx, rockGeo } from '../gfx/builder.js';
 import { mat, glow } from '../gfx/textures.js';
 import { makeGlowSprite, fxTime } from '../gfx/fx.js';
-import { rng, rr } from '../core/util.js';
+import { G, rng, rr } from '../core/util.js';
 import { V, sign } from './stationkit.js';
 import { kit, at, wp, frame, signOn, rod, truss, dish, mast, rcs, hatch, buoy, gate, ringLights, shuttle, patrol, pod, craftOf, lightField, traffic, noShadow } from './stationparts.js';
 
@@ -166,7 +166,7 @@ export function detailWeapon(b, c) {
     const pat = traffic(obj, craftOf((B) => patrol(B, m)), 2, (i, t, P) => { const a = t * 0.05 + i * Math.PI; P.set(Math.cos(a) * 420, 140 + Math.sin(a * 2) * 20, 60 + Math.sin(a) * 520); return true; }, { glow: '#ff8a3a', gs: 16, tail: 19 });
     const drones = traffic(obj, craftOf((B) => pod(B, m, '#ff5a3a')), 3, (i, t, P) => { const a = t * 0.12 + i * TAU / 3; P.set(Math.cos(a) * 150, Math.sin(a) * 150, TZ + 110 + Math.sin(a * 2 + i) * 14); return true; }, { glow: '#ff5a3a', gs: 7, tail: 3.5, up: V(0, 0, 1) });
     o.anim.push((t) => {
-      const k = t % PERIOD, ch = k > PERIOD - 4 ? (k - (PERIOD - 4)) / 4 : 0, f = k < 2.5 ? k : -1, h = Math.exp(-k / 5); // k = 直前の発射からの秒数
+      const k = (G.time ?? t) % PERIOD, ch = k > PERIOD - 4 ? (k - (PERIOD - 4)) / 4 : 0, f = k < 2.5 ? k : -1, h = Math.exp(-k / 5); // k = 直前の発射からの秒数 (艦内の試射監視卓と同じ全体時計で数える)
       radar.rotation.y = t * 1.1; hotM.color.setRGB(0.08 + 4.5 * h, 0.02 + 1.3 * h * h, 0.25 * h * h * h);
       arcs.forEach((sp, i) => { const on = ch > 0 && Math.sin(t * 47 + i * 9) > 0.55 - ch; sp.material.opacity = on ? 1 : 0; sp.scale.setScalar(on ? 6 + 10 * ch + Math.sin(t * 91 + i) * 3 : 1); });
       for (const g of gf) { const d = f >= 0 ? f - g.f0 : -1; g.sp.material.opacity = d >= 0 ? Math.exp(-d * 7) : 0; g.sp.scale.setScalar(d >= 0 ? 40 + 160 * Math.exp(-d * 9) : 1); }

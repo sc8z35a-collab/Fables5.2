@@ -469,9 +469,16 @@ const SCREENS = [];
 export function screenTex(kind = 'data', color = '#4df', title = '') {
   const c = cv(512, 320), x = c.getContext('2d'), t = ctex(c, true, false), rnd = rng(kind.length * 31 + color.length * 7 + title.length);
   const s = { c, x, t, kind, color, title, rnd, ph: rnd() * 10, bars: Array.from({ length: 16 }, () => rnd()) };
-  SCREENS.push(s); drawScreen(s, 0);
+  t.userData.screen = s; SCREENS.push(s); drawScreen(s, 0);
   return t;
 }
+/** root の下で使われている端末スクリーン */
+function screensIn(root) { const set = new Set(); root.traverse((o) => { const m = o.material; if (m && m.map && m.map.userData && m.map.userData.screen) set.add(m.map.userData.screen); }); return set; }
+let ACTIVE = null; // null = すべて
+/** いま見えている室内のスクリーンだけを再描画する (他の室内のぶんまで順番待ちにして、目の前の画面がほとんど動かなくなるのを防ぐ)。root=null で停止 */
+export function activeScreens(root) { ACTIVE = root ? [...screensIn(root)] : []; _scrIdx = 0; }
+/** 破棄した室内のスクリーンを登録から外し、テクスチャを解放する */
+export function dropScreens(root) { const set = screensIn(root); if (!set.size) return; for (let i = SCREENS.length - 1; i >= 0; i--) if (set.has(SCREENS[i])) { SCREENS[i].t.dispose(); SCREENS.splice(i, 1); } if (ACTIVE) ACTIVE = ACTIVE.filter((s) => !set.has(s)); }
 function drawScreen(s, time) {
   const { x, color, kind } = s, W = 512, Hh = 320;
   x.fillStyle = '#02060b'; x.fillRect(0, 0, W, Hh);
@@ -502,8 +509,9 @@ function drawScreen(s, time) {
 let _scrAcc = 0, _scrIdx = 0;
 /** 毎フレーム呼ぶ。負荷分散のため少数ずつ再描画 */
 export function updateScreens(dt, time) {
-  _scrAcc += dt; if (_scrAcc < 0.12 || !SCREENS.length) return; _scrAcc = 0;
-  for (let k = 0; k < 2; k++) { _scrIdx = (_scrIdx + 1) % SCREENS.length; drawScreen(SCREENS[_scrIdx], time); }
+  const L = ACTIVE || SCREENS;
+  _scrAcc += dt; if (_scrAcc < 0.12 || !L.length) return; _scrAcc = 0;
+  for (let k = 0; k < Math.min(2, L.length); k++) { _scrIdx = (_scrIdx + 1) % L.length; drawScreen(L[_scrIdx], time); }
 }
 export function screenMat(kind, color, title, intensity = 1.6) {
   const m = new THREE.MeshBasicMaterial({ map: screenTex(kind, color, title), toneMapped: false });

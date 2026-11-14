@@ -93,7 +93,7 @@ async function boot() {
   let n = 0; while (G.backdrop.bakeNext()) await prog(0.2 + ++n * 0.07, '惑星を形成中… ' + n + '/5');
   await prog(0.6, '環境光を計算中…');
   G.env = G.gfx.envFromScene(G.backdrop.envScene());
-  G.p = load() || newGame(); G.p.quality = G.gfx.qName;
+  G.p = load() || newGame(); G.p.quality = G.gfx.qName; G.audio.setOn(G.p.sound !== false); // タイトル画面でも保存済みのサウンド設定 (OFF) を守る
   await prog(0.66, '艦隊を配備中…');
   G.space = G.modes.space = new SpaceMode();
   n = 0; while (G.space.buildStations()) await prog(0.66 + ++n * 0.029, 'ステーションを建造中… ' + n + '/9');

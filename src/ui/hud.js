@@ -33,8 +33,9 @@ export class Hud {
   setMode(m) {
     this.mode = m; const f = m === 'space' || m === 'atmo'; this.root.classList.toggle('title', m === 'title');
     this.bars.style.display = m === 'title' ? 'none' : ''; this.speed.style.display = f ? '' : 'none';
-    this.cross.style.display = m === 'fps' ? 'block' : 'none'; if (m !== 'fps') this.prompt.style.display = 'none';
-    this.tgt.style.display = 'none'; this.cockpit.style.display = 'none';
+    this.cross.style.display = m === 'fps' ? 'block' : 'none'; if (m !== 'fps') { this.prompt.style.display = 'none'; this._pr = null; }
+    // 非表示にしたら記憶も消す (同じ名前の目標を再び選んだときに表示されなくなるのを防ぐ)
+    this.tgt.style.display = 'none'; this._tg = null; this.cockpit.style.display = 'none';
     this.b.en.d.style.display = f ? '' : 'none';
     this.b.sh.d.firstChild.textContent = f ? 'SHIELD' : 'SUIT'; this.b.hull.d.firstChild.textContent = f ? 'HULL' : 'HEALTH';
   }
