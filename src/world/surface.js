@@ -1,9 +1,9 @@
 // 惑星地表の環境: 地球 (earth.js) / 溶岩 / 砂漠 / 氷 / ガス巨星の雲海デッキ
 import * as THREE from 'three';
 import { Builder, mx, rockGeo } from '../gfx/builder.js';
-import { mat, glow, texSet, signMesh, screenMat } from '../gfx/textures.js';
-import { rng, rr, fbm, ridge, smooth, clamp, pick } from '../core/util.js';
-import { fxTime, makeGlowSprite } from '../gfx/fx.js';
+import { mat, glow, texSet, signMesh } from '../gfx/textures.js';
+import { rng, rr, fbm, ridge, smooth } from '../core/util.js';
+import { fxTime } from '../gfx/fx.js';
 import { BASES } from './defs.js';
 import { HP, V3, COL, N2, makeSky, gridTerrain, scatter, pad, node, beacon, forest, colorGeo, VegField, propGeo, craters, landmarks, scatterAt } from './surfkit.js';
 import { terra } from './earth.js';

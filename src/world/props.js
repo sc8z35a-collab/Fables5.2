@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { Builder, mx, rockGeo } from '../gfx/builder.js';
 import { mat, glow, screenMat, signMesh, leafMat, canopyGeo } from '../gfx/textures.js';
-import { fxTime, makeGlowSprite } from '../gfx/fx.js';
+import { makeGlowSprite } from '../gfx/fx.js';
 import { holoMat, glassMat } from './interior.js';
 
 const HP = Math.PI / 2;

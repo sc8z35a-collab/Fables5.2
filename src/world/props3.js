@@ -1,11 +1,11 @@
 // 追加ステーション用の大道具 (2): メガトン (巨大軌道都市)・ウェポン (兵器試験場)
 import * as THREE from 'three';
-import { Builder, mx, rockGeo } from '../gfx/builder.js';
+import { Builder, mx } from '../gfx/builder.js';
 import { mat, glow, screenMat, cv, ctex, JP } from '../gfx/textures.js';
 import { fxTime, makeGlowSprite } from '../gfx/fx.js';
 import { G } from '../core/util.js';
 import { holoMat, glassMat } from './interior.js';
-import { MM, fab, crateM, flat, scr, blob, bush } from './props.js';
+import { MM, fab, crateM, flat, scr, blob } from './props.js';
 import { basic, W2, item } from './props2.js';
 import { NOISE, VS } from './stations2.js';
 
@@ -305,7 +305,7 @@ void main(){float a=vUv.x*6.2832+uTime*.9,b=vUv.y*6.2832;vec3 p=vec3(cos(a)*2.4,
         slug.visible = f < 0.12; if (slug.visible) slug.position.set(s0.x + dir.x * (3 + f / 0.12 * (L - 3)), s0.y, s0.z + dir.z * (3 + f / 0.12 * (L - 3)));
         const rc = 0.6 * Math.exp(-f * 2.4) * Math.min(1, f * 30); br.position.set(bp0.x - dir.x * rc, bp0.y, bp0.z - dir.z * rc);
         steam.forEach((s, i) => { const q = f * 0.5 - i * 0.04; if (q > 0 && q < 1) { s.material.opacity = (1 - q) * 0.5; s.scale.setScalar(1.2 + q * 4); s.position.y = st0[i].y + q * 2.4; } });
-        if (f > 3.2) { S.ph = 'idle'; S.t = 0; br.position.copy(bp0); } } });
+        if (f > 3.2) { S.ph = 'idle'; S.t = 0; br.position.copy(bp0); } } }, true); // 試射の周期と砲声は、扉の外にいても止めない
     item(e, 3.9, z0 + 5.4, 2.3, '主砲を試射する', 'fn', { fn: fire });
     e.rect(5.5, L); e.rect(1.4, 3.2, -2.9, z0 + 1.4); e.rect(0.8, 1.3, 3.2, z0 + 5.4); e.rect(3.8, 2.6, 0, z0 - 1.4);
   },

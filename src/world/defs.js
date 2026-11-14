@@ -17,7 +17,8 @@ export const BODIES = [
   { id: 'glacies', name: 'グラキエス', sub: '氷とオーロラの星', type: 'ice', R: 38e3, pos: orbit(7.2e7, 3.5, -3e5), seed: 9.4, spin: 0.005, atmoAlt: 2800, color: '#bfe9ff',
     desc: '氷床に覆われた極寒の星。夜空をオーロラが彩る研究拠点。' },
 ];
-export const body = (id) => BODIES.find((b) => b.id === id);
+const BODY_BY = Object.fromEntries(BODIES.map((b) => [b.id, b]));
+export const body = (id) => BODY_BY[id]; // HUD などから毎フレーム引くので id → 定義の表で引く
 
 const V = (a) => new THREE.Vector3().fromArray(a);
 /** 惑星の昼側・やや斜め上空の位置を返す */
@@ -48,7 +49,8 @@ export const STATIONS = [
   { id: 'weapon', name: 'ウェポン', sub: '兵器試験場', body: 'ignis', kind: 'arsenal', alt: 27e3, yaw: 0.75, pitch: 0.22, color: '#ffe14d',
     desc: 'ステーションそのものが一門の巨大電磁投射砲。定期的に標的小惑星へ試射を行う。' },
 ].map((s) => { const b = body(s.body); return { ...s, pos: orbitPos(b, s.alt, s.yaw, s.pitch).toArray() }; });
-export const station = (id) => STATIONS.find((s) => s.id === id);
+const STATION_BY = Object.fromEntries(STATIONS.map((s) => [s.id, s]));
+export const station = (id) => STATION_BY[id];
 
 // 主人公機 3 隻
 export const SHIPS = {

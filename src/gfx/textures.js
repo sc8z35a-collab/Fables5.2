@@ -472,13 +472,15 @@ export function screenTex(kind = 'data', color = '#4df', title = '') {
   t.userData.screen = s; SCREENS.push(s); drawScreen(s, 0);
   return t;
 }
-/** root の下で使われている端末スクリーン */
-function screensIn(root) { const set = new Set(); root.traverse((o) => { const m = o.material; if (m && m.map && m.map.userData && m.map.userData.screen) set.add(m.map.userData.screen); }); return set; }
-let ACTIVE = null; // null = すべて
+/** root の下で使われている端末スクリーンと、それを貼っているメッシュ (Map: screen → [mesh]) */
+function screensIn(root) { const map = new Map(); root.traverse((o) => { const s = o.material?.map?.userData?.screen; if (s) { const L = map.get(s); if (L) L.push(o); else map.set(s, [o]); } }); return map; }
+let ACTIVE = null; // null = すべて / [{ s, objs }]
 /** いま見えている室内のスクリーンだけを再描画する (他の室内のぶんまで順番待ちにして、目の前の画面がほとんど動かなくなるのを防ぐ)。root=null で停止 */
-export function activeScreens(root) { ACTIVE = root ? [...screensIn(root)] : []; _scrIdx = 0; }
+export function activeScreens(root) { ACTIVE = root ? [...screensIn(root)].map(([s, objs]) => ({ s, objs })) : []; _scrIdx = 0; }
 /** 破棄した室内のスクリーンを登録から外し、テクスチャを解放する */
-export function dropScreens(root) { const set = screensIn(root); if (!set.size) return; for (let i = SCREENS.length - 1; i >= 0; i--) if (set.has(SCREENS[i])) { SCREENS[i].t.dispose(); SCREENS.splice(i, 1); } if (ACTIVE) ACTIVE = ACTIVE.filter((s) => !set.has(s)); }
+export function dropScreens(root) { const set = screensIn(root); if (!set.size) return; for (let i = SCREENS.length - 1; i >= 0; i--) if (set.has(SCREENS[i])) { SCREENS[i].t.dispose(); SCREENS.splice(i, 1); } if (ACTIVE) ACTIVE = ACTIVE.filter((a) => !set.has(a.s)); }
+/** メッシュが実際に描かれる状態か (自分と親がすべて表示中)。閉じた扉の向こうの部屋は非表示になっている */
+const shown = (o) => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
 function drawScreen(s, time) {
   const { x, color, kind } = s, W = 512, Hh = 320;
   x.fillStyle = '#02060b'; x.fillRect(0, 0, W, Hh);
@@ -511,7 +513,12 @@ let _scrAcc = 0, _scrIdx = 0;
 export function updateScreens(dt, time) {
   const L = ACTIVE || SCREENS;
   _scrAcc += dt; if (_scrAcc < 0.12 || !L.length) return; _scrAcc = 0;
-  for (let k = 0; k < Math.min(2, L.length); k++) { _scrIdx = (_scrIdx + 1) % L.length; drawScreen(L[_scrIdx], time); }
+  // 見えている部屋の画面だけを順番に描き直す (1 枚 512×320 の転送を、閉じた扉の向こうの画面に使わない)
+  for (let k = 0, tries = 0; k < 2 && tries < L.length; tries++) {
+    _scrIdx = (_scrIdx + 1) % L.length; const a = L[_scrIdx];
+    if (ACTIVE) { if (!a.objs.some(shown)) continue; drawScreen(a.s, time); } else drawScreen(a, time);
+    k++;
+  }
 }
 export function screenMat(kind, color, title, intensity = 1.6) {
   const m = new THREE.MeshBasicMaterial({ map: screenTex(kind, color, title), toneMapped: false });

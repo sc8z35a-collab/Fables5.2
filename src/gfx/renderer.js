@@ -13,7 +13,7 @@ export const RES = { 540: '540p', 720: '720p', 1080: '1080p', 0: '最大' };
 /** 描画距離の倍率 */
 export const DIST = { near: ['近い', 0.6], mid: ['標準', 1], far: ['遠い', 1.6] };
 export const QUALITY = {
-  low: { label: 'ロー', cap: 1, msaa: 0, sky: 512, pNear: 512, pFar: 256, shadow: 0, mirror: 0, bloom: 0.5 },
+  low: { label: 'ロー', cap: 1, msaa: 0, sky: 512, pNear: 512, pFar: 256, shadow: 0, mirror: 0, bloom: 0.25 }, // bloom = 光のにじみを計算する解像度 (画面に対する比)
   medium: { label: 'ミドル', cap: 1.5, msaa: 0, sky: 1024, pNear: 1024, pFar: 256, shadow: 1024, mirror: 0.4, bloom: 0.5 },
   high: { label: 'ハイ', cap: 2, msaa: 4, sky: 1024, pNear: 1024, pFar: 512, shadow: 2048, mirror: 0.5, bloom: 0.5 },
   ultra: { label: 'ウルトラ', cap: 3, msaa: 4, sky: 2048, pNear: 2048, pFar: 512, shadow: 4096, mirror: 0.75, bloom: 0.5 },
@@ -102,6 +102,8 @@ export class Gfx {
     this.canvas.style.width = W + 'px'; this.canvas.style.height = H + 'px';
     this.pw = Math.round(W * pr); this.ph = Math.round(H * pr);
     this.composer.setPixelRatio(1); this.composer.setSize(this.pw, this.ph);
+    // 光のにじみ (ブルーム) は画質設定の解像度で計算する。ローでは標準の半分 (画素数 1/4) にして、スマホでいちばん重い後処理を軽くする
+    const bk = (this.q.bloom ?? 0.5) * 2; if (bk !== 1) this.bloom.setSize(Math.max(2, Math.round(this.pw * bk)), Math.max(2, Math.round(this.ph * bk)));
     this.fx.uAspect.value = W / H; this.fx.uPx.value.set(1 / this.pw, 1 / this.ph);
     this.pxScale = this.ph / 1080;
   }

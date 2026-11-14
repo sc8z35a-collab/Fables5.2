@@ -1,8 +1,8 @@
 // 追加ステーション用の大道具 (1): アトラス救難基地・救助船ミケーネ・医療 / 創薬 (ファイザー)
 import * as THREE from 'three';
-import { Builder, mx, rockGeo } from '../gfx/builder.js';
-import { mat, glow, screenMat, signMesh, aoMat, cv, ctex, JP } from '../gfx/textures.js';
-import { fxTime, makeGlowSprite } from '../gfx/fx.js';
+import { Builder, mx } from '../gfx/builder.js';
+import { mat, glow, aoMat, cv, ctex, JP } from '../gfx/textures.js';
+import { makeGlowSprite } from '../gfx/fx.js';
 import { G } from '../core/util.js';
 import { holoMat, glassMat } from './interior.js';
 import { MM, fab, crateM, flat, scr, blob, bush } from './props.js';
