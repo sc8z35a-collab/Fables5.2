@@ -20,13 +20,18 @@ const Q = new URLSearchParams(location.search);
 const bootEl = document.getElementById('boot'), bootFill = document.getElementById('boot-fill'), bootText = document.getElementById('boot-text');
 window.G = G; G.modes = {}; G.time = 0; G.tip = '';
 
+// ノッチ・パンチホール・ホームバーの安全領域 (env(safe-area-inset-*)) を測るための見えない要素
+const saProbe = document.createElement('div'); saProbe.style.cssText = 'position:fixed;left:0;top:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)'; document.body.appendChild(saProbe);
 function layout() {
   const w = window.innerWidth, h = window.innerHeight, portrait = h > w, W = portrait ? h : w, H = portrait ? w : h;
   Object.assign(G, { W, H, portrait, vw: w });
   app.style.width = W + 'px'; app.style.height = H + 'px';
   app.style.transform = portrait ? `translateX(${w}px) rotate(90deg)` : 'none';
   app.style.setProperty('--u', H / 100 + 'px');
-  G.gfx?.resize(W, H); G.hud?.resize();
+  // HUD とボタンをノッチの下に潜らせない。縦持ちでは画面を 90° 回しているので、上下左右の対応を入れ替える
+  { const cs = getComputedStyle(saProbe), t = parseFloat(cs.paddingTop) || 0, r = parseFloat(cs.paddingRight) || 0, b = parseFloat(cs.paddingBottom) || 0, l = parseFloat(cs.paddingLeft) || 0;
+    const [L, R, T, B] = portrait ? [t, b, r, l] : [l, r, t, b]; for (const [k, v] of [['--sl', L], ['--sr', R], ['--st', T], ['--sb', B]]) app.style.setProperty(k, v + 'px'); }
+  G.gfx?.resize(W, H); G.hud?.resize(); G.dirty = true; // 一時停止中でも、作り直したキャンバスに 1 度は描き直す
   for (const m of Object.values(G.modes)) if (m.camera) { m.camera.aspect = W / H; m.camera.updateProjectionMatrix(); }
 }
 /** 画面座標 → 横向きレイアウト座標 (縦持ち時は 90° 回転して常に横画面で表示する) */
@@ -52,9 +57,9 @@ G.go = async (name, params = {}, o = {}) => {
   G.busy = false;
   if (o.flash) { G.gfx.fx.uFade.value = 1; await G.fade(1, 0.9, true); } else await G.fade(1, 0.5);
 };
-G.setQuality = (name) => { if (G.p) { G.p.quality = name; if (!G.titleOn) save(); else try { localStorage.setItem('starfable-quality', name); } catch (e) { /* noop */ } } G.gfx.setQuality(name); for (const m of Object.values(G.modes)) m.onQuality?.(); };
-G.setRes = (r) => { if (G.p) G.p.res = r; try { localStorage.setItem('starfable-res', r); } catch (e) { /* noop */ } G.gfx.setRes(r); G.hud?.resize(); };
-G.setDist = (d) => { if (G.p) G.p.dist = d; try { localStorage.setItem('starfable-dist', d); } catch (e) { /* noop */ } G.drawDist = DIST[d][1]; G.distName = d; for (const m of Object.values(G.modes)) m.onQuality?.(); };
+G.setQuality = (name) => { G.dirty = true; if (G.p) { G.p.quality = name; if (!G.titleOn) save(); else try { localStorage.setItem('starfable-quality', name); } catch (e) { /* noop */ } } G.gfx.setQuality(name); for (const m of Object.values(G.modes)) m.onQuality?.(); };
+G.setRes = (r) => { G.dirty = true; if (G.p) G.p.res = r; try { localStorage.setItem('starfable-res', r); } catch (e) { /* noop */ } G.gfx.setRes(r); G.hud?.resize(); };
+G.setDist = (d) => { G.dirty = true; if (G.p) G.p.dist = d; try { localStorage.setItem('starfable-dist', d); } catch (e) { /* noop */ } G.drawDist = DIST[d][1]; G.distName = d; for (const m of Object.values(G.modes)) m.onQuality?.(); };
 G.drawDist = 1; G.distName = 'mid';
 G.checkVictory = () => { if (remaining() === 0 && !G.p.flags.won) { G.p.flags.won = 1; earn(50000); save(); setTimeout(() => { G.hud.banner('星系解放', 'ヴォイド艦隊 全艦無力化', 5); setTimeout(() => G.ui.victory(), 4000); }, 2500); } };
 G.start = (fresh) => {
@@ -101,7 +106,11 @@ async function boot() {
   G.modes.interior = new InteriorMode(); G.modes.surface = new SurfaceMode();
   await prog(1, '発進準備完了');
   window.addEventListener('resize', layout); window.addEventListener('orientationchange', () => setTimeout(layout, 250));
-  document.addEventListener('visibilitychange', () => { const c = G.audio.ctx; if (c) document.hidden ? c.suspend() : c.resume(); last = performance.now(); });
+  document.addEventListener('visibilitychange', () => {
+    const c = G.audio.ctx; if (c) { if (document.hidden) c.suspend(); else if (G.audio.on) c.resume(); } last = performance.now(); // サウンド OFF のときは止めたままにする
+    // アプリを切り替えたら自動で一時停止メニューを開く (戻った瞬間に戦闘の真っ只中、とならないように)
+    if (document.hidden && G.p && !G.titleOn && !G.busy && !G.ui.isOpen) G.ui.pause();
+  });
   // 起動: タイトル or デバッグ用の直接開始
   G.mode = G.space; G.modeName = 'space';
   const auto = Q.get('auto');
@@ -115,16 +124,22 @@ async function boot() {
   requestAnimationFrame(frame);
 }
 
-let last = performance.now(), frames = 0;
+let last = performance.now(), frames = 0, fpsN = 0, fpsT = 0;
 function frame(now) {
   requestAnimationFrame(frame);
-  const dt = clamp((now - last) / 1000, 0.001, 0.05); last = now; G.time += dt; fxTime.value = G.time % 3600;
+  const raw = (now - last) / 1000, dt = clamp(raw, 0.001, 0.05); last = now; G.time += dt; fxTime.value = G.time % 3600;
+  if (G.p?.fps) { fpsN++; fpsT += raw; if (fpsT >= 0.5) { G.hud.setFps(fpsN / fpsT); fpsN = 0; fpsT = 0; } } // FPS 表示 (設定で ON のとき)
   for (let i = tweens.length - 1; i >= 0; i--) { const t = tweens[i]; t.t += dt; const k = Math.min(1, t.t / t.dur); t.fn(k); if (k >= 1) { tweens.splice(i, 1); t.res(); } }
   const m = G.mode; if (!m) return;
-  if (!G.busy && !(G.ui.isOpen && !G.titleOn)) m.update(dt);
+  const paused = G.ui.isOpen && !G.titleOn && !G.busy;
+  if (!G.busy && !paused) m.update(dt);
   else if (G.busy) m.idle?.(dt);
-  G.hud.update(dt); G.audio.update(dt); updateScreens(dt, G.time);
-  if (m.render) m.render(dt); else G.gfx.render(dt, m.scene, m.camera, m.far === false ? null : G.backdrop);
+  G.hud.update(dt); G.audio.update(dt);
+  // メニューを開いて止まっている間は 3D を描き直さない (画面は最後のフレームのまま。電池と発熱の節約)。画面サイズが変わったときと演出中だけ描く
+  if (!paused || G.dirty || tweens.length) {
+    updateScreens(dt, G.time); G.dirty = false;
+    if (m.render) m.render(dt); else G.gfx.render(dt, m.scene, m.camera, m.far === false ? null : G.backdrop);
+  }
   G.input.endFrame();
   if (++frames === 20) window.__ready = true;
 }

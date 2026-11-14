@@ -23,7 +23,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .loc { font-size: calc(var(--u) * 3.6); font-weight: 700; letter-spacing: .12em; color: #fff; text-shadow: 0 0 10px var(--c); }
 .loc small { display: block; font-size: calc(var(--u) * 2.3); color: var(--c); letter-spacing: .2em; font-weight: 400; }
 .obj { margin-top: calc(var(--u) * 1); font-size: calc(var(--u) * 2.5); color: var(--c2); line-height: 1.45; }
-.obj b { color: #fff; }
+.obj b { color: #fff; } .obj small { font-size: .88em; opacity: .75; }
 .sys { position: absolute; right: calc(var(--u) * 3); top: calc(var(--u) * 2); display: flex; gap: calc(var(--u) * 1.4); align-items: center; pointer-events: auto; z-index: 8; }
 .tl, .bar span, .speed small, .sys .cr { text-shadow: 0 1px 2px rgba(0, 0, 0, .95), 0 0 6px rgba(0, 0, 0, .8); }
 .loc, .speed b { text-shadow: 0 0 10px var(--c), 0 1px 2px rgba(0, 0, 0, .95), 0 0 5px rgba(0, 0, 0, .8) !important; }
@@ -51,6 +51,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .msgs div.warn { border-color: var(--bad); color: #ffd0c8; }
 .msgs div.good { border-color: var(--ok); color: #d6ffe8; }
 .msgs div.comm { border-color: var(--c2); color: #ffe9c8; }
+.msgs div .n { margin-left: .6em; padding: 0 .4em; border-radius: .6em; background: rgba(255, 255, 255, .16); color: #fff; font-size: .85em; font-variant-numeric: tabular-nums; }
 @keyframes msgIn { from { transform: translateX(-20px); opacity: 0; } }
 .banner { position: absolute; left: 0; right: 0; top: 23%; text-align: center; opacity: 0; transition: opacity .6s; }
 .banner.on { opacity: 1; }
@@ -61,12 +62,22 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .cb.alt { border-color: var(--c2); background: linear-gradient(180deg, rgba(90, 56, 10, .9), rgba(30, 16, 4, .9)); }
 .cb.bad { border-color: var(--bad); background: linear-gradient(180deg, rgba(90, 20, 14, .9), rgba(30, 6, 4, .9)); }
 .cb:active { filter: brightness(1.7); }
+.cb small { display: block; font-size: .62em; font-weight: 400; letter-spacing: .06em; opacity: .8; margin-top: .2em; }
 .cross { position: absolute; left: 50%; top: 50%; width: calc(var(--u) * 1.2); height: calc(var(--u) * 1.2); margin: calc(var(--u) * -.6); border: 2px solid rgba(255, 255, 255, .85); border-radius: 50%; box-shadow: 0 0 6px var(--c); display: none; }
 .prompt { position: absolute; left: 50%; top: 58%; transform: translateX(-50%); font-size: calc(var(--u) * 2.8); color: #fff; background: var(--bg); border: 1px solid rgba(111, 232, 255, .5); padding: calc(var(--u) * .8) calc(var(--u) * 2.4); display: none; white-space: nowrap; }
 .cockpit { position: absolute; inset: 0; display: none; background:
   linear-gradient(115deg, rgba(8, 12, 18, .96) 0 6%, transparent 6.4%), linear-gradient(-115deg, rgba(8, 12, 18, .96) 0 6%, transparent 6.4%),
   linear-gradient(0deg, rgba(8, 12, 18, .97) 0 13%, rgba(40, 60, 80, .5) 13.3%, transparent 14%); }
+.fps { position: absolute; left: 50%; top: calc(var(--u) * .4); transform: translateX(-50%); font-size: calc(var(--u) * 1.9); color: var(--ok); letter-spacing: .08em; font-variant-numeric: tabular-nums; opacity: .85; }
+.fps.low { color: var(--bad); }
 .vign { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s; box-shadow: inset 0 0 calc(var(--u) * 30) rgba(255, 30, 10, .8); }
+
+/* 安全領域 (ノッチなど) の分だけ、画面の縁に寄せた HUD とボタンを内側へ (値は main.js の layout で設定) */
+.tl, .bars, .speed, .msgs { margin-left: var(--sl, 0px); }
+.tl, .sys { margin-top: var(--st, 0px); }
+.sys, .thr, .tb { margin-right: var(--sr, 0px); }
+.bars, .speed, .thr, .tb { margin-bottom: var(--sb, 0px); }
+.tb.p-sc, .tb.p-ap, .tb.p-view { margin-top: var(--st, 0px); }
 
 /* ── タッチ操作 ── */
 .touch { position: absolute; inset: 0; z-index: 6; }
@@ -122,7 +133,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .pb > .row:last-child { border-bottom: 0; }
 .row .g { flex: 1; min-width: 0; } .row .g small { display: block; font-size: calc(var(--u) * 2.2); color: #9fc8d8; margin-top: .2em; white-space: normal; line-height: 1.4; }
 .row .n { width: calc(var(--u) * 17); text-align: right; font-variant-numeric: tabular-nums; }
-.up { color: var(--ok); } .dn { color: var(--bad); } .dim { opacity: .55; }
+.up { color: var(--ok); } .dn { color: var(--bad); } .dim { opacity: .55; } .nw { white-space: nowrap; }
 .bt { padding: calc(var(--u) * 1.4) calc(var(--u) * 2.8); border: 1px solid var(--c); background: rgba(111, 232, 255, .14); color: #fff; font-size: calc(var(--u) * 2.7); font-weight: 700; letter-spacing: .08em; white-space: nowrap; }
 .bt:active { background: rgba(111, 232, 255, .5); }
 .bt.gold { border-color: var(--c2); background: rgba(255, 179, 71, .16); }
@@ -131,10 +142,11 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .note { font-size: calc(var(--u) * 2.5); color: #a9d4e4; line-height: 1.7; margin: 0 0 calc(var(--u) * 1.6); }
 .note b { color: #fff; } .note em { color: var(--c2); font-style: normal; }
 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(var(--u) * 2); }
-.card { border: 1px solid rgba(111, 232, 255, .35); background: rgba(8, 24, 40, .7); padding: calc(var(--u) * 2); }
+.card { border: 1px solid rgba(111, 232, 255, .35); background: rgba(8, 24, 40, .7); padding: calc(var(--u) * 2); display: flex; flex-direction: column; }
+.card > .bt { margin-top: auto; align-self: flex-start; } .card > .stat:last-of-type { margin-bottom: 1em; } /* 説明の長さが違っても能力値とボタンの位置をそろえる */
 .card.sel { border-color: var(--c2); box-shadow: 0 0 20px rgba(255, 179, 71, .35), inset 0 0 20px rgba(255, 179, 71, .12); }
 .card h3 { margin: 0 0 .3em; font-size: calc(var(--u) * 3.4); letter-spacing: .12em; color: #fff; }
-.card h3 small { color: var(--c); font-size: calc(var(--u) * 2.2); margin-left: .6em; font-weight: 400; }
+.card h3 small { display: block; color: var(--c); font-size: calc(var(--u) * 2.2); margin-top: .2em; font-weight: 400; letter-spacing: .06em; } /* 長い艦種名が 1 文字だけ折り返さないよう 2 行目に */
 .card p { margin: 0 0 .8em; font-size: calc(var(--u) * 2.3); color: #a9d4e4; line-height: 1.55; min-height: 4.6em; }
 .stat { display: flex; align-items: center; font-size: calc(var(--u) * 2.1); gap: .6em; margin: .25em 0; } .stat span { width: 5.2em; color: var(--c); }
 .stat i { flex: 1; height: calc(var(--u) * .9); background: rgba(255, 255, 255, .12); position: relative; } .stat i b { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c); }
