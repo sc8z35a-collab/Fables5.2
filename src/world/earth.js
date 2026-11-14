@@ -1,10 +1,10 @@
 // 地球: 不規則な街区を持つ巨大都市 (河川・大通り・公園・港) + 農園地帯 + 雪国 + ジャングル + 海
 import * as THREE from 'three';
 import { Builder, mx, rockGeo, loft } from '../gfx/builder.js';
-import { mat, glow, texSet, signMesh } from '../gfx/textures.js';
+import { mat, glow, signMesh } from '../gfx/textures.js';
 import { rng, rr, fbm, ridge, smooth, clamp, lerp, pick } from '../core/util.js';
 import { fxTime, makeGlowSprite } from '../gfx/fx.js';
-import { HP, V3, COL, N2, makeSky, gridTerrain, scatter, pad, node, beacon, forest, colorGeo, ocean, VegField, propGeo, landmarks, hs2 } from './surfkit.js';
+import { HP, V3, COL, N2, makeSky, gridTerrain, pad, node, beacon, forest, colorGeo, ocean, VegField, propGeo, landmarks, hs2 } from './surfkit.js';
 
 // ── 地域マスク (CPU と GLSL で同じ式を使う) ──
 const coast = (x) => 1650 + 260 * Math.sin(x * 0.0011) + 140 * Math.sin(x * 0.0027 + 1);
@@ -287,7 +287,9 @@ export function terra() {
   const NC = 280, cars = new THREE.InstancedMesh(carGeo, new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false }), NC), lanes = [], o3 = new THREE.Object3D();
   for (let i = 0; i < NC; i++) { const air = i < 110, ax = r() < 0.5, k = Math.floor(rr(r, -12, 12)), dir = r() < 0.5 ? 1 : -1; lanes.push({ air, ax, k, dir, off: r() * 2600, sp: air ? rr(r, 38, 70) : rr(r, 10, 20), alt: air ? pick(r, [46, 84, 130, 180]) + rr(r, -3, 3) : 0.55, lat: dir * (air ? 5 : 3.2 + (r() < 0.5 && hwid(k) > 12 ? 3.6 : 0)) }); }
   cars.frustumCulled = false; grp.add(cars);
-  anim.push((dt, t) => { for (let i = 0; i < NC; i++) { const l = lanes[i], s = ((t * l.sp + l.off) % 2600) - 1300; let x, z, hd;
+  let carsInit = false; // 初回だけは必ず配置する (未配置のままだと全車が原点 = 着陸パッドに重なって見える)
+  anim.push((dt, t, cam) => { if (carsInit && cam && (Math.hypot(cam.x, cam.z + 500) > 4300 || cam.y > 2600)) return; carsInit = true; // 街から遠い・高すぎるときは豆粒以下なので 280 台の計算と転送を省く (近づけば時刻どおりの位置に戻る)
+    for (let i = 0; i < NC; i++) { const l = lanes[i], s = ((t * l.sp + l.off) % 2600) - 1300; let x, z, hd;
     if (l.air) { x = l.ax ? s * l.dir : l.k * 110 + l.lat; z = l.ax ? l.k * 110 + l.lat - 500 : s * l.dir - 500; hd = l.ax ? (l.dir > 0 ? -HP : HP) : l.dir > 0 ? Math.PI : 0; }
     else { const qa = l.k * BS - l.lat, qs = s * l.dir, p = l.ax ? invQ(qs, qa, _o) : invQ(qa, qs - 500, _o); x = p[0]; z = p[1]; const p2 = l.ax ? invQ(qs + 3 * l.dir, qa, _o2) : invQ(qa, qs - 500 + 3 * l.dir, _o2); hd = Math.atan2(-(p2[0] - x), -(p2[1] - z)); }
     const hide = !l.air && (Math.hypot(x, z) < 214 || mCity(x, z) < 0.6 || cityBlocked(x, z)); o3.position.set(x, hide ? -60 : l.alt, z); o3.rotation.set(0, hd, 0); o3.updateMatrix(); cars.setMatrixAt(i, o3.matrix); } cars.instanceMatrix.needsUpdate = true; });

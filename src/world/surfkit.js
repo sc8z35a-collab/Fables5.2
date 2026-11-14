@@ -1,8 +1,8 @@
 // 地表シーンの共通部品: 空・地形グリッド・地形シェーダ・散布・着陸パッド・資源結晶・森林タイル・海
 import * as THREE from 'three';
 import { Builder, mx, rockGeo } from '../gfx/builder.js';
-import { mat, glow, texSet, signMesh, screenMat, cv, ctex } from '../gfx/textures.js';
-import { rng, rr, fbm, ridge, smooth, clamp, pick } from '../core/util.js';
+import { mat, glow, texSet, cv, ctex } from '../gfx/textures.js';
+import { rng, rr, clamp } from '../core/util.js';
 import { fxTime, makeGlowSprite } from '../gfx/fx.js';
 
 const HP = Math.PI / 2, V3 = (x, y, z) => new THREE.Vector3(x, y, z), COL = (c) => new THREE.Color(c);

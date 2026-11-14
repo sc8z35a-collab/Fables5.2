@@ -2,10 +2,10 @@
 import * as THREE from 'three';
 import { Builder, mx } from '../gfx/builder.js';
 import { mat, glow, screenMat, cv, ctex, JP } from '../gfx/textures.js';
-import { makeGlowSprite } from '../gfx/fx.js';
+import {  } from '../gfx/fx.js';
 import { holoMat, glassMat } from './interior.js';
 import { MM, fab, crateM, flat, scr, bush } from './props.js';
-import { basic, W2 } from './props2.js';
+import { basic } from './props2.js';
 
 const HP = Math.PI / 2, TAU = Math.PI * 2;
 let _B;

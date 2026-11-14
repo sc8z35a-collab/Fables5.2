@@ -1,18 +1,20 @@
 // 地表モード: 大気圏内飛行 / 着陸 / 徒歩探索 / 資源採取
 import * as THREE from 'three';
-import { G, clamp, damp, smooth, fmtDist } from '../core/util.js';
+import { G, clamp, damp, smooth, fmtDist, fmtSpeed } from '../core/util.js';
 import { buildSurface } from '../world/surface.js';
 import { buildShip } from '../world/ships.js';
 import { Mirror } from '../gfx/renderer.js';
 import { Particles, Streaks, makeGlowSprite } from '../gfx/fx.js';
 import { syncDamage, rayHit, applyDamage, logDamage, Debris } from '../gfx/damage.js';
 import { SHIPS, BASES, body } from '../world/defs.js';
-import { save, addCargo, event, remaining, commodity, rescueState, earn } from './state.js';
+import { save, addCargo, event, commodity, rescueState, earn, objective } from './state.js';
 import { buildMycenae, cloneShared, makeBot } from '../world/rescue.js';
+import { LOW_HULL } from './space.js';
+import { LOW_HP } from './interior.js';
 import { Builder, mx } from '../gfx/builder.js';
 import { mat, glow, aoMat, signMesh } from '../gfx/textures.js';
 
-const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3(), _q = new THREE.Quaternion(), _e = new THREE.Euler(0, 0, 0, 'YXZ'), _col = new THREE.Color();
+const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _q = new THREE.Quaternion(), _e = new THREE.Euler(0, 0, 0, 'YXZ'), _col = new THREE.Color();
 const PAD_R = 34, CS = 64, gk = (x, z) => Math.floor(x / CS) * 4096 + Math.floor(z / CS);
 
 export class SurfaceMode {
@@ -161,7 +163,7 @@ export class SurfaceMode {
       if (nb) for (const b of o.bots) { const dx = p.x - b.x, dz = p.z - b.z; let a = Math.atan2(dx, dz) - b.yaw; a = Math.atan2(Math.sin(a), Math.cos(a)); b.g.userData.tick(dt, t, this.foot ? a : null, Math.hypot(dx, dz)); } }
   }
   _mode() {
-    if (this.foot) { G.hud.setMode('fps'); G.input.setButtons([{ id: 'run', label: '走る', cls: 'sm p-run', key: 'ShiftLeft,ShiftRight' }], 'fps'); }
+    if (this.foot) { G.hud.setMode('fps'); G.hud.showBar('sh', false); G.input.setButtons([{ id: 'run', label: '走る', cls: 'sm p-run', key: 'ShiftLeft,ShiftRight' }], 'fps'); } // 地表を歩くときは防護服ゲージ (常に満タン) を出さない
     else { G.hud.setMode('atmo'); G.input.setButtons([{ id: 'boost', label: 'ブースト', cls: 'p-boost', key: 'ShiftLeft,ShiftRight' }, { id: 'up', label: '▲<br>上昇', cls: 'p-up', key: 'KeyR,Space' }, { id: 'dn', label: '▼<br>下降', cls: 'p-dn', key: 'KeyF,KeyC' }, { id: 'view', label: '視点', cls: 'sm p-view', key: 'KeyV' }], 'atmo'); }
   }
   _q() { const s = this.ship; s.q.setFromEuler(_e.set(s.pitch, s.yaw, 0)); return s.q; }
@@ -228,9 +230,9 @@ export class SurfaceMode {
     s.m.tilt.rotation.z = damp(s.m.tilt.rotation.z, s.yawV * 0.55, 4, dt);
     this._bump(fwd);
     const vdown = -(fwd.y * s.speed + s.vy), g2 = this.ground(s.pos.x, s.pos.z) + s.clear;
-    if (e.floor != null && s.pos.y < e.floor + 60) { s.pos.y = e.floor + 60; s.vy = 20; if (!this._w1) { this._w1 = 1; G.hud.msg('雲海の下は超高圧層です。上昇してください！', 'warn'); setTimeout(() => { this._w1 = 0; }, 5000); } }
+    if (e.floor != null && s.pos.y < e.floor + 60) { s.pos.y = e.floor + 60; s.vy = 20; G.hud.once('floor', '雲海の下は超高圧層です。上昇してください！', 'warn', 5); }
     if (s.pos.y <= g2) {
-      const X = s.pos.x, Z = s.pos.z, bx = this._box(X, Z), roof = !!bx && bx[6] + s.clear >= g2 - 0.01, onPad = Math.hypot(X, Z) < PAD_R, warn = (m) => { s.vy = 8; if (!this._w2) { this._w2 = 1; G.hud.msg(m, 'warn'); setTimeout(() => { this._w2 = 0; }, 4000); } };
+      const X = s.pos.x, Z = s.pos.z, bx = this._box(X, Z), roof = !!bx && bx[6] + s.clear >= g2 - 0.01, onPad = Math.hypot(X, Z) < PAD_R, warn = (m) => { s.vy = 8; G.hud.once('noland', m, 'warn', 4); };
       const sl = roof ? 0 : Math.abs(this.terrain(X + 6, Z) - this.terrain(X - 6, Z)) / 12 + Math.abs(this.terrain(X, Z + 6) - this.terrain(X, Z - 6)) / 12;
       s.pos.y = g2;
       if (s.speed > 55 || vdown > 16) { this._hull(s.speed * 0.25 + vdown * 1.5, '激しく接地した！'); this._crash(clamp((s.speed * 0.25 + vdown * 1.5) * 0.05, 1.4, 6)); s.vy = 14; s.speed *= 0.5; s.pitch = Math.max(s.pitch, 0.12); this.shake = 1; this.parts.burst(s.pos, 40, 30, _col.set('#ffd9a0'), 1.2, 0.8); G.audio?.sfx('hit'); }
@@ -246,7 +248,7 @@ export class SurfaceMode {
   }
   _auto(dt, alt) {
     const s = this.ship, e = this.env, a = s.auto, tx = 0, tz = 0, d = Math.hypot(s.pos.x - tx, s.pos.z - tz);
-    if (G.input.axes().x ** 2 + G.input.axes().y ** 2 > 0.8) { s.auto = null; G.hud.msg('オートランドを中止 — 手動操縦'); return; }
+    const ax = G.input.axes(); if (ax.x ** 2 + ax.y ** 2 > 0.8) { s.auto = null; G.hud.msg('オートランドを中止 — 手動操縦'); return; }
     s.pitch = damp(s.pitch, 0, 2, dt); s.m.tilt.rotation.z = damp(s.m.tilt.rotation.z, 0, 3, dt);
     if (a.ph === 0) {
       const safe = e.safeAlt ? e.padY + e.safeAlt : null, low = safe != null && d > 300 && s.pos.y < safe - 80; // 高層ビル街は安全高度まで上がってから進入する
@@ -284,8 +286,8 @@ export class SurfaceMode {
   /** 駐機中はエンジンの噴射を止める */
   _engines(on) { const m = this.ship.m; for (const p of m.plumes) { p.visible = on; if (on) p.material.uniforms.uPow.value = 0.1; } for (const g of m.glows || []) if (g.isObject3D) g.visible = on; }
   takeoff() { const s = this.ship; s.landed = false; s.vy = 16; this._engines(true); s.pos.y += 0.5; G.input.setThr(0.15); if (s.m.gear) setTimeout(() => { if (!s.landed) s.m.gear.visible = false; }, 2500); G.audio?.sfx('undock'); G.hud.msg('離陸。高度 5km を超えると軌道へ離脱します。', 'good'); }
-  _hull(d, msg) { const pl = G.space.pl; pl.hull -= d; pl.lastHit = G.space.time; G.p.ships[pl.id].hull = clamp(pl.hull / pl.st.hull, 0, 1); if (msg && !this._w3) { this._w3 = 1; G.hud.msg(msg, 'warn'); setTimeout(() => { this._w3 = 0; }, 3000); }
-    if (pl.hull <= 0 && !this.dead) { this.dead = true; G.hud.banner('船体喪失', '救難艇が回収中…', 4); const fee = Math.round(G.p.credits * 0.1); G.audio?.sfx('boom'); setTimeout(() => { G.p.credits -= fee; G.p.ships[pl.id].hull = 1; this.dead = false; G.space.rebuildShip(); G.go('space', { docked: G.p.last }).then(() => G.hud.msg(`ステーションで修復されました (費用 ${fee.toLocaleString()} Cr)`, 'warn', 8)); }, 3000); } }
+  _hull(d, msg) { const pl = G.space.pl; pl.hull -= d; pl.lastHit = G.space.time; G.p.ships[pl.id].hull = clamp(pl.hull / pl.st.hull, 0, 1); if (msg) G.hud.once('hull', msg, 'warn', 3);
+    if (pl.hull <= 0 && !this.dead) { this.dead = true; G.hud.banner('船体喪失', '救難艇が回収中…', 4); const fee = Math.round(G.p.credits * 0.1); G.audio?.sfx('boom'); setTimeout(() => { G.p.credits -= fee; G.p.ships[pl.id].hull = 1; this.dead = false; G.space.rebuildShip(); G.go('space', { docked: G.p.last }).then(() => G.hud.msg(`ステーションで修復されました (費用 ${fee.toLocaleString('ja-JP')} Cr)`, 'warn', 8)); }, 3000); } }
 
   // ───────────────────────── 徒歩 ─────────────────────────
   ok(x, z, y = this.fp.y) {
@@ -306,18 +308,20 @@ export class SurfaceMode {
     G.hud.msg('周囲に降りられる場所がない。別の場所に着陸しよう。', 'warn'); return false;
   }
   _walk(dt) {
-    const inp = G.input, ax = inp.axes(), p = this.fp, e = this.env;
-    this.fyaw -= inp.look.x * 0.0052; this.fpitch = clamp(this.fpitch - inp.look.y * 0.0052, -1.3, 1.3); if (inp.keys.KeyQ) this.fyaw += dt * 2;
+    const inp = G.input, ax = inp.axes(true), p = this.fp, e = this.env, sens = G.p.sens || 1;
+    this.fyaw -= inp.look.x * 0.0052 * sens; this.fpitch = clamp(this.fpitch - inp.look.y * 0.0052 * sens, -1.3, 1.3); this.fyaw += inp.turn() * dt * 2; // ← / Q で左、→ で右を向く
     const sp = inp.down('run') ? 9.5 : 5.2, sn = Math.sin(this.fyaw), cs = Math.cos(this.fyaw), dx = (-sn * ax.y + cs * ax.x) * sp * dt, dz = (-cs * ax.y - sn * ax.x) * sp * dt;
-    if (dx || dz) { if (this.ok(p.x + dx, p.z + dz, p.y)) { p.x += dx; p.z += dz; } else if (this.ok(p.x + dx, p.z, p.y)) p.x += dx; else if (this.ok(p.x, p.z + dz, p.y)) p.z += dz; else if (Math.hypot(p.x + dx, p.z + dz) > e.walkR && !this._w4) { this._w4 = 1; G.hud.msg('これ以上先は危険だ。船に戻ろう。', 'warn'); setTimeout(() => { this._w4 = 0; }, 5000); }
+    if (dx || dz) { if (this.ok(p.x + dx, p.z + dz, p.y)) { p.x += dx; p.z += dz; } else if (this.ok(p.x + dx, p.z, p.y)) p.x += dx; else if (this.ok(p.x, p.z + dz, p.y)) p.z += dz; else if (Math.hypot(p.x + dx, p.z + dz) > e.walkR) G.hud.once('edge', 'これ以上先は危険だ。船に戻ろう。', 'warn', 5);
       const pb = this.bob; this.bob += Math.hypot(dx, dz) * 1.7; if (Math.floor(pb / Math.PI) !== Math.floor(this.bob / Math.PI)) G.audio?.sfx('step'); }
     p.y = damp(p.y, this.ground(p.x, p.z, p.y), 14, dt);
-    if (e.hazard?.(p.x, p.z, this.ground(p.x, p.z, p.y))) /* 実際に立っている面 (台地・桟橋・パッドを含む) で判定 */ { G.p.hp -= 25 * dt; if (!this._w5) { this._w5 = 1; G.hud.msg('熱い！ 溶岩から離れろ！', 'warn'); G.audio?.sfx('hurt'); setTimeout(() => { this._w5 = 0; }, 2000); } if (G.p.hp <= 0) { G.p.hp = 50; this._disembark(); G.hud.msg('危ないところで船の近くへ退避した。', 'warn'); } }
+    if (e.hazard?.(p.x, p.z, this.ground(p.x, p.z, p.y))) /* 実際に立っている面 (台地・桟橋・パッドを含む) で判定 */ { G.p.hp -= 25 * dt; if (G.hud.once('lava', '熱い！ 溶岩から離れろ！', 'warn', 2)) G.audio?.sfx('hurt'); if (G.p.hp <= 0) { G.p.hp = 50; this._disembark(); G.hud.msg('危ないところで船の近くへ退避した。', 'warn'); } }
     // インタラクション
     const s = this.ship, fx = -sn, fz = -cs; let best = null, bs = 1e9;
-    const cand = [...e.items, { x: s.pos.x, z: s.pos.z, r: Math.min(SHIPS[s.id].radius * 0.4, 8) + 5, label: `${SHIPS[s.id].name} に乗る`, act: 'board', wide: 1 }];
-    e.nodes.forEach((n, i) => { if (n.g.visible) cand.push({ x: n.x, z: n.z, r: 3.6, label: n.label, act: 'node', n, i }); });
-    for (const i of cand) { const ddx = i.x - p.x, ddz = i.z - p.z, d = Math.hypot(ddx, ddz); if (d > i.r) continue; const dot = (ddx * fx + ddz * fz) / (d || 1); if (dot < (i.wide ? -0.3 : 0.2) && d > 1.5) continue; if (d < bs) { bs = d; best = i; } }
+    // 候補は毎フレーム配列にまとめ直さず、その場で順に調べる (自機と資源ノードの候補は使い回し)
+    const test = (i) => { const ddx = i.x - p.x, ddz = i.z - p.z, d = Math.hypot(ddx, ddz); if (d > i.r) return; const dot = (ddx * fx + ddz * fz) / (d || 1); if (dot < (i.wide ? -0.3 : 0.2) && d > 1.5) return; if (d < bs) { bs = d; best = i; } };
+    for (const i of e.items) test(i);
+    const bi = this._boardIt || (this._boardIt = { act: 'board', wide: 1 }); bi.x = s.pos.x; bi.z = s.pos.z; bi.r = Math.min(SHIPS[s.id].radius * 0.4, 8) + 5; bi.label = `${SHIPS[s.id].name} に乗る`; test(bi);
+    e.nodes.forEach((n, i) => { if (n.g.visible) test(n.it || (n.it = { x: n.x, z: n.z, r: 3.6, label: n.label, act: 'node', n, i })); });
     G.hud.setCtx(best && !G.ui.isOpen ? [{ label: best.label, cls: best.act === 'node' ? '' : 'alt', fn: () => this.act(best) }] : []);
     if (best && (inp.key('KeyE') || inp.key('Enter'))) this.act(best);
   }
@@ -364,16 +368,17 @@ export class SurfaceMode {
     const h = G.hud, s = this.ship, e = this.env, pl = G.space.pl, c = this.camera;
     h.begin(); h.setLoc(this.place || e.name, `${body(e.id).name} — ${this.reg || e.sub}`);
     const ms = G.p.missions.find((m) => m.type === 'survey' && m.body === e.id) || G.p.missions[0];
-    h.setObj(`<b>ヴォイド艦隊</b> 残存 ${remaining()}/20${ms ? `<br>任務：${ms.title} (${ms.prog}/${ms.need})` : ''}`);
+    h.setObj(objective(ms));
     if (this.foot) {
-      h.bar('sh', 1); h.bar('hull', G.p.hp / 100); h.damage(G.p.hp < 35 ? 0.4 : 0); G.p.hp = Math.min(100, G.p.hp + HEAL * dt); // 毎秒の回復量 (フレームレートに依存しない)
+      h.bar('sh', 1); h.bar('hull', G.p.hp / 100); h.damage(G.p.hp < 35 ? 0.4 : 0); if (G.p.hp < 35) h.once('lowhp', LOW_HP, 'warn', 45); G.p.hp = Math.min(100, G.p.hp + HEAL * dt); // 毎秒の回復量 (フレームレートに依存しない)
       const sp = _a.copy(s.pos); let [x, y, f] = h.project(sp, c); h.marker(x, y, f, '#6fe8ff', SHIPS[s.id].name, fmtDist(Math.hypot(s.pos.x - this.fp.x, s.pos.z - this.fp.z)), 'diamond', 1.4);
-      for (const it of e.items) { if (Math.hypot(it.x - this.fp.x, it.z - this.fp.z) > (it.near || 3500)) continue; const p = _b.set(it.x, this.ground(it.x, it.z) + 3, it.z); [x, y, f] = h.project(p, c); h.marker(x, y, f, '#ffd27a', it.name || BASES[e.id].name, fmtDist(Math.hypot(it.x - this.fp.x, it.z - this.fp.z)), 'diamond', 1.2); }
-      for (const n of e.nodes) { if (!n.g.visible) continue; const d = Math.hypot(n.x - this.fp.x, n.z - this.fp.z); if (d > 420) continue; [x, y, f] = h.project(_b.set(n.x, this.ground(n.x, n.z) + 2.4, n.z), c); if (f) h.marker(x, y, f, '#6dffb0', d < 60 ? '資源' : '', fmtDist(d), 'circle', 0.9); }
+      for (const it of e.items) { if (Math.hypot(it.x - this.fp.x, it.z - this.fp.z) > (it.near || 3500)) continue; const p = _b.set(it.x, (it.gy ??= this.ground(it.x, it.z)) + 3, it.z); /* 動かない目印の地面の高さは 1 度だけ測る */ [x, y, f] = h.project(p, c); h.marker(x, y, f, '#ffd27a', it.name || BASES[e.id].name, fmtDist(Math.hypot(it.x - this.fp.x, it.z - this.fp.z)), 'diamond', 1.2); }
+      for (const n of e.nodes) { if (!n.g.visible) continue; const d = Math.hypot(n.x - this.fp.x, n.z - this.fp.z); if (d > 420) continue; [x, y, f] = h.project(_b.set(n.x, (n.gy ??= this.ground(n.x, n.z)) + 2.4, n.z), c); if (f) h.marker(x, y, f, '#6dffb0', d < 60 ? '資源' : '', fmtDist(d), 'circle', 0.9); }
       return;
     }
     h.bar('sh', pl.shield / pl.st.shield); h.bar('hull', pl.hull / pl.st.hull); h.bar('en', pl.energy / pl.st.energy); h.damage(pl.hull < pl.st.hull * 0.3 ? 0.4 : 0);
-    h.setSpeed(`${Math.round(s.speed)} m/s`, s.landed ? 'LANDED' : s.auto ? 'AUTO LAND' : `高度 ${Math.max(0, s.alt || 0).toFixed(0)} m`);
+    if (pl.hull < pl.st.hull * 0.3 && !this.dead) h.once('lowhull', LOW_HULL, 'warn', 45);
+    h.setSpeed(fmtSpeed(s.speed), s.landed ? 'LANDED' : s.auto ? 'AUTO LAND' : `高度 ${Math.max(0, s.alt || 0).toFixed(0)} m`);
     const pd = Math.hypot(s.pos.x, s.pos.z, s.pos.y - e.padY); let [x, y, f] = h.project(_a.set(0, e.padY + 2, 0), c);
     if (!s.landed && e.pois) for (const q of e.pois) { const [px, py, pf] = h.project(_b.set(q.x, q.y, q.z), c); if (pf) h.marker(px, py, pf, '#9fd0ff', q.name, fmtDist(Math.hypot(q.x - s.pos.x, q.z - s.pos.z)), 'circle', 1.0); }
     if (!s.landed && e.rs && e.rs.n > 0) for (let i = 0; i < e.rs.n; i++) { const q = e.rescueSites[i], d = Math.hypot(q.x - s.pos.x, q.z - s.pos.z); if (d > 3000) continue; const [px, py, pf] = h.project(_b.set(q.x, q.y + 12, q.z), c); if (pf) h.marker(px, py, pf, '#35ff8a', `ミケーネ ${String(i + 1).padStart(2, '0')}`, fmtDist(d), 'circle', 1.0); }

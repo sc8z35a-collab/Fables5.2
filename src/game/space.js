@@ -1,6 +1,6 @@
 // 宇宙モード: 操縦 / 戦闘 / 敵 AI / ドッキング / 超巡航 / 大気圏突入
 import * as THREE from 'three';
-import { G, clamp, damp, lerp, smooth, fmtDist, fmtSpeed, rng, rr } from '../core/util.js';
+import { G, clamp, damp, smooth, fmtDist, fmtSpeed, fmtTime, fmtCr, rng, rr } from '../core/util.js';
 import { BODIES, STATIONS, ENEMIES } from '../world/defs.js';
 import { buildShip, buildEnemy } from '../world/ships.js';
 import { buildStation, stationSDF } from '../world/stations.js';
@@ -8,12 +8,14 @@ import { enableDamage, rayHit, applyDamage, logDamage, clearDamage, syncDamage, 
 import { Particles, Bolts, Shocks, ShieldFX, Streaks, makeGlowSprite } from '../gfx/fx.js';
 import { rockGeo } from '../gfx/builder.js';
 import { mat } from '../gfx/textures.js';
-import { stats, save, earn, addCargo, event, remaining } from './state.js';
+import { stats, save, earn, addCargo, event, remaining, objective } from './state.js';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const _a = V(), _b = V(), _c = V(), _d = V(), _q = new THREE.Quaternion(), _q2 = new THREE.Quaternion(), _m = new THREE.Matrix4(), _e = new THREE.Euler();
 const FWD = V(0, 0, -1), UP = V(0, 1, 0), ZUP = V(0, 0, 1), C = (c) => new THREE.Color(c), _hp = V(), _hd = V(), _w1 = V(), _w2 = V(), _w3 = V();
 const WHITE = C('#fff'), ORANGE = C('#ffb060'), SPARK = C('#ffd9a0');
+const FLY_BTNS = ['fire', 'mis', 'boost', 'tgt', 'rl', 'rr', 'sc', 'ap']; // ドッキング中は隠す操縦ボタン
+export const LOW_HULL = '警告：船体の損傷が激しい (残り 30% 未満)。ステーションの整備で修理しよう。';
 
 export class SpaceMode {
   constructor() {
@@ -34,7 +36,7 @@ export class SpaceMode {
     this.missiles = []; this.misPool = [];
     for (let i = 0; i < 8; i++) { const g = new THREE.Group(), b = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 2.4, 8).rotateX(Math.PI / 2), mat('hull', { color: 0xdddddd, metal: 0.3, rough: 0.6 })); const gs = makeGlowSprite('#ffb060', 5, 4); gs.position.set(0, 0, 1.6); g.add(b, gs); g.visible = false; s.add(g); this.misPool.push(g); }
     this.pl = { m: null, id: null, vel: V(), av: V(), thr: 0.5, sc: { on: false, speed: 0, charge: 0 }, auto: null, docked: null, gi: 0, fireT: 0, lastHit: -99, view: 0, camQ: new THREE.Quaternion(), target: null, misT: 0, shake: 0 };
-    this.nav = null; this.time = 0; this.title = false; this.heat = 0; this.warp = 0; this.said = {}; this._pp = V(); // _pp = 直前フレームの自機位置 (衝突の取りこぼし防止用)
+    this.nav = null; this.time = 0; this.title = false; this.heat = 0; this.warp = 0; this._pp = V(); // _pp = 直前フレームの自機位置 (衝突の取りこぼし防止用)
     this._asteroids();
   }
   _asteroids() {
@@ -118,6 +120,7 @@ export class SpaceMode {
   }
   exit() { G.gfx.fx.uWarp.value = 0; G.gfx.fx.uHeat.value = 0; G.hud.damage(0); G.audio?.engine(0, 0, 0); }
   _buttons() {
+    this._flyUI = null; // ボタンを作り直したら、ドッキング中の表示/非表示を次のフレームで掛け直す
     if (this.title) return G.input.setButtons([], 'none');
     G.input.setButtons([
       { id: 'fire', label: '発射', cls: 'big p-fire', key: 'Space' }, { id: 'mis', label: 'ミサイル', cls: 'p-mis', key: 'KeyF' }, { id: 'boost', label: 'ブースト', cls: 'p-boost', key: 'ShiftLeft,ShiftRight' },
@@ -197,17 +200,18 @@ export class SpaceMode {
     // 大気圏突入
     const aa = B.b.def.atmoAlt; this.heat = damp(this.heat, smooth(aa * 2.4, aa * 1.05, B.alt), 3, dt);
     if (B.alt < aa && !this.landing) { this.landing = true; G.hud.banner('大気圏突入', B.b.def.name, 2.5); G.audio?.sfx('entry'); G.go('surface', { body: B.b.def.id }, { flash: true }).then(() => { this.landing = false; }); }
-    else if (B.alt < aa * 2.2 && !this.said['e' + B.b.def.id]) { this.said['e' + B.b.def.id] = 1; G.hud.msg(`${B.b.def.name} の大気圏に接近。このまま降下すると地表へ向かいます。`, 'good'); setTimeout(() => { this.said['e' + B.b.def.id] = 0; }, 30000); }
+    else if (B.alt < aa * 2.2) G.hud.once('e' + B.b.def.id, `${B.b.def.name} の大気圏に接近。このまま降下すると地表へ向かいます。`, 'good', 30);
     const sunD = _b.copy(this.origin).add(p.pos).length();
-    if (sunD < 1.2e6 * 1.35) { this.heat = 1; this.damagePlayer(30 * dt, null, true); if (!this.said.sun) { this.said.sun = 1; G.hud.msg('警告：恒星の熱で船体が損傷しています！', 'warn'); setTimeout(() => { this.said.sun = 0; }, 6000); } }
+    if (sunD < 1.2e6 * 1.35) { this.heat = 1; this.damagePlayer(30 * dt, null, true); G.hud.once('sun', '警告：恒星の熱で船体が損傷しています！', 'warn', 6); }
     // 主砲
     p.fireT -= dt;
     if (inp.down('fire') && p.fireT <= 0 && !p.sc.on && p.energy > 2) this._firePlayer(fwd);
     p.misT -= dt; if (inp.hit('mis') && !p.sc.on) this._fireMissile(fwd);
   }
+  /** 最寄りの天体と高度。結果は使い回しのオブジェクトで返す (毎フレーム数回呼ばれるため) */
   nearBody() {
-    let best = null; const u = this.uni(this.pl.pos, _c);
-    for (const b of this.bodies) { const alt = u.distanceTo(b.uni) - b.R; if (!best || alt < best.alt) best = { b, alt }; }
+    const best = this._nb || (this._nb = { b: null, alt: 0 }), u = this.uni(this.pl.pos, _c); best.b = null;
+    for (const b of this.bodies) { const alt = u.distanceTo(b.uni) - b.R; if (!best.b || alt < best.alt) { best.b = b; best.alt = alt; } }
     return best;
   }
   navPos(out = _c) { const n = this.nav; return out.copy(n.ref.uni).sub(this.origin); }
@@ -230,7 +234,7 @@ export class SpaceMode {
       if (dp < need) { to.multiplyScalar(t).addScaledVector(perp, -(need - dp) / (dp || 1)).normalize(); }
     }
     const loc = to.applyQuaternion(_q.copy(p.quat).invert());
-    const yaw = clamp(-loc.x * 3, -1, 1) * (loc.z > 0 ? 1 : 1), pitch = clamp(loc.y * 3, -1, 1);
+    const yaw = clamp(-loc.x * 3, -1, 1), pitch = clamp(loc.y * 3, -1, 1);
     const aligned = loc.z < -0.985, stop = this.nav.type === 'body' ? this.nav.ref.R + this.nav.ref.def.atmoAlt * 3.4 : this.nav.type === 'enemy' ? 2500 : 1800;
     if (!p.sc.on) {
       if (dist < stop) { G.input.setThr(0.15); p.auto = null; G.hud.msg(`${this.nav.name} に到着 — 自動航行を終了`, 'good'); G.audio?.sfx('nav'); return [0, 0]; }
@@ -286,7 +290,7 @@ export class SpaceMode {
       p.pos.addScaledVector(to.multiplyScalar(1 / (d || 1)), Math.min(d, sp * dt)); p.vel.copy(to).multiplyScalar(sp); face(_b.copy(D).negate(), 2); p.thr = 0.08;
       if (d < 0.4) this._docked(t);
     }
-    if (G.input.axes().x ** 2 + G.input.axes().y ** 2 > 0.8) { p.auto = null; if (p.m.gear) p.m.gear.visible = false; G.hud.msg('自動誘導を中止 — 手動操縦'); }
+    const ax = G.input.axes(); if (ax.x ** 2 + ax.y ** 2 > 0.8) { p.auto = null; if (p.m.gear) p.m.gear.visible = false; G.hud.msg('自動誘導を中止 — 手動操縦'); }
   }
   /** シーン座標の点からステーション s の外板までの近似距離 (ステーションの回転も考慮する) */
   _sdf(s, x, y, z) { const o = s.m.obj, c = o.position, q = o.quaternion; _w3.set(x - c.x, y - c.y, z - c.z); if (q.w < 0.999999) _w3.applyQuaternion(_q2.copy(q).invert()); return stationSDF(s.def.id, _w3.x, _w3.y, _w3.z); }
@@ -381,7 +385,7 @@ export class SpaceMode {
   _die() {
     const p = this.pl; p.dead = true; p.auto = null; p.sc.on = false; this.explode(p.pos, p.st.radius * 2.2, p.vel); this.debris.burst(p.pos, 50, 60, p.st.radius * 0.06, '#c8ccd4', p.vel); p.m.obj.visible = false;
     G.hud.banner('船体喪失', '救難艇が回収中…', 4); const fee = Math.round(G.p.credits * 0.1);
-    setTimeout(() => { G.p.credits -= fee; G.p.ships[p.id].hull = 1; this.rebuildShip(); p.m.obj.visible = true; G.go('space', { docked: G.p.last }).then(() => G.hud.msg(`${this.station(G.p.last).def.name} で修復されました (費用 ${fee.toLocaleString()} Cr)`, 'warn', 8)); }, 3200);
+    setTimeout(() => { G.p.credits -= fee; G.p.ships[p.id].hull = 1; this.rebuildShip(); p.m.obj.visible = true; G.go('space', { docked: G.p.last }).then(() => G.hud.msg(`${this.station(G.p.last).def.name} で修復されました (費用 ${fee.toLocaleString('ja-JP')} Cr)`, 'warn', 8)); }, 3200);
   }
   explode(pos, size, vel) {
     this.parts.burst(pos, 160, size * 9, ORANGE, size * 0.5, 1.6, vel, 0.9); this.parts.burst(pos, 60, size * 3, WHITE, size * 1.3, 0.7, vel, 1.5); this.parts.burst(pos, 90, size * 16, SPARK, size * 0.14, 2.4, vel, 0.3);
@@ -404,11 +408,25 @@ export class SpaceMode {
   }
   _kill(e) {
     this.explode(e.m.obj.position, e.m.radius, e.vel); this.debris.burst(e.m.obj.position, 60, e.m.radius * 3.4, e.m.radius * 0.05, e.def.glow, e.vel); e.state = 'gone'; e.m.obj.visible = false; G.p.done[e.def.id] = 'destroyed'; G.p.stats.kills++;
-    if (this.pl.target === e) this.pl.target = null; if (this.nav?.ref === e) this.nav = null; if (this.pl.docked === e) this.pl.docked = null;
+    if (this.pl.target === e) this._retarget(e); if (this.nav?.ref === e) this.nav = null; if (this.pl.docked === e) this.pl.docked = null;
     earn(e.def.bounty); const sal = addCargo('salvage', 1 + e.def.tier);
-    G.hud.msg(`${e.def.name} 撃沈　賞金 ${e.def.bounty.toLocaleString()} Cr${sal ? `／回収部品 ×${sal}` : ''}　残存 ${remaining()} 隻`, 'good', 7);
+    G.hud.msg(`${e.def.name} 撃沈　賞金 ${e.def.bounty.toLocaleString('ja-JP')} Cr${sal ? `／回収部品 ×${sal}` : ''}　残存 ${remaining()} 隻`, 'good', 7);
     event('kill'); save(); G.checkVictory?.();
   }
+  /** ドッキング中に頼める整備 (船体修理 + ミサイル補給) の費用。必要なければ null。ヴァルカン造船廠は 25% 引き */
+  _service(t) {
+    const p = this.pl, full = stats(), disc = t.def.id === 'vulcan' ? 0.75 : 1, rep = Math.round((1 - G.p.ships[p.id].hull) * full.hull * 6 * disc), mis = Math.max(0, full.missiles - p.missiles) * 60;
+    return rep + mis > 0 ? { rep, mis, cost: rep + mis } : null;
+  }
+  _doService(t) {
+    const sv = this._service(t); if (!sv) return;
+    if (G.p.credits < sv.cost) { G.audio?.sfx('deny'); return G.hud.msg(`整備費 ${fmtCr(sv.cost)} が足りません。`, 'warn'); }
+    G.p.credits -= sv.cost; const p = this.pl;
+    if (sv.rep) { G.p.ships[p.id].hull = 1; this.rebuildShip(); this.refit(); } else p.missiles = stats().missiles; // 修理すると凹みも消えた新しい機体になる
+    save(); G.audio?.sfx('reward'); G.hud.msg(`整備完了：${[sv.rep && '船体を修理', sv.mis && 'ミサイルを補給'].filter(Boolean).join('・')}した。`, 'good');
+  }
+  /** 撃沈した目標の代わりに、交戦中でいちばん近い敵へ照準を移す (乱戦で毎回「照準切替」を押さなくてよいように) */
+  _retarget(gone) { let best = null; for (const x of this.enemies) if (x !== gone && x.state === 'attack' && x.dist < 25000 && (!best || x.dist < best.dist)) best = x; this.pl.target = best; if (best) G.audio?.sfx('lock'); }
   /** 乗り込み後: 拿捕なら曳航 (ワープアウト)、略奪なら自沈 */
   afterBoard(e) {
     const p = this.pl; if (p.docked === e) this.undock();
@@ -422,7 +440,15 @@ export class SpaceMode {
   }
   _combat(dt) {
     const p = this.pl, ppos = p.pos, pr = p.st.radius * 0.75;
+    // 近くのステーション (弾が届く範囲) を先に選んでおき、外板に当たった弾は火花を散らして消す (以前は船体を素通りしていた)
+    const ns = this._nearSt || (this._nearSt = []); ns.length = 0; for (const s of this.stations) if (s.m && s.dist < (s.m.reach || s.m.radius * 1.4) + 3000) ns.push(s);
     this.bolts.update(dt, (prev, b) => {
+      for (const s of ns) {
+        const R = s.m.reach || s.m.radius * 1.4; if (b.p.distanceToSquared(s.m.obj.position) > R * R) continue;
+        const mx = (prev.x + b.p.x) / 2, my = (prev.y + b.p.y) / 2, mz = (prev.z + b.p.z) / 2; // 1 フレームで 25m 進むので、中間点も調べて薄い部材のすり抜けを減らす
+        if (this._sdf(s, mx, my, mz) < 0) { this.parts.burst(_hp.set(mx, my, mz), 6, 28, SPARK, 0.7, 0.35); return true; }
+        if (this._sdf(s, b.p.x, b.p.y, b.p.z) < 0) { this.parts.burst(b.p, 6, 28, SPARK, 0.7, 0.35); return true; }
+      }
       if (b.owner === 'p') {
         for (const e of this.enemies) { if (e.state === 'gone' || e.dist > 6000 || !e.m) continue; if (segSphere(prev, b.p, e.m.obj.position, e.m.radius * 0.75)) { const h = this._precise(e.m, prev, b.d, e.shield > 0, prev.distanceTo(b.p) + e.m.radius * 1.6); if (h) { this.hitEnemy(e, b.dmg, h.w || b.p, h, 1.1 + b.dmg * 0.045); return true; } } }
       } else if (!p.dead && !p.docked && segSphere(prev, b.p, ppos, pr)) { const h = this._precise(p.m, prev, b.d, p.shield > 0, prev.distanceTo(b.p) + p.st.radius * 1.6); if (h) { this.damagePlayer(b.dmg, prev, false, h, 1.0 + b.dmg * 0.06); return true; } }
@@ -436,6 +462,7 @@ export class SpaceMode {
         if (d < 16) { const h = this._precise(t.m, _c.copy(m.g.position).addScaledVector(m.dir, -t.m.radius), m.dir, t.shield > 0, t.m.radius * 3); this.hitEnemy(t, 75, m.g.position, h, 4.6); boom = true; }
       }
       m.sp = Math.min(1100, m.sp + 500 * dt); m.vel.copy(m.dir).multiplyScalar(m.sp); m.g.position.addScaledVector(m.vel, dt); m.g.quaternion.setFromUnitVectors(_c.set(0, 0, -1), m.dir);
+      { const q = m.g.position; for (const s of ns) if (this._sdf(s, q.x, q.y, q.z) < 0) { boom = true; break; } } // ステーションの外板に当たったらそこで爆発する
       this.parts.emit(m.g.position.x, m.g.position.y, m.g.position.z, 0, 0, 0, 1, 0.7, 0.35, 2.2, 0.45, 1);
       if (boom) { this.parts.burst(m.g.position, 50, 70, ORANGE, 2.5, 0.8); this.shocks.spawn(m.g.position, '#ffc890', 50, 0.5); G.audio?.sfx('boom', 0.5); m.g.visible = false; this.misPool.push(m.g); this.missiles.splice(i, 1); }
     }
@@ -444,12 +471,12 @@ export class SpaceMode {
 
   // ── 敵 AI ──
   _enemies(dt) {
-    const p = this.pl, active = !p.docked && !p.dead && !p.sc.on && !this.title;
+    const p = this.pl, active = !p.docked && !p.dead && !p.sc.on && !this.title, camU = this.uni(this.camera.position, _w1); // カメラの宇宙座標は敵ごとに計算し直さない
     for (const e of this.enemies) {
       if (e.state === 'gone') continue;
       e.dist = _a.subVectors(e.uni, this.origin).distanceTo(p.pos);
       if (e.dist > 70000) { if (e.m) e.m.obj.visible = false; continue; }
-      this._ensure(e); const o = e.m.obj; o.visible = !G.backdrop.occluded(this.uni(this.camera.position, _b), e.uni, e.m.radius);
+      this._ensure(e); const o = e.m.obj; o.visible = !G.backdrop.occluded(camU, e.uni, e.m.radius);
       const fwd = _b.copy(FWD).applyQuaternion(e.quat); let want = null, speed = 0;
       if (e.state === 'disabled') {
         e.vel.multiplyScalar(Math.exp(-0.5 * dt));
@@ -457,7 +484,7 @@ export class SpaceMode {
       } else if (e.state === 'idle') {
         const a = this.time * 0.05 + e.ph; _c.copy(e.anchor).add(_d.set(Math.cos(a) * 1400, Math.sin(a * 1.7) * 300, Math.sin(a) * 1400));
         want = _c.sub(e.uni).normalize(); speed = 110;
-        if (active && e.dist < 9500) { e.state = 'attack'; if (!this.said['a' + e.def.body] && (this.said['a' + e.def.body] = 1)) { G.hud.msg(`${e.def.name}：「獲物だ。逃がすな」`, 'comm'); G.hud.msg('警告：ヴォイド艦隊が接近中！', 'warn'); setTimeout(() => { this.said['a' + e.def.body] = 0; }, 60000); } if (!p.target) p.target = e; G.audio?.music('battle'); }
+        if (active && e.dist < 9500) { e.state = 'attack'; if (G.hud.once('a' + e.def.body, `${e.def.name}：「獲物だ。逃がすな」`, 'comm', 60)) G.hud.msg('警告：ヴォイド艦隊が接近中！', 'warn'); if (!p.target) p.target = e; G.audio?.music('battle'); }
       } else {
         if (!active || e.dist > 18000) { e.state = 'idle'; continue; }
         const tier = e.def.tier, tp = _c.subVectors(this.uni(p.pos, _d), e.uni), d = tp.length();
@@ -483,17 +510,29 @@ export class SpaceMode {
         for (const pl of e.m.plumes) { pl.material.uniforms.uPow.value = 0.4 + speed / 300; pl.scale.z = 0.5 + speed / 250; }
       }
       e.uni.addScaledVector(e.vel, dt); o.position.subVectors(e.uni, this.origin); o.quaternion.copy(e.quat);
+      if (e.dist < 30000) this._keepOut(e, o.position); // 敵艦もステーションの外板を突き抜けないよう押し出す
     }
     if (p.target && (p.target.state === 'gone' || p.target.dist > 40000)) p.target = null;
   }
 
+  /** 敵艦がステーションの中にめり込んだら、外板の外へ押し出して壁沿いに滑らせる (自機と同じ距離関数を使う) */
+  _keepOut(e, P) {
+    for (const s of this.stations) {
+      if (!s.m || s.dist > 30000) continue; const R = (s.m.reach || s.m.radius * 1.4) + e.m.radius; if (P.distanceToSquared(s.m.obj.position) > R * R) continue;
+      const er = e.m.radius * 0.4, d = this._sdf(s, P.x, P.y, P.z); if (d >= er) continue;
+      const f = (x, y, z) => this._sdf(s, x, y, z), n = _hd.set(f(P.x + 1, P.y, P.z) - f(P.x - 1, P.y, P.z), f(P.x, P.y + 1, P.z) - f(P.x, P.y - 1, P.z), f(P.x, P.y, P.z + 1) - f(P.x, P.y, P.z - 1));
+      if (n.lengthSq() < 1e-8) n.copy(P).sub(s.m.obj.position); n.normalize();
+      P.addScaledVector(n, er - d); e.uni.addScaledVector(n, er - d); const vn = e.vel.dot(n); if (vn < 0) e.vel.addScaledVector(n, -vn);
+    }
+  }
   // ── 世界 (ステーション・光源・背景) ──
   _world(dt) {
-    const p = this.pl, camU = this.uni(this.camera.position, _c);
-    for (const s of this.stations) {
-      if (!s.m) continue; const o = s.m.obj; o.position.subVectors(s.uni, this.origin); s.dist = o.position.distanceTo(p.pos);
+    const p = this.pl, camU = this.uni(this.camera.position, _c), fr = (this._fr = (this._fr || 0) + 1);
+    for (let i = 0; i < this.stations.length; i++) {
+      const s = this.stations[i]; if (!s.m) continue; const o = s.m.obj; o.position.subVectors(s.uni, this.origin); s.dist = o.position.distanceTo(p.pos);
       o.visible = s.dist < 85000 && !G.backdrop.occluded(camU, s.uni, s.m.radius);
-      if (o.visible) for (const f of s.m.anim) f(this.time, dt);
+      // 動く部品 (回転・周回する小型船など) は、20km より遠いときは 4 フレームに 1 回だけ動かす (豆粒ほどにしか見えないため)。経過時間はためて渡す
+      s.adt = (s.adt || 0) + dt; if (o.visible && (s.dist < 20000 || (fr + i) % 4 === 0)) { for (const f of s.m.anim) f(this.time, s.adt); s.adt = 0; }
     }
     this.rocks.position.subVectors(this.rocksAt.uni, this.origin); this.rocks.visible = this.rocks.position.lengthSq() < 9e9;
     if (p.auto?.type === 'push') { p.auto.t -= dt; if (p.auto.t <= 0) this._endPush(); }
@@ -535,6 +574,7 @@ export class SpaceMode {
     this._smoke(p.m, p.vel, dt, p.hull < p.st.hull * 0.35); for (const e of this.enemies) if (e.m && e.state !== 'gone' && e.dist < 4000 && e.m.wounds.length) this._smoke(e.m, e.vel, dt, e.state === 'disabled');
     const sp = p.vel.length(); this.streaks.update(dt, p.sc.on ? _a.copy(p.vel).setLength(4000) : p.vel, p.sc.on ? 0.02 : 0.035, p.sc.on ? 1.6 : clamp(sp / 250, 0, 1) * 0.8, p.sc.on ? 90 : 26);
     f.uWarp.value = this.warp; f.uHeat.value = this.heat; G.hud.damage(p.hull < p.st.hull * 0.3 && !p.dead ? 0.35 + 0.2 * Math.sin(this.time * 5) : 0);
+    if (p.hull < p.st.hull * 0.3 && !p.dead && !p.docked && !this.title) G.hud.once('lowhull', LOW_HULL, 'warn', 45); // 画面の赤みだけでは理由が分かりにくいので言葉でも知らせる
     f.uDamage.value = damp(f.uDamage.value, this.time - p.lastHit < 0.25 ? 1 : 0, 10, dt);
   }
 
@@ -553,7 +593,7 @@ export class SpaceMode {
       p.lastHit = this.time; p.shake = Math.min(1, 0.3 + imp / 120); G.audio?.sfx('hit'); const dmg = imp * 0.42;
       if (p.shield > 0) { p.shield -= dmg * 0.5; if (p.shield < 0) p.shield = 0; } p.hull -= dmg * (p.shield > 0 ? 0.5 : 1);
       if (h) this._wound(p.m, h, R, R * 0.3, p.vel, '#c8ccd4', p.id);
-      G.p.ships[p.id].hull = clamp(p.hull / p.st.hull, 0, 1); if (imp > 40 && !this.said.col) { this.said.col = 1; G.hud.msg(`${label}に衝突！ 船体が損傷した`, 'warn'); setTimeout(() => { this.said.col = 0; }, 3000); }
+      G.p.ships[p.id].hull = clamp(p.hull / p.st.hull, 0, 1); if (imp > 40) G.hud.once('col', `${label}に衝突！ 船体が損傷した`, 'warn', 3);
       if (p.hull <= 0) this._die(); return imp;
     };
     for (const e of this.enemies) { if (e.state === 'gone' || !e.m || e.dist > 400) continue; const o = e.m.obj.position, R = sr + e.m.radius * 0.36, d = o.distanceTo(p.pos); if (d >= R || d < 1e-3) continue;
@@ -585,22 +625,26 @@ export class SpaceMode {
     const nb = (this.nb = p.docked || !this.nb ? this.nearBody() : this.nb); // ドッキング中は飛行処理が走らないのでここで更新
     h.setLoc(nb.alt < nb.b.R * 6 ? `${nb.b.def.name} 軌道` : '惑星間空間', nb.alt < nb.b.R * 6 ? `高度 ${fmtDist(nb.alt)}` : 'DEEP SPACE');
     G.input.active('sc', p.sc.on || p.sc.charge > 0); G.input.active('ap', p.auto?.type === 'nav');
-    { const fly = !p.docked; for (const id of ['fire', 'mis', 'boost', 'tgt', 'rl', 'rr', 'sc', 'ap']) G.input.show(id, fly); G.input.thrEl.style.visibility = fly ? '' : 'hidden'; } // ドッキング中は操縦ボタンを隠す
+    { const fly = !p.docked; if (fly !== this._flyUI) { this._flyUI = fly; for (const id of FLY_BTNS) G.input.show(id, fly); G.input.thrEl.style.visibility = fly ? '' : 'hidden'; } } // ドッキング中は操縦ボタンを隠す (切り替わったときだけ DOM を触る)
     h.begin();
     const fwd = _a.copy(FWD).applyQuaternion(p.quat);
     if (!p.docked) { const [rx, ry, rf] = h.project(_b.copy(p.pos).addScaledVector(fwd, 2000), cam); if (rf) h.reticle(rx, ry, '#6fe8ff'); }
     // 航路目標
     if (this.nav) {
       const np = this.navPos(_c), d = np.distanceTo(p.pos), [x, y, f] = h.project(np, cam);
-      h.marker(x, y, f, '#ffd27a', this.nav.name, fmtDist(Math.max(0, d - (this.nav.type === 'body' ? this.nav.ref.R : 0))) + (p.sc.on ? `  ${Math.ceil(d / Math.max(sp, 1))}s` : ''), 'diamond', 2);
+      const dd = Math.max(0, d - (this.nav.type === 'body' ? this.nav.ref.R : 0));
+      const eta = sp > 1 ? dd / sp : Infinity; // 超巡航中か、自動航行で 1 時間以内に着くときだけ (巡航前の低速では何十時間と出てしまう)
+      h.marker(x, y, f, '#ffd27a', this.nav.name, fmtDist(dd) + (p.sc.on || (p.auto?.type === 'nav' && eta < 3600) ? `  ETA ${fmtTime(eta)}` : ''), 'diamond', 2);
     }
     for (const s of this.stations) {
       if (!s.m || s.dist > 4e5 || this.nav?.ref === s) continue;
       const [x, y, f] = h.project(s.m.obj.position, cam); if (!f) continue;
       h.marker(x, y, f, s.def.color, s.dist < 60000 ? s.def.name : '', s.dist < 60000 ? fmtDist(s.dist) : '', 'diamond', 1.2);
     }
-    const contacts = [], inv = _q.copy(p.quat).invert();
-    for (const s of this.stations) if (s.m && s.dist < 60000) { const l = _d.copy(s.m.obj.position).sub(p.pos).applyQuaternion(inv); contacts.push({ x: l.x, y: l.y, z: l.z, color: '#6dffb0' }); }
+    // レーダーの点は毎フレーム作り直さず、配列とオブジェクトを使い回す
+    const ct = this._ct || (this._ct = []), inv = _q.copy(p.quat).invert(); let nc = 0;
+    const contact = (pos, color) => { const l = _d.copy(pos).sub(p.pos).applyQuaternion(inv), c = ct[nc] || (ct[nc] = { x: 0, y: 0, z: 0, color: '' }); nc++; c.x = l.x; c.y = l.y; c.z = l.z; c.color = color; };
+    for (const s of this.stations) if (s.m && s.dist < 60000) contact(s.m.obj.position, '#6dffb0');
     for (const e of this.enemies) {
       if (e.state === 'gone' || e.dist > 40000 || !e.m) continue;
       const pos = e.m.obj.position, [x, y, f] = h.project(pos, cam), dis = e.state === 'disabled', col = dis ? '#ffd27a' : '#ff5a4a';
@@ -608,10 +652,9 @@ export class SpaceMode {
         h.marker(x, y, f, col, e.def.name + (dis ? ' [航行不能]' : ''), fmtDist(e.dist), 'bracket', clamp(e.m.radius / e.dist * G.H * 0.9 / this.u(), 2.4, 12));
         if (!dis && e.dist < 4000 && !p.docked) { const lp = _d.copy(pos).addScaledVector(e.vel, e.dist / 1500).addScaledVector(p.vel, -e.dist / 1500), [lx, ly, lf] = h.project(lp, cam); if (lf) h.lead(lx, ly, fwd.dot(_b.copy(lp).sub(p.pos).normalize()) > 0.992); }
       } else if (e.dist < 20000 && this.nav?.ref !== e) h.marker(x, y, f, col, '', '', 'bracket', 1.5);
-      const l = _d.copy(pos).sub(p.pos).applyQuaternion(inv); contacts.push({ x: l.x, y: l.y, z: l.z, color: col });
+      contact(pos, col);
     }
-    for (const b of this.bolts.list) if (b.owner === 'e') { /* 省略: 弾はレーダー非表示 */ break; }
-    if (!p.sc.on) h.radar(contacts);
+    if (!p.sc.on) h.radar(ct, nc);
     h.setTarget(p.target ? { name: p.target.def.name, shield: p.target.shield / p.target.maxShield, hull: p.target.hull / p.target.maxHull } : null);
     // ドッキング誘導リング
     if (p.auto?.type === 'dock') {
@@ -620,8 +663,7 @@ export class SpaceMode {
     }
     if (p.sc.charge > 0) h.text('超巡航ドライブ充填中 ' + '■'.repeat(Math.ceil((1.6 - p.sc.charge) * 5)), G.W / 2, G.H * 0.3, '#8cf', 2.8, true);
     if (this.heat > 0.3) h.text('⚠ 大気圏突入', G.W / 2, G.H * 0.24, '#ffb060', 3, true);
-    const left = remaining(), ms = G.p.missions[0];
-    h.setObj(`<b>ヴォイド艦隊</b> 残存 ${left}/20${ms ? `<br>任務：${ms.title} (${ms.prog}/${ms.need})` : ''}${G.tip ? `<br>${G.tip}` : ''}`);
+    h.setObj(objective());
   }
   u() { return G.H / 100; }
   _context() {
@@ -629,19 +671,24 @@ export class SpaceMode {
     if (p.dead) return G.hud.setCtx(L);
     if (p.docked) {
       const t = p.docked;
-      if (t.kind === 'station') L.push({ label: 'ステーションへ', fn: () => G.go('interior', { type: 'station', id: t.def.id }) }, { label: '船内へ', cls: 'alt', fn: () => G.go('interior', { type: 'ship', from: 'space' }) }, { label: '発進', cls: 'bad', fn: () => this.undock() });
+      if (t.kind === 'station') {
+        L.push({ label: 'ステーションへ', fn: () => G.go('interior', { type: 'station', id: t.def.id }) }, { label: '船内へ', cls: 'alt', fn: () => G.go('interior', { type: 'ship', from: 'space' }) });
+        const sv = this._service(t); if (sv) L.push({ label: `${sv.mis ? '整備' : '修理'} ${fmtCr(sv.cost)}`, cls: 'alt', fn: () => this._doService(t) }); // 修理・ミサイル補給をドッキングしたまま頼める
+        L.push({ label: '発進', cls: 'bad', fn: () => this.undock() });
+      }
       else L.push({ label: '敵艦に突入', cls: 'bad', fn: () => G.go('interior', { type: 'enemy', id: t.def.id }) }, { label: '船内へ', cls: 'alt', fn: () => G.go('interior', { type: 'ship', from: 'space' }) }, { label: '離脱', fn: () => this.undock() });
     } else if (p.auto?.type === 'dock') L.push({ label: '誘導を中止', cls: 'bad', fn: () => { p.auto = null; if (p.m.gear) p.m.gear.visible = false; } });
-    else if (!p.sc.on) {
-      const hostile = this.enemies.some((e) => e.state === 'attack' && e.dist < 6000);
-      const st = this.stations.filter((s) => s.m && s.dist < (s.m.dockR || 3500)).sort((a, b) => a.dist - b.dist)[0];
-      const dis = this.enemies.filter((e) => e.state === 'disabled' && e.dist < 1500).sort((a, b) => a.dist - b.dist)[0];
+    // 交戦中の敵・最寄りのステーション・最寄りの航行不能艦を 1 回の走査で求める (毎フレーム filter/sort で配列を作らない)
+    let hostile = false, st = null, dis = null;
+    for (const e of this.enemies) { if (e.state === 'attack' && e.dist < 6000) hostile = true; else if (e.state === 'disabled' && e.dist < 1500 && (!dis || e.dist < dis.dist)) dis = e; }
+    if (!p.docked && p.auto?.type !== 'dock' && !p.sc.on) {
+      for (const s of this.stations) if (s.m && s.dist < (s.m.dockR || 3500) && (!st || s.dist < st.dist)) st = s;
       if (st) L.push({ label: 'ドッキング要請', fn: () => this.requestDock(st) });
       if (dis) L.push({ label: '接舷する', cls: 'alt', fn: () => this.requestDock(dis) });
       if (!hostile && !st && !dis && p.vel.length() < 600) L.push({ label: '席を立つ', cls: 'alt', fn: () => G.go('interior', { type: 'ship', from: 'space' }) });
     }
     // 戦闘曲は敵が離れたら戻す (ドッキング中・自動誘導中・超巡航中も含めて判定する)
-    if (G.music === 'battle' && !this.enemies.some((e) => e.state === 'attack' && e.dist < 6000)) G.audio?.music('space');
+    if (G.music === 'battle' && !hostile) G.audio?.music('space');
     G.hud.setCtx(L); if (L.length && G.input.key('Enter')) L[0].fn(); // PC: Enter で先頭の状況ボタン (ドッキング要請など) を押す
   }
 }

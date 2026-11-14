@@ -27,7 +27,7 @@ export function makeGlowSprite(color, size, intensity = 2.5) {
 // ── パーティクル ──
 export class Particles {
   constructor(max = 3000) {
-    this.max = max; this.i = 0;
+    this.max = max; this.i = 0; this.live = 0; // live = 生きている粒の数 (0 の間は計算・GPU 転送・描画をすべて省く)
     this.pos = new Float32Array(max * 3); this.vel = new Float32Array(max * 3); this.col = new Float32Array(max * 3); this.data = new Float32Array(max * 2);
     this.life = new Float32Array(max); this.ml = new Float32Array(max); this.drag = new Float32Array(max); this.grav = new Float32Array(max);
     const g = new THREE.BufferGeometry();
@@ -45,7 +45,8 @@ export class Particles {
     const i = this.i; this.i = (i + 1) % this.max;
     this.pos[i * 3] = x; this.pos[i * 3 + 1] = y; this.pos[i * 3 + 2] = z; this.vel[i * 3] = vx; this.vel[i * 3 + 1] = vy; this.vel[i * 3 + 2] = vz;
     this.col[i * 3] = r; this.col[i * 3 + 1] = g; this.col[i * 3 + 2] = b; this.data[i * 2] = size; this.data[i * 2 + 1] = 1;
-    this.life[i] = this.ml[i] = life; this.drag[i] = drag; this.grav[i] = grav; this.aC.needsUpdate = true;
+    this.live += (life > 0 ? 1 : 0) - (this.life[i] > 0 ? 1 : 0); // 空き枠を使ったら +1 (生きている粒を上書きしたときは数が変わらない)
+    this.life[i] = this.ml[i] = life; this.drag[i] = drag; this.grav[i] = grav; this.aC.needsUpdate = true; this.obj.visible = true;
   }
   burst(p, n, speed, color, size, life, v0, drag = 0.6, grav = 0) {
     const c = color;
@@ -56,11 +57,12 @@ export class Particles {
   }
   update(dt, pxScale) {
     this.u.uScale.value = pxScale;
+    if (!this.live) { this.obj.visible = false; return; } // 何も飛んでいなければ 3500 粒ぶんのバッファを毎フレーム GPU へ送らない
     const { pos, vel, life, ml, data, drag, grav } = this;
     for (let i = 0; i < this.max; i++) {
       if (life[i] <= 0) continue;
       life[i] -= dt;
-      if (life[i] <= 0) { data[i * 2 + 1] = 0; continue; }
+      if (life[i] <= 0) { data[i * 2 + 1] = 0; this.live--; continue; }
       const k = Math.exp(-drag[i] * dt), j = i * 3;
       vel[j] *= k; vel[j + 1] = vel[j + 1] * k - grav[i] * dt; vel[j + 2] *= k;
       pos[j] += vel[j] * dt; pos[j + 1] += vel[j + 1] * dt; pos[j + 2] += vel[j + 2] * dt;
@@ -68,15 +70,15 @@ export class Particles {
     }
     this.aP.needsUpdate = true; this.aD.needsUpdate = true;
   }
-  shift(d) { const p = this.pos; for (let i = 0; i < this.max; i++) { if (this.life[i] <= 0) continue; p[i * 3] -= d.x; p[i * 3 + 1] -= d.y; p[i * 3 + 2] -= d.z; } }
-  clear() { this.life.fill(0); for (let i = 0; i < this.max; i++) this.data[i * 2 + 1] = 0; this.aD.needsUpdate = true; }
+  shift(d) { if (!this.live) return; const p = this.pos; for (let i = 0; i < this.max; i++) { if (this.life[i] <= 0) continue; p[i * 3] -= d.x; p[i * 3 + 1] -= d.y; p[i * 3 + 2] -= d.z; } }
+  clear() { this.life.fill(0); for (let i = 0; i < this.max; i++) this.data[i * 2 + 1] = 0; this.aD.needsUpdate = true; this.live = 0; this.obj.visible = false; }
 }
 
 // ── レーザーボルト ──
 const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _z = new THREE.Vector3(0, 0, 1), _s = new THREE.Vector3(), _p = new THREE.Vector3(), _c = new THREE.Color();
 export class Bolts {
   constructor(max = 320) {
-    this.max = max; this.list = [];
+    this.max = max; this.list = []; this.free = []; // free = 消えた弾の使い回し (撃つたびにベクトル 3 本を作らない)
     const g = new THREE.CylinderGeometry(0.5, 0.5, 1, 6, 1); g.rotateX(Math.PI / 2);
     this.obj = new THREE.InstancedMesh(g, new THREE.MeshBasicMaterial({ ...ADD, toneMapped: false }), max);
     this.obj.instanceMatrix.setUsage(THREE.DynamicDrawUsage); this.obj.frustumCulled = false; this.obj.count = 0;
@@ -84,7 +86,8 @@ export class Bolts {
   }
   fire(pos, dir, speed, color, dmg, owner, life = 2.4, len = 16, w = 0.28, baseVel) {
     if (this.list.length >= this.max) return null;
-    const b = { p: pos.clone(), v: dir.clone().multiplyScalar(speed), d: dir.clone(), color, dmg, owner, life, len, w };
+    const b = this.free.pop() || { p: new THREE.Vector3(), v: new THREE.Vector3(), d: new THREE.Vector3() };
+    b.p.copy(pos); b.v.copy(dir).multiplyScalar(speed); b.d.copy(dir); b.color = color; b.dmg = dmg; b.owner = owner; b.life = life; b.len = len; b.w = w;
     if (baseVel) b.v.add(baseVel);
     this.list.push(b);
     return b;
@@ -95,9 +98,9 @@ export class Bolts {
     for (let i = L.length - 1; i >= 0; i--) {
       const b = L[i]; _p.copy(b.p);
       b.p.addScaledVector(b.v, dt); b.life -= dt;
-      if (b.life <= 0 || (hit && hit(_p, b))) { L[i] = L[L.length - 1]; L.pop(); }
+      if (b.life <= 0 || (hit && hit(_p, b))) { L[i] = L[L.length - 1]; L.pop(); this.free.push(b); }
     }
-    const n = (this.obj.count = L.length);
+    const n = (this.obj.count = L.length); if (!n) return; // 弾が無いときはバッファを GPU へ送り直さない
     for (let i = 0; i < n; i++) {
       const b = L[i]; _q.setFromUnitVectors(_z, b.d); _s.set(b.w, b.w, b.len);
       _m.compose(b.p, _q, _s); this.obj.setMatrixAt(i, _m); this.obj.setColorAt(i, b.color);
@@ -105,7 +108,7 @@ export class Bolts {
     this.obj.instanceMatrix.needsUpdate = true; if (this.obj.instanceColor) this.obj.instanceColor.needsUpdate = true;
   }
   shift(d) { for (const b of this.list) b.p.sub(d); }
-  clear() { this.list.length = 0; this.obj.count = 0; }
+  clear() { this.free.push(...this.list); this.list.length = 0; this.obj.count = 0; }
 }
 
 // ── 衝撃波リング & 閃光 ──

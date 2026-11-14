@@ -402,7 +402,7 @@ export class Backdrop {
     this.sunDir.copy(this.sunPos).sub(camPos).normalize();
     const sunDist = _v.copy(this.sunPos).sub(camPos).length();
     // 奥→手前の順に描画順を決める
-    const list = [...this.planets]; let near = null;
+    const list = this._list || (this._list = [...this.planets]); let near = null; // 並べ替え用の配列は使い回す
     for (const p of list) { p.dist = _v.copy(p.pos).sub(camPos).length(); if (!near || p.dist - p.R < near.dist - near.R) near = p; }
     list.sort((a, b) => b.dist - a.dist);
     let order = 0, sunPlaced = false;
@@ -427,8 +427,8 @@ export class Backdrop {
   }
   /** 視線が惑星に遮られるか (near シーンの物体のカリング用) */
   occluded(camPos, objPos, objR = 0) {
+    _v.copy(objPos).sub(camPos); const L = _v.length(); if (L < 1e-6) return false; _v.multiplyScalar(1 / L); // 視線の向きは惑星ごとに計算し直さない
     for (const p of this.planets) {
-      _v.copy(objPos).sub(camPos); const L = _v.length(); _v.multiplyScalar(1 / L);
       _v2.copy(p.pos).sub(camPos); const t = _v2.dot(_v);
       if (t > 0 && t < L) { const d2 = _v2.lengthSq() - t * t; if (d2 < (p.R - objR) * (p.R - objR) && p.R > objR) return true; }
     }

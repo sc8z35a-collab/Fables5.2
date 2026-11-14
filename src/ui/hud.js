@@ -9,7 +9,7 @@ export class Hud {
     this.cv = el('canvas', 'ov', '', r); this.x = this.cv.getContext('2d');
     this.cockpit = el('div', 'cockpit', '', r);
     this.vign = el('div', 'vign', '', r);
-    const tl = el('div', 'tl', '', r); this.loc = el('div', 'loc', '', tl); this.obj = el('div', 'obj', '', tl);
+    const tl = (this.tl = el('div', 'tl', '', r)); this.loc = el('div', 'loc', '', tl); this.obj = el('div', 'obj', '', tl);
     this.sys = el('div', 'sys', '', r); this.cr = el('div', 'cr', '', this.sys);
     this.bMap = el('button', 'sb', '星図', this.sys); this.bMenu = el('button', 'sb', 'MENU', this.sys);
     this.bars = el('div', 'bars', '', r);
@@ -20,15 +20,19 @@ export class Hud {
     this.msgs = el('div', 'msgs', '', r);
     this.bannerEl = el('div', 'banner', '<h1></h1><p></p>', r);
     this.cross = el('div', 'cross', '', r); this.prompt = el('div', 'prompt', '', r);
-    this.ctx = el('div', 'ctx', '', r); this.ctxKey = '';
+    this.ctx = el('div', 'ctx', '', r);
+    this.fpsEl = el('div', 'fps', '', r); this.fpsEl.style.display = 'none';
     this.bMap.onclick = () => { G.audio?.ui(); G.ui.map(); }; this.bMenu.onclick = () => { G.audio?.ui(); G.ui.pause(); };
-    this._cr = -1; this._loc = ''; this._obj = ''; this._sp = ''; this._bt = 0;
+    this._cr = -1; this._loc = ''; this._obj = ''; this._sp = ''; this._bt = 0; this._once = {};
     this.resize();
   }
   resize() {
     const s = Math.min(window.devicePixelRatio || 1, 2); this.s = s;
-    this.cv.width = Math.round(G.W * s); this.cv.height = Math.round(G.H * s); this.u = G.H / 100;
+    this.cv.width = Math.round(G.W * s); this.cv.height = Math.round(G.H * s); this.u = G.H / 100; this._fonts = {}; // 画面の大きさが変わったら文字サイズを作り直す
+    this._place();
   }
+  /** メッセージ欄を左上の地名・目標表示のすぐ下に置く (任務や案内で目標表示が長くなっても重ならないように)。表示が変わったときだけ測る */
+  _place() { if (!this.msgs) return; const b = this.tl.offsetTop + this.tl.offsetHeight; this.msgs.style.top = Math.max(this.u * 21, b + this.u * 1.2) + 'px'; }
   show(on) { this.root.classList.toggle('hide', !on); }
   setMode(m) {
     this.mode = m; const f = m === 'space' || m === 'atmo'; this.root.classList.toggle('title', m === 'title');
@@ -36,38 +40,55 @@ export class Hud {
     this.cross.style.display = m === 'fps' ? 'block' : 'none'; if (m !== 'fps') { this.prompt.style.display = 'none'; this._pr = null; }
     // 非表示にしたら記憶も消す (同じ名前の目標を再び選んだときに表示されなくなるのを防ぐ)
     this.tgt.style.display = 'none'; this._tg = null; this.cockpit.style.display = 'none';
-    this.b.en.d.style.display = f ? '' : 'none';
+    this.b.en.d.style.display = f ? '' : 'none'; this.b.sh.d.style.display = '';
     this.b.sh.d.firstChild.textContent = f ? 'SHIELD' : 'SUIT'; this.b.hull.d.firstChild.textContent = f ? 'HULL' : 'HEALTH';
   }
-  setLoc(name, sub = '') { const k = name + sub; if (k !== this._loc) { this._loc = k; this.loc.innerHTML = `${name}<small>${sub}</small>`; } }
-  setObj(html) { if (html !== this._obj) { this._obj = html; this.obj.innerHTML = html; } }
+  /** ゲージを出す/隠す (意味のない場面で満タンのまま出し続けないように) */
+  showBar(k, on) { this.b[k].d.style.display = on ? '' : 'none'; }
+  setLoc(name, sub = '') { const k = name + sub; if (k !== this._loc) { this._loc = k; this.loc.innerHTML = `${name}<small>${sub}</small>`; this._place(); } }
+  setObj(html) { if (html !== this._obj) { this._obj = html; this.obj.innerHTML = html; this._place(); } }
   bar(k, v) { const b = this.b[k]; v = clamp(v, 0, 1); if (Math.abs(v - b.v) < 0.004) return; b.v = v; b.f.style.width = v * 100 + '%'; b.d.classList.toggle('low', v < 0.25); }
   setSpeed(main, sub) { const k = main + sub; if (k !== this._sp) { this._sp = k; this.speed.firstChild.textContent = main; this.speed.lastChild.textContent = sub; } }
   setTarget(t) {
     if (!t) { if (this._tg) { this.tgt.style.display = 'none'; this._tg = null; } return; }
-    if (this._tg !== t.name) { this._tg = t.name; this.tgt.style.display = 'block'; this.tgt.firstChild.textContent = t.name; }
-    this.tgt.children[1].firstChild.style.width = clamp(t.shield, 0, 1) * 100 + '%'; this.tgt.children[2].firstChild.style.width = clamp(t.hull, 0, 1) * 100 + '%';
+    if (this._tg !== t.name) { this._tg = t.name; this.tgt.style.display = 'block'; this.tgt.firstChild.textContent = t.name; this._ts = this._th = -1; }
+    // 値が変わったときだけ DOM に書く (毎フレームの style 書き換えはレイアウト再計算を招く)
+    const sh = Math.round(clamp(t.shield, 0, 1) * 400), hu = Math.round(clamp(t.hull, 0, 1) * 400);
+    if (sh !== this._ts) { this._ts = sh; this.tgt.children[1].firstChild.style.width = sh / 4 + '%'; }
+    if (hu !== this._th) { this._th = hu; this.tgt.children[2].firstChild.style.width = hu / 4 + '%'; }
   }
   msg(text, cls = '', ttl = 5) {
-    const d = el('div', cls, text, this.msgs); while (this.msgs.children.length > 5) this.msgs.firstChild.remove();
-    setTimeout(() => { d.style.opacity = 0; setTimeout(() => d.remove(), 700); }, ttl * 1000);
     if (cls === 'warn') G.audio?.sfx('warn'); else if (cls === 'comm') G.audio?.sfx('comm');
+    // 直前と同じ文面がまだ表示中なら、行を増やさず「×2」のように数えて表示時間を延ばす (警告の連打で欄が埋まらないように)
+    const last = this.msgs.lastElementChild;
+    if (last && last._text === text && !last._fading) { last._n++; last.innerHTML = `${text}<span class="n">×${last._n}</span>`; this._fade(last, ttl); return; }
+    const d = el('div', cls, text, this.msgs); d._text = text; d._n = 1; while (this.msgs.children.length > 5) this.msgs.firstChild.remove();
+    this._fade(d, ttl);
   }
+  /** 同じ警告を何度も出さない: key ごとに cooldown 秒に 1 回だけ表示する。表示したら true。
+   *  (各モードにあった「フラグ + setTimeout で解除」の書き方をまとめたもの。モードを切り替えてもタイマーが残らない) */
+  once(key, text, cls = 'warn', cooldown = 4, ttl) { const now = performance.now() / 1000, t = this._once[key]; if (t != null && now - t < cooldown) return false; this._once[key] = now; this.msg(text, cls, ttl); return true; }
+  _fade(d, ttl) { clearTimeout(d._to); d._to = setTimeout(() => { d._fading = true; d.style.opacity = 0; setTimeout(() => d.remove(), 700); }, ttl * 1000); }
   banner(title, sub = '', ttl = 3.2) {
     this.bannerEl.firstChild.textContent = title; this.bannerEl.lastChild.textContent = sub; this.bannerEl.classList.add('on');
     clearTimeout(this._bn); this._bn = setTimeout(() => this.bannerEl.classList.remove('on'), ttl * 1000);
   }
   /** 状況依存ボタン。list: [{label, fn, cls}] */
   setCtx(list) {
-    const key = list.map((c) => c.label + (c.cls || '')).join('|'); this.ctxList = list;
-    if (key === this.ctxKey) return; this.ctxKey = key; this.ctx.innerHTML = '';
+    this.ctxList = list;
+    // 毎フレーム呼ばれるので、前回と同じ並び (ラベルと種類) なら文字列を組み立てずに戻る
+    const prev = this._ctxPrev; let same = !!prev && prev.length === list.length; if (same) for (let i = 0; i < list.length; i++) if (prev[i].label !== list[i].label || prev[i].cls !== list[i].cls) { same = false; break; }
+    if (same) return; this._ctxPrev = list.map((c) => ({ label: c.label, cls: c.cls })); this.ctx.innerHTML = '';
     list.forEach((c, i) => { const b = el('button', 'cb ' + (c.cls || ''), c.label, this.ctx); b.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); G.audio?.unlock(); G.audio?.ui(); this.ctxList[i]?.fn(); }, { passive: false }); });
   }
+  /** FPS 表示 (設定 → FPS 表示)。v = null で隠す */
+  setFps(v) { if (v == null) { this.fpsEl.style.display = 'none'; return; } this.fpsEl.style.display = ''; this.fpsEl.textContent = `${Math.round(v)} FPS`; this.fpsEl.classList.toggle('low', v < 25); }
   setPrompt(text) { if (text !== this._pr) { this._pr = text; this.prompt.style.display = text ? 'block' : 'none'; this.prompt.textContent = text || ''; } }
-  damage(k) { this.vign.style.opacity = clamp(k, 0, 1); }
+  damage(k) { k = Math.round(clamp(k, 0, 1) * 100) / 100; if (k !== this._dmg) { this._dmg = k; this.vign.style.opacity = k; } } // 毎フレーム呼ばれるので値が変わったときだけ書く
   // ── キャンバス描画 ──
   begin() { this.lbl = []; const x = this.x; x.setTransform(this.s, 0, 0, this.s, 0, 0); x.clearRect(0, 0, G.W, G.H); x.lineWidth = 1.5; x.textAlign = 'center'; x.textBaseline = 'middle'; this.font(2.2); }
-  font(k, bold) { this.x.font = `${bold ? '700 ' : ''}${this.u * k}px "Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif`; }
+  /** 文字の大きさ (vh 単位) と太さ。フォント指定文字列は毎回組み立てず使い回す (マーカーやラベルで 1 フレームに何十回も呼ばれる) */
+  font(k, bold) { const key = bold ? -k : k; this.x.font = this._fonts[key] || (this._fonts[key] = `${bold ? '700 ' : ''}${this.u * k}px "Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif`); }
   /** ワールド座標 → 画面座標。戻り値 [x, y, 前方か] */
   project(p, cam) {
     _v.copy(p).applyMatrix4(cam.matrixWorldInverse); const front = _v.z < 0; _v.applyMatrix4(cam.projectionMatrix);
@@ -96,12 +117,13 @@ export class Hud {
       // 既に描いたラベルと重なる場合は、重ならなくなるまで上下にずらす
       for (let i = 0; i < 8; i++) { const hit = this.lbl.find((b) => Math.abs(b[0] - lx) < (b[2] + w) / 2 && Math.abs(b[1] - ty) < lh * 0.5 + b[3] * 0.5); if (!hit) break; ty = up ? hit[1] - (hit[3] + lh) * 0.5 - u * 0.4 : hit[1] + (hit[3] + lh) * 0.5 + u * 0.4; }
       this.lbl.push([lx, ty + (sub ? u * 1.25 : 0), w, lh]);
-      x.shadowColor = '#000'; x.shadowBlur = 4; x.fillText(label, lx, ty);
-      if (sub) { this.font(1.9); x.globalAlpha = 0.8; x.fillText(sub, lx, ty + u * 2.5); }
-      x.shadowBlur = 0;
+      this._label(label, lx, ty);
+      if (sub) { this.font(1.9); x.globalAlpha = 0.8; this._label(sub, lx, ty + u * 2.5); }
     }
     x.globalAlpha = 1;
   }
+  /** 縁取り付きの文字。shadowBlur (2D キャンバスでは 1 文字ごとにぼかしを計算して重い) の代わりに暗い縁を描く */
+  _label(str, px, py) { const x = this.x, lw = x.lineWidth; x.lineWidth = Math.max(2, this.u * 0.45); x.lineJoin = 'round'; x.strokeStyle = 'rgba(0,6,12,.78)'; x.strokeText(str, px, py); x.fillText(str, px, py); x.lineWidth = lw; }
   reticle(px, py, color = '#6fe8ff', spread = 1) {
     const x = this.x, u = this.u, r = u * 2.2 * spread; x.strokeStyle = color; x.globalAlpha = 0.9; x.lineWidth = 1.5;
     x.beginPath(); x.arc(px, py, r, 0, 7); x.stroke();
@@ -109,22 +131,22 @@ export class Hud {
     x.fillStyle = color; x.beginPath(); x.arc(px, py, 1.6, 0, 7); x.fill(); x.globalAlpha = 1;
   }
   lead(px, py, locked) { const x = this.x, u = this.u; x.strokeStyle = locked ? '#ff5a4a' : '#ffd27a'; x.lineWidth = 2; x.beginPath(); x.arc(px, py, u * 1.5, 0, 7); x.moveTo(px - u * 2.3, py); x.lineTo(px + u * 2.3, py); x.moveTo(px, py - u * 2.3); x.lineTo(px, py + u * 2.3); x.stroke(); x.lineWidth = 1.5; }
-  /** レーダー。contacts: [{x,y,z (自機ローカル, m), color}] */
-  radar(contacts, range = 12000) {
+  /** レーダー。contacts: [{x,y,z (自機ローカル, m), color}] の先頭 n 件 (配列は呼び出し側で使い回す) */
+  radar(contacts, n = contacts.length, range = 12000) {
     const x = this.x, u = this.u, cx = G.W / 2, cy = G.H - u * 14, R = u * 9.5;
     x.globalAlpha = 0.85; x.fillStyle = 'rgba(4,14,24,.55)'; x.strokeStyle = 'rgba(111,232,255,.7)';
     x.beginPath(); x.ellipse(cx, cy, R, R * 0.62, 0, 0, 7); x.fill(); x.stroke();
     x.globalAlpha = 0.35; x.beginPath(); x.ellipse(cx, cy, R * 0.5, R * 0.31, 0, 0, 7); x.moveTo(cx - R, cy); x.lineTo(cx + R, cy); x.moveTo(cx, cy - R * 0.62); x.lineTo(cx, cy + R * 0.62); x.stroke();
     x.globalAlpha = 1;
-    for (const c of contacts) {
-      const d = Math.hypot(c.x, c.y, c.z); if (d > range * 4) continue;
+    for (let i = 0; i < n; i++) {
+      const c = contacts[i], d = Math.hypot(c.x, c.y, c.z); if (d > range * 4) continue;
       const k = Math.min(1, Math.log10(1 + d / range * 9)) / (d || 1), px = cx + c.x * k * R, py = cy + c.z * k * R * 0.62, top = py - c.y * k * R * 0.5;
       x.strokeStyle = x.fillStyle = c.color; x.globalAlpha = 0.6; x.beginPath(); x.moveTo(px, py); x.lineTo(px, top); x.stroke(); x.globalAlpha = 1;
       x.fillRect(px - u * 0.45, top - u * 0.45, u * 0.9, u * 0.9);
     }
     x.fillStyle = '#fff'; x.beginPath(); x.moveTo(cx, cy - u * 0.9); x.lineTo(cx + u * 0.6, cy + u * 0.6); x.lineTo(cx - u * 0.6, cy + u * 0.6); x.fill();
   }
-  text(str, px, py, color = '#6fe8ff', k = 2.4, bold) { const x = this.x; this.font(k, bold); x.fillStyle = color; x.shadowColor = '#000'; x.shadowBlur = 5; x.fillText(str, px, py); x.shadowBlur = 0; }
+  text(str, px, py, color = '#6fe8ff', k = 2.4, bold) { this.font(k, bold); this.x.fillStyle = color; this._label(str, px, py); }
   /** ドッキング誘導 (進入路の輪) */
   ring(px, py, r, color, a = 1) { const x = this.x; x.strokeStyle = color; x.globalAlpha = a; x.lineWidth = 2; x.beginPath(); x.arc(px, py, Math.max(r, 2), 0, 7); x.stroke(); x.globalAlpha = 1; x.lineWidth = 1.5; }
   update(dt) {

@@ -297,7 +297,7 @@ export function buildInterior(bp) {
       use: (label, act, range = 2.4, extra = {}) => { const it = { x: wx, z: wz, y: 1.2 + y0, r: range, label, act, room: r.id, ...extra }; out.items.push(it); return it; },
       dyn: (obj, x = 0, y = 0, z = 0) => { obj.position.set(x, y, z).applyMatrix4(base); obj.rotation.y += ang; groups[r.id].add(obj); return obj; },
       light: (c, i, y = 2, d = 12) => out.lights.push({ x: wx, y: y + y0, z: wz, c: new THREE.Color(c), i, d }),
-      anim: (f) => out.anim.push(guard(f, type)),
+      anim: (f, always) => { const g = guard(f, type); g.room = always ? null : groups[r.id]; out.anim.push(g); }, // 既定では部屋が見えている間だけ動かす (always = 隣の部屋からも聞こえる砲など)
     };
     try { fn(P, o, env); } catch (err) { console.warn('[小道具] 設置に失敗:', type, 'in', r.id, err); }
   }

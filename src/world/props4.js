@@ -1,16 +1,16 @@
 // 追加ステーション用の小道具 (3): 細部の作り込み用。壁の設備・救難用具・研究機器・兵器まわり・駅や街の小物
 import * as THREE from 'three';
 import { Builder, mx } from '../gfx/builder.js';
-import { mat, glow, screenMat, cv, ctex, JP } from '../gfx/textures.js';
+import { mat, glow, cv, ctex, JP } from '../gfx/textures.js';
 import { makeGlowSprite } from '../gfx/fx.js';
 import { G } from '../core/util.js';
-import { holoMat, glassMat } from './interior.js';
+import { glassMat } from './interior.js';
 import { MM, fab, crateM, flat, scr } from './props.js';
-import { basic, W2 } from './props2.js';
+import { basic } from './props2.js';
 import { rescueN } from './rescue.js';
 import { RESCUE } from './defs.js';
 
-const HP = Math.PI / 2, TAU = Math.PI * 2;
+const HP = Math.PI / 2;
 const ADD = { transparent: true, blending: THREE.AdditiveBlending, depthWrite: false };
 let _B;
 const BM = () => _B || (_B = { br: mat('flat', { color: 0xc8a04a, rough: 0.3, metal: 1 }), cu: mat('flat', { color: 0xc8743a, rough: 0.32, metal: 1 }), rl: mat('flat', { color: 0x8a929e, rough: 0.3, metal: 1 }), gm: mat('flat', { color: 0x4a505a, rough: 0.5, metal: 0.65 }), yl: mat('flat', { color: 0xf2b90a, rough: 0.55, metal: 0.3 }),

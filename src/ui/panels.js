@@ -1,10 +1,20 @@
 // メニュー / 端末 UI (星図・市場・造船所・任務・酒場・カジノ ほか)
 import { G, el, fmtCr, fmtDist, clamp } from '../core/util.js';
-import { BODIES, STATIONS, ENEMIES, SHIPS, COMMODITIES, UPGRADES, BASES, RESCUE, station, body } from '../world/defs.js';
+import { BODIES, STATIONS, ENEMIES, SHIPS, COMMODITIES, UPGRADES, BASES, RESCUE, PRICES, station, body } from '../world/defs.js';
 import { QUALITY, RES, DIST } from '../gfx/renderer.js';
-import { stats, save, wipe, newGame, load, price, cargoUsed, addCargo, takeCargo, earn, commodity, missionBoard, accept, event, remaining, rescueState, disaster, dispatch, recall } from '../game/state.js';
+import { stats, save, wipe, newGame, load, price, cargoUsed, addCargo, takeCargo, earn, commodity, missionBoard, accept, remaining, rescueState, disaster, dispatch, recall } from '../game/state.js';
 
 const SFX = (n) => G.audio?.sfx(n);
+const placeName = (k) => station(k)?.name || BASES[k]?.name || k;
+/** 改修の種類 → 変わる能力値と表示形式 */
+const UPGRADE_STAT = { laser: ['dmg', (v) => v.toFixed(1)], shield: ['shield', Math.round], armor: ['hull', Math.round], engine: ['maxSpeed', (v) => `${Math.round(v)} m/s`], cargo: ['cargo', Math.round], missile: ['missiles', (v) => `${v} 発`] };
+/** 今日、品物 cid をいちばん高く買い取ってくれる拠点 (here 以外)。{ name, v } */
+function bestSell(cid, here) { let best = null; for (const k of Object.keys(PRICES)) { if (k === here) continue; const v = price(k, cid); if (v != null && (!best || v > best.v)) best = { name: placeName(k), v }; } return best; }
+/** 任務の目的地へ航路を引くボタン (輸送 → 納品先のステーション、調査 → 惑星) */
+function missionRoute(m, done) {
+  const nav = m.type === 'deliver' ? ['station', m.to] : m.type === 'survey' ? ['body', m.body] : null; if (!nav) return [];
+  return [{ label: '航路設定', fn: () => { G.space.setNav(nav[0], nav[1]); done?.(); } }];
+}
 export class UI {
   constructor(app) { this.app = app; this.cur = null; }
   get isOpen() { return !!this.cur; }
@@ -16,7 +26,7 @@ export class UI {
     el('h2', '', `${title}<small>${sub || ''}</small>`, ph); const cr = el('div', 'cr', '', ph);
     if (!o.noClose) { const x = el('button', 'px', '×', ph); x.onclick = () => { SFX('ui'); this.close(); }; }
     const tabsEl = o.tabs ? el('div', 'tabs', '', p) : null, bodyEl = el('div', 'pb', '', p);
-    const api = { wrap, body: bodyEl, tab: 0, onClose: o.onClose, refresh: () => { cr.textContent = G.p ? fmtCr(G.p.credits) : ''; const y = bodyEl.scrollTop; bodyEl.innerHTML = ''; (o.tabs ? o.tabs[api.tab].build : build)(bodyEl, api); bodyEl.scrollTop = y; } };
+    const api = { wrap, body: bodyEl, tab: 0, kind: o.kind, onClose: o.onClose, refresh: () => { cr.textContent = G.p ? fmtCr(G.p.credits) : ''; const y = bodyEl.scrollTop; bodyEl.innerHTML = ''; (o.tabs ? o.tabs[api.tab].build : build)(bodyEl, api); bodyEl.scrollTop = y; } };
     if (o.tabs) o.tabs.forEach((t, i) => { const b = el('button', 'tab' + (i ? '' : ' on'), t.name, tabsEl); b.onclick = () => { SFX('ui'); api.tab = i; [...tabsEl.children].forEach((c, k) => c.classList.toggle('on', k === i)); bodyEl.scrollTop = 0; api.refresh(); }; });
     this.cur = api; api.refresh();
     return api;
@@ -45,8 +55,9 @@ export class UI {
       t.classList.add('fadeout'); setTimeout(() => t.remove(), 900);
       G.start(fresh);
     };
-    if (saved) { const c = el('button', 'cb', 'つづきから', menu); c.onclick = () => go(false); }
-    const n = el('button', 'cb ' + (saved ? 'alt' : ''), 'はじめから', menu); n.onclick = () => go(true);
+    if (saved) { const c = el('button', 'cb', `つづきから<small>${saved.day || 1} 日目・${fmtCr(saved.credits || 0)}</small>`, menu); c.onclick = () => go(false); } // どのデータから再開するかが分かるように
+    // セーブがあるときの「はじめから」は確認してから消す (以前は 1 回のタップで即座に上書きしていた)
+    const n = el('button', 'cb ' + (saved ? 'alt' : ''), 'はじめから', menu); n.onclick = () => { if (!saved) return go(true); G.audio?.unlock(); SFX('ui'); this.talk('はじめから', `いまのセーブデータ（${saved.day || 1} 日目・${fmtCr(saved.credits || 0)}）を消して、最初から始めますか？<br><em>この操作は取り消せません。</em>`, [{ label: '消してはじめから', cls: 'red', fn: () => go(true) }, { label: 'やめる' }]); };
     const s = el('button', 'cb alt', '画質：' + QUALITY[G.gfx.qName].label, menu);
     s.onclick = () => { const k = Object.keys(QUALITY), nx = k[(k.indexOf(G.gfx.qName) + 1) % k.length]; G.setQuality(nx); s.textContent = '画質：' + QUALITY[nx].label; SFX('ui'); };
     const rs = el('button', 'cb alt', '解像度：' + RES[G.gfx.res], menu);
@@ -66,6 +77,9 @@ export class UI {
       this.row(b, '画質', `現在：${QUALITY[G.gfx.qName].label}（影・反射・アンチエイリアスの品質。星空・惑星の解像度は再起動後に反映）`, null, Object.keys(QUALITY).map((k) => ({ label: QUALITY[k].label, cls: k === G.gfx.qName ? 'gold' : '', fn: () => { G.setQuality(k); api.refresh(); } })));
       this.row(b, '操縦の上下', G.p.invertY ? 'フライトスティック式（上で機首下げ）' : '標準（上で機首上げ）', null, [{ label: '切り替え', fn: () => { G.p.invertY = !G.p.invertY; save(); api.refresh(); } }]);
       this.row(b, 'サウンド', G.p.sound ? 'ON' : 'OFF', null, [{ label: '切り替え', fn: () => { G.p.sound = !G.p.sound; G.audio?.setOn(G.p.sound); save(); api.refresh(); } }]);
+      const SENS = [['低', 0.6], ['標準', 1], ['高', 1.5]], sens = G.p.sens || 1;
+      this.row(b, '視点の感度', '歩いているときに画面をドラッグして見回す速さ', null, SENS.map(([n, v]) => ({ label: n, cls: v === sens ? 'gold' : '', fn: () => { G.p.sens = v; save(); api.refresh(); } })));
+      this.row(b, 'FPS 表示', G.p.fps ? 'ON（画面上部に 1 秒あたりの描画回数を表示）' : 'OFF', null, [{ label: '切り替え', fn: () => { G.p.fps = !G.p.fps; if (!G.p.fps) G.hud.setFps(null); save(); api.refresh(); } }]);
       this.row(b, '全画面表示', '横向き全画面に切り替えます', null, [{ label: '全画面', fn: () => G.fullscreen(true) }]);
       this.row(b, '機体と積荷', `${SHIPS[G.p.ship].name}／積荷 ${cargoUsed()}/${stats().cargo}`, null, [{ label: '確認', fn: () => this.status() }]);
       this.row(b, '遊び方', '操作方法と目的', null, [{ label: '見る', fn: () => this.help() }]);
@@ -78,17 +92,19 @@ export class UI {
       this.note(b, '<b>操縦</b>：左スティックで旋回、右端のスライダーで推力。<em>発射</em>・<em>ミサイル</em>（要ロック）・<em>ブースト</em>。⟲⟳ でロール。<br><b>超巡航</b>：惑星間の高速移動。<b>星図</b>で目的地を選び <em>自動航行</em> を押すと、到着まで自動で飛ぶ。');
       this.note(b, '<b>ドッキング</b>：ステーションに 3.5km まで近づき <em>ドッキング要請</em>。自動誘導で接続後、ステーション内を歩いて各施設を利用できる。<br><b>着陸</b>：惑星へ降下すると大気圏に突入。地表では <em>▲▼</em> で昇降し、平らな場所へゆっくり降りると接地する。パッドの近くでは <em>オートランド</em> で自動着陸できる。降りて歩ける。');
       this.note(b, '<b>敵艦への乗り込み</b>：船体を削ると <em>航行不能</em> になる。<em>接舷する</em> → <em>敵艦に突入</em> で艦内へ。警備ドローンを倒し、艦橋の制御コアを掌握すれば拿捕成功。');
-      this.note(b, '<b>PC</b>：WASD/矢印=旋回、R/C=推力、Z/X=推力全開/停止、Q/E=ロール、Space=発射、F=ミサイル、Shift=ブースト、T=照準、J=超巡航、G=自動航行、V=視点、Enter=状況ボタン、歩行時は E=調べる・右半分をドラッグで視点。');
+      this.note(b, '<b>PC</b>：WASD/矢印=旋回、R/C=推力、Z/X=推力全開/停止、Q/E=ロール、Space=発射、F=ミサイル、Shift=ブースト、T=照準、J=超巡航、G=自動航行、V=視点、Enter=状況ボタン、M=星図、Esc/P=メニュー。<br>地表の飛行中は R/Space=上昇、F/C=下降 (推力はスライダーか Z/X)。<br>歩行時は WASD=移動、←→/Q=向きを変える、Shift=走る、E=調べる、右半分をドラッグで見回す。');
     }, { small: true });
   }
   status() {
-    const st = stats(), s = SHIPS[G.p.ship];
+    const st = stats(), s = SHIPS[G.p.ship], hp = G.p.ships[G.p.ship].hull, mis = G.space?.pl.missiles ?? st.missiles;
     this.open(`${s.name} ${s.kanji}`, s.cls, (b) => {
-      this.note(b, `船体 <b>${Math.round(st.hull)}</b>　シールド <b>${Math.round(st.shield)}</b>　最高速 <b>${Math.round(st.maxSpeed)} m/s</b>　主砲 <b>${st.dmg.toFixed(1)}×${st.guns}</b>　ミサイル <b>${st.missiles}</b>　積載 <b>${cargoUsed()}/${st.cargo}</b>`);
+      // 最大値だけでなく、いまの船体の状態とミサイル残弾も出す
+      this.note(b, `船体 <b class="${hp < 0.35 ? 'dn' : ''}">${Math.round(hp * 100)}%</b>（耐久 ${Math.round(st.hull)}）　シールド <b>${Math.round(st.shield)}</b>　最高速 <b>${Math.round(st.maxSpeed)} m/s</b>　主砲 <b>${st.dmg.toFixed(1)}×${st.guns}</b>　ミサイル <b>${mis}/${st.missiles}</b>　積載 <b>${cargoUsed()}/${st.cargo}</b>`);
+      this.note(b, `航海 <b>${G.p.day} 日目</b>　所持金 <b>${fmtCr(G.p.credits)}</b>　体力 <b>${Math.round(G.p.hp)}</b>`);
       el('h3', '', '積荷', b); const ks = Object.keys(G.p.cargo);
       if (!ks.length) this.note(b, '積荷はありません。'); for (const k of ks) this.row(b, commodity(k).name, '', '×' + G.p.cargo[k]);
       el('h3', '', '受注中の任務', b); if (!G.p.missions.length) this.note(b, '受注中の任務はありません。各ステーションの任務端末で受注できます。');
-      for (const m of G.p.missions) this.row(b, m.title, m.desc, `${m.prog}/${m.need}`);
+      for (const m of G.p.missions) this.row(b, m.title, m.desc, `${m.prog}/${m.need}`, missionRoute(m, () => this.close()));
       el('h3', '', '戦績', b); this.note(b, `撃沈 <b>${G.p.stats.kills}</b>　拿捕 <b>${G.p.stats.captures}</b>　残存敵艦 <b>${remaining()}</b>　総収入 <b>${fmtCr(G.p.stats.earned)}</b>`);
     });
   }
@@ -103,7 +119,7 @@ export class UI {
       const cv = el('canvas', 'mapc', '', left), side = el('div', 'mapside', '', b);
       const items = [...STATIONS.map((s) => ({ type: 'station', id: s.id, name: s.name, sub: `${s.sub}／${body(s.body).name}軌道`, pos: s.pos, col: s.color })),
         ...BODIES.filter((x) => x.type !== 'sun').map((x) => ({ type: 'body', id: x.id, name: x.name, sub: `${x.sub}／着陸地：${BASES[x.id].name}`, pos: x.pos, col: x.color, R: x.R })),
-        ...sp.enemies.filter((e) => e.state !== 'gone').map((e) => ({ type: 'enemy', id: e.def.id, name: e.def.name, sub: `敵影${e.state === 'disabled' ? '（航行不能）' : ''}／${body(e.def.body).name}宙域　賞金 ${e.def.bounty.toLocaleString()} Cr`, pos: e.uni.toArray(), col: '#ff5a4a' }))];
+        ...sp.enemies.filter((e) => e.state !== 'gone').map((e) => ({ type: 'enemy', id: e.def.id, name: e.def.name, sub: `敵影${e.state === 'disabled' ? '（航行不能）' : ''}／${body(e.def.body).name}宙域　賞金 ${e.def.bounty.toLocaleString('ja-JP')} Cr`, pos: e.uni.toArray(), col: '#ff5a4a' }))];
       const draw = () => {
         const r = left.getBoundingClientRect(), W = G.portrait ? r.height : r.width, H = G.portrait ? r.width : r.height, s = Math.min(window.devicePixelRatio || 1, 2);
         if (W < 60 || H < 60) return;
@@ -121,7 +137,10 @@ export class UI {
         for (const st of STATIONS) { const [px, py] = P(st.pos); x.strokeStyle = st.color; x.lineWidth = 1.5; x.strokeRect(px + 9, py - 3, 6, 6); }
         if (sel) { const it = items.find((i) => i.type === sel.type && i.id === sel.id); if (it) { const [px, py] = P(it.pos); x.strokeStyle = '#ffd27a'; x.lineWidth = 2; x.beginPath(); x.arc(px, py, 20, 0, 7); x.stroke(); const [mx, my] = P([me.x, 0, me.z]); x.setLineDash([5, 5]); x.beginPath(); x.moveTo(mx, my); x.lineTo(px, py); x.stroke(); x.setLineDash([]); } }
         const [mx, my] = P([me.x, 0, me.z]), tri = (tx, ty, s2) => { x.beginPath(); x.moveTo(tx, ty - s2 * 1.3); x.lineTo(tx + s2, ty + s2); x.lineTo(tx - s2, ty + s2); x.closePath(); };
-        x.lineWidth = 3; x.strokeStyle = 'rgba(2,8,16,.92)'; tri(mx, my, 6); x.stroke(); x.fillStyle = '#fff'; tri(mx, my, 6); x.fill();
+        // 現在地の三角は機首の向き (真上から見た向き) に回す
+        const q = sp.pl.quat, fx = -2 * (q.x * q.z + q.w * q.y), fz = -(1 - 2 * (q.x * q.x + q.y * q.y));
+        x.save(); x.translate(mx, my); x.rotate(Math.hypot(fx, fz) > 0.05 ? Math.atan2(fx, -fz) : 0);
+        x.lineWidth = 3; x.strokeStyle = 'rgba(2,8,16,.92)'; tri(0, 0, 6); x.stroke(); x.fillStyle = '#fff'; tri(0, 0, 6); x.fill(); x.restore();
         x.textAlign = 'left'; tri(18, 20, 5); x.fill(); label('現在地', 30, 21, '#fff'); x.textAlign = 'center'; // 惑星の表示と重ならないよう凡例に
       };
       const list = () => {
@@ -130,24 +149,33 @@ export class UI {
           el('div', 'note', `<b>${label}</b>`, side);
           for (const it of items.filter((i) => i.type === type).sort((a, b2) => dist(a.pos) - dist(b2.pos))) {
             const on = sel && sel.type === it.type && sel.id === it.id, r = el('div', 'row', `<div class="g" style="color:${on ? '#ffd27a' : it.col}">${it.name}<small>${it.sub}<br>距離 ${fmtDist(Math.max(0, dist(it.pos) - (it.R || 0)))}</small></div>`, side);
-            if (on) { const bt = el('button', 'bt gold', '航路設定', r); bt.onclick = () => { sp.setNav(it.type, it.id); G.tip = ''; this.close(); if (G.modeName === 'space' && !sp.pl.docked) G.hud.msg('「自動航行」を押すと目的地まで自動で飛行します。', 'good'); }; }
+            if (on) { const cur = sp.nav && sp.nav.type === it.type && sp.nav.id === it.id, bt = el('button', 'bt gold' + (cur ? ' off' : ''), cur ? '航路設定中' : '航路設定', r); bt.onclick = () => { sp.setNav(it.type, it.id); G.tip = ''; this.close(); if (G.modeName === 'space' && !sp.pl.docked) G.hud.msg('「自動航行」を押すと目的地まで自動で飛行します。', 'good'); }; }
             r.onclick = (e) => { if (e.target.tagName === 'BUTTON') return; SFX('ui'); sel = { type: it.type, id: it.id }; list(); draw(); };
           }
         }
       };
       list(); requestAnimationFrame(draw);
-    });
+      // 画面の回転やウィンドウの大きさが変わったら描き直す (以前は開いたときの大きさのまま引き伸ばされていた)
+      api.ro?.disconnect(); if (window.ResizeObserver) { api.ro = new ResizeObserver(() => draw()); api.ro.observe(left); api.onClose = () => api.ro.disconnect(); }
+    }, { kind: 'map' });
   }
 
   // ───────────────────────── 市場 ─────────────────────────
   market(sid, title = '交易市場') {
     const st = station(sid) || { name: BASES[sid]?.name || sid };
     this.open(title, st.name, (b, api) => {
-      const cap = stats().cargo; this.note(b, `積載 <b>${cargoUsed()} / ${cap}</b>　価格は拠点ごとに異なる。<em>安く買って高く売る</em>のが交易の基本。`);
+      const cap = stats().cargo, used = cargoUsed(); this.note(b, `積載 <b>${used} / ${cap}</b>　価格は拠点ごとに異なる。<em>安く買って高く売る</em>のが交易の基本。`);
+      // ここで売れる積荷をまとめて売る (任務で運んでいる品は残す)
+      const keep = (id) => G.p.missions.reduce((n, m) => n + (m.type === 'deliver' && m.cargo === id ? m.qty : 0), 0);
+      const lots = Object.keys(G.p.cargo).map((id) => ({ id, n: Math.max(0, (G.p.cargo[id] || 0) - keep(id)), pr: price(sid, id) })).filter((x) => x.n > 0 && x.pr != null), total = lots.reduce((t, x) => t + Math.round(x.pr * 0.96) * x.n, 0);
+      if (lots.length) this.row(b, '積荷をまとめて売る', `${lots.map((x) => `${commodity(x.id).name}×${x.n}`).join('、')}${G.p.missions.some((m) => m.type === 'deliver') ? '（輸送任務の品は残す）' : ''}`, fmtCr(total), [{ label: 'すべて売る', cls: 'gold', fn: () => { let got = 0; for (const x of lots) got += Math.round(x.pr * 0.96) * takeCargo(x.id, x.n); earn(got); SFX('reward'); api.refresh(); } }]);
       for (const c of COMMODITIES) {
-        const pr = price(sid, c.id); if (pr == null) continue; const have = G.p.cargo[c.id] || 0, ratio = pr / c.base;
-        this.row(b, c.name, `所持 ×${have}　<span class="${ratio < 0.92 ? 'up' : ratio > 1.08 ? 'dn' : ''}">${ratio < 0.92 ? '安値 ▼' : ratio > 1.08 ? '高値 ▲' : '相場並み'}</span>`, fmtCr(pr), [
-          { label: '買う', off: G.p.credits < pr || cargoUsed() >= cap, fn: () => { if (addCargo(c.id, 1)) { G.p.credits -= pr; SFX('buy'); } api.refresh(); } },
+        const pr = price(sid, c.id); if (pr == null) continue; const have = G.p.cargo[c.id] || 0, ratio = pr / c.base, best = bestSell(c.id, sid), most = Math.min(cap - used, Math.floor(G.p.credits / pr));
+        // 今日いちばん高く売れる拠点 (ここより高いときだけ)。交易ルートを考える手がかりに
+        const tip = best && best.v > pr ? `　<span class="dim">最高値 ${best.name} ${fmtCr(best.v)}</span>` : '';
+        this.row(b, c.name, `所持 ×${have}　<span class="${ratio < 0.92 ? 'up' : ratio > 1.08 ? 'dn' : ''}">${ratio < 0.92 ? '安値 ▼' : ratio > 1.08 ? '高値 ▲' : '相場並み'}</span>${tip}`, fmtCr(pr), [
+          { label: '買う', off: most < 1, fn: () => { if (addCargo(c.id, 1)) { G.p.credits -= pr; SFX('buy'); } api.refresh(); } },
+          { label: most > 1 ? `×${most}` : '×1', off: most < 2, fn: () => { const n = addCargo(c.id, Math.min(cap - cargoUsed(), Math.floor(G.p.credits / pr))); if (n) { G.p.credits -= pr * n; SFX('buy'); } api.refresh(); } }, // まとめ買い (積める・払える最大数)
           { label: '売る', cls: 'gold', off: !have, fn: () => { if (takeCargo(c.id, 1)) { earn(Math.round(pr * 0.96)); SFX('buy'); } api.refresh(); } },
           { label: '全売', cls: 'gold', off: !have, fn: () => { const n = takeCargo(c.id, 999); earn(Math.round(pr * 0.96) * n); SFX('reward'); api.refresh(); } }]);
       }
@@ -166,13 +194,15 @@ export class UI {
         for (const s of Object.values(SHIPS)) {
           const e = stats(s.id), cur = G.p.ship === s.id, c = el('div', 'card' + (cur ? ' sel' : ''), `<h3>${s.name}<small>${s.kanji}／${s.cls}</small></h3><p>${s.desc}</p>`, g);
           for (const [n, v] of [['速度', e.maxSpeed / 520], ['旋回', s.turn / 2.2], ['装甲', e.hull / 400], ['シールド', e.shield / 380], ['火力', e.dmg * s.guns * s.rof / 500], ['積載', e.cargo / 90]]) el('div', 'stat', `<span>${n}</span><i><b style="width:${clamp(v, 0.05, 1) * 100}%"></b></i>`, c);
-          const bt = el('button', 'bt ' + (cur ? 'off' : 'gold'), cur ? '搭乗中' : '乗り換える', c); bt.style.marginTop = '1em'; bt.onclick = () => { swap(s.id); api.refresh(); };
+          const bt = el('button', 'bt ' + (cur ? 'off' : 'gold'), cur ? '搭乗中' : '乗り換える', c); bt.onclick = () => { swap(s.id); api.refresh(); };
         }
       } },
       { name: '改修', build: (b, api) => {
         const u = G.p.ships[G.p.ship].up; this.note(b, `対象：<b>${SHIPS[G.p.ship].name}</b>${disc < 1 ? '　<em>造船廠割引 −25%</em>' : ''}`);
         for (const up of UPGRADES) { const lv = u[up.id], cost = Math.round(up.base * Math.pow(1.7, lv) * disc);
-          this.row(b, `${up.name}　Lv.${lv}${lv >= 5 ? ' MAX' : ''}`, up.desc, lv >= 5 ? '—' : fmtCr(cost), [{ label: '改修', off: lv >= 5 || G.p.credits < cost, fn: () => { G.p.credits -= cost; u[up.id]++; G.space.refit(); save(); SFX('reward'); api.refresh(); } }]); }
+          // 改修後の数値を先に見せる (いま → 次の Lv)
+          const [k, f] = UPGRADE_STAT[up.id], now = stats()[k]; let next = null; if (lv < 5) { u[up.id]++; next = stats()[k]; u[up.id]--; }
+          this.row(b, `${up.name}　Lv.${lv}${lv >= 5 ? ' MAX' : ''}`, `${up.desc}${next != null ? `　<span class="up">${f(now)} → ${f(next)}</span>` : `　${f(now)}`}`, lv >= 5 ? '—' : fmtCr(cost), [{ label: '改修', off: lv >= 5 || G.p.credits < cost, fn: () => { G.p.credits -= cost; u[up.id]++; G.space.refit(); save(); SFX('reward'); api.refresh(); } }]); }
       } },
       { name: '整備', build: (b, api) => {
         const sh = G.p.ships[G.p.ship], full = stats(), cost = Math.round((1 - sh.hull) * full.hull * 6 * disc), pl = G.space.pl, mis = (full.missiles - pl.missiles) * 60;
@@ -189,7 +219,7 @@ export class UI {
       for (const m of L) this.row(b, m.title, m.desc, fmtCr(m.reward), [{ label: '受注', off: G.p.missions.length >= 4, fn: () => { if (accept(m)) { SFX('nav'); G.hud.msg(`任務受注：${m.title}`, 'good'); } else { SFX('deny'); G.hud.msg('貨物室に空きがありません', 'warn'); } api.refresh(); } }]);
       el('h3', '', `受注中 (${G.p.missions.length}/4)`, b);
       if (!G.p.missions.length) this.note(b, '受注中の任務はありません。上の一覧から「受注」を押してください。');
-      for (const m of G.p.missions) this.row(b, m.title, m.desc, `${m.prog}/${m.need}`, [{ label: '破棄', cls: 'red', fn: () => { if (m.type === 'deliver') takeCargo(m.cargo, m.qty); G.p.missions.splice(G.p.missions.indexOf(m), 1); api.refresh(); } }]);
+      for (const m of G.p.missions) this.row(b, m.title, `${m.desc}　報酬 ${fmtCr(m.reward)}`, `${m.prog}/${m.need}`, [...missionRoute(m, () => this.close()), { label: '破棄', cls: 'red', fn: () => { if (m.type === 'deliver') takeCargo(m.cargo, m.qty); G.p.missions.splice(G.p.missions.indexOf(m), 1); api.refresh(); } }]);
     });
   }
   /** 賞金首リスト (バスティオン司令部) */
@@ -197,7 +227,8 @@ export class UI {
     this.open('戦術司令部', 'ヴォイド艦隊 追跡リスト', (b) => {
       this.note(b, `残存 <b>${remaining()} / 20</b> 隻。行を選ぶと航路を設定できる。全艦を無力化すれば星系は解放される。`);
       for (const e of ENEMIES) { const d = G.p.done[e.id];
-        this.row(b, `<span class="${d ? 'dim' : ''}">${e.name}</span>`, `${body(e.body).name}宙域／脅威度 ${'★'.repeat(e.tier)}`, d ? (d === 'captured' ? '<span class="up">拿捕済</span>' : '<span class="dim">撃沈済</span>') : fmtCr(e.bounty), d ? [] : [{ label: '航路設定', fn: () => { G.space.setNav('enemy', e.id); this.close(); } }]); }
+        const on = G.space.nav?.type === 'enemy' && G.space.nav.id === e.id; // いま航路を引いている敵は分かるように
+        this.row(b, `<span class="${d ? 'dim' : ''}">${e.name}</span>`, `${body(e.body).name}宙域／脅威度 ${'★'.repeat(e.tier)}`, d ? (d === 'captured' ? '<span class="up">拿捕済</span>' : '<span class="dim">撃沈済</span>') : fmtCr(e.bounty), d ? [] : [{ label: on ? '航路設定中' : '航路設定', cls: on ? 'gold off' : '', fn: () => { G.space.setNav('enemy', e.id); this.close(); } }]); }
     });
   }
 
@@ -215,17 +246,17 @@ export class UI {
   casino() {
     const sym = ['🍒', '⭐', '💎', '🚀', '7️⃣'], pay = [3, 5, 12, 25, 60]; let bet = 100, spin = false;
     this.open('スロット', "ROGUE'S FORTUNE", (b, api) => {
-      this.note(b, '絵柄が 3 つ揃えば大当たり、2 つでも小当たり。賭け金を選んで回そう。');
+      this.note(b, `絵柄が 3 つ揃えば大当たり、2 つでも小当たり。賭け金を選んで回そう。<br><span class="dim">配当：${sym.map((x, i) => `<span class="nw">${x}×3＝${pay[i]} 倍</span>`).join('　')}　<span class="nw">2 つ揃い＝1.5 倍</span></span>`);
       const reels = el('div', 'slots', '', b), R = [0, 1, 2].map(() => el('div', 'reel', sym[Math.floor(Math.random() * 5)], reels)), res = el('p', 'note', '&nbsp;', b); res.style.textAlign = 'center';
       const r = el('div', 'row', '<div class="g"></div>', b);
       // 回転中は賭け金を変えられない (払い戻しは回した時点の賭け金で計算する)
-      for (const v of [100, 500, 2000]) { const e = el('button', 'bt' + (v === bet ? ' gold' : '') + (spin && v !== bet ? ' off' : ''), `賭け ${v}`, r); e.onclick = () => { if (spin) return; bet = v; api.refresh(); }; }
+      for (const v of [100, 500, 2000]) { const e = el('button', 'bt' + (v === bet ? ' gold' : '') + ((spin && v !== bet) || (G.p.credits < v && v !== bet) ? ' off' : ''), `賭け ${v}`, r); e.onclick = () => { if (spin) return; bet = v; api.refresh(); }; } // 払えない賭け金は選べない
       const go = el('button', 'bt red', '回す！', r);
       go.onclick = () => {
         if (spin || G.p.credits < bet) return SFX('deny'); spin = true; const stake = bet; G.p.credits -= stake; const out = [0, 1, 2].map(() => { const x = Math.random(); return x < 0.34 ? 0 : x < 0.6 ? 1 : x < 0.8 ? 2 : x < 0.93 ? 3 : 4; }); let n = 0;
         const iv = setInterval(() => { n++; R.forEach((e, i) => { if (n < 10 + i * 6) { e.textContent = sym[Math.floor(Math.random() * 5)]; SFX('slot'); } else e.textContent = sym[out[i]]; });
           if (n > 24) { clearInterval(iv); spin = false; let win = 0; if (out[0] === out[1] && out[1] === out[2]) win = stake * pay[out[0]]; else if (out[0] === out[1] || out[1] === out[2] || out[0] === out[2]) win = Math.round(stake * 1.5);
-            if (win) { earn(win); SFX('reward'); res.innerHTML = `<b class="up">当たり！ +${win.toLocaleString()} Cr</b>`; } else { SFX('deny'); res.innerHTML = 'はずれ…'; } this.cur && (this.cur.wrap.querySelector('.cr').textContent = fmtCr(G.p.credits)); } }, 70);
+            if (win) { earn(win); SFX('reward'); res.innerHTML = `<b class="up">当たり！ +${win.toLocaleString('ja-JP')} Cr</b>`; } else { SFX('deny'); res.innerHTML = 'はずれ…'; } this.cur && (this.cur.wrap.querySelector('.cr').textContent = fmtCr(G.p.credits)); } }, 70);
       };
     }, { small: true });
   }
@@ -237,7 +268,8 @@ export class UI {
   lab(sid) {
     this.open('研究ラボ', station(sid)?.name || '', (b, api) => {
       this.note(b, '惑星で採取したサンプルを解析し、<em>探査データ</em>に変換します。探査データはここで最も高く売れます。');
-      for (const id of ['magma', 'ice', 'spice', 'gas']) { const have = G.p.cargo[id] || 0; this.row(b, `${commodity(id).name} の解析`, `所持 ×${have}　→ 探査データ ×1 ＋ 研究協力金 400 Cr`, '', [{ label: '解析する', off: !have, fn: () => { takeCargo(id, 1); addCargo('data', 1); earn(400); SFX('reward'); api.refresh(); } }]); }
+      // 1 つ解析しても積荷の数は変わらない (サンプル 1 → データ 1) ので、まとめて解析もできる
+      for (const id of ['magma', 'ice', 'spice', 'gas']) { const have = G.p.cargo[id] || 0; this.row(b, `${commodity(id).name} の解析`, `所持 ×${have}　→ 探査データ ×1 ＋ 研究協力金 400 Cr`, '', [{ label: '解析する', off: !have, fn: () => { takeCargo(id, 1); addCargo('data', 1); earn(400); SFX('reward'); api.refresh(); } }, { label: 'すべて', off: have < 2, fn: () => { const n = takeCargo(id, 999); addCargo('data', n); earn(400 * n); SFX('reward'); api.refresh(); } }]); }
       const d = G.p.cargo.data || 0, pr = price(sid, 'data') || 900; this.row(b, '探査データの売却', `所持 ×${d}`, fmtCr(pr), [{ label: 'すべて売る', cls: 'gold', off: !d, fn: () => { earn(pr * takeCargo('data', 999)); SFX('reward'); api.refresh(); } }]);
       el('h3', '', '探査記録', b); for (const x of BODIES.filter((q) => q.type !== 'sun')) this.row(b, x.name, x.desc, G.p.stats.lands[x.id] ? `<span class="up">着陸 ${G.p.stats.lands[x.id]} 回</span>` : '<span class="dim">未踏</span>');
     });
@@ -251,7 +283,7 @@ export class UI {
       this.note(b, dz ? `<em>災害警報</em>：<b>${dz.name}</b>　収拾に必要な救助船 <b>${dz.need} 機</b>${dz.done ? '（対応済み）' : '　─ 必要数を出動させ、1 日以上活動させてから帰還させると特別報奨が出る'}` : '現在、地球に災害警報は出ていない。出動は警戒待機として扱われ、活動日数に応じた報奨金が出る。');
       if (!atAtlas) this.note(b, '出動と帰還の発令は、アトラス救難基地の指令室で行う。');
       else if (!st.n) this.row(b, '緊急出動を発令する', '出動させる機数を選ぶ（最大 15 機）', null, [3, 5, 10, 15].map((n) => ({ label: `${n} 機`, cls: n === 15 ? 'red' : 'gold', fn: () => { dispatch(n); sync(); SFX('warp'); G.hud.banner('緊急出動', `救助船ミケーネ ${n} 機 ─ 地球へ`, 4); G.hud.msg('発進した機体は、アトラスを出たときに地球へ向かう姿を見送れる。', 'good', 8); api.refresh(); } })));
-      else this.row(b, '帰還を命じる', '全機をアトラスへ呼び戻す', null, [{ label: '全機帰還', cls: 'gold', fn: () => { const r = recall(); sync(); SFX(r.pay + r.bonus ? 'reward' : 'nav'); G.hud.msg(`ミケーネ ${r.n} 機が帰還した。${r.bonus ? `「${r.name}」を収拾 ─ 特別報奨 ${r.bonus.toLocaleString()} Cr。` : ''}${r.pay ? `活動報奨 ${r.pay.toLocaleString()} Cr` : r.bonus ? '' : '（活動 1 日未満のため報奨なし）'}`, 'good', 8); api.refresh(); } }]);
+      else this.row(b, '帰還を命じる', '全機をアトラスへ呼び戻す', null, [{ label: '全機帰還', cls: 'gold', fn: () => { const r = recall(); sync(); SFX(r.pay + r.bonus ? 'reward' : 'nav'); G.hud.msg(`ミケーネ ${r.n} 機が帰還した。${r.bonus ? `「${r.name}」を収拾 ─ 特別報奨 ${r.bonus.toLocaleString('ja-JP')} Cr。` : ''}${r.pay ? `活動報奨 ${r.pay.toLocaleString('ja-JP')} Cr` : r.bonus ? '' : '（活動 1 日未満のため報奨なし）'}`, 'good', 8); api.refresh(); } }]);
       el('h3', '', '機体一覧', b);
       for (let i = 0; i < N; i++) this.row(b, `ミケーネ ${String(i + 1).padStart(2, '0')} 号機`, i < st.n ? `ネオン・ベイ 第 ${i + 1} 緊急着陸帯` : `格納庫 ${'ABC'[Math.floor(i / 5)]}-${i % 5 + 1} 番`, i < st.n ? '<span class="dn">出動中</span>' : '<span class="up">待機</span>');
     });
@@ -263,8 +295,8 @@ export class UI {
   hack(e, done) {
     const loot = 3000 + e.def.tier * 2500;
     this.talk('制御コア', `<b>${e.def.name}</b> の制御コアに接続した。艦の処遇を選択してください。`, [
-      { label: `拿捕して引き渡す (+${(e.def.bounty * 2).toLocaleString()} Cr)`, cls: 'gold', fn: () => done('capture', e.def.bounty * 2) },
-      { label: `積荷を奪って自沈 (+${loot.toLocaleString()} Cr 相当)`, cls: 'red', fn: () => done('loot', loot) }]);
+      { label: `拿捕して引き渡す (+${(e.def.bounty * 2).toLocaleString('ja-JP')} Cr)`, cls: 'gold', fn: () => done('capture', e.def.bounty * 2) },
+      { label: `積荷を奪って自沈 (+${loot.toLocaleString('ja-JP')} Cr 相当)`, cls: 'red', fn: () => done('loot', loot) }]);
   }
   victory() {
     this.open('星系解放', 'MISSION COMPLETE', (b) => {
