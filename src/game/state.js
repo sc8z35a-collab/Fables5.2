@@ -23,13 +23,19 @@ export function stats(id = G.p.ship) {
 export const cargoUsed = () => Object.values(G.p.cargo).reduce((a, b) => a + b, 0);
 export function addCargo(id, n) { const k = Math.max(0, Math.min(n, stats().cargo - cargoUsed())); if (k > 0) G.p.cargo[id] = (G.p.cargo[id] || 0) + k; return k; }
 export function takeCargo(id, n) { const h = G.p.cargo[id] || 0, k = Math.min(h, n); if (k > 0) { G.p.cargo[id] = h - k; if (!G.p.cargo[id]) delete G.p.cargo[id]; } return k; }
-export const commodity = (id) => COMMODITIES.find((c) => c.id === id);
+const COMMODITY_BY = Object.fromEntries(COMMODITIES.map((c) => [c.id, c]));
+export const commodity = (id) => COMMODITY_BY[id]; // 価格計算で何百回も引くので表にしておく
 export function price(sid, cid) {
   const c = commodity(cid), m = PRICES[sid]?.[cid]; if (m == null) return null;
   return Math.max(1, Math.round(c.base * m * (1 + 0.08 * Math.sin(G.p.day * 1.7 + c.base + sid.length * 3))));
 }
 export function earn(n) { G.p.credits += n; if (n > 0) G.p.stats.earned += n; }
-export const remaining = () => ENEMIES.filter((e) => !G.p.done[e.id]).length;
+export const remaining = () => { let n = 0; for (const e of ENEMIES) if (!G.p.done[e.id]) n++; return n; }; // HUD から毎フレーム呼ばれるので配列を作らずに数える
+/** HUD 左上の目標表示 (宇宙・艦内・地表で共通)。ms = 優先して見せる任務 */
+export function objective(ms = G.p.missions[0]) {
+  const n = G.p.missions.length;
+  return `<b>ヴォイド艦隊</b> 残存 ${remaining()}/20${ms ? `<br>任務：${ms.title} (${ms.prog}/${ms.need})${n > 1 ? `<small>　ほか ${n - 1} 件</small>` : ''}` : ''}${G.tip ? `<br>${G.tip}` : ''}`;
+}
 
 // ── 任務 ──
 export function missionBoard(sid) {
@@ -60,7 +66,7 @@ export function event(type, data = {}) {
     m.prog++;
     if (m.prog >= m.need) {
       G.p.missions.splice(G.p.missions.indexOf(m), 1); G.p.flags['m' + m.id] = 1; earn(m.reward);
-      G.hud?.msg(`任務達成：${m.title}　報酬 ${m.reward.toLocaleString()} Cr`, 'good', 7); G.audio?.sfx('reward');
+      G.hud?.msg(`任務達成：${m.title}　報酬 ${m.reward.toLocaleString('ja-JP')} Cr`, 'good', 7); G.audio?.sfx('reward');
     } else G.hud?.msg(`任務進行：${m.title} (${m.prog}/${m.need})`, 'good');
   }
 }

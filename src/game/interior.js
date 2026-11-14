@@ -9,10 +9,11 @@ import { Mirror } from '../gfx/renderer.js';
 import { Particles, makeGlowSprite } from '../gfx/fx.js';
 import { syncDamage } from '../gfx/damage.js';
 import { mat, glow, aoMat, activeScreens, dropScreens } from '../gfx/textures.js';
-import { ENEMIES, SHIPS, BASES, station, body } from '../world/defs.js';
-import { stats, save, earn, addCargo, event, remaining, rescueState, disaster } from './state.js';
+import { ENEMIES, SHIPS, station, body } from '../world/defs.js';
+import { stats, save, earn, addCargo, event, remaining, rescueState, disaster, objective } from './state.js';
 
-const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3(), _q = new THREE.Quaternion();
+const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3();
+export const LOW_HP = '体力が少ない。医療ポッド・休憩・食事で回復しよう。';
 const TALK = {
   mech: ['「機体の調子はどうだ？ 格納庫サービスの端末で、3 隻のどれにでも乗り換えられるぜ」', '「ミサイルは撃ったら補給を忘れるな。整備タブでやってやる」'],
   tourist: ['「展望デッキから見る地球は最高よ。あなたも見てきたら？」', '「ゼファーの雲海ラウンジに行くのが夢なの。黄金の環が空いっぱいに広がるんですって」'],
@@ -108,7 +109,7 @@ export class InteriorMode {
   constructor() {
     const s = (this.scene = new THREE.Scene()); this.camera = new THREE.PerspectiveCamera(72, G.W / G.H, 0.08, 400); s.add(this.camera);
     s.add((this.hemi = new THREE.HemisphereLight(0xffffff, 0x222222, 1)));
-    this.pool = []; for (let i = 0; i < (G.gfx.q.cap <= 1 ? 4 : 6); i++) { const l = new THREE.PointLight(0xffffff, 0, 24, 2); s.add(l); this.pool.push(l); }
+    this.pool = []; this._pool();
     this.mirror = new Mirror(G.gfx, 0); this.parts = new Particles(500); s.add(this.parts.obj);
     this.cache = new Map(); this.cur = null; this.pos = new THREE.Vector3(); this.yaw = 0; this.pitch = 0; this.bob = 0; this.far = true;
     this.frameQ = new THREE.Quaternion(); this.farQ = new THREE.Quaternion(); this.camU = new THREE.Vector3(); this.ships = {};
@@ -129,6 +130,7 @@ export class InteriorMode {
     this.ctx = o; const id = o.type === 'ship' ? G.p.ship : o.id || o.body, key = o.type + ':' + id;
     if (this.cur) { this.scene.remove(this.cur.group); if (this.cache.get(this.cur.key) !== this.cur) this._dispose(this.cur); } // キャッシュしない室内 (敵艦) は出るときに解放する
     let it = this.cache.get(key);
+    if (it) { this.cache.delete(key); this.cache.set(key, it); } // 最近使った順に並べ直す (よく行く室内ほど捨てられにくい LRU。以前は作った順に捨てていた)
     if (!it) {
       const def = o.type === 'enemy' ? ENEMIES.find((e) => e.id === id) : null, bp = blueprint(o.type, id, def);
       it = buildInterior(bp); it.key = key; it.def = def;
@@ -157,16 +159,22 @@ export class InteriorMode {
     this.scene.environment = it.env; this.scene.environmentIntensity = 0.5; G.gfx.look(0.4, 1.15, 0.92);
     this.hostile = !!it.bp.hostile; this.gun.visible = this.hostile; this.suit = 60; for (const sh of this.shots) { sh.life = 0; sh.m.visible = false; }
     this.camera.aspect = G.W / G.H; this.camera.fov = 72; this.camera.updateProjectionMatrix();
-    G.hud.setMode('fps'); G.hud.show(true); G.hud.setTarget(null); G.gfx.fx.uSun.value.z = 0; G.gfx.fx.uWarp.value = 0; G.gfx.fx.uHeat.value = 0;
+    G.hud.setMode('fps'); G.hud.showBar('sh', this.hostile); G.hud.show(true); G.hud.setTarget(null); /* 防護服 (SUIT) が減るのは敵艦の中だけ */ G.gfx.fx.uSun.value.z = 0; G.gfx.fx.uWarp.value = 0; G.gfx.fx.uHeat.value = 0;
     G.input.setButtons([{ id: 'run', label: '走る', cls: 'sm p-run', key: 'ShiftLeft,ShiftRight' }, ...(this.hostile ? [{ id: 'ffire', label: '射撃', cls: 'big p-ffire', key: 'Space' }] : [])], this.hostile ? 'fpsH' : 'fps');
     G.audio?.music(it.bp.music || 'interior'); G.audio?.engine(0, 0, 0);
     if (this.hostile) { G.hud.banner(it.bp.name, '艦橋の制御コアを掌握せよ', 3.5); G.hud.msg('警備ドローンが巡回中。「射撃」で撃破し、通路の奥の艦橋を目指せ。', 'warn', 8); }
     else G.hud.banner(o.type === 'rescue' && o.idx != null ? `${it.bp.name} ${o.idx + 1} 号機` : it.bp.name, it.bp.sub, 2.6);
-    if (o.type === 'station' && id === 'atlas') { const dz = disaster(), st = rescueState(); if (dz && !dz.done && !this._dz) { this._dz = 1; setTimeout(() => { this._dz = 0; }, 60000); G.hud.msg(`災害警報：${dz.name}。${st.n >= dz.need ? `ミケーネ ${st.n} 機が対応中。` : `指令室から救助船 ${dz.need} 機を出動させよ。`}`, 'warn', 9); } }
+    if (o.type === 'station' && id === 'atlas') { const dz = disaster(), st = rescueState(); if (dz && !dz.done) G.hud.once('dz', `災害警報：${dz.name}。${st.n >= dz.need ? `ミケーネ ${st.n} 機が対応中。` : `指令室から救助船 ${dz.need} 機を出動させよ。`}`, 'warn', 60, 9); }
     this._cam(0); this._far(0);
   }
   exit() { G.hud.setPrompt(''); G.hud.setCtx([]); G.hud.damage(0); this._sky?.(false); activeScreens(null); }
-  onQuality() { this.cache.forEach((it) => { if (it !== this.cur) { it.envRT?.dispose(); it.envRT = null; } it.env = null; }); }
+  onQuality() { this.cache.forEach((it) => { if (it !== this.cur) { it.envRT?.dispose(); it.envRT = null; } it.env = null; }); this._pool(); }
+  /** 実ライトの数を画質に合わせる (ロー: 4 灯 / それ以上: 6 灯)。以前は起動時の画質のまま変わらなかった */
+  _pool() {
+    const n = G.gfx.q.cap <= 1 ? 4 : 6;
+    while (this.pool.length < n) { const l = new THREE.PointLight(0xffffff, 0, 24, 2); this.scene.add(l); this.pool.push(l); }
+    while (this.pool.length > n) { const l = this.pool.pop(); this.scene.remove(l); l.dispose(); }
+  }
   /** 室内一式を GPU から解放する (形状・反射プローブ・端末スクリーン)。自機のモデルと接地影は別の室内でも使うので外してから */
   _dispose(it) {
     if (this.shipObj?.parent === it.group) { it.group.remove(this.shipObj); this.shipObj = null; } if (this.shipShadow?.parent === it.group) it.group.remove(this.shipShadow);
@@ -195,9 +203,9 @@ export class InteriorMode {
   refreshShip() { if (this.cur?.slot) this._slot(); }
 
   update(dt) {
-    this.time += dt; const it = this.cur, inp = G.input, ax = inp.axes();
-    this.yaw -= inp.look.x * 0.0052; this.pitch = clamp(this.pitch - inp.look.y * 0.0052, -1.3, 1.3);
-    if (inp.keys.KeyQ) this.yaw += dt * 2; if (inp.keys.KeyE && false) this.yaw -= dt * 2;
+    this.time += dt; const it = this.cur, inp = G.input, ax = inp.axes(true), sens = G.p.sens || 1;
+    this.yaw -= inp.look.x * 0.0052 * sens; this.pitch = clamp(this.pitch - inp.look.y * 0.0052 * sens, -1.3, 1.3);
+    this.yaw += inp.turn() * dt * 2; // キーボード: ← / Q で左、→ で右を向く
     const sp = inp.down('run') ? 7.6 : 4.5, sn = Math.sin(this.yaw), cs = Math.cos(this.yaw);
     const dx = (-sn * ax.y + cs * ax.x) * sp * dt, dz = (-cs * ax.y - sn * ax.x) * sp * dt, p = this.pos;
     if (dx || dz) {
@@ -209,7 +217,7 @@ export class InteriorMode {
     // 扉
     for (const d of it.doors) { if (d.open) continue; const near = Math.hypot(d.x - p.x, d.z - p.z) < 3.2 || it.drones.some((q) => q.alive && Math.hypot(d.x - q.x, d.z - q.z) < 2.4); if (near !== d.was) { d.was = near; if (Math.hypot(d.x - p.x, d.z - p.z) < 12) G.audio?.sfx('door'); } d.k = damp(d.k, near ? 1 : 0, d.mode === 'y' ? 5 : 9, dt); if (d.mode === 'y') d.panels[0].position.y = d.k * d.dh * 0.97; else { d.panels[0].position.x = -(d.dw / 4 + d.k * d.dw * 0.49); d.panels[1].position.x = d.dw / 4 + d.k * d.dw * 0.49; } }
     this._vis();
-    for (const f of it.anim) f(dt, this.time);
+    for (const f of it.anim) if (!f.room || f.room.visible) f(dt, this.time); // 閉じた扉の向こう (非表示の部屋) の小道具は動かさない
     for (const n of it.npcs) { const a = Math.atan2(p.x - n.x, p.z - n.z), d = Math.hypot(p.x - n.x, p.z - n.z); let da = (d < 7 ? a : n.yaw) - n.g.rotation.y; da = Math.atan2(Math.sin(da), Math.cos(da)); n.g.rotation.y += da * Math.min(1, dt * 3); n.g.position.y = (n.y || 0) + Math.sin(this.time * 1.6 + n.ph) * 0.012; } // 台の上の人物が床まで沈まないよう足元の高さを保つ
     if (this.hostile) this._combat(dt);
     this._cam(dt); this._lights(dt); this._far(dt); this._interact();
@@ -217,10 +225,10 @@ export class InteriorMode {
     // HUD
     const rm = roomAt(it, p.x, p.z); G.hud.setLoc(it.bp.name, rm?.name || '');
     if (this.time - this.lastHurt > 3.5) this.suit = Math.min(60, this.suit + 14 * dt);
-    G.hud.bar('sh', this.suit / 60); G.hud.bar('hull', G.p.hp / 100); G.hud.damage(G.p.hp < 35 ? 0.4 : 0);
+    G.hud.bar('sh', this.suit / 60); G.hud.bar('hull', G.p.hp / 100); G.hud.damage(G.p.hp < 35 ? 0.4 : 0); if (G.p.hp < 35 && !this.dead) G.hud.once('lowhp', LOW_HP, 'warn', 45);
     G.gfx.fx.uDamage.value = damp(G.gfx.fx.uDamage.value, this.time - this.lastHurt < 0.2 ? 1 : 0, 10, dt);
-    const left = it.drones.filter((d) => d.alive).length;
-    G.hud.setObj(this.hostile ? `<b>警備ドローン</b> 残り ${left}<br>艦橋の <b>制御コア</b> を掌握せよ` : `<b>ヴォイド艦隊</b> 残存 ${remaining()}/20${G.p.missions[0] ? `<br>任務：${G.p.missions[0].title} (${G.p.missions[0].prog}/${G.p.missions[0].need})` : ''}`);
+    let left = 0; for (const d of it.drones) if (d.alive) left++;
+    G.hud.setObj(this.hostile ? `<b>警備ドローン</b> 残り ${left}<br>艦橋の <b>制御コア</b> を掌握せよ` : objective());
     G.hud.begin();
   }
   idle(dt) { this._far(dt); }
@@ -228,8 +236,13 @@ export class InteriorMode {
   _vis(all) {
     const it = this.cur, p = this.pos; if (all) { for (const id in it.roomGroups) it.roomGroups[id].visible = true; return; }
     const rm = roomAt(it, p.x, p.z) || this.lastRoom; if (!rm) return; this.lastRoom = rm;
-    const vis = new Set([rm.id]), add = (id, depth) => { for (const a of it.adj[id] || []) { const d = a.d; if (vis.has(a.to)) continue; if (d.open || d.k > 0.02 || Math.hypot(d.x - p.x, d.z - p.z) < 9) { vis.add(a.to); if (depth < 2 && (d.open || d.k > 0.5)) add(a.to, depth + 1); } } };
-    add(rm.id, 0); for (const id in it.roomGroups) it.roomGroups[id].visible = vis.has(id);
+    const vis = this._visSet || (this._visSet = new Set()); vis.clear(); vis.add(rm.id); this._visAdd(rm.id, 0); // 集合は毎フレーム作らず使い回す
+    for (const id in it.roomGroups) it.roomGroups[id].visible = vis.has(id);
+  }
+  /** 扉が開いている (または近い) 隣の部屋を見える部屋に加える。開け放した扉の先は 2 部屋先まで */
+  _visAdd(id, depth) {
+    const it = this.cur, p = this.pos, vis = this._visSet;
+    for (const a of it.adj[id] || []) { const d = a.d; if (vis.has(a.to)) continue; if (d.open || d.k > 0.02 || Math.hypot(d.x - p.x, d.z - p.z) < 9) { vis.add(a.to); if (depth < 2 && (d.open || d.k > 0.5)) this._visAdd(a.to, depth + 1); } }
   }
   _cam(dt) {
     const c = this.camera; c.position.set(this.pos.x, this.pos.y + 1.68 + Math.sin(this.bob * 2) * 0.03, this.pos.z); c.rotation.set(this.pitch, this.yaw, 0, 'YXZ'); c.updateMatrixWorld();
@@ -238,9 +251,13 @@ export class InteriorMode {
   _far(dt) { if (!this.far) { if (this.skyM) this.skyM.position.copy(this.camera.position); return; } this.farQ.copy(this.frameQ).multiply(this.camera.quaternion); G.backdrop.update(this.camU, this.farQ, this.camera.fov, this.camera.aspect, dt, G.gfx.pxScale); }
   /** 近い論理ライトを実ライトのプールへ割り当てる (シェーダ再コンパイルなし) */
   _lights(dt, snap) {
-    const L = this.cur.lights, p = this.pos; for (const l of L) l._d = (l.x - p.x) ** 2 + (l.z - p.z) ** 2;
-    L.sort((a, b) => a._d - b._d);
-    this.pool.forEach((pl, i) => { const l = L[i]; if (!l) { pl.intensity = 0; return; } const d = Math.sqrt(l._d), f = 1 - THREE.MathUtils.smoothstep(d, 18, 34); pl.position.set(l.x, l.y, l.z); pl.color.copy(l.c); pl.distance = l.d * 1.6; pl.intensity = snap ? l.i * f : damp(pl.intensity, l.i * f, 8, dt); });
+    // 全ライトを毎フレーム並べ替えず、近い順に必要な数 (4〜6 灯) だけを選ぶ
+    const L = this.cur.lights, p = this.pos, n = this.pool.length, near = this._near || (this._near = []); near.length = 0;
+    for (const l of L) {
+      const d = (l.x - p.x) ** 2 + (l.z - p.z) ** 2; l._d = d; if (near.length === n && d >= near[n - 1]._d) continue;
+      let i = near.length < n ? near.length : n - 1; while (i > 0 && near[i - 1]._d > d) { near[i] = near[i - 1]; i--; } near[i] = l;
+    }
+    for (let i = 0; i < n; i++) { const pl = this.pool[i], l = near[i]; if (!l) { pl.intensity = 0; continue; } const d = Math.sqrt(l._d), f = 1 - THREE.MathUtils.smoothstep(d, 18, 34); pl.position.set(l.x, l.y, l.z); pl.color.copy(l.c); pl.distance = l.d * 1.6; pl.intensity = snap ? l.i * f : damp(pl.intensity, l.i * f, 8, dt); }
   }
   _interact() {
     const it = this.cur, p = this.pos, fx = -Math.sin(this.yaw), fz = -Math.cos(this.yaw); let best = null, bs = 1e9;
@@ -267,11 +284,11 @@ export class InteriorMode {
       case 'lab': return ui.lab(c.type === 'station' ? sid : 'aurora');
       case 'status': return ui.status();
       case 'rest': return ui.rest();
-      case 'cafe': return ui.talk('バリスタ', '「地球産の豆を使ったコーヒーはいかがですか？ ひと息つけば、航海日誌も記録しておきますよ」', [{ label: 'コーヒーで一服 (40 Cr)', fn: () => { if (G.p.credits < 40) return G.audio?.sfx('deny'); G.p.credits -= 40; G.p.hp = 100; G.p.day++; save(); G.audio?.sfx('reward'); G.hud.msg('香り高い一杯で体力が全快した。記録完了。', 'good'); } }, { label: 'また今度' }]);
-      case 'ramen': return ui.talk('ラーメン屋の店主', '「へいらっしゃい！ ネオン・ベイ名物、星屑トンコツだよ！」', [{ label: '一杯たのむ (60 Cr)', fn: () => { if (G.p.credits < 60) return G.audio?.sfx('deny'); G.p.credits -= 60; G.p.hp = 100; G.p.day++; save(); G.audio?.sfx('reward'); G.hud.msg('五臓六腑に染みわたる…体力全快・記録完了。', 'good'); } }, { label: 'やめておく' }]);
+      case 'cafe': return meal('バリスタ', '「地球産の豆を使ったコーヒーはいかがですか？ ひと息つけば、航海日誌も記録しておきますよ」', 'コーヒーで一服', 40, '香り高い一杯で体力が全快した。記録完了。', 'また今度');
+      case 'ramen': return meal('ラーメン屋の店主', '「へいらっしゃい！ ネオン・ベイ名物、星屑トンコツだよ！」', '一杯たのむ', 60, '五臓六腑に染みわたる…体力全快・記録完了。', 'やめておく');
       case 'heal': G.p.hp = 100; this.suit = 60; G.audio?.sfx('reward'); return G.hud.msg('医療ポッドで治療した。体力全快。', 'good');
       case 'vend': if (G.p.credits < 20) return G.audio?.sfx('deny'); G.p.credits -= 20; G.p.hp = Math.min(100, G.p.hp + 30); G.audio?.sfx('buy'); return G.hud.msg('エナジードリンクを飲んだ。体力 +30', 'good');
-      case 'ammo': { const p = G.space.pl, f = stats().missiles; if (p.missiles >= f) return G.hud.msg('ミサイルは満載です。'); p.missiles = f; G.audio?.sfx('buy'); return G.hud.msg(`艦内備蓄からミサイルを補給した (${f} 発)`, 'good'); }
+      case 'ammo': return rearm((f) => `艦内備蓄からミサイルを補給した (${f} 発)`);
       case 'harvest': { if (G.p.flags.harvest === G.p.day) return G.hud.msg('今日はもう収穫済み。作物が育つまで待とう。'); const n = addCargo('food', 3); if (!n) return G.hud.msg('貨物室に空きがありません', 'warn'); G.p.flags.harvest = G.p.day; G.audio?.sfx('pickup'); return G.hud.msg(`新鮮な野菜を収穫した。食料 ×${n} を貨物室へ。${n < 3 ? '（貨物室がいっぱいで残りは積めなかった）' : ''}`, 'good'); }
       case 'scope': return ui.talk('大望遠鏡', `深宇宙の闇に、星系の姿が浮かび上がる。<br>ヴォイド艦隊の残存は <b>${remaining()} 隻</b>。${['地球の雲がゆっくりと渦を巻いている。', 'ゼファーの環が陽光を受けて黄金に輝いている。', 'イグニスの夜側で、溶岩の河が赤く脈打っている。', 'グラキエスの極に、青緑のオーロラが揺れている。'][Math.floor(Math.random() * 4)]}`);
       case 'arcade': return ui.talk('アーケード筐体', ['ハイスコア 999,990 — 「AAA」。どうやっても抜けそうにない。', '画面の中でも宇宙船が戦っている。現実とあまり変わらないな。', '1 クレジット入れてみたが、3 秒で撃墜された。'][Math.floor(Math.random() * 3)]);
@@ -283,9 +300,9 @@ export class InteriorMode {
       case 'rescue': return ui.rescue();
       case 'water': G.p.hp = Math.min(100, G.p.hp + 10); G.audio?.sfx('pickup'); return G.hud.msg('冷たい水を一杯飲んだ。体力 +10', 'good');
       case 'mycenae': return ui.talk(`救助船 ミケーネ ${i.idx + 1} 号機`, '後部ランプが下りている。機内では救難ボットが発進に備えて待機している。', [{ label: '機内に入る', cls: 'gold', fn: () => G.go('interior', { type: 'rescue', from: 'station', idx: i.idx, back: [i.x, i.z, Math.PI] }) }, { label: 'やめる' }]);
-      case 'rearm': { const p = G.space.pl, f = stats().missiles; if (p.missiles >= f) return G.hud.msg('ミサイルは満載です。'); p.missiles = f; G.audio?.sfx('buy'); return G.hud.msg(`兵装庫の試験弾でミサイルを満載にした (${f} 発)。代金は不要だ。`, 'good'); }
+      case 'rearm': return rearm((f) => `兵装庫の試験弾でミサイルを満載にした (${f} 発)。代金は不要だ。`);
       case 'checkup': G.p.hp = 100; this.suit = 60; G.audio?.sfx('reward'); return ui.talk('全身スキャナ', `走査完了。骨格・循環器・神経、すべて異常なし。体力が全快した。<br>被曝線量：年間許容値の ${12 + (G.p.day * 7) % 30}%　／　撃沈 ${G.p.stats.kills} ・拿捕 ${G.p.stats.captures} の戦歴にしては、驚くほど健康だ。`);
-      case 'loot': { const k = 'l' + i.id; if (G.p.flags[k]) return G.hud.msg('ここはもう空っぽだ。'); G.p.flags[k] = 1; const cr = 900 + this.cur.def.tier * 500; earn(cr); const n = addCargo('salvage', 2); G.audio?.sfx('reward'); return G.hud.msg(`貨物を略奪した：${cr.toLocaleString()} Cr${n ? `／回収部品 ×${n}` : ''}`, 'good'); }
+      case 'loot': { const k = 'l' + i.id; if (G.p.flags[k]) return G.hud.msg('ここはもう空っぽだ。'); G.p.flags[k] = 1; const cr = 900 + this.cur.def.tier * 500; earn(cr); const n = addCargo('salvage', 2); G.audio?.sfx('reward'); return G.hud.msg(`貨物を略奪した：${cr.toLocaleString('ja-JP')} Cr${n ? `／回収部品 ×${n}` : ''}`, 'good'); }
       default: return G.hud.msg('（反応がない）');
     }
   }
@@ -313,7 +330,7 @@ export class InteriorMode {
       if (G.p.done[e.def.id] || e.fate) return;
       earn(reward); G.p.done[e.def.id] = kind === 'capture' ? 'captured' : 'destroyed'; e.fate = kind;
       if (kind === 'capture') { G.p.stats.captures++; event('capture'); } else { G.p.stats.kills++; addCargo('salvage', 2 + e.def.tier); addCargo('contra', 1); event('kill'); }
-      save(); G.audio?.sfx('reward'); G.hud.banner(kind === 'capture' ? '拿捕成功' : '略奪完了', `${e.def.name}　+${reward.toLocaleString()} Cr`, 4);
+      save(); G.audio?.sfx('reward'); G.hud.banner(kind === 'capture' ? '拿捕成功' : '略奪完了', `${e.def.name}　+${reward.toLocaleString('ja-JP')} Cr`, 4);
       setTimeout(() => G.go('space', { resume: true }).then(() => G.space.afterBoard(e)), 1800);
     });
   }
@@ -376,3 +393,12 @@ export class InteriorMode {
   }
 }
 const _col = new THREE.Color();
+/** 飲食店: 代金を払うと体力全快 + 1 日進めて保存 (カフェ・ラーメン屋で共通) */
+function meal(who, line, label, cost, done, no) {
+  return G.ui.talk(who, line, [{ label: `${label} (${cost} Cr)`, fn: () => { if (G.p.credits < cost) return G.audio?.sfx('deny'); G.p.credits -= cost; G.p.hp = 100; G.p.day++; save(); G.audio?.sfx('reward'); G.hud.msg(done, 'good'); } }, { label: no }]);
+}
+/** ミサイルを満載にする (艦内備蓄・兵装庫で共通)。text(f) は補給後のメッセージ */
+function rearm(text) {
+  const p = G.space.pl, f = stats().missiles; if (p.missiles >= f) return G.hud.msg('ミサイルは満載です。');
+  p.missiles = f; G.audio?.sfx('buy'); return G.hud.msg(text(f), 'good');
+}
