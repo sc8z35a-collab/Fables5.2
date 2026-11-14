@@ -378,11 +378,23 @@ export const BUILD2 = { atlas, megaton, fizer, weapon };
 const cylY = (x, y, z, R, y0, y1) => Math.max(Math.hypot(x, z) - R, Math.abs(y - (y0 + y1) / 2) - (y1 - y0) / 2);
 const cylZ = (x, y, z, R, z0, z1) => Math.max(Math.hypot(x, y) - R, Math.abs(z - (z0 + z1) / 2) - (z1 - z0) / 2);
 const MER = [0, 1, 2].map((k) => [Math.cos(k * Math.PI / 3), Math.sin(k * Math.PI / 3)]);
+/** 線分 a-b からの距離 (カプセル判定用) */
+const segD = (x, y, z, a, b) => { const bx = b[0] - a[0], by = b[1] - a[1], bz = b[2] - a[2], px = x - a[0], py = y - a[1], pz = z - a[2], t = Math.max(0, Math.min(1, (px * bx + py * by + pz * bz) / (bx * bx + by * by + bz * bz))); return Math.hypot(px - bx * t, py - by * t, pz - bz * t); };
+// アトラスの天球儀を支える 4 本の腕 (TubeGeometry の制御点を線分でつないだもの)
+const ATLAS_ARMS = [0, 1, 2, 3].map((k) => { const a = (45 + k * 90) * Math.PI / 180, c = Math.cos(a), s = Math.sin(a); return [[150, 14], [214, 60], [252, 150], [236, 226], [202, 262]].map(([r, y]) => [c * r, y, s * r]); });
+// ウェポンの射線上にある 2 基の弾速計測ゲート (一辺約 90m の四角いトラス枠)。以前は判定が無く枠をすり抜けられた
+const CHRONO = [-620, -980].flatMap((z) => [0, 1, 2, 3].map((k) => { const a0 = k * Math.PI / 2 + 0.785, a1 = a0 + Math.PI / 2; return [[Math.cos(a0) * 64, Math.sin(a0) * 64, z], [Math.cos(a1) * 64, Math.sin(a1) * 64, z]]; }));
+const chrono = (x, y, z) => { if (Math.abs(z + 800) > 200) return 1e9; let d = 1e9; for (const [a, b] of CHRONO) d = Math.min(d, segD(x, y, z, a, b) - 4); return d; };
 export const SDF2 = {
-  atlas: (x, y, z) => { const cy = y - 262; let d = Math.min(cylY(x, y, z, 276, -17, 17), cylY(x, y, z, 152, -66, -14), cylY(x, y, z, 205, -64, -20) + 0, cylY(x, y, z, 120, -190, -66), cylY(x, y, z, 80, 14, 182), Math.hypot(x, cy, z) - 65, Math.hypot(Math.hypot(x, z) - 200, cy) - 8, sdBox(x, y, z, 0, -42, 232, 12, 12, 92), sdBox(Math.abs(x), y, z, 188, -140, 0, 78, 14, 30));
-    for (const [c, s] of MER) d = Math.min(d, Math.hypot(Math.hypot(x * c - z * s, cy) - 200, x * s + z * c) - 7); return d; },
+  atlas: (x, y, z) => { const cy = y - 262; let d = Math.min(cylY(x, y, z, 276, -17, 17), cylY(x, y, z, 152, -66, -14), cylY(x, y, z, 205, -64, -20) + 0, cylY(x, y, z, 120, -190, -66), cylY(x, y, z, 80, 14, 182), Math.hypot(x, cy, z) - 65, Math.hypot(Math.hypot(x, z) - 200, cy) - 8, sdBox(x, y, z, 0, -42, 232, 12, 12, 92), sdBox(Math.abs(x), y, z, 188, -140, 0, 78, 14, 30),
+      cylY(x, y, z, 6, -282, -190), Math.hypot(Math.hypot(x, z) - 31, y + 200) - 3.5); // 下部の尖塔と環 (以前は判定なし)
+    for (const [c, s] of MER) d = Math.min(d, Math.hypot(Math.hypot(x * c - z * s, cy) - 200, x * s + z * c) - 7);
+    for (const arm of ATLAS_ARMS) for (let i = 0; i < 4; i++) d = Math.min(d, segD(x, y, z, arm[i], arm[i + 1]) - 9.5); // 天球儀を担ぐ 4 本の腕 (以前は判定なし)
+    return d; },
   megaton: (x, y, z) => { const r = Math.hypot(x, y); let d = Math.min(Math.max(r - 268, Math.abs(z) - 1104), Math.max(r - 190, Math.abs(z) - 1232), Math.hypot(r - 640, Math.abs(z) - 940) - 60, Math.hypot(x, y, z + 1600) - 196, cylZ(x, y, z, 70, 1230, 1556), Math.hypot(r - 176, z - 1330) - 40, cylZ(x, y, z, 108, -1440, -1230), sdBox(x, y, z, 0, 0, -1320, 890, 8, 152), sdBox(x, y, z, 0, 0, -1320, 8, 610, 152));
-    for (let k = 0; k < 3; k++) { const a = k * 2.0944, c = Math.cos(a), s = Math.sin(a), rho = x * c + y * s, tau = -x * s + y * c, u = (rho - 264) * 0.4695 - (z - 780) * 0.8829, v = (rho - 264) * 0.8829 + (z - 780) * 0.4695; d = Math.min(d, sdBox(u, v, tau, 575, 4, 0, 578, 9, 108)); } return d; },
+    for (let k = 0; k < 3; k++) { const a = k * 2.0944, c = Math.cos(a), s = Math.sin(a), rho = x * c + y * s, tau = -x * s + y * c, u = (rho - 264) * 0.4695 - (z - 780) * 0.8829, v = (rho - 264) * 0.8829 + (z - 780) * 0.4695; d = Math.min(d, sdBox(u, v, tau, 575, 4, 0, 578, 9, 108)); }
+    for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3 + 0.3, c = Math.cos(a), s = Math.sin(a), u = x * c + y * s, v = -x * s + y * c; d = Math.min(d, i % 2 ? sdBox(u, v, z, 236, 0, 1342, 9, 11, 45) : sdBox(u, v, z, 232, 0, 1356, 10, 14, 52)); } // 前端の港に係留・接岸中の貨物船 6 隻 (以前は判定なし)
+    return d; },
   fizer: (x, y, z) => Math.min(cylY(x, y, z, 70, -186, 186), Math.hypot(Math.max(Math.abs(x) - 76, 0), y - 262, z) - 44, Math.hypot(Math.hypot(x, z) - 96, y + 222) - 28, cylY(x, y, z, 36, -240, -196), cylY(x, y, z, 24, 180, 222), sdBox(x, y, z, 0, 232, 0, 32, 3, 172)),
-  weapon: (x, y, z) => Math.min(sdBox(x, y, z, 0, 0, 32, 50, 36, 60), sdBox(x, y, z, 0, 0, -165, 24, 24, 146), sdBox(x, y, z, 0, 62, 44, 18, 30, 20), sdBox(x, y, z, 81, 0, 30, 28, 24, 50), sdBox(x, y, z, -81, 0, 30, 28, 24, 50), sdBox(x, y, z, 0, -48, 30, 28, 28, 40), sdBox(x, y, z, 140, -10, 30, 45, 12, 12), Math.hypot(x, y, z + 1500) - 62, sdBox(x, y, z, 0, 0, -153, 52, 3, 10), Math.hypot(x - 426, y + 154, z + 1376) - 44),
+  weapon: (x, y, z) => Math.min(chrono(x, y, z), sdBox(x, y, z, 0, 0, 32, 50, 36, 60), sdBox(x, y, z, 0, 0, -165, 24, 24, 146), sdBox(x, y, z, 0, 62, 44, 18, 30, 20), sdBox(x, y, z, 81, 0, 30, 28, 24, 50), sdBox(x, y, z, -81, 0, 30, 28, 24, 50), sdBox(x, y, z, 0, -48, 30, 28, 28, 40), sdBox(x, y, z, 140, -10, 30, 45, 12, 12), Math.hypot(x, y, z + 1500) - 62, sdBox(x, y, z, 0, 0, -153, 52, 3, 10), Math.hypot(x - 426, y + 154, z + 1376) - 44),
 };

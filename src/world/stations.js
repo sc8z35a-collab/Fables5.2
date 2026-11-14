@@ -158,13 +158,26 @@ function rogue() {
 const BUILD = { haven, vulcan, aurora, bastion, rogue, ...BUILD2 };
 export function buildStation(def) { const o = BUILD[def.id](); o.def = def; return o; }
 
+// ローグズ・デンの周囲の小岩: rogue() と同じ乱数列 (rng(55) の先頭から 4 回ずつ) で位置と大きさを再現する
+const ROGUE_ROCKS = (() => { const r = rng(55), out = []; for (let i = 0; i < 7; i++) { const rad = rr(r, 12, 34), a = r() * 6.28, d = rr(r, 250, 400), y = rr(r, -90, 90); out.push([Math.cos(a) * d, y, Math.sin(a) * d, rad * 1.15]); } return out; })();
 // ── 衝突判定用の近似距離関数 (ステーションのローカル座標) ──
 const SDF = {
-  haven: (x, y, z) => Math.min(Math.hypot(Math.hypot(x, y) - 250, z) - 28, Math.max(Math.hypot(x, y) - 50, Math.abs(z) - 100)),
-  vulcan: (x, y, z) => Math.min(sdBox(x, y, z, 0, 0, 0, 362, 12, 14), sdBox(x, y, z, -215, -62, 0, 82, 64, 50), sdBox(x, y, z, 0, -62, 0, 82, 64, 50), sdBox(x, y, z, 215, -62, 0, 82, 64, 50), sdBox(x, y, z, 392, 40, 0, 32, 66, 26)),
-  aurora: (x, y, z) => Math.min(Math.hypot(x, y, z) - 60, Math.hypot(Math.hypot(x, z) - 96, y) - 6, sdBox(x, y, z, 0, 0, 0, 345, 3, 44), Math.hypot(x, y - 26, Math.max(Math.abs(z + 110) - 65, 0)) - 17),
-  bastion: (x, y, z) => Math.min(Math.max(Math.hypot(x, z) - 158, Math.abs(y) - 64), Math.max(Math.hypot(x, z) - 74, Math.abs(y - 106) - 44), sdBox(x, y, z, 0, 0, 190, 10, 10, 60)),
-  rogue: (x, y, z) => Math.min((Math.hypot(x / 212, y / 145, z / 170) - 1) * 145, Math.hypot(x, y - 30, Math.max(Math.abs(z - 235) - 66, 0)) - 12),
+  haven: (x, y, z) => { // リングとハブに加え、スポーク 6 本・居住モジュール 6 基・後部マスト・通信ディッシュ・太陽電池パネル (以前は判定なし)
+    const r = Math.hypot(x, y); let d = Math.min(Math.hypot(r - 250, z) - 28, Math.max(r - 50, Math.abs(z) - 100), Math.max(r - 8, Math.max(z + 100, -z - 305)), Math.max(r - 39, Math.abs(z + 224) - 7));
+    for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3, c = Math.cos(a), s = Math.sin(a), u = x * c + y * s, v = -x * s + y * c; d = Math.min(d, Math.hypot(Math.max(Math.abs(u - 141) - 95, 0), v, z) - 8.5, sdBox(u, v, z, 105, 0, 0, 18, 8, 20), sdBox(u, v, z, 220, 0, 0, 11, 17, 15)); }
+    for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4, c = Math.cos(a), s = Math.sin(a), u = x * c + y * s, v = -x * s + y * c; d = Math.min(d, sdBox(u, v, z, 105, 0, -150, 23, 1, 55), Math.hypot(Math.max(Math.abs(u - 85) - 75, 0), v, z + 150) - 2); }
+    return d; },
+  vulcan: (x, y, z) => Math.min(sdBox(x, y, z, 0, 0, 0, 362, 12, 14), sdBox(x, y, z, -215, -62, 0, 82, 64, 50), sdBox(x, y, z, 0, -62, 0, 82, 64, 50), sdBox(x, y, z, 215, -62, 0, 82, 64, 50), sdBox(x, y, z, 392, 40, 0, 32, 66, 26),
+    Math.hypot(x + 330, Math.abs(y) - 34, z) - 23, Math.hypot(x + 378, Math.abs(y) - 34, z) - 23), // 球形燃料タンク 4 基 (以前は判定なし)
+  aurora: (x, y, z) => { // 主球・リング・太陽電池翼・望遠鏡に加え、直径約 180m のパラボラアンテナと下部ハブ (以前は判定が無くすり抜けられた)
+    const px = x, py = y - 96, pz = z - 30, h = py * 0.8776 - pz * 0.4794, rx = px, rz = py * 0.4794 + pz * 0.8776, rho = Math.hypot(rx, rz), dish = Math.max(rho - 92, (Math.abs(h - rho * rho / 300) - 2.5) / 1.2);
+    return Math.min(Math.hypot(x, y, z) - 60, Math.hypot(Math.hypot(x, z) - 96, y) - 6, sdBox(x, y, z, 0, 0, 0, 345, 3, 44), Math.hypot(x, y - 26, Math.max(Math.abs(z + 110) - 65, 0)) - 17, dish, Math.max(Math.hypot(x, z - 20) - 5, Math.abs(y - 80) - 30), Math.max(Math.hypot(x, z) - 20, Math.abs(y + 68) - 16)); },
+  bastion: (x, y, z) => { const r = Math.hypot(x, z); let d = Math.min(Math.max(r - 158, Math.abs(y) - 64), Math.max(r - 92, Math.abs(y - 84) - 24), Math.max(r - 60, Math.abs(y - 126) - 21), Math.max(r - 8, Math.abs(y - 190) - 46), sdBox(x, y, z, 0, 0, 190, 10, 10, 60), sdBox(x, y, z, 0, 0, 236, 15, 15, 13),
+      Math.max(r - 94, Math.abs(y + 86) - 26), Math.max(r - 44, Math.abs(y + 126) - 16)); // 下部の円錐部と最下段 (以前は判定が無く、下半分をすり抜けられた)
+    for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3 + Math.PI / 6; d = Math.min(d, Math.max(Math.hypot(x - Math.cos(a) * 150, z - Math.sin(a) * 150) - 27, Math.abs(y) - 106)); } // 6 本の柱と上下の砲塔
+    return d; },
+  rogue: (x, y, z) => { let d = Math.min((Math.hypot(x / 212, y / 145, z / 170) - 1) * 145, Math.hypot(x, y - 30, Math.max(Math.abs(z - 235) - 66, 0)) - 12, sdBox(x, y, z, 25, 148, 20, 85, 22, 75), sdBox(x, y, z, 0, 30, 292, 17, 17, 15));
+    for (const q of ROGUE_ROCKS) d = Math.min(d, Math.hypot(x - q[0], y - q[1], z - q[2]) - q[3]); return d; }, // 周囲の小岩 7 個と岩の上の居住区 (以前は判定なし)
 };
 Object.assign(SDF, SDF2);
 export function stationSDF(id, x, y, z) { return SDF[id](x, y, z); }

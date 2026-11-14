@@ -288,10 +288,12 @@ export class SpaceMode {
     }
     if (G.input.axes().x ** 2 + G.input.axes().y ** 2 > 0.8) { p.auto = null; if (p.m.gear) p.m.gear.visible = false; G.hud.msg('自動誘導を中止 — 手動操縦'); }
   }
+  /** シーン座標の点からステーション s の外板までの近似距離 (ステーションの回転も考慮する) */
+  _sdf(s, x, y, z) { const o = s.m.obj, c = o.position, q = o.quaternion; _w3.set(x - c.x, y - c.y, z - c.z); if (q.w < 0.999999) _w3.applyQuaternion(_q2.copy(q).invert()); return stationSDF(s.def.id, _w3.x, _w3.y, _w3.z); }
   /** 線分 a→b がステーション s の本体 (衝突判定用の距離関数) に触れるか */
   _blocked(s, a, b) {
-    const c = s.m.obj.position, id = s.def.id, n = Math.min(120, Math.ceil(a.distanceTo(b) / 15)), cl = this.pl.st.radius * 0.5 + 8;
-    for (let i = 1; i < n; i++) { const k = i / n; if (stationSDF(id, a.x + (b.x - a.x) * k - c.x, a.y + (b.y - a.y) * k - c.y, a.z + (b.z - a.z) * k - c.z) < cl) return true; }
+    const n = Math.min(120, Math.ceil(a.distanceTo(b) / 15)), cl = this.pl.st.radius * 0.5 + 8;
+    for (let i = 1; i < n; i++) { const k = i / n; if (this._sdf(s, a.x + (b.x - a.x) * k, a.y + (b.y - a.y) * k, a.z + (b.z - a.z) * k) < cl) return true; }
     return false;
   }
   /** 回り込みの中継点: 中心から見た自機と進入点の方向の中間で、本体の外接球より十分外側 */
@@ -557,17 +559,17 @@ export class SpaceMode {
     for (const e of this.enemies) { if (e.state === 'gone' || !e.m || e.dist > 400) continue; const o = e.m.obj.position, R = sr + e.m.radius * 0.36, d = o.distanceTo(p.pos); if (d >= R || d < 1e-3) continue;
       const n = _b.subVectors(p.pos, o).multiplyScalar(1 / d), imp = bump(n, R - d, e.vel, e.def.name); if (imp > 8) { const h = this._precise(e.m, _a.copy(o).addScaledVector(n, e.m.radius * 1.6), _c.copy(n).negate(), false, e.m.radius * 3.2); if (h) this._wound(e.m, h, clamp(imp * 0.045, 1.2, 6), 0.6, e.vel, e.def.glow); e.vel.addScaledVector(n, -imp * 0.4); this.hitEnemy(e, imp * 0.3, p.pos); } }
     if (this.rocks.visible && this.rocks.position.distanceToSquared(p.pos) < 4.3e7) { const g = this.rocks.position; for (const r of this.rockList) { const dx = p.pos.x - g.x - r[0], dy = p.pos.y - g.y - r[1], dz = p.pos.z - g.z - r[2], R = r[3] + sr, d2 = dx * dx + dy * dy + dz * dz; if (d2 >= R * R) continue; const d = Math.sqrt(d2) || 1; bump(_b.set(dx / d, dy / d, dz / d), R - d, null, '小惑星'); } }
-    for (const s of this.stations) { if (!s.m || s.dist > (s.m.reach || s.m.radius * 1.4) + 200) continue; const o = s.m.obj, l = _a.copy(p.pos).sub(o.position), f = (x, y, z) => stationSDF(s.def.id, x, y, z), d = f(l.x, l.y, l.z); if (d >= sr) continue;
-      const n = _b.set(f(l.x + 1, l.y, l.z) - f(l.x - 1, l.y, l.z), f(l.x, l.y + 1, l.z) - f(l.x, l.y - 1, l.z), f(l.x, l.y, l.z + 1) - f(l.x, l.y, l.z - 1)); if (n.lengthSq() < 1e-8) n.copy(l); n.normalize(); bump(n, sr - d, null, s.def.name); }
+    for (const s of this.stations) { if (!s.m || s.dist > (s.m.reach || s.m.radius * 1.4) + 200) continue; const P = p.pos, f = (x, y, z) => this._sdf(s, x, y, z), d = f(P.x, P.y, P.z); if (d >= sr) continue; // 回転するステーション (ヘイヴン) も正しく判定する
+      const n = _b.set(f(P.x + 1, P.y, P.z) - f(P.x - 1, P.y, P.z), f(P.x, P.y + 1, P.z) - f(P.x, P.y - 1, P.z), f(P.x, P.y, P.z + 1) - f(P.x, P.y, P.z - 1)); if (n.lengthSq() < 1e-8) n.copy(P).sub(s.m.obj.position); n.normalize(); bump(n, sr - d, null, s.def.name); }
   }
   /** 前フレームの位置 → 現在位置の線分をたどり、ステーション (距離関数) ・小惑星・敵艦 (球) に最初に触れた所で止める */
   _sweep(sr) {
     const p = this.pl, a = this._pp, mv = _w2.subVectors(p.pos, a), L = mv.length(); if (L < sr * 0.5) return; mv.multiplyScalar(1 / L);
     let tHit = L;
     for (const s of this.stations) {
-      if (!s.m || s.dist > (s.m.reach || s.m.radius * 1.4) + 200 + L) continue; const c = s.m.obj.position, id = s.def.id;
-      if (stationSDF(id, a.x - c.x, a.y - c.y, a.z - c.z) < sr) continue; // すでに接触中 (壁沿いに滑っている) なら通常の押し戻しに任せる
-      for (let t = 0, n = 0; t < tHit && n < 400; n++) { const d = stationSDF(id, a.x + mv.x * t - c.x, a.y + mv.y * t - c.y, a.z + mv.z * t - c.z); if (d < sr) { tHit = Math.min(tHit, t); break; } t += Math.max(d - sr, 0.5); }
+      if (!s.m || s.dist > (s.m.reach || s.m.radius * 1.4) + 200 + L) continue;
+      if (this._sdf(s, a.x, a.y, a.z) < sr) continue; // すでに接触中 (壁沿いに滑っている) なら通常の押し戻しに任せる
+      for (let t = 0, n = 0; t < tHit && n < 400; n++) { const d = this._sdf(s, a.x + mv.x * t, a.y + mv.y * t, a.z + mv.z * t); if (d < sr) { tHit = Math.min(tHit, t); break; } t += Math.max(d - sr, 0.5); }
     }
     const sphere = (cx, cy, cz, R) => { const ox = a.x - cx, oy = a.y - cy, oz = a.z - cz, b = ox * mv.x + oy * mv.y + oz * mv.z, cc = ox * ox + oy * oy + oz * oz - R * R; if (cc <= 0) return; const disc = b * b - cc; if (disc < 0) return; const t = -b - Math.sqrt(disc); if (t >= 0 && t < tHit) tHit = t; };
     if (this.rocks.visible && this.rocks.position.distanceToSquared(p.pos) < (6600 + L) ** 2) { const g = this.rocks.position; for (const r of this.rockList) sphere(g.x + r[0], g.y + r[1], g.z + r[2], r[3] + sr); }
