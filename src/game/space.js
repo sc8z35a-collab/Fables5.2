@@ -34,7 +34,7 @@ export class SpaceMode {
     this.missiles = []; this.misPool = [];
     for (let i = 0; i < 8; i++) { const g = new THREE.Group(), b = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 2.4, 8).rotateX(Math.PI / 2), mat('hull', { color: 0xdddddd, metal: 0.3, rough: 0.6 })); const gs = makeGlowSprite('#ffb060', 5, 4); gs.position.set(0, 0, 1.6); g.add(b, gs); g.visible = false; s.add(g); this.misPool.push(g); }
     this.pl = { m: null, id: null, vel: V(), av: V(), thr: 0.5, sc: { on: false, speed: 0, charge: 0 }, auto: null, docked: null, gi: 0, fireT: 0, lastHit: -99, view: 0, camQ: new THREE.Quaternion(), target: null, misT: 0, shake: 0 };
-    this.nav = null; this.time = 0; this.title = false; this.heat = 0; this.warp = 0; this.said = {};
+    this.nav = null; this.time = 0; this.title = false; this.heat = 0; this.warp = 0; this.said = {}; this._pp = V(); // _pp = 直前フレームの自機位置 (衝突の取りこぼし防止用)
     this._asteroids();
   }
   _asteroids() {
@@ -128,7 +128,7 @@ export class SpaceMode {
 
   // ───────────────────────── 更新 ─────────────────────────
   update(dt) {
-    this.time += dt; const p = this.pl, inp = G.input;
+    this.time += dt; const p = this.pl, inp = G.input; this._pp.copy(p.pos);
     if (this.title) { this._title(dt); return; }
     if (inp.hit('tgt')) this.cycleTarget();
     if (inp.hit('view')) p.view = (p.view + 1) % 2; // コックピットの枠は _cam で実際の視点に合わせて出し入れする
@@ -151,7 +151,7 @@ export class SpaceMode {
     p.energy = Math.min(p.st.energy, p.energy + p.st.energy * 0.11 * dt);
   }
   _rebase() {
-    const d = _d.copy(this.pl.pos); this.origin.add(d); this.pl.pos.set(0, 0, 0); this.camera.position.sub(d);
+    const d = _d.copy(this.pl.pos); this.origin.add(d); this.pl.pos.set(0, 0, 0); this.camera.position.sub(d); this._pp.sub(d);
     this.parts.shift(d); this.bolts.shift(d); this.shocks.shift(d); this.debris.shift(d); for (const m of this.missiles) m.g.position.sub(d);
   }
   _title(dt) {
@@ -543,6 +543,7 @@ export class SpaceMode {
   /** 衝突: 敵艦・小惑星・ステーション。ぶつかった所だけが壊れる */
   _collide() {
     const p = this.pl, sr = p.st.radius * 0.36; if (p.docked || p.dead || p.auto?.type === 'dock' || p.auto?.type === 'push' || p.sc.on) return;
+    this._sweep(sr); // 高速 (ブースト時は 1 フレーム 50m 超) でも、移動の途中にある外板・岩・敵艦をすり抜けないよう、最初に触れた位置まで戻す
     const bump = (n, depth, ov, label) => {
       const vn = p.vel.x * n.x + p.vel.y * n.y + p.vel.z * n.z - (ov ? ov.dot(n) : 0); p.pos.addScaledVector(n, depth + 0.05); if (vn >= 0) return 0;
       p.vel.addScaledVector(n, -vn * 1.55); const imp = -vn; if (imp < 8) return imp;
@@ -558,6 +559,20 @@ export class SpaceMode {
     if (this.rocks.visible && this.rocks.position.distanceToSquared(p.pos) < 4.3e7) { const g = this.rocks.position; for (const r of this.rockList) { const dx = p.pos.x - g.x - r[0], dy = p.pos.y - g.y - r[1], dz = p.pos.z - g.z - r[2], R = r[3] + sr, d2 = dx * dx + dy * dy + dz * dz; if (d2 >= R * R) continue; const d = Math.sqrt(d2) || 1; bump(_b.set(dx / d, dy / d, dz / d), R - d, null, '小惑星'); } }
     for (const s of this.stations) { if (!s.m || s.dist > (s.m.reach || s.m.radius * 1.4) + 200) continue; const o = s.m.obj, l = _a.copy(p.pos).sub(o.position), f = (x, y, z) => stationSDF(s.def.id, x, y, z), d = f(l.x, l.y, l.z); if (d >= sr) continue;
       const n = _b.set(f(l.x + 1, l.y, l.z) - f(l.x - 1, l.y, l.z), f(l.x, l.y + 1, l.z) - f(l.x, l.y - 1, l.z), f(l.x, l.y, l.z + 1) - f(l.x, l.y, l.z - 1)); if (n.lengthSq() < 1e-8) n.copy(l); n.normalize(); bump(n, sr - d, null, s.def.name); }
+  }
+  /** 前フレームの位置 → 現在位置の線分をたどり、ステーション (距離関数) ・小惑星・敵艦 (球) に最初に触れた所で止める */
+  _sweep(sr) {
+    const p = this.pl, a = this._pp, mv = _w2.subVectors(p.pos, a), L = mv.length(); if (L < sr * 0.5) return; mv.multiplyScalar(1 / L);
+    let tHit = L;
+    for (const s of this.stations) {
+      if (!s.m || s.dist > (s.m.reach || s.m.radius * 1.4) + 200 + L) continue; const c = s.m.obj.position, id = s.def.id;
+      if (stationSDF(id, a.x - c.x, a.y - c.y, a.z - c.z) < sr) continue; // すでに接触中 (壁沿いに滑っている) なら通常の押し戻しに任せる
+      for (let t = 0, n = 0; t < tHit && n < 400; n++) { const d = stationSDF(id, a.x + mv.x * t - c.x, a.y + mv.y * t - c.y, a.z + mv.z * t - c.z); if (d < sr) { tHit = Math.min(tHit, t); break; } t += Math.max(d - sr, 0.5); }
+    }
+    const sphere = (cx, cy, cz, R) => { const ox = a.x - cx, oy = a.y - cy, oz = a.z - cz, b = ox * mv.x + oy * mv.y + oz * mv.z, cc = ox * ox + oy * oy + oz * oz - R * R; if (cc <= 0) return; const disc = b * b - cc; if (disc < 0) return; const t = -b - Math.sqrt(disc); if (t >= 0 && t < tHit) tHit = t; };
+    if (this.rocks.visible && this.rocks.position.distanceToSquared(p.pos) < (6600 + L) ** 2) { const g = this.rocks.position; for (const r of this.rockList) sphere(g.x + r[0], g.y + r[1], g.z + r[2], r[3] + sr); }
+    for (const e of this.enemies) if (e.m && e.state !== 'gone' && e.dist < 400 + L) { const o = e.m.obj.position; sphere(o.x, o.y, o.z, sr + e.m.radius * 0.36); }
+    if (tHit < L) p.pos.copy(a).addScaledVector(mv, Math.max(0, tHit - 0.3)); // 接触点の手前へ。押し戻しと損傷は続く判定で処理する
   }
   // ── HUD ──
   _hud() {
