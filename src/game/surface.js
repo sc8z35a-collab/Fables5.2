@@ -215,7 +215,7 @@ export class SurfaceMode {
     if (inp.hit('view')) s.view = (s.view + 1) % 2;
     if (inp.keys.KeyZ) inp.setThr(1); if (inp.keys.KeyX) inp.setThr(0);
     const gy = this.ground(s.pos.x, s.pos.z), alt = s.pos.y - gy - s.clear; s.alt = alt;
-    if (s.landed) { s.speed = 0; s.vy = 0; if (e.hazard?.(s.pos.x, s.pos.z, e.H(s.pos.x, s.pos.z))) this._hull(12 * dt, '溶岩で船体が損傷中！ 離陸せよ'); G.audio?.engine(0.05, 0, 0); for (const p of s.m.plumes) p.material.uniforms.uPow.value = 0.05; return; }
+    if (s.landed) { s.speed = 0; s.vy = 0; if (e.hazard?.(s.pos.x, s.pos.z, this.ground(s.pos.x, s.pos.z, s.pos.y - s.clear + 1))) this._hull(12 * dt, '溶岩で船体が損傷中！ 離陸せよ'); G.audio?.engine(0.05, 0, 0); for (const p of s.m.plumes) p.material.uniforms.uPow.value = 0.05; return; }
     if (s.auto) return this._auto(dt, alt);
     s.yawV = damp(s.yawV, -ax.x * st.turn * 0.62, 5, dt); s.yaw += s.yawV * dt;
     s.pitch = clamp(s.pitch + ax.y * (G.p.invertY ? -1 : 1) * 0.85 * dt, -1.15, 1.15); if (Math.abs(ax.y) < 0.05 && s.speed < 60) s.pitch = damp(s.pitch, 0, 1.5, dt);
@@ -248,9 +248,13 @@ export class SurfaceMode {
     s.pitch = damp(s.pitch, 0, 2, dt); s.m.tilt.rotation.z = damp(s.m.tilt.rotation.z, 0, 3, dt);
     if (a.ph === 0) {
       const safe = e.safeAlt ? e.padY + e.safeAlt : null, low = safe != null && d > 300 && s.pos.y < safe - 80; // 高層ビル街は安全高度まで上がってから進入する
-      const sp = Math.min(safe != null ? 230 : 150, Math.max(8, d * 0.45)) * (low ? 0 : 1), want = Math.atan2(s.pos.x - tx, s.pos.z - tz); let dy = want - s.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); if (d > 20) s.yaw += clamp(dy, -1.2 * dt, 1.2 * dt);
-      s.speed = damp(s.speed, sp, 2, dt); s.pos.x += (tx - s.pos.x) / (d || 1) * s.speed * dt; s.pos.z += (tz - s.pos.z) / (d || 1) * s.speed * dt;
-      const ty = safe != null ? (d > 40 ? safe : e.padY + s.clear + 60) : e.padY + s.clear + 55 + Math.min(d * 0.25, 500); s.pos.y = damp(s.pos.y, Math.max(ty, this.ground(s.pos.x, s.pos.z) + s.clear + 30), 0.9, dt);
+      // 進路の先 (最大 700m) の地形と建物を先読みし、山や塔より低いうちは減速して上昇を優先する (以前は巡航高度が固定で、山腹に突っ込んでいた)
+      const ux = (tx - s.pos.x) / (d || 1), uz = (tz - s.pos.z) / (d || 1); let gA = this.ground(s.pos.x, s.pos.z); for (const k of [60, 150, 300, 500, 700]) { if (k > d) break; gA = Math.max(gA, this.ground(s.pos.x + ux * k, s.pos.z + uz * k)); }
+      const clearY = gA + s.clear + 35, under = s.pos.y < clearY - 8;
+      const sp = Math.min(safe != null ? 230 : 150, Math.max(8, d * 0.45)) * (low ? 0 : 1) * (under ? 0.15 : 1), want = Math.atan2(s.pos.x - tx, s.pos.z - tz); let dy = want - s.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); if (d > 20) s.yaw += clamp(dy, -1.2 * dt, 1.2 * dt);
+      s.speed = damp(s.speed, sp, 2, dt); s.pos.x += ux * s.speed * dt; s.pos.z += uz * s.speed * dt;
+      const ty = safe != null ? (d > 40 ? safe : e.padY + s.clear + 60) : e.padY + s.clear + 55 + Math.min(d * 0.25, 500); s.pos.y = damp(s.pos.y, Math.max(ty, d > 40 ? clearY : 0, this.ground(s.pos.x, s.pos.z) + s.clear + 30), under ? 2.5 : 0.9, dt);
+      s.pos.y = Math.max(s.pos.y, this.ground(s.pos.x, s.pos.z, s.pos.y) + s.clear + 2); // どんな場合も地面や屋上の下には入らない
       if (d < 3) { a.ph = 1; if (s.m.gear) s.m.gear.visible = true; G.hud.msg('パッド直上 — 降下開始'); }
     } else { s.speed = 0; const g = e.padY + s.clear; s.pos.y -= Math.max(2.2, Math.min(e.safeAlt ? 60 : 16, (s.pos.y - g) * 0.45)) * dt; if (s.pos.y <= g) { s.pos.y = g; this._landed(); } }
     for (const p of s.m.plumes) p.material.uniforms.uPow.value = 0.4; G.audio?.engine(0.4, 0, 0);
@@ -306,7 +310,7 @@ export class SurfaceMode {
     if (dx || dz) { if (this.ok(p.x + dx, p.z + dz, p.y)) { p.x += dx; p.z += dz; } else if (this.ok(p.x + dx, p.z, p.y)) p.x += dx; else if (this.ok(p.x, p.z + dz, p.y)) p.z += dz; else if (Math.hypot(p.x + dx, p.z + dz) > e.walkR && !this._w4) { this._w4 = 1; G.hud.msg('これ以上先は危険だ。船に戻ろう。', 'warn'); setTimeout(() => { this._w4 = 0; }, 5000); }
       const pb = this.bob; this.bob += Math.hypot(dx, dz) * 1.7; if (Math.floor(pb / Math.PI) !== Math.floor(this.bob / Math.PI)) G.audio?.sfx('step'); }
     p.y = damp(p.y, this.ground(p.x, p.z, p.y), 14, dt);
-    if (e.hazard?.(p.x, p.z, e.H(p.x, p.z))) { G.p.hp -= 25 * dt; if (!this._w5) { this._w5 = 1; G.hud.msg('熱い！ 溶岩から離れろ！', 'warn'); G.audio?.sfx('hurt'); setTimeout(() => { this._w5 = 0; }, 2000); } if (G.p.hp <= 0) { G.p.hp = 50; this._disembark(); G.hud.msg('危ないところで船の近くへ退避した。', 'warn'); } }
+    if (e.hazard?.(p.x, p.z, this.ground(p.x, p.z, p.y))) /* 実際に立っている面 (台地・桟橋・パッドを含む) で判定 */ { G.p.hp -= 25 * dt; if (!this._w5) { this._w5 = 1; G.hud.msg('熱い！ 溶岩から離れろ！', 'warn'); G.audio?.sfx('hurt'); setTimeout(() => { this._w5 = 0; }, 2000); } if (G.p.hp <= 0) { G.p.hp = 50; this._disembark(); G.hud.msg('危ないところで船の近くへ退避した。', 'warn'); } }
     // インタラクション
     const s = this.ship, fx = -sn, fz = -cs; let best = null, bs = 1e9;
     const cand = [...e.items, { x: s.pos.x, z: s.pos.z, r: Math.min(SHIPS[s.id].radius * 0.4, 8) + 5, label: `${SHIPS[s.id].name} に乗る`, act: 'board', wide: 1 }];

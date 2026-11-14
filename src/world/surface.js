@@ -54,7 +54,7 @@ function ignis() {
   grp.add(scatter(rockGeo(1, 2, 5, 0.45), RK, 420, (o) => { const a = r() * 6.28, d = rr(r, 90, 2600), x = Math.cos(a) * d, z = Math.sin(a) * d, h = TM.heightAt(x, z); if (h < 0) return false; const s = Math.pow(r(), 3) * 16 + 1.2; o.position.set(x, h - s * 0.3, z); o.rotation.set(r() * 6, r() * 6, r() * 6); o.scale.set(s, s * rr(r, 0.7, 1.6), s); if (s > 3 && d < 700) cols.push({ x, z, r: s * 0.8 }); }));
   // 精錬基地
   const D = mat('hull', { color: 0x3a3430, rough: 0.8, metal: 0.6 }), RB = mat('rib', { color: 0x7a5a48, metal: 0.5 }), W = mat('wall', { color: 0x6a5648, rough: 0.7, metal: 0.5 }), G = glow('#ff6a1e', 4);
-  pad(B, 8.1, 32, '#ff8a2a');
+  pad(B, 8.6, 32, '#ff8a2a'); // 地形 (パッドの範囲で 8.3〜8.5m) より上に置く。以前は 8.1 でパッド全体が地面に埋もれていた
   B.box(W, 34, 12, 22, 70, 14, -10); B.box(D, 36, 1.4, 24, 70, 20.6, -10); B.box(glow('#ffc890', 2), 0.3, 4, 14, 52.9, 13, -10); B.box(D, 2, 4.4, 5, 52.5, 10.2, -10); B.box(G, 34.2, 0.4, 22.2, 70, 19, -10);
   for (const [x, z, h] of [[82, -34, 46], [92, -30, 60], [74, -40, 34]]) { B.cyl(RB, 3, 4.5, h, x, 8 + h / 2, z, 'y', 14); B.cyl(G, 3.1, 3.1, 0.8, x, 8 + h - 1, z, 'y', 14, true); beacon(beacons, x, 8 + h + 2, z, '#ff8a2a', 16); }
   for (let i = 0; i < 4; i++) { B.sph(RB, 7, 100, 15, -2 + i * 15, 1, 1, 1, 18); B.cyl(D, 0.6, 0.6, 15, 100, 11, 6 + i * 15 - 8, 'z', 8); }
@@ -72,7 +72,7 @@ function ignis() {
   const veg = groundCover(grp, hA, [{ g: propGeo('boulder'), m: OB, tumble: 1, sink: 0.3, key: 'a' }, { g: propGeo('boulder2'), m: RK2, tumble: 1, sink: 0.25, key: 'b' }, { g: propGeo('slab'), m: RK2, tumble: 0.12, sink: 0.3, key: 'c' }, { g: propGeo('crystal'), m: MC, sink: 0.03, key: 'd' }],
     (x, z, h, v, d) => { d[0] = h < 0.6 || Math.hypot(x, z) < 46 || (x > 46 && x < 114 && z > -46 && z < 58) ? 0 : 0.22 + 0.5 * smooth(0.35, 0.7, fbm(x * 0.006, z * 0.006, 2, 15)); d[1] = v < 0.34 ? 0 : v < 0.62 ? 1 : v < 0.82 ? 2 : 3; }, { s1: 7 }); // 暗い大地なので発光する結晶を多めに
   grp.add(B.build());
-  return { id: 'ignis', group: grp, sky, H, heightAt: TM.heightAt, sunDir, sunCol: '#ff7a40', sunInt: 3.0, hemi: ['#a04a28', '#6a2210', 2.4], fog: [COL('#5a2010'), 0.00026], cols, rects, obbs, veg, items, anim, beacons, nodes, padY: 8.2, rain: [V3(3, 9, 1), 0.5, '#ff8a4a'], walkR: 3000, door: [49, -10, -HP], foot: [0, 40], look: [0.7, 0.95, 1.3], heat: 0.12, music: 'hostile', smoke: [-2600, 760, -1900], hazard: (x, z, h) => h < -2.5 };
+  return { id: 'ignis', group: grp, sky, H, heightAt: TM.heightAt, sunDir, sunCol: '#ff7a40', sunInt: 3.0, hemi: ['#a04a28', '#6a2210', 2.4], fog: [COL('#5a2010'), 0.00026], cols, rects, obbs, veg, items, anim, beacons, nodes, padY: 8.7, rain: [V3(3, 9, 1), 0.5, '#ff8a4a'], walkR: 3000, door: [49, -10, -HP], foot: [0, 40], look: [0.7, 0.95, 1.3], heat: 0.12, music: 'hostile', smoke: [-2600, 760, -1900], hazard: (x, z, h) => h < -2.5 };
 }
 
 // ───────────────────────── 砂漠の星 ─────────────────────────

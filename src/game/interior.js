@@ -179,11 +179,17 @@ export class InteriorMode {
   _slot() {
     const it = this.cur; if (this.shipObj) { this.shipObj.parent?.remove(this.shipObj); this.shipObj = null; }
     it.cols = it.cols.filter((c) => !c.ship); it.items = it.items.filter((i) => i.act !== 'ramp');
-    if (!it.slot) return; const m = this.ship(G.p.ship), o = m.obj, r = SHIPS[G.p.ship].radius;
-    const minY = new THREE.Box3().setFromObject(m.gear || m.body).min.y - o.position.y; o.position.set(it.slot.x, -minY, it.slot.z); o.rotation.set(0, Math.PI, 0); m.tilt.rotation.set(0, 0, 0);
+    if (!it.slot) return; const m = this.ship(G.p.ship), o = m.obj, r0 = SHIPS[G.p.ship].radius;
+    // 格納庫に収まる縮尺で置く: ライデン (37m) やアマツ (59m) は多くの格納庫 (奥行き 28〜34m) より長く、そのままでは壁を突き抜けて隣の通路にはみ出していた
+    o.scale.setScalar(1); o.rotation.set(0, Math.PI, 0); m.tilt.rotation.set(0, 0, 0); o.position.set(it.slot.x, 0, it.slot.z); o.updateMatrixWorld(true);
+    const bb = new THREE.Box3().setFromObject(m.body), rm = roomAt(it, it.slot.x, it.slot.z); let k = 1;
+    if (rm) { const pad = 1.5, sx = it.slot.x, sz = it.slot.z, f = (room, ext) => (ext > 1e-3 ? room / ext : 1);
+      k = Math.max(0.25, Math.min(1, f(sx - rm.x - pad, sx - bb.min.x), f(rm.x + rm.w - pad - sx, bb.max.x - sx), f(sz - rm.z - pad, sz - bb.min.z), f(rm.z + rm.d - pad - sz, bb.max.z - sz), f(rm.h - 1, bb.max.y - bb.min.y))); }
+    o.scale.setScalar(k); o.updateMatrixWorld(true); const r = r0 * k;
+    const minY = new THREE.Box3().setFromObject(m.gear || m.body).min.y - o.position.y; o.position.y = -minY;
     it.group.add(o); this.shipObj = o; it.cols.push({ x: it.slot.x, z: it.slot.z, r: Math.min(r * 0.42, 8), ship: 1 });
     if (!this.shipShadow) { this.shipShadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), aoMat('blob')); this.shipShadow.renderOrder = 2; }
-    this.shipShadow.scale.set(r * 1.5, 1, SHIPS[G.p.ship].len * 1.25); this.shipShadow.position.set(it.slot.x, 0.02, it.slot.z); it.group.add(this.shipShadow);
+    this.shipShadow.scale.set(r * 1.5, 1, SHIPS[G.p.ship].len * 1.25 * k); this.shipShadow.position.set(it.slot.x, 0.02, it.slot.z); it.group.add(this.shipShadow);
     it.items.push({ x: it.slot.x, z: it.slot.z, y: 1.5, r: Math.min(r * 0.42, 8) + 4.5, label: `${SHIPS[G.p.ship].name} に乗船する`, act: 'ramp', wide: 1 });
   }
   refreshShip() { if (this.cur?.slot) this._slot(); }

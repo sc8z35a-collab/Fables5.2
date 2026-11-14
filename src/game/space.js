@@ -12,7 +12,7 @@ import { stats, save, earn, addCargo, event, remaining } from './state.js';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const _a = V(), _b = V(), _c = V(), _d = V(), _q = new THREE.Quaternion(), _q2 = new THREE.Quaternion(), _m = new THREE.Matrix4(), _e = new THREE.Euler();
-const FWD = V(0, 0, -1), UP = V(0, 1, 0), ZUP = V(0, 0, 1), C = (c) => new THREE.Color(c), _hp = V(), _hd = V();
+const FWD = V(0, 0, -1), UP = V(0, 1, 0), ZUP = V(0, 0, 1), C = (c) => new THREE.Color(c), _hp = V(), _hd = V(), _w1 = V(), _w2 = V(), _w3 = V();
 const WHITE = C('#fff'), ORANGE = C('#ffb060'), SPARK = C('#ffd9a0');
 
 export class SpaceMode {
@@ -272,9 +272,11 @@ export class SpaceMode {
     // dir に _a/_b を渡されても壊れないよう、注視点は別の一時ベクトルで作る (以前は dir を上書きして、機体が浮動原点から見た自分の位置の方向を向いていた = 後ろ向きに接近していた)
     const face = (dir, rate) => { const up = Math.abs(dir.y) > 0.9 ? ZUP : UP; _m.lookAt(p.pos, _hp.copy(p.pos).add(dir), up); _q.setFromRotationMatrix(_m); p.quat.rotateTowards(_q, rate * dt); return p.quat.angleTo(_q); };
     if (a.ph === 0) {
-      const to = _a.copy(A).sub(p.pos), d = to.length(), sp = Math.min(170, Math.max(14, d * 0.55)); to.multiplyScalar(1 / (d || 1));
+      // 進入点 A までの直線がステーション本体を貫くときは、外周の中継点へ回り込む (以前は船体の中を突き抜けていた)
+      const dA = p.pos.distanceTo(A), detour = t.kind === 'station' && dA > 60 && this._blocked(t, p.pos, A), T = detour ? this._detour(t, p.pos, A, _w1) : A;
+      const to = _a.copy(T).sub(p.pos), d = to.length(), sp = detour ? 170 : Math.min(170, Math.max(14, d * 0.55)); to.multiplyScalar(1 / (d || 1));
       p.vel.lerp(_b.copy(to).multiplyScalar(sp), 1 - Math.exp(-2.5 * dt)); p.pos.addScaledVector(p.vel, dt);
-      if (d > 60) face(to, 1.2); if (d < 14) a.ph = 1; p.thr = clamp(sp / 170, 0.15, 0.8);
+      if (d > 60) face(to, 1.2); if (!detour && dA < 14) a.ph = 1; p.thr = clamp(sp / 170, 0.15, 0.8);
     } else if (a.ph === 1) {
       p.vel.multiplyScalar(Math.exp(-3 * dt)); p.pos.lerp(A, 1 - Math.exp(-1.5 * dt)); p.thr = 0.1;
       if (face(_a.copy(D).negate(), 0.9) < 0.02) { a.ph = 2; if (p.m.gear) p.m.gear.visible = true; G.hud.msg('進入路に整列 — 最終アプローチ'); }
@@ -285,11 +287,23 @@ export class SpaceMode {
     }
     if (G.input.axes().x ** 2 + G.input.axes().y ** 2 > 0.8) { p.auto = null; if (p.m.gear) p.m.gear.visible = false; G.hud.msg('自動誘導を中止 — 手動操縦'); }
   }
+  /** 線分 a→b がステーション s の本体 (衝突判定用の距離関数) に触れるか */
+  _blocked(s, a, b) {
+    const c = s.m.obj.position, id = s.def.id, n = Math.min(120, Math.ceil(a.distanceTo(b) / 15)), cl = this.pl.st.radius * 0.5 + 8;
+    for (let i = 1; i < n; i++) { const k = i / n; if (stationSDF(id, a.x + (b.x - a.x) * k - c.x, a.y + (b.y - a.y) * k - c.y, a.z + (b.z - a.z) * k - c.z) < cl) return true; }
+    return false;
+  }
+  /** 回り込みの中継点: 中心から見た自機と進入点の方向の中間で、本体の外接球より十分外側 */
+  _detour(s, p, A, out) {
+    const c = s.m.obj.position, u = _w2.copy(p).sub(c), du = u.length(), v = _w3.copy(A).sub(c), dv = v.length(); u.multiplyScalar(1 / (du || 1)); v.multiplyScalar(1 / (dv || 1));
+    const w = out.copy(u).add(v); if (w.lengthSq() < 1e-4) w.crossVectors(u, Math.abs(u.y) < 0.9 ? UP : ZUP); w.normalize();
+    return w.multiplyScalar(Math.max(s.m.radius * 1.45, Math.min(du, dv))).add(c);
+  }
   _docked(t) {
     const p = this.pl; this.placeDocked(t); G.audio?.sfx('dock'); p.shake = 0.5;
     this.parts.burst(this.portOf(t)[0], 40, 8, C('#bfefff'), 1.2, 0.8);
     if (t.kind === 'station') {
-      G.p.last = t.def.id; G.p.stats.docks[t.def.id] = (G.p.stats.docks[t.def.id] || 0) + 1; G.p.day++;
+      G.p.last = t.def.id; G.p.stats.docks[t.def.id] = (G.p.stats.docks[t.def.id] || 0) + 1; G.p.day++; G.tip = ''; // 入港したら「ドッキング要請で入港しよう」の案内は役目を終える
       G.hud.banner('ドッキング完了', t.def.name); event('dock', { station: t.def.id });
       this.refit(); p.hull = p.st.hull * G.p.ships[p.id].hull; save();
     } else G.hud.banner('接舷完了', t.def.name + ' — 乗り込み可能');
