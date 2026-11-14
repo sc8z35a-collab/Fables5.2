@@ -8,7 +8,7 @@ import { buildShip } from '../world/ships.js';
 import { Mirror } from '../gfx/renderer.js';
 import { Particles, makeGlowSprite } from '../gfx/fx.js';
 import { syncDamage } from '../gfx/damage.js';
-import { mat, glow, aoMat } from '../gfx/textures.js';
+import { mat, glow, aoMat, activeScreens, dropScreens } from '../gfx/textures.js';
 import { ENEMIES, SHIPS, BASES, station, body } from '../world/defs.js';
 import { stats, save, earn, addCargo, event, remaining, rescueState, disaster } from './state.js';
 
@@ -127,16 +127,16 @@ export class InteriorMode {
   async enter(o) {
     if (typeof o.at === 'string') o.at = o.at.split(',').map(Number); if (o.type === 'rescue') { o.id = o.from === 'surface' ? 'mycenae-d' : 'mycenae'; if (o.from !== 'surface') o.from = 'station'; }
     this.ctx = o; const id = o.type === 'ship' ? G.p.ship : o.id || o.body, key = o.type + ':' + id;
-    if (this.cur) this.scene.remove(this.cur.group);
+    if (this.cur) { this.scene.remove(this.cur.group); if (this.cache.get(this.cur.key) !== this.cur) this._dispose(this.cur); } // キャッシュしない室内 (敵艦) は出るときに解放する
     let it = this.cache.get(key);
     if (!it) {
       const def = o.type === 'enemy' ? ENEMIES.find((e) => e.id === id) : null, bp = blueprint(o.type, id, def);
       it = buildInterior(bp); it.key = key; it.def = def;
       for (const m of it.floorMats) if (!m.userData.mir) { m.userData.mir = 1; this.mirror.apply(m, bp.theme.gloss ?? 0.6); }
       if (bp.drones) for (const [x, z] of bp.drones) { const g = makeDrone(def.glow); it.group.add(g); it.drones.push({ g, x, z, hx: x, hz: z, hp: 34 + def.tier * 16, alive: true, fireT: 1 + Math.random() * 2, ph: x * 3 + z, alert: false }); }
-      if (o.type !== 'enemy') { this.cache.set(key, it); if (this.cache.size > 4) { const k = this.cache.keys().next().value, old = this.cache.get(k); this.cache.delete(k); old.group.traverse((n) => n.geometry?.dispose()); } }
+      if (o.type !== 'enemy') { this.cache.set(key, it); if (this.cache.size > 4) { const k = this.cache.keys().next().value, old = this.cache.get(k); this.cache.delete(k); this._dispose(old); } }
     } else if (it.drones.length) for (const d of it.drones) { d.alive = true; d.g.visible = true; }
-    this.cur = it; this.scene.add(it.group); for (const f of it.hooks || []) { try { f(); } catch (err) { console.warn('[内装] hook:', err); } } // 出動状況などを反映
+    this.cur = it; this.scene.add(it.group); activeScreens(it.group); for (const f of it.hooks || []) { try { f(); } catch (err) { console.warn('[内装] hook:', err); } } // 出動状況などを反映
     const th = it.bp.theme; this.hemi.color.set(th.amb[0]); this.hemi.groundColor.set(th.amb[1]); this.hemi.intensity = th.amb[2];
     // 遠景の向き: 船内=実際の機首方向 / ステーション=主窓が惑星を向く
     const sp = G.space; this.far = true; this._sky?.(false);
@@ -153,7 +153,7 @@ export class InteriorMode {
     this._slot();
     // 反射プローブ (初回のみ)
     this._lights(0, true);
-    if (!it.env) { const r = G.gfx.renderer, rt = new THREE.WebGLCubeRenderTarget(128, { type: THREE.HalfFloatType }), cc = new THREE.CubeCamera(0.1, 300, rt); cc.position.set(this.pos.x, 1.7, this.pos.z); this.scene.environment = null; this.mirror.u.uMirrorOn.value = 0; r.autoClear = true; cc.update(r, this.scene); r.autoClear = false; r.setRenderTarget(null); it.env = G.gfx.pmrem.fromCubemap(rt.texture).texture; rt.dispose(); }
+    if (!it.env) { const r = G.gfx.renderer, rt = new THREE.WebGLCubeRenderTarget(128, { type: THREE.HalfFloatType }), cc = new THREE.CubeCamera(0.1, 300, rt); cc.position.set(this.pos.x, 1.7, this.pos.z); this.scene.environment = null; this.mirror.u.uMirrorOn.value = 0; r.autoClear = true; cc.update(r, this.scene); r.autoClear = false; r.setRenderTarget(null); it.envRT?.dispose(); it.envRT = G.gfx.pmrem.fromCubemap(rt.texture); it.env = it.envRT.texture; rt.dispose(); }
     this.scene.environment = it.env; this.scene.environmentIntensity = 0.5; G.gfx.look(0.4, 1.15, 0.92);
     this.hostile = !!it.bp.hostile; this.gun.visible = this.hostile; this.suit = 60; for (const sh of this.shots) { sh.life = 0; sh.m.visible = false; }
     this.camera.aspect = G.W / G.H; this.camera.fov = 72; this.camera.updateProjectionMatrix();
@@ -165,8 +165,13 @@ export class InteriorMode {
     if (o.type === 'station' && id === 'atlas') { const dz = disaster(), st = rescueState(); if (dz && !dz.done && !this._dz) { this._dz = 1; setTimeout(() => { this._dz = 0; }, 60000); G.hud.msg(`災害警報：${dz.name}。${st.n >= dz.need ? `ミケーネ ${st.n} 機が対応中。` : `指令室から救助船 ${dz.need} 機を出動させよ。`}`, 'warn', 9); } }
     this._cam(0); this._far(0);
   }
-  exit() { G.hud.setPrompt(''); G.hud.setCtx([]); G.hud.damage(0); this._sky?.(false); }
-  onQuality() { this.cache.forEach((it) => { it.env = null; }); }
+  exit() { G.hud.setPrompt(''); G.hud.setCtx([]); G.hud.damage(0); this._sky?.(false); activeScreens(null); }
+  onQuality() { this.cache.forEach((it) => { if (it !== this.cur) { it.envRT?.dispose(); it.envRT = null; } it.env = null; }); }
+  /** 室内一式を GPU から解放する (形状・反射プローブ・端末スクリーン)。自機のモデルと接地影は別の室内でも使うので外してから */
+  _dispose(it) {
+    if (this.shipObj?.parent === it.group) { it.group.remove(this.shipObj); this.shipObj = null; } if (this.shipShadow?.parent === it.group) it.group.remove(this.shipShadow);
+    dropScreens(it.group); it.group.traverse((n) => n.geometry?.dispose()); it.envRT?.dispose(); it.envRT = null; it.env = null;
+  }
   /** 惑星上では空ドームを背景に使う */
   /** 地上の建物・着陸中の船内: 窓の外に地表の空を描く。空の球 (半径 9000m) は室内カメラの描画距離 (400m) を超えて切り取られ窓が真っ黒になるので、室内では縮めて使う */
   _sky(on, bodyId) { const sm = G.modes.surface; if (!on) { if (this.skyM) { this.skyM.scale.setScalar(1); this.scene.remove(this.skyM); sm.reclaimSky(this.skyM); this.skyM = null; } return; } const m = sm?.skyMesh?.(bodyId); if (m) { m.scale.setScalar(0.03); this.scene.add(m); this.skyM = m; } }
@@ -199,7 +204,7 @@ export class InteriorMode {
     for (const d of it.doors) { if (d.open) continue; const near = Math.hypot(d.x - p.x, d.z - p.z) < 3.2 || it.drones.some((q) => q.alive && Math.hypot(d.x - q.x, d.z - q.z) < 2.4); if (near !== d.was) { d.was = near; if (Math.hypot(d.x - p.x, d.z - p.z) < 12) G.audio?.sfx('door'); } d.k = damp(d.k, near ? 1 : 0, d.mode === 'y' ? 5 : 9, dt); if (d.mode === 'y') d.panels[0].position.y = d.k * d.dh * 0.97; else { d.panels[0].position.x = -(d.dw / 4 + d.k * d.dw * 0.49); d.panels[1].position.x = d.dw / 4 + d.k * d.dw * 0.49; } }
     this._vis();
     for (const f of it.anim) f(dt, this.time);
-    for (const n of it.npcs) { const a = Math.atan2(p.x - n.x, p.z - n.z), d = Math.hypot(p.x - n.x, p.z - n.z); let da = (d < 7 ? a : n.yaw) - n.g.rotation.y; da = Math.atan2(Math.sin(da), Math.cos(da)); n.g.rotation.y += da * Math.min(1, dt * 3); n.g.position.y = Math.sin(this.time * 1.6 + n.ph) * 0.012; }
+    for (const n of it.npcs) { const a = Math.atan2(p.x - n.x, p.z - n.z), d = Math.hypot(p.x - n.x, p.z - n.z); let da = (d < 7 ? a : n.yaw) - n.g.rotation.y; da = Math.atan2(Math.sin(da), Math.cos(da)); n.g.rotation.y += da * Math.min(1, dt * 3); n.g.position.y = (n.y || 0) + Math.sin(this.time * 1.6 + n.ph) * 0.012; } // 台の上の人物が床まで沈まないよう足元の高さを保つ
     if (this.hostile) this._combat(dt);
     this._cam(dt); this._lights(dt); this._far(dt); this._interact();
     this.parts.update(dt, G.gfx.ph / (2 * Math.tan(this.camera.fov * Math.PI / 360)));
@@ -281,23 +286,25 @@ export class InteriorMode {
   toPilot() {
     const c = this.ctx;
     if (c.from === 'station') return G.go('space', { docked: c.station });
-    if (c.from === 'surface') return G.go('surface', { resume: true });
+    if (c.from === 'surface') return G.go('surface', { resume: true, body: c.body });
     return G.go('space', { resume: true });
   }
   exitDoor() {
     const c = this.ctx, sp = G.space;
-    if (c.type === 'rescue') return c.from === 'surface' ? G.go('surface', { resume: true, foot: true, at: c.back }) : G.go('interior', { type: 'station', id: 'atlas', at: c.back });
+    if (c.type === 'rescue') return c.from === 'surface' ? G.go('surface', { resume: true, foot: true, at: c.back, body: 'terra' }) : G.go('interior', { type: 'station', id: 'atlas', at: c.back });
     if (c.type === 'enemy') return G.go('space', { resume: true });
-    if (c.type === 'outpost') return G.go('surface', { resume: true, foot: true, door: true });
+    if (c.type === 'outpost') return G.go('surface', { resume: true, foot: true, door: true, body: c.body });
     if (c.from === 'station') return G.go('interior', { type: 'station', id: c.station });
-    if (c.from === 'surface') return G.go('surface', { resume: true, foot: true });
+    if (c.from === 'surface') return G.go('surface', { resume: true, foot: true, body: c.body });
     const d = sp.pl.docked;
     if (!d) return G.hud.msg('宇宙空間ではエアロックを開けられません。ステーションにドッキングするか、惑星に着陸してください。', 'warn');
     return G.go('interior', d.kind === 'station' ? { type: 'station', id: d.def.id } : { type: 'enemy', id: d.def.id });
   }
   hack() {
-    const it = this.cur, e = this.enemy; if (it.drones.some((d) => d.alive && Math.hypot(d.x - this.pos.x, d.z - this.pos.z) < 16)) return G.hud.msg('警備ドローンが近くにいる。先に排除せよ。', 'warn');
+    const it = this.cur, e = this.enemy; if (G.p.done[e.def.id] || e.fate) return G.hud.msg('制御コアは既に掌握済みだ。まもなく自船へ戻る。'); // 退艦までの間に二重に報酬を得られないように
+    if (it.drones.some((d) => d.alive && Math.hypot(d.x - this.pos.x, d.z - this.pos.z) < 16)) return G.hud.msg('警備ドローンが近くにいる。先に排除せよ。', 'warn');
     G.ui.hack(e, (kind, reward) => {
+      if (G.p.done[e.def.id] || e.fate) return;
       earn(reward); G.p.done[e.def.id] = kind === 'capture' ? 'captured' : 'destroyed'; e.fate = kind;
       if (kind === 'capture') { G.p.stats.captures++; event('capture'); } else { G.p.stats.kills++; addCargo('salvage', 2 + e.def.tier); addCargo('contra', 1); event('kill'); }
       save(); G.audio?.sfx('reward'); G.hud.banner(kind === 'capture' ? '拿捕成功' : '略奪完了', `${e.def.name}　+${reward.toLocaleString()} Cr`, 4);
@@ -306,7 +313,15 @@ export class InteriorMode {
   }
 
   // ───────────────────────── 艦内戦闘 ─────────────────────────
-  rayClear(x0, z0, x1, z1) { const it = this.cur, d = Math.hypot(x1 - x0, z1 - z0), n = Math.ceil(d / 0.5); for (let i = 1; i < n; i++) { const t = i / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t; let ok = false; for (const w of it.walk) if (x >= w[0] - 0.4 && x <= w[2] + 0.4 && z >= w[1] - 0.4 && z <= w[3] + 0.4) { ok = true; break; } if (!ok) return false; } return true; }
+  /** (x,z) が歩行範囲の中か。矩形 [x0,z0,x1,z1] と円形の部屋 [cx,cz,r,'c'] の両方を扱う (pad = 外側の余白) */
+  inWalk(x, z, pad = 0) {
+    for (const w of this.cur.walk) {
+      if (w[3] === 'c') { const r = w[2] + pad; if ((x - w[0]) ** 2 + (z - w[1]) ** 2 <= r * r) return true; }
+      else if (x >= w[0] - pad && x <= w[2] + pad && z >= w[1] - pad && z <= w[3] + pad) return true;
+    }
+    return false;
+  }
+  rayClear(x0, z0, x1, z1) { const d = Math.hypot(x1 - x0, z1 - z0), n = Math.ceil(d / 0.5); for (let i = 1; i < n; i++) { const t = i / n; if (!this.inWalk(x0 + (x1 - x0) * t, z0 + (z1 - z0) * t, 0.4)) return false; } return true; }
   hurt(dmg) {
     this.lastHurt = this.time; G.audio?.sfx('hurt'); if (this.suit > 0) { this.suit -= dmg; if (this.suit < 0) { G.p.hp += this.suit; this.suit = 0; } } else G.p.hp -= dmg;
     if (G.p.hp <= 0 && !this.dead) { this.dead = true; G.p.hp = 60; G.hud.banner('戦闘不能', '自船へ緊急転送…', 3); G.go('space', { resume: true }).then(() => { this.dead = false; G.hud.msg('艦内戦に敗れ、自船へ退却した。態勢を整えて再突入しよう。', 'warn', 8); }); }
@@ -333,7 +348,7 @@ export class InteriorMode {
     for (const s of this.shots) {
       if (s.life <= 0) continue; s.life -= dt; const m = s.m.position; m.addScaledVector(s.v, dt);
       const hit = Math.hypot(m.x - p.x, m.z - p.z) < 0.5 && m.y > 0.2 && m.y < 1.9;
-      let wall = true; for (const w of it.walk) if (m.x >= w[0] - 0.3 && m.x <= w[2] + 0.3 && m.z >= w[1] - 0.3 && m.z <= w[3] + 0.3) { wall = false; break; }
+      const wall = !this.inWalk(m.x, m.z, 0.3);
       if (hit) this.hurt(s.dmg);
       if (hit || wall || s.life <= 0 || m.y < 0.05) { s.life = 0; s.m.visible = false; if (!hit) this.parts.burst(m, 8, 3, _col.set('#ff7040'), 0.12, 0.3, null, 2); } // 自分への命中はカメラの中で火花が弾けるので出さない (被弾表示は画面の赤みで行う)
     }
@@ -343,7 +358,7 @@ export class InteriorMode {
       this.fireT = 0.19; G.audio?.sfx('blaster'); this.gun.position.z = -0.36;
       const dir = _a.set(0, 0, -1).applyQuaternion(cam.quaternion), o = cam.position; let best = null, bt = 60;
       for (const d of it.drones) { if (!d.alive) continue; const to = _b.copy(d.g.position).sub(o), t = to.dot(dir); if (t < 0.3 || t > bt) continue; const off = Math.sqrt(Math.max(0, to.lengthSq() - t * t)); if (off < 0.5 + t * 0.045 && this.rayClear(o.x, o.z, d.x, d.z)) { best = d; bt = t; } }
-      let end; if (best) end = _c.copy(best.g.position); else { let t = 0.6; while (t < 40) { const x = o.x + dir.x * t, z = o.z + dir.z * t, y = o.y + dir.y * t; let ok = y > 0 && y < 16; if (ok) { ok = false; for (const w of it.walk) if (x >= w[0] - 0.4 && x <= w[2] + 0.4 && z >= w[1] - 0.4 && z <= w[3] + 0.4) { ok = true; break; } } if (!ok) break; t += 0.5; } end = _c.copy(o).addScaledVector(dir, t); }
+      let end; if (best) end = _c.copy(best.g.position); else { let t = 0.6; while (t < 40) { const x = o.x + dir.x * t, z = o.z + dir.z * t, y = o.y + dir.y * t; const ok = y > 0 && y < 16 && this.inWalk(x, z, 0.4); if (!ok) break; t += 0.5; } end = _c.copy(o).addScaledVector(dir, t); }
       const muz = _b.set(0.2, -0.16, -0.78).applyMatrix4(cam.matrixWorld), len = muz.distanceTo(end); this.tracer.position.copy(muz).lerp(end, 0.5); this.tracer.scale.set(1, 1, len); this.tracer.lookAt(end); this.tracer.visible = true;
       this.parts.burst(end, 10, 4, _col.set('#8fe8ff'), 0.14, 0.35, null, 2);
       if (best) { best.hp -= 15; best.alert = true; if (best.hp <= 0) { best.alive = false; best.g.visible = false; this.parts.burst(best.g.position, 60, 7, _col.set('#ffb060'), 0.35, 0.8, null, 1.5); this.parts.burst(best.g.position, 20, 2, _col.set('#ffffff'), 0.7, 0.3); G.audio?.sfx('boom', 0.5); earn(150); G.hud.msg('警備ドローン撃破 +150 Cr', 'good', 3); } }

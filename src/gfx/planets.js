@@ -419,7 +419,7 @@ export class Backdrop {
     let vis = 1;
     for (const p of this.planets) {
       _v.copy(p.pos).sub(camPos); const t = _v.dot(this.sunDir);
-      if (t > 0) { const d = Math.sqrt(Math.max(_v.lengthSq() - t * t, 0)), ang = this.sunR / sunDist * t; vis = Math.min(vis, THREE.MathUtils.smoothstep(d, p.R - ang, p.R + ang)); }
+      if (t > 0 && t < sunDist) { const d = Math.sqrt(Math.max(_v.lengthSq() - t * t, 0)), ang = this.sunR / sunDist * t; vis = Math.min(vis, THREE.MathUtils.smoothstep(d, p.R - ang, p.R + ang)); } // 太陽より奥の惑星は食を起こさない
     }
     this.sunVis = vis;
     _v2.copy(this.sun.position).project(c);

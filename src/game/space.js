@@ -19,8 +19,7 @@ export class SpaceMode {
   constructor() {
     const s = (this.scene = new THREE.Scene()); s.environment = G.env; s.environmentIntensity = 1.0;
     this.camera = new THREE.PerspectiveCamera(62, G.W / G.H, 0.3, 9e4);
-    this.sun = new THREE.DirectionalLight(0xfff2dc, 4.4); s.add(this.sun, this.sun.target);
-    if (G.gfx.q.shadow) { const sh = this.sun.shadow; this.sun.castShadow = true; sh.mapSize.setScalar(G.gfx.q.shadow); sh.bias = -0.0005; sh.normalBias = 0.06; sh.camera.near = 20; sh.camera.far = 700; }
+    this.sun = new THREE.DirectionalLight(0xfff2dc, 4.4); s.add(this.sun, this.sun.target); this._shadow();
     this.shine = new THREE.DirectionalLight(0x6699ff, 0); s.add(this.shine, this.shine.target);
     s.add((this.amb = new THREE.HemisphereLight(0x3d4c62, 0x0c0e14, 0.55)));
     this.origin = V();
@@ -47,6 +46,13 @@ export class SpaceMode {
     }
     im.frustumCulled = false; im.castShadow = im.receiveShadow = false; this.rocks = new THREE.Group(); this.rocks.add(im); this.rocksAt = st; this.scene.add(this.rocks);
   }
+  /** 画質設定の影を反映する (設定画面で画質を変えたときにも呼ばれる) */
+  _shadow() {
+    const q = G.gfx.q.shadow, l = this.sun; l.castShadow = q > 0; if (!q) return;
+    const sh = l.shadow; if (sh.mapSize.x !== q) { sh.mapSize.setScalar(q); sh.map?.dispose(); sh.map = null; }
+    sh.bias = -0.0005; sh.normalBias = 0.06; sh.camera.near = 20; sh.camera.far = 700; sh.camera.updateProjectionMatrix();
+  }
+  onQuality() { this._shadow(); }
   station(id) { return this.stations.find((s) => s.def.id === id); }
   buildStations(onStep) { for (const s of this.stations) if (!s.m) { s.m = buildStation(s.def); s.m.obj.visible = false; this.scene.add(s.m.obj); onStep?.(); return true; } return false; }
 
@@ -83,7 +89,8 @@ export class SpaceMode {
     const p = this.pl; this.title = !!o.title;
     for (const e of this.enemies) if (G.p.done[e.def.id] && e.state !== 'gone' && !e.fate) { e.state = 'gone'; if (e.m) e.m.obj.visible = false; }
     if (!o.resume) {
-      this.setShip(G.p.ship); this.refit(); syncDamage(p.m, p.id);
+      const mis = o.orbit ? p.missiles : null; // 惑星から軌道へ戻るときは残弾を引き継ぐ (補給はステーションで)
+      this.setShip(G.p.ship); this.refit(); syncDamage(p.m, p.id); if (mis != null) p.missiles = Math.min(mis, p.st.missiles);
       this.bolts.clear(); this.parts.clear(); p.auto = null; p.docked = null; p.dead = false; p.target = null; p.sc.on = false; p.sc.speed = 0;
       if (o.docked || o.undock) {
         const t = this.station(o.docked || o.undock); this.origin.copy(t.uni); p.pos.set(0, 0, 0); this.placeDocked(t);
@@ -123,7 +130,7 @@ export class SpaceMode {
     this.time += dt; const p = this.pl, inp = G.input;
     if (this.title) { this._title(dt); return; }
     if (inp.hit('tgt')) this.cycleTarget();
-    if (inp.hit('view')) { p.view = (p.view + 1) % 2; G.hud.cockpit.style.display = p.view ? 'block' : 'none'; }
+    if (inp.hit('view')) p.view = (p.view + 1) % 2; // コックピットの枠は _cam で実際の視点に合わせて出し入れする
     if (inp.hit('sc')) this.toggleSC();
     if (inp.hit('ap')) this.toggleAP();
     if (inp.key('KeyX')) inp.setThr(0); if (inp.key('KeyZ')) inp.setThr(1);
@@ -431,7 +438,7 @@ export class SpaceMode {
         e.fireT -= dt;
         if (e.breakT <= 0 && e.fireT <= 0 && d < 2600 && fwd.dot(tp) > 0.994) {
           const g = e.m.guns, gp = _d.copy(g[e.gi++ % g.length]).applyMatrix4(o.matrixWorld), sp = (0.035 - tier * 0.007);
-          _a.copy(tp).add(_c.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(sp)).normalize();
+          _a.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(sp).add(tp).normalize(); // ばらつき用に tp (=_c, 向きの目標) を上書きしない
           this.bolts.fire(gp, _a, 950, e.bc || (e.bc = C(e.def.glow).multiplyScalar(5)), e.def.dmg, 'e', 3, 20, 0.34, e.vel); G.audio?.sfx('elaser', clamp(1 - d / 3000, 0.1, 1));
           e.burst++; e.fireT = e.burst % (3 + tier) === 0 ? 1.5 - tier * 0.25 : 0.16;
         }
@@ -478,6 +485,7 @@ export class SpaceMode {
     if (snap) p.camQ.copy(p.quat); else p.camQ.slerp(p.quat, 1 - Math.exp(-(p.docked || p.auto?.type === 'dock' ? 2 : 4.5) * dt));
     const sp = p.vel.length(), k = p.sc.on ? 1 : clamp(sp / (p.st.maxSpeed * p.st.boost), 0, 1);
     this.warp = damp(this.warp, p.sc.on ? clamp(p.sc.speed / 60000, 0.25, 1) : p.sc.charge > 0 ? 0.3 : 0, 2.5, dt);
+    const ck = p.view === 1 && !p.docked && !this.title ? 'block' : 'none'; if (G.hud.cockpit.style.display !== ck) G.hud.cockpit.style.display = ck; // モード切替後やドッキング中も視点と枠を一致させる
     if (p.view === 1 && !p.docked) { cam.position.copy(m.cockpit).applyQuaternion(p.quat).add(p.pos); cam.quaternion.copy(p.quat); m.body.visible = false; }
     else {
       m.body.visible = true; const dd = m.cam.d * (1 + k * 0.22) * (p.auto?.type === 'dock' || p.docked ? 1.5 : 1);
@@ -583,9 +591,10 @@ export class SpaceMode {
       if (st) L.push({ label: 'ドッキング要請', fn: () => this.requestDock(st) });
       if (dis) L.push({ label: '接舷する', cls: 'alt', fn: () => this.requestDock(dis) });
       if (!hostile && !st && !dis && p.vel.length() < 600) L.push({ label: '席を立つ', cls: 'alt', fn: () => G.go('interior', { type: 'ship', from: 'space' }) });
-      if (!hostile && G.music === 'battle') G.audio?.music('space');
     }
-    G.hud.setCtx(L);
+    // 戦闘曲は敵が離れたら戻す (ドッキング中・自動誘導中・超巡航中も含めて判定する)
+    if (G.music === 'battle' && !this.enemies.some((e) => e.state === 'attack' && e.dist < 6000)) G.audio?.music('space');
+    G.hud.setCtx(L); if (L.length && G.input.key('Enter')) L[0].fn(); // PC: Enter で先頭の状況ボタン (ドッキング要請など) を押す
   }
 }
 

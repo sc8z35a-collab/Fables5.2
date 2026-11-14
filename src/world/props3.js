@@ -296,16 +296,16 @@ void main(){float a=vUv.x*6.2832+uTime*.9,b=vUv.y*6.2832;vec3 p=vec3(cos(a)*2.4,
     // 弾体・閃光・蒸気
     const slug = e.dyn(new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.6, 10).rotateX(HP), basic('#dff6ff', 9)), 0, yc, z0), s0 = slug.position.clone(); slug.visible = false;
     const [mxw, mzw] = W2(e, 0, 0), Lt = { x: mxw, y: yc + 0.6, z: mzw, c: new THREE.Color(c), i: 10, d: 26 }, steam = [0, 1, 2, 3].map((i) => e.dyn(makeGlowSprite('#e8f4ff', 1.6, 0.2), (i % 2 ? 1 : -1) * 2.0, 1.4, z0 + 2 + i * (L - 4) / 3)), st0 = steam.map((s) => s.position.clone()); e.out.lights.push(Lt);
-    const S = { ph: 'idle', t: 0, next: 14 + (e.x % 7) }, u = rm.uniforms;
+    const S = { ph: 'idle', t: 0, cyc: -1 }, u = rm.uniforms, PER = 22, CH = 2.8; // 定期試射は外の砲・試射監視卓と同じ 22 秒周期 (全体時計 G.time) にそろえる
     const fire = () => { if (S.ph !== 'idle') return G.hud?.msg('蓄電中…次の試射まで待て。', 'warn'); S.ph = 'charge'; S.t = 0; G.audio?.sfx('charge'); G.hud?.msg('主砲 蓄電開始 — 加速環が順に励起していく。', 'good'); };
     e.anim((dt, t) => { S.t += dt; for (const s of steam) s.material.opacity = 0;
-      if (S.ph === 'idle') { u.uWave.value = -99; u.uBase.value = 0.38 + 0.08 * Math.sin(t * 2); u.uFlash.value *= Math.exp(-3 * dt); Lt.i = 9 + 2 * Math.sin(t * 2); if (S.t > S.next) { S.ph = 'charge'; S.t = 0; } }
+      if (S.ph === 'idle') { u.uWave.value = -99; u.uBase.value = 0.38 + 0.08 * Math.sin(t * 2); u.uFlash.value *= Math.exp(-3 * dt); Lt.i = 9 + 2 * Math.sin(t * 2); const gt = G.time || t, gk = gt % PER, cyc = Math.floor((gt + CH) / PER); if (gk > PER - CH && cyc !== S.cyc) { S.cyc = cyc; S.ph = 'charge'; S.t = CH - (PER - gk); } }
       else if (S.ph === 'charge') { const k = S.t / 2.8; u.uWave.value = ((S.t * 2.2) % 1) * L * Math.min(1, k * 1.4); u.uBase.value = 0.4 + k * 1.4; Lt.i = 10 + k * 40; if (S.t > 2.8) { S.ph = 'fire'; S.t = 0; slug.visible = true; if (G.modes?.interior?.cur === e.out) G.audio?.sfx('boom', 0.9); } }
       else { const f = S.t; u.uWave.value = Math.min(1, f / 0.12) * (L + 8); u.uFlash.value = 6 * Math.exp(-f * 3.5); u.uBase.value = 0.4 + 1.4 * Math.exp(-f * 2); Lt.i = 10 + 320 * Math.exp(-f * 5);
         slug.visible = f < 0.12; if (slug.visible) slug.position.set(s0.x + dir.x * (3 + f / 0.12 * (L - 3)), s0.y, s0.z + dir.z * (3 + f / 0.12 * (L - 3)));
         const rc = 0.6 * Math.exp(-f * 2.4) * Math.min(1, f * 30); br.position.set(bp0.x - dir.x * rc, bp0.y, bp0.z - dir.z * rc);
         steam.forEach((s, i) => { const q = f * 0.5 - i * 0.04; if (q > 0 && q < 1) { s.material.opacity = (1 - q) * 0.5; s.scale.setScalar(1.2 + q * 4); s.position.y = st0[i].y + q * 2.4; } });
-        if (f > 3.2) { S.ph = 'idle'; S.t = 0; S.next = 26 + (e.z % 9); br.position.copy(bp0); } } });
+        if (f > 3.2) { S.ph = 'idle'; S.t = 0; br.position.copy(bp0); } } });
     item(e, 3.9, z0 + 5.4, 2.3, '主砲を試射する', 'fn', { fn: fire });
     e.rect(5.5, L); e.rect(1.4, 3.2, -2.9, z0 + 1.4); e.rect(0.8, 1.3, 3.2, z0 + 5.4); e.rect(3.8, 2.6, 0, z0 - 1.4);
   },

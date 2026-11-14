@@ -7,7 +7,7 @@ import { Mirror } from '../gfx/renderer.js';
 import { Particles, Streaks, makeGlowSprite } from '../gfx/fx.js';
 import { syncDamage, rayHit, applyDamage, logDamage, Debris } from '../gfx/damage.js';
 import { SHIPS, BASES, body } from '../world/defs.js';
-import { save, addCargo, event, remaining, commodity, rescueState } from './state.js';
+import { save, addCargo, event, remaining, commodity, rescueState, earn } from './state.js';
 import { buildMycenae, cloneShared, makeBot } from '../world/rescue.js';
 import { Builder, mx } from '../gfx/builder.js';
 import { mat, glow, aoMat, signMesh } from '../gfx/textures.js';
@@ -39,7 +39,7 @@ export class SurfaceMode {
     const e = (this.env = buildSurface(id)); this.bodyId = id; this.scene.add(e.group, e.sky);
     this.sun.color.set(e.sunCol); this.sun.intensity = e.sunInt; this.hemi.color.set(e.hemi[0]); this.hemi.groundColor.set(e.hemi[1]); this.hemi.intensity = e.hemi[2];
     this.scene.fog = new THREE.FogExp2(e.fog[0], e.fog[1]);
-    const tmp = new THREE.Scene(); tmp.add(e.sky); this.scene.environment = G.gfx.pmrem.fromScene(tmp, 0, 1, 20000).texture; this.scene.environmentIntensity = 0.9; this.scene.add(e.sky);
+    const tmp = new THREE.Scene(); tmp.add(e.sky); this.envRT?.dispose(); this.envRT = G.gfx.pmrem.fromScene(tmp, 0, 1, 20000); this.scene.environment = this.envRT.texture; this.scene.environmentIntensity = 0.9; this.scene.add(e.sky); // 前の星の環境マップは捨てる (着陸のたびに GPU メモリが増えないように)
     if (e.mirror && !e.mirror[0].userData.mir) { e.mirror[0].userData.mir = 1; this.mirror.apply(e.mirror[0], e.mirror[1]); }
     this.mirror.y = e.mirror ? 0.03 : -9999;
     for (const b of e.beacons) { const s = makeGlowSprite(b.c, b.s, 2.2); s.position.copy(b.p); s.userData.blink = b.blink; s.material.fog = false; this.scene.add(s); this.sprites.push(s); }
@@ -52,6 +52,9 @@ export class SurfaceMode {
 
   async enter(o = {}) {
     const s = this.ship;
+    // 地表がまだ無い (または別の星の) まま「再開」で呼ばれたら、その星を生成して着陸パッドに駐機した状態から始める
+    // (デバッグ用 URL で拠点や着陸中の救助船に直接入り、外へ出たときなど。以前は毎フレーム例外で止まっていた)
+    if (o.resume && (!this.env || (o.body && o.body !== this.bodyId))) o = { ...o, resume: false, parked: true, body: o.body || this.bodyId || 'terra' };
     if (!o.resume) {
       if (this.bodyId !== o.body || !this.env) { G.hud.show(true); G.hud.banner('大気圏突入', `${body(o.body).name} の地表を展開中…`, 8); await new Promise((r) => setTimeout(r, 90)); this.load(o.body); } else for (const [i, n] of this.env.nodes.entries()) n.g.visible = G.p.flags[`n_${o.body}_${i}`] !== G.p.day;
       if (s.m) this.scene.remove(s.m.obj);
@@ -59,9 +62,11 @@ export class SurfaceMode {
       s.clear = -(new THREE.Box3().setFromObject(s.m.gear || s.m.body).min.y - s.m.obj.position.y) + 0.05;
       s.pos.set(...(this.env.start || [260, 1250, 3700])); s.yaw = Math.atan2(s.pos.x, s.pos.z); s.pitch = -0.12; s.speed = 200; s.vy = 0; s.landed = false; s.auto = null; s.yawV = 0; this.foot = false;
       G.input.setThr(0.75); this._q(); s.camQ.copy(s.q);
-      const first = !G.p.stats.lands[o.body]; G.hud.banner(this.env.name, `${body(o.body).name} — ${this.env.sub}`, 4);
-      setTimeout(() => G.hud.msg(first ? `${body(o.body).name} に初めて降り立つ。「オートランド」で着陸パッドへ自動着陸できる。` : '着陸パッドへ接近中。「オートランド」が使えます。', 'good', 8), 1500);
-    } else {
+      if (o.parked) { s.pos.set(0, this.env.padY + s.clear, 0); s.speed = 0; s.pitch = 0; s.landed = true; G.input.setThr(0); if (s.m.gear) s.m.gear.visible = true; this._engines(false); this._q(); s.camQ.copy(s.q); }
+      else { const first = !G.p.stats.lands[o.body]; G.hud.banner(this.env.name, `${body(o.body).name} — ${this.env.sub}`, 4);
+        setTimeout(() => G.hud.msg(first ? `${body(o.body).name} に初めて降り立つ。「オートランド」で着陸パッドへ自動着陸できる。` : '着陸パッドへ接近中。「オートランド」が使えます。', 'good', 8), 1500); }
+    }
+    if (o.resume || o.parked) {
       if (o.foot) { this.foot = true; const e = this.env; if (o.door) { this.fp.set(e.door[0], 0, e.door[1]); this.fp.y = this.ground(e.door[0], e.door[1], 3); this.fyaw = e.door[2] + Math.PI; } else if (o.at) { this.fp.set(o.at[0], 0, o.at[1]); this.fp.y = this.ground(o.at[0], o.at[1], 3); this.fyaw = o.at[2] ?? 0; } else if (!this._disembark()) this.foot = false; this.fpitch = 0; }
       else this.foot = false;
     }
@@ -186,7 +191,8 @@ export class SurfaceMode {
     this.time += dt; const e = this.env, s = this.ship, pl = G.space.pl;
     for (const f of e.anim) f(dt, this.time, this.camera.position);
     for (const sp of this.sprites) if (sp.userData.blink) sp.material.opacity = (this.time * sp.userData.blink) % 1 < 0.15 ? 1 : 0.05;
-    if (this.foot) this._walk(dt); else this._fly(dt);
+    if (this.dead) { const s0 = this.ship; if (!this.foot && !s0.landed) { s0.speed = damp(s0.speed, 0, 0.8, dt); s0.vy = damp(s0.vy, -20, 0.8, dt); s0.pos.addScaledVector(_a.set(0, 0, -1).applyQuaternion(this._q()), s0.speed * dt); s0.pos.y = Math.max(s0.pos.y + s0.vy * dt, this.ground(s0.pos.x, s0.pos.z) + s0.clear); } } // 船体喪失: 救難艇が回収に来るまで操縦できない
+    else if (this.foot) this._walk(dt); else this._fly(dt);
     this._rescueTick(dt);
     this._cam(dt);
     // 降水・降灰・砂塵
@@ -200,7 +206,7 @@ export class SurfaceMode {
     // 光源は対象に追従
     const t = this.foot ? this.fp : s.pos; this.sun.position.copy(t).addScaledVector(e.sunDir, 600); this.sun.target.position.copy(t); e.sky.position.copy(this.camera.position);
     pl.energy = Math.min(pl.st.energy, pl.energy + pl.st.energy * 0.1 * dt);
-    this._hud();
+    this._hud(dt);
   }
 
   // ───────────────────────── 飛行 ─────────────────────────
@@ -253,7 +259,7 @@ export class SurfaceMode {
     const s = this.ship, e = this.env; s.landed = true; s.auto = null; s.speed = 0; s.vy = 0; s.pitch = 0; G.input.setThr(0); if (s.m.gear) s.m.gear.visible = true; s.m.tilt.rotation.set(0, 0, 0); this._engines(false);
     this.parts.burst(_a.copy(s.pos).setY(s.pos.y - s.clear + 0.3), 50, 14, _col.set('#cfd8e0'), 2.2, 1.0, null, 1.2); G.audio?.sfx('land'); this.shake = 0.4;
     const first = !G.p.stats.lands[e.id]; G.p.stats.lands[e.id] = (G.p.stats.lands[e.id] || 0) + 1; G.p.day++; save();
-    this._region(); G.hud.banner('着陸完了', (this.place || e.name) + (first ? ' — 初到達' : '')); if (first) { G.p.credits += 1500; G.hud.msg(`探査ボーナス：${body(e.id).name} 初着陸 +1,500 Cr`, 'good', 7); }
+    this._region(); G.hud.banner('着陸完了', (this.place || e.name) + (first ? ' — 初到達' : '')); if (first) { earn(1500); G.hud.msg(`探査ボーナス：${body(e.id).name} 初着陸 +1,500 Cr`, 'good', 7); }
   }
   /** 箱型障害物 (ビルなど) の側面にぶつかったら押し戻し、壁に沿って滑らせる */
   _bump(fwd) {
@@ -273,7 +279,7 @@ export class SurfaceMode {
   _engines(on) { const m = this.ship.m; for (const p of m.plumes) { p.visible = on; if (on) p.material.uniforms.uPow.value = 0.1; } for (const g of m.glows || []) if (g.isObject3D) g.visible = on; }
   takeoff() { const s = this.ship; s.landed = false; s.vy = 16; this._engines(true); s.pos.y += 0.5; G.input.setThr(0.15); if (s.m.gear) setTimeout(() => { if (!s.landed) s.m.gear.visible = false; }, 2500); G.audio?.sfx('undock'); G.hud.msg('離陸。高度 5km を超えると軌道へ離脱します。', 'good'); }
   _hull(d, msg) { const pl = G.space.pl; pl.hull -= d; pl.lastHit = G.space.time; G.p.ships[pl.id].hull = clamp(pl.hull / pl.st.hull, 0, 1); if (msg && !this._w3) { this._w3 = 1; G.hud.msg(msg, 'warn'); setTimeout(() => { this._w3 = 0; }, 3000); }
-    if (pl.hull <= 0 && !this.dead) { this.dead = true; G.hud.banner('船体喪失', '救難艇が回収中…', 4); const fee = Math.round(G.p.credits * 0.1); G.audio?.sfx('boom'); setTimeout(() => { G.p.credits -= fee; G.p.ships[pl.id].hull = 1; this.dead = false; G.go('space', { docked: G.p.last }).then(() => G.hud.msg(`ステーションで修復されました (費用 ${fee.toLocaleString()} Cr)`, 'warn', 8)); }, 3000); } }
+    if (pl.hull <= 0 && !this.dead) { this.dead = true; G.hud.banner('船体喪失', '救難艇が回収中…', 4); const fee = Math.round(G.p.credits * 0.1); G.audio?.sfx('boom'); setTimeout(() => { G.p.credits -= fee; G.p.ships[pl.id].hull = 1; this.dead = false; G.space.rebuildShip(); G.go('space', { docked: G.p.last }).then(() => G.hud.msg(`ステーションで修復されました (費用 ${fee.toLocaleString()} Cr)`, 'warn', 8)); }, 3000); } }
 
   // ───────────────────────── 徒歩 ─────────────────────────
   ok(x, z, y = this.fp.y) {
@@ -317,7 +323,7 @@ export class SurfaceMode {
     if (i.act === 'ruins') { const first = !G.p.flags.ruins, fresh = G.p.flags.ruinsDay !== G.p.day;
       return G.ui.talk('古代遺跡', first ? '苔むした石段の先で、翠色の紋様が脈打つように光っている。壁一面に、見たことのない星図が刻まれていた…。' : '翠色の紋様は今も静かに脈打っている。星図の刻印にはまだ読み解けていない部分がある。', [{ label: first ? '星図を記録する' : '刻印を調べる', cls: 'gold', fn: () => {
         if (!first && !fresh) return G.hud.msg('今日はもう新しい発見はなさそうだ。', 'warn');
-        const n = addCargo('data', first ? 2 : 1); G.p.flags.ruins = 1; G.p.flags.ruinsDay = G.p.day; if (first) G.p.credits += 3000; G.audio?.sfx('pickup'); event('sample', { body: e.id }); save();
+        const n = addCargo('data', first ? 2 : 1); G.p.flags.ruins = 1; G.p.flags.ruinsDay = G.p.day; if (first) earn(3000); G.audio?.sfx('pickup'); event('sample', { body: e.id }); save();
         G.hud.msg(first ? `古代の星図を記録した！ 探査データ ×${n} / 発見ボーナス +3,000 Cr` : n ? '刻印の一部を解読した。探査データ ×1' : '解読できたが、貨物室がいっぱいでデータを持ち帰れない。', 'good', 7); } }, { label: '立ち去る' }]); }
     if (i.act === 'board') return G.ui.talk(SHIPS[this.ship.id].name, '着陸中の自機。', [{ label: '船内に入る', fn: () => G.go('interior', { type: 'ship', from: 'surface', body: e.id, via: 'airlock' }) }, { label: '操縦席へ', cls: 'gold', fn: () => { this.foot = false; this._mode(); this._cam(0, true); } }, { label: 'やめる' }]);
     if (i.act === 'node') {
@@ -329,9 +335,10 @@ export class SurfaceMode {
 
   _cam(dt, snap) {
     const c = this.camera, s = this.ship, e = this.env;
-    if (this.foot) { c.position.set(this.fp.x, this.fp.y + 1.68 + Math.sin(this.bob * 2) * 0.03, this.fp.z); c.rotation.set(this.fpitch, this.fyaw, 0, 'YXZ'); c.fov = 70; c.near = 0.22; }
+    if (this.foot) { c.position.set(this.fp.x, this.fp.y + 1.68 + Math.sin(this.bob * 2) * 0.03, this.fp.z); c.rotation.set(this.fpitch, this.fyaw, 0, 'YXZ'); c.fov = 70; c.near = 0.22; if (G.hud.cockpit.style.display !== 'none') G.hud.cockpit.style.display = 'none'; }
     else {
       s.m.obj.position.copy(s.pos); s.m.obj.quaternion.copy(this._q()); c.near = s.view === 1 && !s.landed ? 1.2 : clamp(s.m.cam.d * 0.08, 0.5, 2.2); // 近クリップを遠ざけて遠景の深度精度を稼ぐ
+      const ck = s.view === 1 && !s.landed ? 'block' : 'none'; if (G.hud.cockpit.style.display !== ck) G.hud.cockpit.style.display = ck; // 操縦席視点ではコックピットの枠を出す (宇宙と同じ)
       if (snap) s.camQ.copy(s.q); else s.camQ.slerp(s.q, 1 - Math.exp(-4 * dt));
       if (s.view === 1 && !s.landed) { c.position.copy(s.m.cockpit).applyQuaternion(s.q).add(s.pos); c.quaternion.copy(s.q); s.m.body.visible = false; }
       else { s.m.body.visible = true; const k = clamp(s.speed / 430, 0, 1), d = s.m.cam.d * (s.landed ? 1.25 : 1 + k * 0.2); c.position.set(0, s.m.cam.h * (s.landed ? 0.75 : 1), d).applyQuaternion(s.camQ).add(s.pos); c.quaternion.copy(s.camQ); c.rotateX(-0.07);
@@ -347,13 +354,13 @@ export class SurfaceMode {
     // 太陽の画面位置 (光条用)
     _a.copy(c.position).addScaledVector(e.sunDir, 5000).project(c); const u = G.gfx.fx.uSun.value; u.set(_a.x, _a.y, _a.z < 1 && Math.abs(_a.x) < 1.5 && Math.abs(_a.y) < 1.5 ? 1 : 0);
   }
-  _hud() {
+  _hud(dt = 0) {
     const h = G.hud, s = this.ship, e = this.env, pl = G.space.pl, c = this.camera;
     h.begin(); h.setLoc(this.place || e.name, `${body(e.id).name} — ${this.reg || e.sub}`);
     const ms = G.p.missions.find((m) => m.type === 'survey' && m.body === e.id) || G.p.missions[0];
     h.setObj(`<b>ヴォイド艦隊</b> 残存 ${remaining()}/20${ms ? `<br>任務：${ms.title} (${ms.prog}/${ms.need})` : ''}`);
     if (this.foot) {
-      h.bar('sh', 1); h.bar('hull', G.p.hp / 100); h.damage(G.p.hp < 35 ? 0.4 : 0); G.p.hp = Math.min(100, G.p.hp + dtHeal);
+      h.bar('sh', 1); h.bar('hull', G.p.hp / 100); h.damage(G.p.hp < 35 ? 0.4 : 0); G.p.hp = Math.min(100, G.p.hp + HEAL * dt); // 毎秒の回復量 (フレームレートに依存しない)
       const sp = _a.copy(s.pos); let [x, y, f] = h.project(sp, c); h.marker(x, y, f, '#6fe8ff', SHIPS[s.id].name, fmtDist(Math.hypot(s.pos.x - this.fp.x, s.pos.z - this.fp.z)), 'diamond', 1.4);
       for (const it of e.items) { if (Math.hypot(it.x - this.fp.x, it.z - this.fp.z) > (it.near || 3500)) continue; const p = _b.set(it.x, this.ground(it.x, it.z) + 3, it.z); [x, y, f] = h.project(p, c); h.marker(x, y, f, '#ffd27a', it.name || BASES[e.id].name, fmtDist(Math.hypot(it.x - this.fp.x, it.z - this.fp.z)), 'diamond', 1.2); }
       for (const n of e.nodes) { if (!n.g.visible) continue; const d = Math.hypot(n.x - this.fp.x, n.z - this.fp.z); if (d > 420) continue; [x, y, f] = h.project(_b.set(n.x, this.ground(n.x, n.z) + 2.4, n.z), c); if (f) h.marker(x, y, f, '#6dffb0', d < 60 ? '資源' : '', fmtDist(d), 'circle', 0.9); }
@@ -367,10 +374,11 @@ export class SurfaceMode {
     if (!s.landed) { h.marker(x, y, f, '#ffd27a', '着陸パッド', fmtDist(pd), 'diamond', 1.8); if (s.view === 0) { [x, y, f] = h.project(_b.set(0, 0, -1).applyQuaternion(s.q).multiplyScalar(800).add(s.pos), c); if (f) h.reticle(x, y, '#6fe8ff', 0.8); } }
     if (s.pos.y > 3800 && !s.landed) h.text(`軌道離脱まで ${(5200 - s.pos.y).toFixed(0)} m`, G.W / 2, G.H * 0.26, '#8cf', 2.6, true);
     const L = [];
+    if (this.dead) return h.setCtx(L); // 回収待ちの間は離陸・降機・船内移動をさせない
     if (s.landed) L.push({ label: '降りる', fn: () => { if (this._disembark()) { this.foot = true; this._mode(); } } }, { label: '船内へ', cls: 'alt', fn: () => G.go('interior', { type: 'ship', from: 'surface', body: e.id }) }, { label: '離陸', cls: 'bad', fn: () => this.takeoff() });
     else if (s.auto) L.push({ label: '中止', cls: 'bad', fn: () => { s.auto = null; } });
     else if (Math.hypot(s.pos.x, s.pos.z) < (e.safeAlt ? 6500 : 2600) && s.pos.y < (e.safeAlt ? 3200 : 2200)) L.push({ label: 'オートランド', fn: () => { s.auto = { ph: 0 }; G.audio?.sfx('nav'); G.hud.msg(`${e.name} 管制：着陸を許可。自動誘導を開始します。`, 'comm'); } });
-    h.setCtx(L);
+    h.setCtx(L); if (L.length && G.input.key('Enter')) L[0].fn(); // PC: Enter で先頭の状況ボタン (オートランド・降りる など) を押す
   }
   render(dt) {
     const e = this.env, cp = this.camera.position; if (!e) return G.gfx.render(dt, this.scene, this.camera, null); // 地表の生成が終わるまでは空のシーンを描く
@@ -378,4 +386,4 @@ export class SurfaceMode {
     G.gfx.render(dt, this.scene, this.camera, null);
   }
 }
-const dtHeal = 0.02;
+const HEAL = 1.2; // 徒歩中の自然回復 (体力/秒)

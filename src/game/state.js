@@ -2,7 +2,7 @@
 import { G, rng, pick } from '../core/util.js';
 import { SHIPS, COMMODITIES, PRICES, ENEMIES, STATIONS, BODIES, BASES, RESCUE, DISASTERS } from '../world/defs.js';
 
-const KEY = 'starfable-save-v1';
+const KEY = 'starfable-save-v1', DEV_KEY = 'starfable-save-dev';
 export function newGame(ship = 'hayate') {
   return {
     v: 1, credits: 6000, ship, cargo: {}, missions: [], done: {}, last: 'haven', hp: 100, day: 1, flags: {}, quality: null, invertY: false, sound: true,
@@ -11,8 +11,9 @@ export function newGame(ship = 'hayate') {
   };
 }
 export function load() { try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.v === 1) return s; } catch (e) { /* 保存なし */ } return null; }
-export function save() { try { localStorage.setItem(KEY, JSON.stringify(G.p)); } catch (e) { /* プライベートモード等 */ } }
-export function wipe() { try { localStorage.removeItem(KEY); } catch (e) { /* noop */ } }
+// デバッグ用 URL (?auto=...) で始めた仮のゲームは別の枠に保存し、本来のセーブデータを上書きしない
+export function save() { try { localStorage.setItem(G.dev ? DEV_KEY : KEY, JSON.stringify(G.p)); } catch (e) { /* プライベートモード等 */ } }
+export function wipe() { try { localStorage.removeItem(G.dev ? DEV_KEY : KEY); } catch (e) { /* noop */ } }
 
 export function stats(id = G.p.ship) {
   const s = SHIPS[id], u = G.p.ships[id].up;
@@ -43,7 +44,8 @@ export function missionBoard(sid) {
   return out.filter((m) => !G.p.missions.some((x) => x.id === m.id) && !G.p.flags['m' + m.id]);
 }
 export function accept(m) {
-  if (m.type === 'deliver' && addCargo(m.cargo, m.qty) < m.qty) { takeCargo(m.cargo, m.qty); return false; }
+  // 積みきれなかったときは、いま積んだ分だけを降ろす (元から持っていた同じ品物まで消さない)
+  if (m.type === 'deliver') { const k = addCargo(m.cargo, m.qty); if (k < m.qty) { takeCargo(m.cargo, k); return false; } }
   G.p.missions.push(m); return true;
 }
 /** ゲーム内イベントで任務を進める */

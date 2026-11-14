@@ -81,7 +81,7 @@ export const PROPS = {
     const m = MM(), c = o.c || e.th.trim;
     P.box(m.dk, 0.56, 1.05, 0.3, 0, 0.52, 0); P.box(m.ch, 0.6, 0.05, 0.34, 0, 0.03, 0); P.add(m.dk, new THREE.BoxGeometry(0.86, 0.06, 0.6), mx(0, 1.18, 0.1, 0.75));
     scr(P, o.kind || 'bars', c, o.title || o.label, 0.78, 0.5, 0, 1.213, 0.132, 0.75 - HP); P.box(glow(c, 3), 0.04, 0.9, 0.31, 0.3, 0.55, 0); P.box(glow(c, 3), 0.04, 0.9, 0.31, -0.3, 0.55, 0);
-    const s = signMesh(o.label, c, 0.26, { double: true, intensity: 2.4 }); e.dyn(s, 0, 2.2, 0); e.anim((dt, t) => { s.position.y = 2.2 + Math.sin(t * 2 + e.x) * 0.04; });
+    const s = signMesh(o.label, c, 0.26, { double: true, intensity: 2.4 }); e.dyn(s, 0, 2.2, 0); e.anim((dt, t) => { s.position.y = e.y0 + 2.2 + Math.sin(t * 2 + e.x) * 0.04; });
     e.col(0.42); e.use(o.label, o.use, 2.5, o);
   },
   wallscreen(P, o, e) {
@@ -151,7 +151,7 @@ export const PROPS = {
   railing(P, o, e) { const m = MM(), w = o.w || 4; P.box(m.ch, w, 0.05, 0.05, 0, 1.05, 0); P.add(glassMat(), new THREE.BoxGeometry(w, 0.85, 0.02), mx(0, 0.55, 0), 0); for (let x = -w / 2; x <= w / 2 + 0.01; x += w / Math.max(1, Math.round(w / 1.6))) P.box(m.ch, 0.05, 1.05, 0.05, x, 0.52, 0); e.rect(w, 0.15); },
   sign(P, o, e) { const s = signMesh(o.text, o.c || e.th.trim, o.h || 0.6, { double: !!o.double, frame: o.frame, intensity: o.k || 2.4 }); e.dyn(s, 0, o.y || 2.6, 0.03); if (o.flicker) e.anim((dt, t) => { s.material.color.setScalar((o.k || 2.4) * (Math.sin(t * 13 + e.x) > 0.93 ? 0.35 : 1)); }); },
   npc(P, o, e) {
-    const g = e.dyn(makeNPC(o.suit, o.visor || e.th.trim)); const n = { g, x: e.x, z: e.z, yaw: e.ang, ph: e.x * 3 + e.z, walk: o.walk, t: 0 }; e.out.npcs.push(n);
+    const g = e.dyn(makeNPC(o.suit, o.visor || e.th.trim)); const n = { g, x: e.x, z: e.z, y: g.position.y, yaw: e.ang, ph: e.x * 3 + e.z, walk: o.walk, t: 0 }; e.out.npcs.push(n); // y = 台の上に立つときの足元の高さ
     e.col(0.4); if (o.use) e.use(o.label, o.use, 2.6, o);
   },
   slot(P, o, e) { const m = MM(), c = o.c || '#fd4'; P.box(flat(0x8a1420, 0.35, 0.4), 0.8, 1.7, 0.7, 0, 0.85, 0); scr(P, 'bars', c, '777', 0.62, 0.5, 0, 1.25, 0.356); P.box(m.gd, 0.84, 0.1, 0.74, 0, 1.7, 0); P.box(glow(c, 3), 0.7, 0.16, 0.04, 0, 1.56, 0.36); P.box(m.gd, 0.6, 0.06, 0.2, 0, 0.9, 0.42); P.cyl(m.ch, 0.025, 0.025, 0.5, 0.46, 1.25, 0.1, 'y', 6); P.sph(glow('#f33', 2), 0.06, 0.46, 1.52, 0.1); e.rect(0.85, 0.7); e.use(o.label || 'スロットで遊ぶ', 'casino', 2.3); },
@@ -176,7 +176,7 @@ export const PROPS = {
     const f = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 2.55), holoMat(c, 0.5)); e.dyn(f, 0, 1.3, 1.28); e.rect(3.2, 0.2, 0, 1.28); e.rect(0.2, 2.6, -1.5, 0); e.rect(0.2, 2.6, 1.5, 0); e.light(c, 10, 2, 6); },
   core(P, o, e) { const m = MM(), c = o.c || '#f43'; P.cyl(m.dk, 0.7, 0.95, 1.0, 0, 0.5, 0, 'y', 8); P.cyl(m.bk, 0.5, 0.5, 0.08, 0, 1.04, 0, 'y', 8); P.tor(glow(c, 4), 0.62, 0.03, 0, 1.02, 0, HP, 0, 0, 8, 5);
     const k = e.dyn(new THREE.Mesh(new THREE.IcosahedronGeometry(0.34, 0), glow(c, 5)), 0, 1.75, 0), w = e.dyn(new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(0.55, 1)), new THREE.LineBasicMaterial({ color: new THREE.Color(c).multiplyScalar(2), transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending })), 0, 1.75, 0);
-    e.anim((dt, t) => { k.rotation.y += dt * 1.3; k.rotation.x += dt * 0.7; w.rotation.y -= dt * 0.5; k.position.y = 1.75 + Math.sin(t * 2) * 0.06; }); e.light(c, 30, 1.8, 9); e.col(0.95); e.use(o.label || '制御コアを掌握する', 'core', 2.8); },
+    e.anim((dt, t) => { k.rotation.y += dt * 1.3; k.rotation.x += dt * 0.7; w.rotation.y -= dt * 0.5; k.position.y = e.y0 + 1.75 + Math.sin(t * 2) * 0.06; /* 台座の高さ (y0) を保ち、外殻の中心からずれないように */ }); e.light(c, 30, 1.8, 9); e.col(0.95); e.use(o.label || '制御コアを掌握する', 'core', 2.8); },
   exit(P, o, e) { const m = MM(), c = o.c || '#4f8', w = o.w || 2.0; P.box(m.dk, w + 0.5, 2.9, 0.16, 0, 1.45, 0.08); P.box(m.st, w, 2.5, 0.08, 0, 1.25, 0.17); for (let i = 0; i < 6; i++) P.add(glow('#fc4', 1.2), new THREE.PlaneGeometry(0.16, 0.5), mx(-w / 2 + 0.2 + i * (w - 0.4) / 5, 0.32, 0.215, 0, 0, 0.5), 0);
     P.add(m.bk, new THREE.CylinderGeometry(0.42, 0.42, 0.06, 20).rotateX(HP), mx(0, 1.5, 0.22)); P.add(glassMat(), new THREE.CircleGeometry(0.36, 20), mx(0, 1.5, 0.26), 0); P.box(glow(c, 4), w + 0.4, 0.06, 0.04, 0, 2.82, 0.18);
     const s = signMesh(o.sign || 'EXIT', c, 0.3, { intensity: 2.4 }); e.dyn(s, 0, 3.15, 0.1); e.use(o.label || 'エアロック', o.use || 'exit', 2.6, o); },

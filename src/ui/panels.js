@@ -39,7 +39,9 @@ export class UI {
     const menu = el('div', 'menu', '', t);
     const go = (fresh) => {
       G.audio?.unlock(); SFX('nav'); G.fullscreen();
-      if (fresh) { const q = G.p.quality; wipe(); G.p = newGame(ship); G.p.quality = q; } else { G.p = saved; G.p.ship = ship; }
+      // タイトル画面で選び直した画質を、セーブデータに残っていた古い画質で上書きしない
+      const q = G.gfx.qName;
+      if (fresh) { wipe(); G.p = newGame(ship); G.p.quality = q; } else { G.p = saved; G.p.ship = ship; G.p.quality = q; }
       t.classList.add('fadeout'); setTimeout(() => t.remove(), 900);
       G.start(fresh);
     };
@@ -49,6 +51,9 @@ export class UI {
     s.onclick = () => { const k = Object.keys(QUALITY), nx = k[(k.indexOf(G.gfx.qName) + 1) % k.length]; G.setQuality(nx); s.textContent = '画質：' + QUALITY[nx].label; SFX('ui'); };
     const rs = el('button', 'cb alt', '解像度：' + RES[G.gfx.res], menu);
     rs.onclick = () => { const k = [540, 720, 1080, 0], nx = k[(k.indexOf(G.gfx.res) + 1) % k.length]; G.setRes(nx); rs.textContent = '解像度：' + RES[nx]; SFX('ui'); };
+    // 描画距離もタイトルで選べるようにする (README の「タイトル画面と MENU → 設定から変更できます」の通りに)
+    const ds = el('button', 'cb alt', '描画距離：' + DIST[G.distName][0], menu);
+    ds.onclick = () => { const k = Object.keys(DIST), nx = k[(k.indexOf(G.distName) + 1) % k.length]; G.setDist(nx); ds.textContent = '描画距離：' + DIST[nx][0]; SFX('ui'); };
     el('div', 'hint', '機体を選んで出撃。9 つの宇宙ステーション、着陸できる 5 つの星、乗り込める敵艦 20 隻が待っている。<br>スマホは横向き全画面推奨（ホーム画面に追加すると完全な全画面で遊べます）', t);
   }
 
@@ -71,9 +76,9 @@ export class UI {
     this.open('遊び方', 'HOW TO PLAY', (b) => {
       this.note(b, '<b>目的</b>：星系を荒らす <em>ヴォイド艦隊 20 隻</em> を撃沈または拿捕し、9 つのステーションと 5 つの星を巡って交易・任務・探索を楽しもう。アトラス救難基地では、救助船ミケーネを地球の都市へ出動させられる。');
       this.note(b, '<b>操縦</b>：左スティックで旋回、右端のスライダーで推力。<em>発射</em>・<em>ミサイル</em>（要ロック）・<em>ブースト</em>。⟲⟳ でロール。<br><b>超巡航</b>：惑星間の高速移動。<b>星図</b>で目的地を選び <em>自動航行</em> を押すと、到着まで自動で飛ぶ。');
-      this.note(b, '<b>ドッキング</b>：ステーションに 3.5km まで近づき <em>ドッキング要請</em>。自動誘導で接続後、ステーション内を歩いて各施設を利用できる。<br><b>着陸</b>：惑星へ降下すると大気圏に突入。地表では <em>▲▼</em> で昇降し、<em>着陸</em> ボタンで接地。降りて歩ける。');
+      this.note(b, '<b>ドッキング</b>：ステーションに 3.5km まで近づき <em>ドッキング要請</em>。自動誘導で接続後、ステーション内を歩いて各施設を利用できる。<br><b>着陸</b>：惑星へ降下すると大気圏に突入。地表では <em>▲▼</em> で昇降し、平らな場所へゆっくり降りると接地する。パッドの近くでは <em>オートランド</em> で自動着陸できる。降りて歩ける。');
       this.note(b, '<b>敵艦への乗り込み</b>：船体を削ると <em>航行不能</em> になる。<em>接舷する</em> → <em>敵艦に突入</em> で艦内へ。警備ドローンを倒し、艦橋の制御コアを掌握すれば拿捕成功。');
-      this.note(b, '<b>PC</b>：WASD/矢印=旋回、R/C=推力、Space=発射、F=ミサイル、Shift=ブースト、T=照準、J=超巡航、G=自動航行、V=視点、歩行時は E=調べる・クリックで視点。');
+      this.note(b, '<b>PC</b>：WASD/矢印=旋回、R/C=推力、Z/X=推力全開/停止、Q/E=ロール、Space=発射、F=ミサイル、Shift=ブースト、T=照準、J=超巡航、G=自動航行、V=視点、Enter=状況ボタン、歩行時は E=調べる・右半分をドラッグで視点。');
     }, { small: true });
   }
   status() {
@@ -212,12 +217,13 @@ export class UI {
       this.note(b, '絵柄が 3 つ揃えば大当たり、2 つでも小当たり。賭け金を選んで回そう。');
       const reels = el('div', 'slots', '', b), R = [0, 1, 2].map(() => el('div', 'reel', sym[Math.floor(Math.random() * 5)], reels)), res = el('p', 'note', '&nbsp;', b); res.style.textAlign = 'center';
       const r = el('div', 'row', '<div class="g"></div>', b);
-      for (const v of [100, 500, 2000]) { const e = el('button', 'bt' + (v === bet ? ' gold' : ''), `賭け ${v}`, r); e.onclick = () => { bet = v; api.refresh(); }; }
+      // 回転中は賭け金を変えられない (払い戻しは回した時点の賭け金で計算する)
+      for (const v of [100, 500, 2000]) { const e = el('button', 'bt' + (v === bet ? ' gold' : '') + (spin && v !== bet ? ' off' : ''), `賭け ${v}`, r); e.onclick = () => { if (spin) return; bet = v; api.refresh(); }; }
       const go = el('button', 'bt red', '回す！', r);
       go.onclick = () => {
-        if (spin || G.p.credits < bet) return SFX('deny'); spin = true; G.p.credits -= bet; const out = [0, 1, 2].map(() => { const x = Math.random(); return x < 0.34 ? 0 : x < 0.6 ? 1 : x < 0.8 ? 2 : x < 0.93 ? 3 : 4; }); let n = 0;
+        if (spin || G.p.credits < bet) return SFX('deny'); spin = true; const stake = bet; G.p.credits -= stake; const out = [0, 1, 2].map(() => { const x = Math.random(); return x < 0.34 ? 0 : x < 0.6 ? 1 : x < 0.8 ? 2 : x < 0.93 ? 3 : 4; }); let n = 0;
         const iv = setInterval(() => { n++; R.forEach((e, i) => { if (n < 10 + i * 6) { e.textContent = sym[Math.floor(Math.random() * 5)]; SFX('slot'); } else e.textContent = sym[out[i]]; });
-          if (n > 24) { clearInterval(iv); spin = false; let win = 0; if (out[0] === out[1] && out[1] === out[2]) win = bet * pay[out[0]]; else if (out[0] === out[1] || out[1] === out[2] || out[0] === out[2]) win = Math.round(bet * 1.5);
+          if (n > 24) { clearInterval(iv); spin = false; let win = 0; if (out[0] === out[1] && out[1] === out[2]) win = stake * pay[out[0]]; else if (out[0] === out[1] || out[1] === out[2] || out[0] === out[2]) win = Math.round(stake * 1.5);
             if (win) { earn(win); SFX('reward'); res.innerHTML = `<b class="up">当たり！ +${win.toLocaleString()} Cr</b>`; } else { SFX('deny'); res.innerHTML = 'はずれ…'; } this.cur && (this.cur.wrap.querySelector('.cr').textContent = fmtCr(G.p.credits)); } }, 70);
       };
     }, { small: true });

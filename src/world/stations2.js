@@ -358,7 +358,7 @@ function weapon() {
   beam.visible = slug.visible = false; obj.add(beam); const D0 = TZ + 58 - ZM;
   let fired = false;
   o.anim.push((t) => {
-    const k = t % PERIOD, ch = k > PERIOD - 4 ? (k - (PERIOD - 4)) / 4 : 0, f = k < 2.5 ? k : -1; // 充電 4 秒 → 発射
+    const k = (G.time ?? t) % PERIOD, ch = k > PERIOD - 4 ? (k - (PERIOD - 4)) / 4 : 0, f = k < 2.5 ? k : -1; // 充電 4 秒 → 発射。宇宙モードの時計は船内にいる間止まるので、艦内の試射監視卓と同じ全体時計 (G.time) で数える
     ringM.forEach((q, i) => { const on = ch > 0 ? Math.max(0, Math.min(1, ch * NRING * 1.15 - i)) : f >= 0 ? Math.max(0, 1 - f * 1.4) : 0; q.m.color.set('#8fe8ff').multiplyScalar(0.35 + on * 6 + (ch > 0.9 ? Math.sin(t * 60) * 1.5 : 0)); });
     muzzle.scale.setScalar(f >= 0 ? 30 + 380 * Math.exp(-f * 5) : 10 + ch * 60); muzzle.material.opacity = f >= 0 ? Math.exp(-f * 2.5) : ch;
     const sl = f >= 0 && f < 0.32; slug.visible = sl; if (sl) slug.position.set(0, 0, ZM + D0 * (f / 0.32));
