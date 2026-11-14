@@ -221,11 +221,12 @@ export class SpaceMode {
   _navSteer(fwd) {
     const p = this.pl; if (!this.nav) { p.auto = null; return null; }
     const tp = this.navPos(_c), to = _b.copy(tp).sub(p.pos), dist = to.length(); to.multiplyScalar(1 / dist);
-    // 天体を避ける
-    for (const b of this.bodies) {
-      if (this.nav.ref === b) continue;
-      const v = _d.copy(b.uni).sub(this.origin).sub(p.pos), t = v.dot(to); if (t <= 0 || t > dist) continue;
-      const perp = v.addScaledVector(to, -t), dp = perp.length(), need = b.R * 1.5;
+    // 天体を避ける (太陽も含める: 以前は惑星だけを避け、太陽をはさんだ星どうしの航行で恒星に突っ込んで撃墜されていた)
+    const avoid = this._avoid || (this._avoid = [...this.bodies.map((b) => ({ b, uni: b.uni, need: b.R * 1.5 })), { b: null, uni: V(0, 0, 0), need: 1.2e6 * 2.4 }]);
+    for (const { b, uni, need } of avoid) {
+      if (b && this.nav.ref === b) continue;
+      const v = _d.copy(uni).sub(this.origin).sub(p.pos), t = v.dot(to); if (t <= 0 || t > dist) continue;
+      const perp = v.addScaledVector(to, -t), dp = perp.length();
       if (dp < need) { to.multiplyScalar(t).addScaledVector(perp, -(need - dp) / (dp || 1)).normalize(); }
     }
     const loc = to.applyQuaternion(_q.copy(p.quat).invert());
@@ -466,7 +467,9 @@ export class SpaceMode {
         e.fireT -= dt;
         if (e.breakT <= 0 && e.fireT <= 0 && d < 2600 && fwd.dot(tp) > 0.994) {
           const g = e.m.guns, gp = _d.copy(g[e.gi++ % g.length]).applyMatrix4(o.matrixWorld), sp = (0.035 - tier * 0.007);
-          _a.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(sp).add(tp).normalize(); // ばらつき用に tp (=_c, 向きの目標) を上書きしない
+          // 砲口から狙う: 砲は機体の中心線から最大 13m 横に付いているので、中心からの向きのまま撃つと弾が平行に目標の横を素通りしていた
+          const aim = _hp.copy(p.pos).addScaledVector(p.vel, d / 950).addScaledVector(e.vel, -d / 950).sub(gp).normalize();
+          _a.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(sp).add(aim).normalize(); // ばらつき用に tp (=_c, 向きの目標) を上書きしない
           this.bolts.fire(gp, _a, 950, e.bc || (e.bc = C(e.def.glow).multiplyScalar(5)), e.def.dmg, 'e', 3, 20, 0.34, e.vel); G.audio?.sfx('elaser', clamp(1 - d / 3000, 0.1, 1));
           e.burst++; e.fireT = e.burst % (3 + tier) === 0 ? 1.5 - tier * 0.25 : 0.16;
         }

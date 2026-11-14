@@ -157,7 +157,8 @@ export class UI {
   // ───────────────────────── 造船所 / 格納庫 ─────────────────────────
   shipyard(sid, disc = 1) {
     const st = station(sid);
-    const swap = (id) => { G.p.ship = id; G.space.setShip(id); G.space.refit(); G.mode.refreshShip?.(); save(); SFX('reward'); G.hud.msg(`${SHIPS[id].name} に乗り換えた`, 'good'); };
+    const swap = (id) => { if (cargoUsed() > stats(id).cargo) { SFX('deny'); return G.hud.msg(`積荷 ${cargoUsed()} が${SHIPS[id].name}の積載量 ${stats(id).cargo} を超えています。売却してから乗り換えてください。`, 'warn'); } // 積載量オーバーの機体にしない
+      G.p.ship = id; G.space.setShip(id); G.space.refit(); G.mode.refreshShip?.(); save(); SFX('reward'); G.hud.msg(`${SHIPS[id].name} に乗り換えた`, 'good'); };
     this.open(disc < 1 ? '造船廠ドック' : '格納庫サービス', st?.name || '', null, { tabs: [
       { name: '艦船', build: (b, api) => {
         this.note(b, '3 隻すべてがあなたの所有機。いつでも無料で回送・乗り換えができる。');
