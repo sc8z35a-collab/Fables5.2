@@ -222,7 +222,9 @@ export class SurfaceMode {
     const boost = inp.down('boost') && pl.energy > 4; if (boost) pl.energy -= 18 * dt;
     s.speed = damp(s.speed, inp.thr * (boost ? 430 : 250), boost ? 1.6 : 1.1, dt);
     s.vy = damp(s.vy, ((inp.down('up') ? 1 : 0) - (inp.down('dn') ? 1 : 0)) * 46, 3, dt);
-    const fwd = _a.set(0, 0, -1).applyQuaternion(this._q()); s.pos.addScaledVector(fwd, s.speed * dt); s.pos.y += s.vy * dt;
+    // 1 フレームで細いビルを飛び越えないよう、移動を 4m 以下に刻んで建物との当たりを調べる (高速・低フレームレート時のすり抜け対策)
+    const fwd = _a.set(0, 0, -1).applyQuaternion(this._q()), mv = s.speed * dt, nSub = Math.min(12, Math.max(1, Math.ceil(mv / 4))); s.pos.y += s.vy * dt;
+    for (let i = 0; i < nSub; i++) { s.pos.addScaledVector(fwd, mv / nSub); if (i < nSub - 1) this._bump(fwd); }
     s.m.tilt.rotation.z = damp(s.m.tilt.rotation.z, s.yawV * 0.55, 4, dt);
     this._bump(fwd);
     const vdown = -(fwd.y * s.speed + s.vy), g2 = this.ground(s.pos.x, s.pos.z) + s.clear;
