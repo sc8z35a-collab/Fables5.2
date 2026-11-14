@@ -12,7 +12,7 @@ import { stats, save, earn, addCargo, event, remaining } from './state.js';
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const _a = V(), _b = V(), _c = V(), _d = V(), _q = new THREE.Quaternion(), _q2 = new THREE.Quaternion(), _m = new THREE.Matrix4(), _e = new THREE.Euler();
-const FWD = V(0, 0, -1), UP = V(0, 1, 0), C = (c) => new THREE.Color(c), _hp = V(), _hd = V();
+const FWD = V(0, 0, -1), UP = V(0, 1, 0), ZUP = V(0, 0, 1), C = (c) => new THREE.Color(c), _hp = V(), _hd = V();
 const WHITE = C('#fff'), ORANGE = C('#ffb060'), SPARK = C('#ffd9a0');
 
 export class SpaceMode {
@@ -80,7 +80,7 @@ export class SpaceMode {
     const [P, D] = this.portOf(t), len = p.st.len / 2 + 3;
     p.pos.copy(P).addScaledVector(D, len); _c.copy(p.pos).sub(D);
     _m.lookAt(p.pos, _c, Math.abs(D.y) > 0.9 ? _d.set(0, 0, 1) : UP); p.quat.setFromRotationMatrix(_m);
-    p.vel.set(0, 0, 0); p.av.set(0, 0, 0); p.docked = t; p.auto = null; p.sc.on = false; p.sc.speed = 0; p.thr = 0; G.input.setThr(0); p.camQ.copy(p.quat);
+    p.vel.set(0, 0, 0); p.av.set(0, 0, 0); p.docked = t; p.auto = null; p.sc.on = false; p.sc.speed = 0; p.sc.charge = 0; p.thr = 0; G.input.setThr(0); p.camQ.copy(p.quat);
   }
   _sync(e) { if (e.kind === 'enemy') this._ensure(e); e.m.obj.position.subVectors(e.uni, this.origin); if (e.kind === 'enemy') e.m.obj.quaternion.copy(e.quat); e.m.obj.updateMatrixWorld(true); }
   _ensure(e) { if (!e.m) { e.m = enableDamage(buildEnemy(e.def)); this.scene.add(e.m.obj); if (!e.quat.lengthSq()) e.quat.identity(); } }
@@ -91,7 +91,8 @@ export class SpaceMode {
     if (!o.resume) {
       const mis = o.orbit ? p.missiles : null; // 惑星から軌道へ戻るときは残弾を引き継ぐ (補給はステーションで)
       this.setShip(G.p.ship); this.refit(); syncDamage(p.m, p.id); if (mis != null) p.missiles = Math.min(mis, p.st.missiles);
-      this.bolts.clear(); this.parts.clear(); p.auto = null; p.docked = null; p.dead = false; p.target = null; p.sc.on = false; p.sc.speed = 0;
+      this.bolts.clear(); this.parts.clear(); p.auto = null; p.docked = null; p.dead = false; p.target = null; p.sc.on = false; p.sc.speed = 0; p.sc.charge = 0;
+      this.heat = 0; this.warp = 0; // 大気圏突入時の熱を持ち越さない (軌道に戻った直後に「⚠ 大気圏突入」と熱のゆらぎが出ていた)
       if (o.docked || o.undock) {
         const t = this.station(o.docked || o.undock); this.origin.copy(t.uni); p.pos.set(0, 0, 0); this.placeDocked(t);
         if (o.undock) this.undock();
@@ -138,6 +139,7 @@ export class SpaceMode {
     if (!p.dead) {
       if (p.docked) this._dockedUpdate(dt);
       else if (p.auto?.type === 'dock') this._autoDock(dt);
+      else if (p.auto?.type === 'push') this._push(dt);
       else this._fly(dt);
     }
     // 浮動原点の再設定
@@ -259,7 +261,7 @@ export class SpaceMode {
 
   // ── ドッキング ──
   requestDock(t) {
-    const p = this.pl; if (p.sc.on) this.dropSC();
+    const p = this.pl; if (p.sc.on) this.dropSC(); p.sc.charge = 0; p.boosting = false; // 充填中の超巡航やブーストの状態は取り消す (発進直後に勝手に作動しないように)
     p.auto = { type: 'dock', t, ph: 0 }; p.target = null;
     G.hud.msg(t.kind === 'station' ? `${t.def.name} 管制：ドッキングを許可します。自動誘導を開始。` : `${t.def.name} へ接舷シーケンス開始`, 'comm'); G.audio?.sfx('nav');
   }
@@ -267,7 +269,8 @@ export class SpaceMode {
     const p = this.pl, a = p.auto, t = a.t; if (t.kind === 'enemy' && t.state !== 'disabled') { p.auto = null; return; }
     const [P, D] = this.portOf(t), len = p.st.len / 2 + 3, A = _c.copy(P).addScaledVector(D, len + 240), Dk = _d.copy(P).addScaledVector(D, len);
     p.sc.on = false; p.m.tilt.rotation.z = damp(p.m.tilt.rotation.z, 0, 4, dt); p.m.tilt.rotation.x = damp(p.m.tilt.rotation.x, 0, 4, dt);
-    const face = (dir, rate) => { _m.lookAt(p.pos, _a.copy(p.pos).add(dir), Math.abs(dir.y) > 0.9 ? _b.set(0, 0, 1) : UP); _q.setFromRotationMatrix(_m); p.quat.rotateTowards(_q, rate * dt); return p.quat.angleTo(_q); };
+    // dir に _a/_b を渡されても壊れないよう、注視点は別の一時ベクトルで作る (以前は dir を上書きして、機体が浮動原点から見た自分の位置の方向を向いていた = 後ろ向きに接近していた)
+    const face = (dir, rate) => { const up = Math.abs(dir.y) > 0.9 ? ZUP : UP; _m.lookAt(p.pos, _hp.copy(p.pos).add(dir), up); _q.setFromRotationMatrix(_m); p.quat.rotateTowards(_q, rate * dt); return p.quat.angleTo(_q); };
     if (a.ph === 0) {
       const to = _a.copy(A).sub(p.pos), d = to.length(), sp = Math.min(170, Math.max(14, d * 0.55)); to.multiplyScalar(1 / (d || 1));
       p.vel.lerp(_b.copy(to).multiplyScalar(sp), 1 - Math.exp(-2.5 * dt)); p.pos.addScaledVector(p.vel, dt);
@@ -299,8 +302,19 @@ export class SpaceMode {
     const p = this.pl, t = p.docked; if (!t) return;
     const [, D] = this.portOf(t); p.docked = null; p.vel.copy(D).multiplyScalar(40); p.thr = 0.2; G.input.setThr(0.2);
     if (p.m.gear) p.m.gear.visible = false; G.audio?.sfx('undock'); G.hud.msg(t.kind === 'station' ? `${t.def.name} 管制：発進を確認。良い航海を。` : '離脱しました', 'comm');
-    p.auto = { type: 'push', t: 1.6 }; // 少しの間だけ後退を維持
+    p.auto = { type: 'push', t: 4, dir: D.clone() }; p.thr = 0; G.input.setThr(0); // 港から外向きに後退しながら機首を外へ回し、向き終えたら操縦を渡す (_push)
   }
+
+  /** 発進直後: 係留中は機首が港を向いているので、そのまま推力を入れるとステーションに突っ込む。
+   *  外向きに後退しながら機首を外へ回し、向き終えて港から離れたら操縦を渡す */
+  _push(dt) {
+    const p = this.pl, a = p.auto, D = a.dir; this.nb = this.nearBody();
+    _m.lookAt(p.pos, _hp.copy(p.pos).add(D), Math.abs(D.y) > 0.9 ? ZUP : UP); _q.setFromRotationMatrix(_m); p.quat.rotateTowards(_q, 1.7 * dt);
+    p.vel.copy(D).multiplyScalar(45); p.pos.addScaledVector(p.vel, dt); p.thr = 0; p.av.set(0, 0, 0);
+    p.m.tilt.rotation.z = damp(p.m.tilt.rotation.z, 0, 4, dt); p.m.tilt.rotation.x = damp(p.m.tilt.rotation.x, 0, 4, dt);
+    a.moved = (a.moved || 0) + 45 * dt; if (p.quat.angleTo(_q) < 0.06 && a.moved > 70) this._endPush();
+  }
+  _endPush() { const p = this.pl; if (p.auto?.type !== 'push') return; p.auto = null; G.input.setThr(0.3); }
 
   // ── 戦闘 ──
   cycleTarget() {
@@ -463,7 +477,7 @@ export class SpaceMode {
       if (o.visible) for (const f of s.m.anim) f(this.time, dt);
     }
     this.rocks.position.subVectors(this.rocksAt.uni, this.origin); this.rocks.visible = this.rocks.position.lengthSq() < 9e9;
-    if (p.auto?.type === 'push') { p.auto.t -= dt; if (p.auto.t <= 0) p.auto = null; }
+    if (p.auto?.type === 'push') { p.auto.t -= dt; if (p.auto.t <= 0) this._endPush(); }
     if (p.m.spin) p.m.spin.rotation.z += dt * 0.25;
     const pw = p.sc.on ? 1.6 : p.docked ? 0.05 : 0.15 + p.thr * 0.85 + (p.boosting ? 0.7 : 0);
     for (const pl of p.m.plumes) { pl.material.uniforms.uPow.value = damp(pl.material.uniforms.uPow.value, pw, 6, dt); pl.scale.z = 0.25 + pl.material.uniforms.uPow.value * 0.9; }

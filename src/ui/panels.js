@@ -69,7 +69,7 @@ export class UI {
       this.row(b, '全画面表示', '横向き全画面に切り替えます', null, [{ label: '全画面', fn: () => G.fullscreen(true) }]);
       this.row(b, '機体と積荷', `${SHIPS[G.p.ship].name}／積荷 ${cargoUsed()}/${stats().cargo}`, null, [{ label: '確認', fn: () => this.status() }]);
       this.row(b, '遊び方', '操作方法と目的', null, [{ label: '見る', fn: () => this.help() }]);
-      this.row(b, 'セーブデータ', 'ドッキング・着陸時に自動保存されます', null, [{ label: '今すぐ保存', fn: () => { save(); G.hud.msg('保存しました', 'good'); this.close(); } }, { label: '最初から', cls: 'red', fn: () => { wipe(); location.reload(); } }]);
+      this.row(b, 'セーブデータ', 'ドッキング・着陸時に自動保存されます', null, [{ label: '今すぐ保存', fn: () => { save(); G.hud.msg('保存しました', 'good'); this.close(); } }, { label: '最初から', cls: 'red', fn: () => this.talk('最初から', 'セーブデータを消して、最初からやり直しますか？<br><em>この操作は取り消せません。</em>', [{ label: '消してやり直す', cls: 'red', fn: () => { wipe(); location.reload(); } }, { label: 'やめる', fn: () => this.pause() }]) }]); // 誤タップ 1 回で全データが消えないよう確認を挟む
     }, { small: true });
   }
   help() {
@@ -269,7 +269,7 @@ export class UI {
     this.open('星系解放', 'MISSION COMPLETE', (b) => {
       this.note(b, `ヴォイド艦隊 20 隻すべてを無力化した。星系に平和が戻った。<br>撃沈 <b>${G.p.stats.kills}</b>　拿捕 <b>${G.p.stats.captures}</b>　総収入 <b>${fmtCr(G.p.stats.earned)}</b>`);
       this.note(b, '星海はまだ広い。交易も探索も、気の済むまで続けられる。防衛軍から特別報奨金 <em>50,000 Cr</em> が贈られた。');
-      this.row(b, '敵艦隊を再出現させて戦い続ける', '増援として 20 隻が再配置されます', null, [{ label: '再配置', cls: 'red', fn: () => { G.p.done = {}; save(); location.reload(); } }]);
+      this.row(b, '敵艦隊を再出現させて戦い続ける', '増援として 20 隻が再配置されます', null, [{ label: '再配置', cls: 'red', fn: () => { G.p.done = {}; for (const k of Object.keys(G.p.flags)) if (/^le\d/.test(k)) delete G.p.flags[k]; save(); location.reload(); } }]); // 増援の艦は新しい積荷を積んでいる (略奪済みの印も消す)
     }, { small: true });
   }
 }

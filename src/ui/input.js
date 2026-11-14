@@ -40,7 +40,9 @@ export class Input {
     window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
     window.addEventListener('keydown', (e) => { if (e.repeat) return; this.keys[e.code] = true; this.tapped[e.code] = true; if (['Space', 'ArrowUp', 'ArrowDown', 'Tab'].includes(e.code)) e.preventDefault(); });
     window.addEventListener('keyup', (e) => { this.keys[e.code] = false; });
-    window.addEventListener('blur', () => { this.keys = {}; });
+    // フォーカスを失った (アプリ切替・通知など) ときは、押しっぱなしのキー・タッチボタン・スティックをすべて離した扱いにする
+    const release = () => { this.keys = {}; this.btn = {}; for (const d of Object.values(this.defs)) d.el?.classList.remove('on'); this.sid = this.lid = this.tid = null; this.steer.x = this.steer.y = 0; this.stickBase.style.display = 'none'; };
+    window.addEventListener('blur', release); document.addEventListener('visibilitychange', () => { if (document.hidden) release(); });
     document.addEventListener('contextmenu', (e) => e.preventDefault());
     this.defs = {};
   }
