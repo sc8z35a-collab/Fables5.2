@@ -4,7 +4,7 @@ import { G, clamp } from './core/util.js';
 import { Gfx, QUALITY, DIST } from './gfx/renderer.js';
 import { Backdrop } from './gfx/planets.js';
 import { fxTime } from './gfx/fx.js';
-import { updateScreens } from './gfx/textures.js';
+import { updateScreens, texturesReady } from './gfx/textures.js';
 import { BODIES } from './world/defs.js';
 import { Input } from './ui/input.js';
 import { Hud } from './ui/hud.js';
@@ -49,6 +49,7 @@ G.go = async (name, params = {}, o = {}) => {
   if (o.flash) { G.gfx.fx.uFade.value = 0; }
   G.mode = G.modes[name]; G.modeName = name; G.hud.begin(); G.hud.setCtx([]);
   try { await G.mode.enter(params); } catch (e) { console.error(e); }
+  await texturesReady(6000); // 画像テクスチャが届く前に暗転を明けない
   G.busy = false;
   if (o.flash) { G.gfx.fx.uFade.value = 1; await G.fade(1, 0.9, true); } else await G.fade(1, 0.5);
 };
@@ -99,6 +100,7 @@ async function boot() {
   n = 0; while (G.space.buildStations()) await prog(0.66 + ++n * 0.05, 'ステーションを建造中… ' + n + '/5');
   await prog(0.93, '各施設を準備中…');
   G.modes.interior = new InteriorMode(); G.modes.surface = new SurfaceMode();
+  await prog(0.97, 'テクスチャを読み込み中…'); await texturesReady(12000);
   await prog(1, '発進準備完了');
   window.addEventListener('resize', layout); window.addEventListener('orientationchange', () => setTimeout(layout, 250));
   document.addEventListener('visibilitychange', () => { const c = G.audio.ctx; if (c) document.hidden ? c.suspend() : c.resume(); last = performance.now(); });

@@ -1,0 +1,16 @@
+{
+ "id": "s5_terrain",
+ "group": "new",
+ "style": "Planetary terrain and rock surfaces for a space adventure game: volcanic, desert, icy, asteroid and earth-like worlds.",
+ "cells": [
+  {"name": "basalt", "kind": "tile", "prompt": "Dark volcanic basalt ground: cooled ropy pahoehoe lava crust with cracks, vesicles and sharp clinker.", "mean": [127, 127, 127], "rough": 200, "sat": 0.35, "normal": 5.0},
+  {"name": "obsidian", "kind": "tile", "prompt": "Black obsidian volcanic glass rock with conchoidal fractures and sharp glossy facets.", "mean": [127, 127, 127], "rough": 90, "sat": 0.2, "normal": 4.5},
+  {"name": "dune_sand", "kind": "tile", "prompt": "Fine desert sand seen from above with regular wind ripples and a few scattered pebbles.", "mean": [127, 127, 127], "rough": 230, "sat": 0.35, "normal": 3.0, "hp": 40},
+  {"name": "sandstone", "kind": "tile", "prompt": "Layered red-orange sandstone rock face with horizontal strata, cross-bedding and erosion pockets.", "mean": [127, 127, 127], "rough": 215, "sat": 0.35, "normal": 4.5},
+  {"name": "snowfield", "kind": "tile", "prompt": "Wind-packed snow surface seen from above with sastrugi ridges, small crusts and soft blue shadows.", "mean": [127, 127, 127], "rough": 170, "sat": 0.3, "normal": 3.0, "hp": 40},
+  {"name": "glacier", "kind": "tile", "prompt": "Blue glacier ice surface: clear blue ice with white cracks, trapped bubbles and frost.", "mean": [196, 222, 240], "rough": 40, "sat": 1.0, "normal": 3.0},
+  {"name": "asteroid", "kind": "tile", "prompt": "Grey asteroid surface: pitted lunar-like rock and regolith dust with many small craters and rubble.", "mean": [127, 127, 127], "rough": 215, "sat": 0.2, "normal": 5.0},
+  {"name": "earth_ground", "kind": "tile", "prompt": "Natural ground seen from above: patchy short grass, bare soil, small stones and a few fallen leaves.", "mean": [127, 127, 127], "rough": 225, "sat": 0.3, "normal": 3.5},
+  {"name": "mossy_rock", "kind": "tile", "prompt": "Grey stone surface partly covered in thick green moss and small ferns in the cracks.", "mean": [127, 127, 127], "rough": 220, "sat": 0.5, "normal": 4.5}
+ ]
+}

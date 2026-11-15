@@ -1,0 +1,16 @@
+{
+ "id": "s2_interior",
+ "group": "replace",
+ "style": "Interior architecture finishes for rooms, bars, cafes, offices and lounges.",
+ "cells": [
+  {"name": "tile", "kind": "tile", "prompt": "Large-format porcelain floor tiles: 2x2 big square light neutral grey tiles with thin grout lines and a subtle stone speckle.", "mean": [197, 197, 197], "rough": 48, "sat": 0.1, "normal": 2.0},
+  {"name": "carpet", "kind": "tile", "prompt": "Commercial loop-pile carpet close-up: dense fibre loops, neutral light grey, a faint woven stripe pattern.", "mean": [201, 201, 201], "rough": 245, "sat": 0.05, "normal": 2.5},
+  {"name": "wood", "kind": "tile", "prompt": "Hardwood floor of long oak planks in staggered rows, natural warm medium brown, visible grain, knots and thin dark seams.", "mean": [169, 119, 71], "rough": 103, "sat": 1.0, "normal": 2.0},
+  {"name": "concrete", "kind": "tile", "prompt": "Smooth poured concrete with formwork joints in a square grid, fine pores, hairline cracks and faint water stains.", "mean": [150, 150, 150], "rough": 196, "sat": 0.1, "normal": 2.5},
+  {"name": "padded", "kind": "tile", "prompt": "Quilted diamond-tufted upholstery (chesterfield style) with deep buttons, soft neutral light grey fabric.", "mean": [173, 173, 173], "rough": 189, "sat": 0.05, "normal": 4.0},
+  {"name": "brick", "kind": "tile", "prompt": "Old brick wall in running bond: rectangular bricks with recessed mortar joints, bricks of varied tones, slight chipping.", "mean": [139, 139, 139], "rough": 175, "sat": 0.3, "normal": 4.0},
+  {"name": "plaster", "kind": "tile", "prompt": "Hand-troweled off-white plaster wall with soft uneven trowel marks.", "mean": [219, 219, 219], "rough": 217, "sat": 0.1, "normal": 1.6},
+  {"name": "shoji", "kind": "tile", "prompt": "Japanese shoji screen seen straight-on: translucent white washi paper behind a dark wooden lattice of rectangular grid bars.", "mean": [188, 188, 188], "rough": 191, "sat": 0.4, "normal": 2.5},
+  {"name": "marble", "kind": "tile", "prompt": "Polished white Carrara marble floor: large slabs with thin joints, soft grey veining.", "mean": [233, 233, 233], "rough": 37, "sat": 0.15, "normal": 1.0}
+ ]
+}

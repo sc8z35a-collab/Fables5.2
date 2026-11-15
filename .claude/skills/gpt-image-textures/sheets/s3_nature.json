@@ -1,0 +1,16 @@
+{
+ "id": "s3_nature",
+ "group": "replace",
+ "style": "Natural surfaces, technical surfaces, a glowing window pattern and aerial views of tree crowns.",
+ "cells": [
+  {"name": "rock", "kind": "tile", "prompt": "Rough natural grey rock surface close-up: weathered granite and basalt with cracks, small ledges and grit.", "mean": [127, 127, 127], "rough": 205, "sat": 0.2, "normal": 5.0},
+  {"name": "grass", "kind": "tile", "prompt": "Dense short lawn grass seen from directly above, many thin blades, mixed greens.", "mean": [172, 172, 172], "rough": 240, "sat": 0.25, "normal": 2.4},
+  {"name": "water", "kind": "water", "prompt": "Calm water surface seen from directly above: small interfering ripples and wavelets, neutral grey-blue, no reflections of objects.", "rough": 20, "normal": 6.0, "hp": 40},
+  {"name": "solar", "kind": "tile", "prompt": "Solar panel array: dark blue monocrystalline photovoltaic cells in a 4x4 grid with thin silver frames and fine busbar lines.", "mean": [24, 45, 100], "rough": 54, "sat": 1.0, "normal": 1.5},
+  {"name": "windows", "kind": "emissive", "prompt": "Night facade of a huge space station seen straight-on: many horizontal rows of small rectangular lit windows, mostly warm yellow-white and some cool blue-white, many windows dark, some rows missing, on pure black.", "mean": [16, 15, 12], "black": 0.1},
+  {"name": "oak_top", "kind": "cutout", "role": "top", "plant": "oak", "prompt": "The crown of a broad leafy oak tree seen from directly above (orthographic aerial top view): round dense canopy of sunlit leaves.", "bg": "magenta", "mean": [61, 117, 49]},
+  {"name": "jungle_top", "kind": "cutout", "role": "top", "plant": "jungle", "prompt": "The crown of a tropical rainforest tree seen from directly above (orthographic aerial top view): dense dark-green broad-leaf canopy.", "bg": "magenta", "mean": [42, 102, 42]},
+  {"name": "pine_top", "kind": "cutout", "role": "top", "plant": "pine", "prompt": "A snow-dusted spruce tree seen from directly above (orthographic aerial top view): star-shaped radial branches with snow lying on them.", "bg": "magenta", "mean": [111, 139, 125]},
+  {"name": "palm_top", "kind": "cutout", "role": "top", "plant": "palm", "prompt": "A coconut palm seen from directly above (orthographic aerial top view): long feathery green fronds radiating from the center like a star.", "bg": "magenta", "mean": [59, 131, 47]}
+ ]
+}

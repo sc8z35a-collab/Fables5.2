@@ -1,0 +1,16 @@
+{
+ "id": "s7_industrial",
+ "group": "new",
+ "style": "Industrial and spacecraft materials: cargo, hazard markings, warship armor, ornate trims, airship decks, computers and heat shields.",
+ "cells": [
+  {"name": "container", "kind": "tile", "prompt": "Corrugated steel shipping-container wall with vertical trapezoidal corrugation, painted, scratches and small rust spots.", "mean": [143, 143, 143], "rough": 130, "sat": 0.12, "normal": 4.0, "uvs": 0.5},
+  {"name": "hazard", "kind": "tile", "prompt": "Painted industrial yellow steel with bands of diagonal black-and-yellow hazard stripes, worn paint, scratches and bolts.", "mean": [172, 120, 30], "rough": 140, "sat": 1.0, "normal": 3.0, "uvs": 0.25},
+  {"name": "armor", "kind": "tile", "prompt": "Heavy warship armor plating: angular overlapping plates, recessed bolts, battle scratches and scorch marks, neutral gunmetal.", "mean": [183, 183, 183], "rough": 120, "sat": 0.08, "normal": 4.5, "uvs": 0.11},
+  {"name": "gold", "kind": "tile", "prompt": "Ornate gold-plated metal panel with engraved art-deco line patterns and small rivets.", "mean": [205, 205, 205], "rough": 70, "sat": 0.2, "normal": 3.0, "uvs": 0.25},
+  {"name": "brass_deck", "kind": "tile", "prompt": "Brass and bronze airship deck plating: riveted plates, circular hatches and worn walking paths.", "mean": [135, 135, 135], "rough": 100, "sat": 0.2, "normal": 3.5, "uvs": 0.12},
+  {"name": "circuit", "kind": "tile", "prompt": "Science-fiction computer wall: dark grey server panels with vents, connector sockets, small indicator holes and circuit-like engraved grooves.", "mean": [150, 150, 150], "rough": 110, "sat": 0.15, "normal": 3.5, "uvs": 0.25},
+  {"name": "rust", "kind": "tile", "prompt": "Heavily rusted steel plate with peeling grey paint, corrosion pits and orange-brown rust.", "mean": [111, 100, 92], "rough": 200, "sat": 0.7, "normal": 4.0, "uvs": 0.25},
+  {"name": "heat_tiles", "kind": "tile", "prompt": "Space-shuttle heat shield: grid of small square black ceramic tiles with thin grey gaps, some tiles lighter, scorch marks.", "mean": [183, 183, 183], "rough": 170, "sat": 0.0, "normal": 3.0, "uvs": 0.25},
+  {"name": "carbon", "kind": "tile", "prompt": "Woven carbon-fibre composite with a glossy 2x2 twill weave.", "mean": [120, 120, 120], "rough": 60, "sat": 0.0, "normal": 1.5, "uvs": 1.0}
+ ]
+}

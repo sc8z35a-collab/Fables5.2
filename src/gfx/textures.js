@@ -1,6 +1,8 @@
-// プロシージャル PBR テクスチャ & マテリアル生成（外部画像を一切使わない）
+// PBR テクスチャ & マテリアル生成
+// AI 生成テクスチャ (assets/textures/, 一覧は texmanifest.js) があればそれを読み込み、無ければ手続き生成する
 import * as THREE from 'three';
 import { rng, pick } from '../core/util.js';
+import { AITEX } from './texmanifest.js';
 
 export const JP = '"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Noto Sans CJK JP","Yu Gothic","Meiryo","IPAGothic",sans-serif';
 let ANISO = 8;
@@ -381,8 +383,45 @@ function grassSet(seed = 28, size = 512) {
 }
 const BUILDERS = { bulk: bulkSet, smooth: smoothSet, padded: paddedSet, brick: brickSet, plaster: plasterSet, shoji: shojiSet, marble: marbleSet, grass: grassSet, hull: hullSet, wall: wallSet, plate: plateSet, grate: grateSet, hex: hexSet, tile: tileSet, carpet: carpetSet, wood: woodSet, concrete: concreteSet, rock: rockSet, solar: solarSet, rib: ribSet, ceil: ceilSet, water: waterSet };
 const UVS = { bulk: 0.25, smooth: 0.25, padded: 0.5, brick: 0.5, plaster: 0.25, shoji: 0.5, marble: 0.33, grass: 0.33, hull: 0.11, wall: 0.25, plate: 0.5, grate: 1, hex: 0.5, tile: 0.5, carpet: 1, wood: 0.4, concrete: 0.25, rock: 0.2, solar: 0.25, rib: 0.5, ceil: 0.25, water: 0.05 };
+/** AI 生成で追加した材質。画像が無いときは右の既存材質で代用する (平均の明るさを揃えてあるので色指定はそのまま使える) */
+const ALIAS = { basalt: 'rock', obsidian: 'rock', dune_sand: 'rock', sandstone: 'rock', snowfield: 'rock', glacier: 'rock', asteroid: 'rock', earth_ground: 'rock', mossy_rock: 'rock',
+  asphalt: 'concrete', temple_stone: 'rock', cobble: 'concrete', bark: 'wood', log: 'wood', terrazzo: 'tile', tatami: 'carpet', leather: 'padded', casino_carpet: 'carpet',
+  container: 'rib', hazard: 'hull', armor: 'hull', gold: 'flat', brass_deck: 'hex', circuit: 'smooth', rust: 'bulk', heat_tiles: 'hull', carbon: 'flat' };
+/** AI 生成テクスチャがあるか */
+export const hasTex = (name) => !!AITEX[name];
+
+// ── 画像テクスチャの読み込み ──
+// 読み込み中は平均色の 4x4 で代用し、読み込めたら差し替える (GPU 側の領域は dispose で作り直す)。
+// 読み込めなかったときは fallback() が返す手続き生成のキャンバスに差し替える。
+const PENDING = new Set(), CLONES = new WeakMap();
+const solid = (rgb, a = 1) => { const c = cv(4), x = c.getContext('2d'); x.fillStyle = `rgba(${rgb[0] | 0},${rgb[1] | 0},${rgb[2] | 0},${a})`; x.fillRect(0, 0, 4, 4); return c; };
+const swapIn = (t, img) => { t.image = img; t.dispose(); t.needsUpdate = true; for (const c of CLONES.get(t) || []) { c.dispose(); c.needsUpdate = true; } };
+export function aiTex(url, placeholder, srgb = true, rep = true, fallback = null) {
+  const t = ctex(placeholder, srgb, rep);
+  const p = new Promise((res) => { const im = new Image(); im.decoding = 'async'; im.onload = () => res(im); im.onerror = () => res(null); im.src = url; })
+    .then((im) => { const img = im || fallback?.(); if (img) swapIn(t, img); if (!im) console.warn('texture fallback:', url); })
+    .finally(() => PENDING.delete(p));
+  PENDING.add(p);
+  return t;
+}
+/** 読み込み中のテクスチャがすべて揃うまで待つ (最大 ms) */
+export const texturesReady = (ms = 8000) => Promise.race([Promise.all([...PENDING]), new Promise((r) => setTimeout(r, ms))]);
+/** 画像を共有したまま repeat などを変えた複製 (差し替え時に一緒に更新する) */
+export function texClone(t) { const c = t.clone(); if (!CLONES.has(t)) CLONES.set(t, []); CLONES.get(t).push(c); c.needsUpdate = true; return c; }
+
 const SETS = {};
-export function texSet(name) { return SETS[name] || (SETS[name] = BUILDERS[name]()); }
+const baseOf = (name) => (BUILDERS[name] ? name : ALIAS[name]);
+export function texSet(name) {
+  if (SETS[name]) return SETS[name];
+  const ai = AITEX[name], fb = baseOf(name);
+  if (!ai) return (SETS[name] = SETS[fb] || (SETS[fb] = BUILDERS[fb]()));
+  let proc; const P = () => proc || (proc = BUILDERS[fb]());
+  return (SETS[name] = {
+    map: ai.a ? aiTex(ai.a, solid(ai.mean), true, true, () => P().map.image) : ctex(solid([255, 255, 255]), true),
+    normalMap: aiTex(ai.n, solid([128, 128, 255]), false, true, () => P().normalMap.image),
+    roughnessMap: aiTex(ai.r, solid([ai.rough, ai.rough, ai.rough]), false, true, () => P().roughnessMap.image),
+  });
+}
 
 const MATS = new Map();
 /** PBR マテリアル。uvs = 1m あたりのテクスチャ繰り返し数 (Builder が参照) */
@@ -391,17 +430,19 @@ export function mat(style, o = {}) {
   let m = MATS.get(key);
   if (m) return m;
   const p = { color: o.color ?? 0xffffff, roughness: o.rough ?? 1, metalness: o.metal ?? 0.5 };
-  if (style !== 'flat') { const s = texSet(style); p.map = s.map; p.normalMap = s.normalMap; p.roughnessMap = s.roughnessMap; }
+  if (style !== 'flat' && (AITEX[style] || baseOf(style) !== 'flat')) { const s = texSet(style); p.map = s.map; p.normalMap = s.normalMap; p.roughnessMap = s.roughnessMap; }
   m = new THREE.MeshStandardMaterial(p);
   if (m.normalMap) m.normalScale.setScalar(o.ns ?? 1);
   if (o.emissive != null) { m.emissive.set(o.emissive); m.emissiveIntensity = o.ei ?? 1; }
   if (o.transparent) { m.transparent = true; m.opacity = o.opacity ?? 0.5; m.depthWrite = false; }
   if (o.side) m.side = o.side;
   m.envMapIntensity = o.env ?? 1;
-  m.userData.uvs = o.uvs ?? UVS[style] ?? 0.25;
+  m.userData.uvs = o.uvs ?? UVS[style] ?? AITEX[style]?.uvs ?? UVS[ALIAS[style]] ?? 0.25;
   MATS.set(key, m);
   return m;
 }
+/** AI テクスチャがあれば style/o、無ければ従来の fbStyle/fbo で作る (色の付け方が変わる材質用) */
+export const aiMat = (style, o, fbStyle, fbo = o) => (AITEX[style] ? mat(style, o) : mat(fbStyle, fbo));
 /** 自発光 (ブルーム対象)。HDR 強度 */
 export function glow(color, intensity = 3) {
   const key = 'glow' + color + '_' + intensity;
@@ -415,6 +456,10 @@ let _win;
 /** ステーション外壁用の窓明かり (エミッシブ) */
 export function windowsTex() {
   if (_win) return _win;
+  if (AITEX.windows) return (_win = aiTex(AITEX.windows.e, solid([16, 15, 12]), true, true, drawWindows));
+  return (_win = ctex(drawWindows(), true));
+}
+function drawWindows() {
   const s = 1024, c = cv(s), x = c.getContext('2d'), rnd = rng(77); x.fillStyle = '#000'; x.fillRect(0, 0, s, s);
   for (let j = 0; j < 32; j++) {
     if (rnd() < 0.25) continue;
@@ -426,7 +471,7 @@ export function windowsTex() {
       x.fillRect(i * w + w * 0.2, j * 32 + 9, w * 0.6, 12);
     }
   }
-  return (_win = ctex(c, true));
+  return c;
 }
 let _glow;
 export function glowTex() {
@@ -530,7 +575,12 @@ export function aoMat(kind = 'blob') {
 // ── 葉の房 (アルファ抜き) ──
 let _leaf; const LEAFM = new Map();
 function leafTex() {
-  if (_leaf) return _leaf; const s = 256, c = cv(s), x = c.getContext('2d'), r = rng(321);
+  if (_leaf) return _leaf;
+  if (AITEX.leaf) return (_leaf = aiTex(AITEX.leaf.cut, solid([0, 0, 0], 0), true, false, drawLeaf));
+  return (_leaf = ctex(drawLeaf(), true, false));
+}
+function drawLeaf() {
+  const s = 256, c = cv(s), x = c.getContext('2d'), r = rng(321);
   for (let i = 0; i < 70; i++) {
     const px = 30 + r() * (s - 60), py = 30 + r() * (s - 60), len = 26 + r() * 22, w = len * (0.3 + r() * 0.14), a = r() * 6.283, v = i / 70;
     x.save(); x.translate(px, py); x.rotate(a);
@@ -539,7 +589,7 @@ function leafTex() {
     x.strokeStyle = `rgba(${150 + v * 60 | 0},${200 + v * 40 | 0},${110 + v * 40 | 0},.55)`; x.lineWidth = 1.2; x.beginPath(); x.moveTo(-len * 0.9, 0); x.lineTo(len * 0.9, 0); x.stroke();
     x.restore();
   }
-  return (_leaf = ctex(c, true, false));
+  return c;
 }
 export function leafMat(tint = 0xffffff) {
   let m = LEAFM.get(tint); if (m) return m;

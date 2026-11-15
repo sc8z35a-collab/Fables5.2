@@ -1,7 +1,8 @@
 // 地表シーンの共通部品: 空・地形グリッド・地形シェーダ・散布・着陸パッド・資源結晶・森林タイル・海
 import * as THREE from 'three';
 import { Builder, mx, rockGeo } from '../gfx/builder.js';
-import { mat, glow, texSet, signMesh, screenMat, cv, ctex } from '../gfx/textures.js';
+import { mat, glow, texSet, signMesh, screenMat, cv, ctex, aiTex } from '../gfx/textures.js';
+import { AITEX } from '../gfx/texmanifest.js';
 import { rng, rr, fbm, ridge, smooth, clamp, pick } from '../core/util.js';
 import { fxTime, makeGlowSprite } from '../gfx/fx.js';
 
@@ -119,6 +120,7 @@ const leafFrag = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#inclu
 /** 木のアトラス (1024×512): 左半分=側面, 右半分=真上から見た樹冠。葉むら・枝・羽状の葉を描き込む */
 function treeTex(kind) {
   if (TREES[kind]) return TREES[kind];
+  const paint = () => { // 手続き生成の木 (AI 画像が無いとき・読み込めなかったときに使う)
   const c = cv(1024, 512), x = c.getContext('2d'), r = rng(kind.length * 97 + kind.charCodeAt(0));
   const PAL = { oak: [['#173a1a', '#1f4a20'], ['#2f6b2a', '#3f8a34', '#58a13f'], ['#7ab653', '#96c866']], jungle: [['#0b2812', '#12381a'], ['#1c5a24', '#2a7a2e', '#3c9436'], ['#5cab46', '#7cc25a']], bush: [['#16361a', '#1e4a1e'], ['#2c6428', '#3f8032', '#55983c'], ['#74ae4e', '#8cc060']] }[kind];
   const clump = (px, py, rad, sq = 0.78) => { // 葉むら: 暗い芯 → 中間色の葉 → 上側に光の当たった葉
@@ -167,7 +169,9 @@ function treeTex(kind) {
       pts.sort((a, b) => b[1] - a[1]); for (const q of pts) clump(q[0], Math.min(q[1], bush ? 462 : 400), q[2]); });
     half(1, () => { for (let i = 0; i < 26; i++) { const a = r() * 6.28, d = Math.sqrt(r()) * 170; clump(768 + Math.cos(a) * d, 256 + Math.sin(a) * d, 44 + r() * 34, 1); } });
   }
-  const t = ctex(c, true, false), m = new THREE.MeshLambertMaterial({ map: t, alphaTest: 0.42, side: THREE.DoubleSide }); m.color.setScalar(1.75); m.onBeforeCompile = leafFrag; m.customProgramCacheKey = () => 'leaf';
+  return c; };
+  const ai = AITEX['plant_' + kind]; // AI 画像 (左: 側面 / 右: 真上) は読み込み中は透明
+  const t = ai ? aiTex(ai.cut, cv(4, 2), true, false, paint) : ctex(paint(), true, false), m = new THREE.MeshLambertMaterial({ map: t, alphaTest: 0.42, side: THREE.DoubleSide }); m.color.setScalar(1.75); m.onBeforeCompile = leafFrag; m.customProgramCacheKey = () => 'leaf';
   // 3 枚の板を 60° ずつ交差 + 樹冠を上から覆う板。法線は外向き+上向きに傾け、日の当たる側が明るくなるようにする
   const g = new THREE.BufferGeometry(), P = [], U = [], Nn = [], I = [];
   const quad = (pts, u0) => { const b = P.length / 3; pts.forEach(([px, py, pz, u, v]) => { P.push(px, py, pz); U.push(u0 + u * 0.5, v); const l = Math.hypot(px * 1.7, 0.75, pz * 1.7); Nn.push(px * 1.7 / l, 0.75 / l, pz * 1.7 / l); }); I.push(b, b + 1, b + 2, b, b + 2, b + 3); };

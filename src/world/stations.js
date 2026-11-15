@@ -1,7 +1,7 @@
 // 宇宙ステーション 5 基の外観 (それぞれ全く異なる構造)
 import * as THREE from 'three';
 import { Builder, mx, rockGeo, loft } from '../gfx/builder.js';
-import { mat, glow, texSet, windowsTex, signMesh } from '../gfx/textures.js';
+import { mat, aiMat, hasTex, glow, texSet, windowsTex, texClone, signMesh } from '../gfx/textures.js';
 import { makeGlowSprite } from '../gfx/fx.js';
 import { rng, rr } from '../core/util.js';
 
@@ -9,7 +9,7 @@ const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const WM = new Map();
 function winMat(color = 0xd4dae2, glowCol = 0xffffff, k = 2.4) {
   const key = color + '_' + glowCol + '_' + k; let m = WM.get(key); if (m) return m;
-  const s = texSet('hull'), e = windowsTex().clone(); e.repeat.set(0.3, 0.3); e.needsUpdate = true;
+  const s = texSet('hull'), e = texClone(windowsTex()); e.repeat.set(0.3, 0.3);
   m = new THREE.MeshStandardMaterial({ color, map: s.map, normalMap: s.normalMap, roughnessMap: s.roughnessMap, roughness: 0.65, metalness: 0.3, emissiveMap: e, emissive: glowCol, emissiveIntensity: k });
   m.userData.uvs = 0.09; WM.set(key, m);
   return m;
@@ -63,7 +63,7 @@ function haven() {
 
 // ───────────────────────── 2. ヴァルカン造船廠 ─────────────────────────
 function vulcan() {
-  const b = new Builder(), H = mat('hull', { color: 0xc9b98f, rough: 0.7, metal: 0.35 }), Y = mat('hull', { color: 0xf0a020, rough: 0.6, metal: 0.3 }), D = mat('hull', { color: 0x363a42, rough: 0.85, metal: 0.6 }), W = winMat(0xb8b0a0, 0xffe0a0), RB = mat('rib', { color: 0x8a8f98, metal: 0.6 });
+  const b = new Builder(), H = mat('hull', { color: 0xc9b98f, rough: 0.7, metal: 0.35 }), Y = aiMat('hazard', { color: 0xffffff, rough: 0.6, metal: 0.3 }, 'hull', { color: 0xf0a020, rough: 0.6, metal: 0.3 }), D = mat('hull', { color: 0x363a42, rough: 0.85, metal: 0.6 }), W = winMat(0xb8b0a0, 0xffe0a0), RB = mat('rib', { color: 0x8a8f98, metal: 0.6 });
   const G = glow('#ffb347', 4), lights = [];
   b.box(D, 720, 14, 14, 0, 0, 0);
   for (let i = -8; i <= 8; i++) { b.box(H, 4, 22, 22, i * 44, 0, 0); for (const s of [-1, 1]) b.add(D, new THREE.CylinderGeometry(0.9, 0.9, 50, 6), mx(i * 44 + 22, 0, s * 9, 0, 0, Math.PI / 2 + s * 0.42)); }
@@ -102,7 +102,8 @@ function vulcan() {
 // ───────────────────────── 3. オーロラ天文台 ─────────────────────────
 function aurora() {
   const b = new Builder(), H = mat('hull', { color: 0xf4f7fb, rough: 0.5, metal: 0.25 }), W = winMat(0xf0f4f8, 0xc8f0ff), D = mat('hull', { color: 0x40464f, rough: 0.8, metal: 0.6 }), S = mat('solar', { metal: 0.9, env: 1.6 });
-  const A = new THREE.MeshStandardMaterial({ color: 0xd9b25a, roughness: 0.28, metalness: 1 }); A.userData.uvs = 0;
+  let A = new THREE.MeshStandardMaterial({ color: 0xd9b25a, roughness: 0.28, metalness: 1 }); A.userData.uvs = 0;
+  if (hasTex('gold')) A = mat('gold', { color: 0xd9b25a, rough: 0.28, metal: 1 }); // 彫金の金張り
   const C = glow('#8feaff', 4), lights = [];
   b.sph(W, 58, 0, 0, 0, 1, 1, 1, 48); b.tor(D, 59, 3, 0, 0, 0, Math.PI / 2, 0, 0, 80, 8); b.tor(C, 62.5, 0.5, 0, 0, 0, Math.PI / 2, 0, 0, 80, 5);
   b.tor(H, 96, 5, 0, 0, 0, Math.PI / 2, 0, 0, 96, 10); b.tor(C, 101.4, 0.35, 0, 0, 0, Math.PI / 2, 0, 0, 96, 5);
@@ -160,14 +161,14 @@ function bastion() {
 
 // ───────────────────────── 5. ローグズ・デン (小惑星基地) ─────────────────────────
 function rogue() {
-  const b = new Builder(), RK = mat('rock', { color: 0x6a5648, rough: 1, metal: 0.05, uvs: 0.012, ns: 1.6 }), D = mat('hull', { color: 0x2c2f36, rough: 0.85, metal: 0.6 }), W = winMat(0x5a5560, 0xff9ad8, 2.6), RB = mat('rib', { color: 0x9a5a3a, metal: 0.4 });
+  const b = new Builder(), RK = mat('asteroid', { color: 0x6a5648, rough: 1, metal: 0.05, uvs: 0.012, ns: 1.6 }), D = mat('hull', { color: 0x2c2f36, rough: 0.85, metal: 0.6 }), W = winMat(0x5a5560, 0xff9ad8, 2.6), RB = mat('rib', { color: 0x9a5a3a, metal: 0.4 });
   const cols = [0xb8452e, 0x2e7ab8, 0xc9a22e, 0x3aa86a, 0x8a4ab8], r = rng(55), lights = [], signs = [];
   const rock = rockGeo(170, 6, 7, 0.42); rock.scale(1.25, 0.85, 1);
   b.add(RK, rock);
   for (let i = 0; i < 7; i++) { const g = rockGeo(rr(r, 12, 34), 3, 20 + i, 0.4), a = r() * 6.28, d = rr(r, 250, 400); b.add(RK, g, mx(Math.cos(a) * d, rr(r, -90, 90), Math.sin(a) * d)); }
   // 岩に食い込む居住モジュール & コンテナ街
   b.box(W, 70, 38, 60, 60, 132, 20, 0.3); b.box(W, 44, 60, 40, -40, 138, -30, -0.4); b.box(W, 50, 30, 50, 10, 150, 70, 0.8); b.cyl(W, 22, 22, 50, 110, 96, -40, 'y', 12);
-  for (let i = 0; i < 26; i++) { const m = mat('rib', { color: cols[i % 5], metal: 0.3 }); b.box(m, 6, 6, 14, rr(r, -60, 90), 148 + Math.floor(r() * 3) * 6.2, rr(r, -70, 60), Math.floor(r() * 2) * Math.PI / 2 + rr(r, -0.1, 0.1)); }
+  for (let i = 0; i < 26; i++) { const m = mat('container', { color: cols[i % 5], metal: 0.3 }); b.box(m, 6, 6, 14, rr(r, -60, 90), 148 + Math.floor(r() * 3) * 6.2, rr(r, -70, 60), Math.floor(r() * 2) * Math.PI / 2 + rr(r, -0.1, 0.1)); }
   b.cyl(D, 3, 3, 90, -90, 150, 30, 'y', 8); b.add(D, new THREE.CylinderGeometry(26, 2, 10, 20, 1, true), mx(-90, 196, 30, 0.5, 0.4, 0));
   for (let i = 0; i < 5; i++) { const a = i * 1.3; b.add(RB, new THREE.CylinderGeometry(5, 5, 80, 10), mx(Math.cos(a) * 150, rr(r, -30, 60), Math.sin(a) * 120, r(), a, 1.2)); }
   // ドッキングアーム (岩から突き出す)

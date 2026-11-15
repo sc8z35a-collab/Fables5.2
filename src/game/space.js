@@ -40,7 +40,7 @@ export class SpaceMode {
   }
   _asteroids() {
     const st = this.stations.find((x) => x.def.id === 'rogue'), r = rng(808), n = 260;
-    const im = new THREE.InstancedMesh(rockGeo(1, 2, 3, 0.4), mat('rock', { color: 0x6a5648, metal: 0.05, uvs: 0, ns: 1.4 }), n), o = new THREE.Object3D();
+    const im = new THREE.InstancedMesh(rockGeo(1, 2, 3, 0.4), mat('asteroid', { color: 0x6a5648, metal: 0.05, uvs: 0, ns: 1.4 }), n), o = new THREE.Object3D();
     for (let i = 0; i < n; i++) {
       const a = r() * 6.283, d = rr(r, 900, 5200), s = Math.pow(r(), 2.5) * 46 + 4;
       o.position.set(Math.cos(a) * d, rr(r, -700, 700), Math.sin(a) * d); o.rotation.set(r() * 6, r() * 6, r() * 6); o.scale.set(s, s * rr(r, 0.6, 1), s * rr(r, 0.7, 1.1)); o.updateMatrix(); im.setMatrixAt(i, o.matrix); (this.rockList || (this.rockList = [])).push([o.position.x, o.position.y, o.position.z, s * 0.82]);
