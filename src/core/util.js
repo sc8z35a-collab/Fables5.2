@@ -36,15 +36,21 @@ export function ridge(x, y, o = 5, s = 0) {
   return t;
 }
 
+// 単位の切り替えは「丸めた後の値」で判定する (以前は 999.6 m が "1000 m"、999.97 km が "1000.0 km" と表示されていた)
 export function fmtDist(m) {
-  if (m < 1000) return m.toFixed(0) + ' m';
-  if (m < 1e6) return (m / 1000).toFixed(m < 1e4 ? 2 : 1) + ' km';
-  return (m / 1e6).toFixed(m < 1e7 ? 2 : 1) + ' Mm';
+  if (m < 999.5) return m.toFixed(0) + ' m';
+  if (m < 999950) return (m / 1000).toFixed(m < 9995 ? 2 : 1) + ' km';
+  return (m / 1e6).toFixed(m < 9.995e6 ? 2 : 1) + ' Mm';
 }
 export function fmtSpeed(v) {
-  if (v < 2000) return v.toFixed(0) + ' m/s';
-  if (v < 1e6) return (v / 1000).toFixed(1) + ' km/s';
+  if (v < 1999.5) return v.toFixed(0) + ' m/s';
+  if (v < 999950) return (v / 1000).toFixed(1) + ' km/s';
   return (v / 1e6).toFixed(2) + ' Mm/s';
+}
+/** 秒 → "m:ss" / "h:mm:ss" (到着予想時刻などの表示用) */
+export function fmtTime(s) {
+  s = Math.max(0, Math.ceil(s)); const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, ss = String(s % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
 }
 export const fmtCr = (n) => Math.round(n).toLocaleString('ja-JP') + ' Cr';
 

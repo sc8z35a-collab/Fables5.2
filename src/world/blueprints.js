@@ -1,9 +1,10 @@
-// 内装の設計図 v2: ステーション 5 / 主人公機 3 / 惑星拠点 5 / 敵艦 (シード生成・3 種の間取り)
+// 内装の設計図 v2: ステーション 5 (+ 追加の 4 基と救助船ミケーネは blueprints2.js) / 主人公機 3 / 惑星拠点 5 / 敵艦 (シード生成・3 種の間取り)
 // 部屋: {id,x,z,w,d,h, shape:'round', ceil3:'vault|truss|coffer|rock|dome', lamps, deco[], plat[], rug[], win[]}
 // 小道具: [種類, x, z, 向き(90°単位), オプション] (部屋の左上隅からの相対座標)  扉: [部屋A, 部屋B, 位置, 幅, 高さ, 種類]
 import * as THREE from 'three';
 import { rng, rr, pick } from '../core/util.js';
-import { mat, aiMat, glow, hasTex } from '../gfx/textures.js';
+import { mat, glow } from '../gfx/textures.js';
+import { BP2, ALL2 } from './blueprints2.js';
 
 const T = (label, use, x, z, rot, o = {}) => ['terminal', x, z, rot, { label, use, ...o }];
 const N = (label, use, x, z, rot, suit, o = {}) => ['npc', x, z, rot, { label, use, suit, ...o }];
@@ -22,7 +23,7 @@ const haven = () => ({
         ['planter', 0.9, 6, 1, { w: 6, flowers: 1 }], ['planter', 13.1, 6, 1, { w: 6, flowers: 1 }], ['planter', 0.9, 28, 1, { w: 7, flowers: 1 }], ['planter', 13.1, 27, 1, { w: 5, flowers: 1 }],
         T('任務端末', 'missions', 1.6, 12.5, 1), T('星図', 'map', 12.4, 12.5, 3, { kind: 'orbit' }), S('交易バザール →', 13.7, 13, 3, { h: 0.6, y: 3.9, c: '#ffd27a' }), S('← カフェ・テラ', 0.3, 17, 1, { h: 0.6, y: 3.9, c: '#ff9ad8' }), S('展望デッキ', 7, 55.7, 2, { h: 0.7, y: 4.2 }), S('居住区 →', 13.7, 39.5, 3, { h: 0.5, y: 3.4 }),
         N('旅行者', 'talk:tourist', 4.4, 24, 0.6, 0x7a3a8a), N('商人', 'talk:trader', 9.6, 38, -1, 0x3a8a5a), ['vending', 13.3, 46.5, 3], ['hoload', 7, 14, 0, { text: 'HAVEN\nMARKET', c: '#ffd27a', y: 5.4, h: 1.6 }], ['lightcone', 7, 30, 0, { r: 3.2, k: 0.22 }]] },
-    { id: 'market', name: '交易バザール', x: 29, z: 36, w: 26, d: 26, h: 10, shape: 'round', sky: true, floor: ['terrazzo', 0xe8dcc8, 0.35, 0.1], wall: ['plaster', 0xf0e6d2, 0.9, 0], ceil: ['plaster', 0xe8dcc8], lamps: 'pendant', rug: [[13, 13, 0, 5.2, 'carpet', 0x8a3a2a]],
+    { id: 'market', name: '交易バザール', x: 29, z: 36, w: 26, d: 26, h: 10, shape: 'round', sky: true, floor: ['tile', 0xe8dcc8, 0.35, 0.1], wall: ['plaster', 0xf0e6d2, 0.9, 0], ceil: ['plaster', 0xe8dcc8], lamps: 'pendant', rug: [[13, 13, 0, 5.2, 'carpet', 0x8a3a2a]],
       props: [['stall', 13, 4.2, 0, { c: 0xb8452e, use: 'market', label: '交易市場' }], ['stall', 13, 21.8, 2, { c: 0x2e7ab8 }], ['stall', 21.8, 13, 3, { c: 0xc9a22e }], ['stall', 19.4, 6.6, 3.5, { c: 0x3aa86a }], ['stall', 19.4, 19.4, 2.5, { c: 0x8a4ab8 }],
         T('交易市場', 'market', 10.2, 13, 3, { kind: 'bars' }), N('仲買人', 'market', 13, 15.4, 2, 0xb8452e), ['hoload', 13, 13, 0, { text: '相場 MARKET', c: '#4de1ff', y: 4.6, h: 1.0 }], ['crate', 5.6, 6.2, 0, { n: 4 }], ['crate', 5.8, 19.6, 0, { n: 5 }], ['plant', 8, 3.6, 0, { s: 1.3 }], ['plant', 8, 22.4, 0, { s: 1.3 }], ['barrel', 3.4, 9.6, 0]] },
     { id: 'cafe', name: 'カフェ・テラ', x: -5, z: 44, w: 20, d: 18, h: 5.5, floor: ['wood', 0xffffff, 0.4, 0], wall: ['plaster', 0xf2e8d8, 0.9, 0], ceil: ['plaster', 0xe8dcc8], deco: ['beams', 'wains'], lamps: 'pendant', win: [['w', 2, 16, 0.6, 4.8]], lamp: '#ffe2b8', plat: [[0.4, 1.5, 5, 15, 0.36, 'e', 0.5]],
@@ -50,9 +51,9 @@ const vulcan = () => ({
         S('VULCAN DRYDOCK', 20, 29.7, 2, { h: 1.5, y: 9, c: '#ffb347' }), S('注意 溶接作業中', 20, 29.7, 2, { h: 0.6, y: 7.2, c: '#ff5a3a', flicker: 1 }), N('ドック長', 'talk:dock', 29, 25, -1, 0xd0a020), ['steam', 12, 20, 0], ['steam', 30, 8, 0]] },
     { id: 'shop', name: '工作室', x: 40, z: 4, w: 22, d: 18, h: 7, deco: ['ibeam', 'cables'], plat: [[12.6, 0.4, 9, 6, 0.9, 's', 0.35]],
       props: [['reactor', 6.5, 9.5, 0, { c: '#ff8a2a' }], T('改修工房', 'yard', 2.5, 15.5, 0), ['rack', 17, 1.2, 0, { n: 4, y0: 0.9 }], ['workbench', 17, 4.6, 2, { y0: 0.9 }], ['workbench', 13, 16.8, 2], ['crate', 18.5, 15, 0, { n: 5 }], ['weaponrack', 6, 0.25, 0, { c: '#ffb347' }], ['barrel', 1.6, 6, 0], ['toolcart', 11, 13, 0.2], ['steam', 9, 5, 0], ['fan', 16, 11, 0]] },
-    { id: 'ctrl', name: '管制デッキ', x: 40, z: 22, w: 22, d: 14, h: 6, ceil3: 'coffer', lamps: 'spot', win: [['s', 1.5, 20.5, 0.8, 5.3]], floor: ['hex', 0x8a8478, 0.35, 0.5], wall: ['circuit', 0x8a8478, 0.6, 0.4], plat: [[3, 7.4, 16, 5.2, 0.45, 'n', 0.3]],
+    { id: 'ctrl', name: '管制デッキ', x: 40, z: 22, w: 22, d: 14, h: 6, ceil3: 'coffer', lamps: 'spot', win: [['s', 1.5, 20.5, 0.8, 5.3]], floor: ['hex', 0x8a8478, 0.35, 0.5], wall: ['smooth', 0x8a8478, 0.6, 0.4], plat: [[3, 7.4, 16, 5.2, 0.45, 'n', 0.3]],
       props: [['console', 6, 11.2, 2, { kind: 'graph', y0: 0.45 }], ['console', 11, 11.2, 2, { kind: 'bars', y0: 0.45 }], ['console', 16, 11.2, 2, { kind: 'radar', y0: 0.45 }], ['seat', 6, 9.6, 0, { y0: 0.45 }], ['seat', 11, 9.6, 0, { y0: 0.45 }], ['seat', 16, 9.6, 0, { y0: 0.45 }], ['holo', 11, 3.6, 0, { kind: 'ship', s: 0.9 }], T('任務端末', 'missions', 2, 3, 1), N('管制官', 'talk:ctrl', 19.5, 4, -1.4, 0x3a5a8a), ['wallscreen', 21.7, 4, 3, { w: 4, h: 2, y: 2.6, kind: 'bars', title: '建造進捗' }]] },
-    { id: 'mess', name: '食堂・資材市場', x: 62, z: 4, w: 14, d: 14, h: 4.5, ceil3: 'flat', lamps: 'tube', wall: ['plaster', 0xe8d8a8, 0.9, 0], floor: ['terrazzo', 0xd8d0c0, 0.4, 0.1], ceil: ['ceil', 0x8a8478],
+    { id: 'mess', name: '食堂・資材市場', x: 62, z: 4, w: 14, d: 14, h: 4.5, ceil3: 'flat', lamps: 'tube', wall: ['plaster', 0xe8d8a8, 0.9, 0], floor: ['tile', 0xd8d0c0, 0.4, 0.1], ceil: ['ceil', 0x8a8478],
       props: [['kitchen', 7, 0.6, 0, { w: 5, use: 'rest', label: '食事をとって休む' }], ['tablelong', 4.5, 7, 1], ['tablelong', 9.5, 7, 1], ['vending', 13.4, 11.5, 3], T('資材市場', 'market', 1.8, 12.4, 1), ['fan', 7, 7, 0], ['poster', 13.75, 5, 3, { text: '本日の定食\nカレー', c: '#ffb347', h: 1.0 }], ['crate', 12, 12.4, 0, { n: 3 }]] },
     { id: 'office', name: '現場事務所', x: 62, z: 18, w: 10, d: 8, h: 3.6, ceil3: 'flat', wall: ['wood', 0xb89878, 0.8, 0], floor: ['carpet', 0x5a3a2a, 1, 0], ceil: ['plaster', 0xd8ccb8], deco: ['wains'], rug: [[2.5, 2.6, 5, 3, 'carpet', 0x8a2a20]],
       props: [['desk', 5, 2.6, 2, { wood: 1 }], N('設計主任', 'talk:design', 5, 1.2, 0, 0x8a6a3a), ['bookshelf', 8.6, 0.45, 0, { w: 2 }], ['bookshelf', 1.4, 0.45, 0, { w: 2 }], ['sofa', 5, 7.0, 2, { c: 0x5a3a2a }], ['poster', 9.75, 5, 3, { text: '安全第一', c: '#6dffb0', h: 0.9 }], ['floorlamp', 9.2, 7.2, 0], ['cabinet', 0.5, 5, 1, { w: 1.6 }]] },
@@ -62,7 +63,7 @@ const vulcan = () => ({
   doors: [['hangar', 'shop', 13, 3, 2.8, 'blast'], ['shop', 'ctrl', 51, 2.4, 2.5, 'slide'], ['shop', 'mess', 11, 2.2, 2.5, 'slide'], ['shop', 'office', 20, 1.6, 2.3, 'wood'], ['shop', 'ware', 49, 3, 2.8, 'blast']],
   // 管制デッキの窓の外: 建造中の船体 (乾ドック)
   extra(B) {
-    const Y = aiMat('hazard', { color: 0xffffff, rough: 0.6, metal: 0.3 }, 'hull', { color: 0xf0a020, rough: 0.6, metal: 0.3 }), H = mat('hull', { color: 0xc9b98f, rough: 0.7, metal: 0.35 }), RB = mat('rib', { color: 0x8a8f98, metal: 0.6 }), L = glow('#ffe2b0', 6);
+    const Y = mat('hull', { color: 0xf0a020, rough: 0.6, metal: 0.3 }), H = mat('hull', { color: 0xc9b98f, rough: 0.7, metal: 0.35 }), RB = mat('rib', { color: 0x8a8f98, metal: 0.6 }), L = glow('#ffe2b0', 6);
     for (let i = 0; i < 9; i++) { const x = 15 + i * 9, R = 9 + Math.sin(i / 8 * Math.PI) * 13; B.tor(RB, R, 0.8, x, -6, 78, 0, Math.PI / 2, 0, 24, 6); if (i < 5) B.add(H, new THREE.CylinderGeometry(R + 0.9, R + 0.9, 8.6, 24, 1, true, 0, 3.6), new THREE.Matrix4().makeRotationZ(Math.PI / 2).setPosition(x, -6, 78)); }
     B.box(RB, 80, 2.5, 3, 51, -27, 78);
     for (const z of [50, 106]) { B.box(Y, 4, 70, 4, 8, -8, z); B.box(Y, 4, 70, 4, 94, -8, z); B.box(Y, 90, 4, 4, 51, 26, z); B.box(Y, 90, 4, 4, 51, -42, z); for (let i = 0; i < 6; i++) B.box(L, 2.4, 0.6, 0.6, 14 + i * 15, 23.6, z + (z < 78 ? 2.2 : -2.2)); }
@@ -79,7 +80,7 @@ const aurora = () => ({
       props: [['shipslot', 18, 13, 0, { r: 10.5 }], T('格納庫サービス', 'shipyard', 31, 23.5, 0), ['crate', 4, 4, 0, { n: 4 }], ['rack', 2, 22, 1, { n: 3 }], ['toolcart', 8, 24, 0.3, { c: 0x2a8ab8 }], S('AURORA OBSERVATORY', 18, 27.7, 2, { h: 1.1, y: 6.4 }), S('到着ベイ', 18, 27.7, 2, { h: 0.6, y: 5.2, c: '#ffffff' }), N('研究員', 'talk:sci', 25, 23, -1, 0xdfe8f0)] },
     { id: 'atrium', name: '星系儀アトリウム', x: 6, z: 28, w: 24, d: 24, h: 13, shape: 'round', sky: true, rug: [[12, 12, 0, 4.2, 'carpet', 0x1a3a5a]],
       props: [['holo', 12, 12, 0, { kind: 'system', s: 2.3, y: 4.4, use: 'map', label: '星系儀を見る' }], ['bench', 6.6, 6.6, 0.5], ['bench', 17.4, 6.6, -0.5], ['bench', 6.6, 17.4, 1.5], ['bench', 17.4, 17.4, 2.5], ['plant', 3.8, 9, 0, { s: 1.3 }], ['plant', 20.2, 15, 0, { s: 1.3 }], T('任務端末', 'missions', 17.6, 3.6, -0.4), ['lightcone', 12, 12, 0, { r: 4, k: 0.2, c: '#8feaff' }]] },
-    { id: 'lab', name: '研究ラボ', x: 30, z: 32, w: 18, d: 16, h: 5, ceil3: 'coffer', wall: ['circuit', 0xd0d8e0, 0.6, 0.3],
+    { id: 'lab', name: '研究ラボ', x: 30, z: 32, w: 18, d: 16, h: 5, ceil3: 'coffer',
       props: [T('研究ラボ', 'lab', 4, 12.5, 0, { kind: 'graph' }), ['tank', 5, 2, 0, { c: '#6fe' }], ['tank', 8, 2, 0, { c: '#f84' }], ['tank', 11, 2, 0, { c: '#c6f' }], ['tank', 14, 2, 0, { c: '#fd4' }], ['console', 14, 8, 3, { tall: 1, kind: 'graph' }], ['desk', 9, 9, 0, { kind: 'graph' }],
         ['medpod', 15.5, 13.5, 0], ['rack', 1, 4, 1, { n: 2 }], N('主任研究員', 'lab', 6, 9, 1.5, 0xf0f4f8), ['workbench', 9, 15.2, 2]] },
     { id: 'planet', name: 'プラネタリウム', x: -12, z: 31, w: 18, d: 18, h: 9, shape: 'round', wall: ['smooth', 0x1c2436, 0.6, 0.3], ceil: ['flat', 0x060a16], floor: ['carpet', 0x141c30, 1, 0], li: 0.35, lamp: '#6a8aff', trim: '#4a6aff',
@@ -130,9 +131,9 @@ const rogue = () => ({
     { id: 'bar', name: 'バー「ネビュラ」', x: 38, z: 2, w: 22, d: 18, h: 5.5, wall: ['brick', 0x8a5a48, 1, 0], floor: ['wood', 0x8a7a70, 0.3, 0.1], ceil: ['wood', 0x4a3428], ceil3: 'flat', nobeam: 1, deco: ['beams', 'lanterns'], lamps: 'lantern', lamp: '#ff9ad8', plat: [[13.8, 10.2, 7.8, 7.4, 1.1, 'w', 0.4]],
       props: [['barcounter', 9, 2.4, 0, { w: 8, c: '#ff4df0' }], N('バーテンダー', 'bar', 9, 1.3, 0, 0x2a2a3a, { visor: '#4df0ff' }), ['stage', 4.4, 14, 0, { c: '#4df0ff' }], ['table', 4.6, 8, 0, { wood: 1, c: '#ff4df0' }], ['pooltable', 9.5, 10.5, 0], ['sofa', 20.4, 13.9, 3, { c: 0x6a1a4a, y0: 1.1 }], ['table', 17.4, 13.9, 0, { wood: 1, n: 0, c: '#ffe14d', y0: 1.1 }], ['floorlamp', 20.6, 16.6, 0, { c: '#ff4df0', y0: 1.1 }],
         ['arcade', 21.4, 4, 3], ['arcade', 21.4, 6, 3, { c: '#f4c', title: 'NEON RUN' }], S('BAR NEBULA', 9, 0.3, 0, { h: 0.7, y: 4.3, frame: 1 }), S('酒', 21.7, 8.6, 3, { h: 1.1, y: 3.6, c: '#4df0ff', flicker: 1 }), N('常連客', 'talk:drunk', 6.2, 8, 2, 0x6a5a2a), ['fan', 12, 9, 0, { wood: 1, sp: 1.2 }]] },
-    { id: 'casino', name: 'カジノ', x: 60, z: 2, w: 18, d: 18, h: 7.5, shape: 'round', wall: ['padded', 0x7a1420, 0.9, 0], floor: hasTex('casino_carpet') ? ['casino_carpet', 0xc8c8c8, 1, 0] : ['carpet', 0x5a1018, 1, 0], ceil: ['flat', 0x3a2a14], lamps: 'chandelier', trim: '#ffe14d', lamp: '#ffe8a0', win: [[-36, 36, 1, 4.6]], rug: [[9, 9, 0, 3.4, 'carpet', 0x8a6a1a]],
+    { id: 'casino', name: 'カジノ', x: 60, z: 2, w: 18, d: 18, h: 7.5, shape: 'round', wall: ['padded', 0x7a1420, 0.9, 0], floor: ['carpet', 0x5a1018, 1, 0], ceil: ['flat', 0x3a2a14], lamps: 'chandelier', trim: '#ffe14d', lamp: '#ffe8a0', win: [[-36, 36, 1, 4.6]], rug: [[9, 9, 0, 3.4, 'carpet', 0x8a6a1a]],
       props: [['slot', 12, 14.2, -1.667], ['slot', 6, 14.2, 1.667], ['slot', 6, 3.8, 0.333], ['slot', 12, 3.8, -0.333], ['slot', 9, 15.2, 2], ['slot', 9, 2.8, 0], N('ディーラー', 'talk:dealer', 9, 9, -1, 0x8a1420, { visor: '#ffe14d' }), ['hoload', 9, 9, 1, { text: 'JACKPOT', c: '#ffe14d', y: 4.2, h: 0.8 }], ['plant', 14.6, 5, 0, { s: 1.2, dark: 1 }], ['plant', 14.6, 13, 0, { s: 1.2, dark: 1 }]] },
-    { id: 'alley', name: '闇市の路地', x: 40, z: 20, w: 6, d: 22, h: 4.2, wall: ['brick', 0x5a4038, 1, 0], floor: ['cobble', 0x8a8078, 0.85, 0], ceil3: 'flat', nobeam: 1, deco: ['lanterns', 'cables'], lamps: 'lantern', lamp: '#ffb080',
+    { id: 'alley', name: '闇市の路地', x: 40, z: 20, w: 6, d: 22, h: 4.2, wall: ['brick', 0x5a4038, 1, 0], ceil3: 'flat', nobeam: 1, deco: ['lanterns', 'cables'], lamps: 'lantern', lamp: '#ffb080',
       props: [['stall', 1.2, 4.6, 1, { c: 0x5a2a6a, use: 'market', label: '闇市' }], ['stall', 1.2, 10, 1, { c: 0x2a5a6a }], ['stall', 1.2, 15.4, 1, { c: 0x6a5a2a }], ['crate', 4.8, 7.4, 0, { n: 3 }], ['barrel', 4.9, 13, 0], N('情報屋', 'broker', 3, 20.4, 2, 0x2a2a2a, { visor: '#f43' }), T('任務端末', 'missions', 5.2, 18, 3, { c: '#4df0ff' }), S('闇市', 3, 21.7, 2, { h: 0.8, y: 3.2, c: '#ff5a3a', flicker: 1 }), ['steam', 4.6, 3, 0]] },
     { id: 'hide', name: '隠れ家', x: 46, z: 30, w: 10, d: 9, h: 3.4, floor: ['carpet', 0x3a2a2a, 1, 0], deco: ['boulders'], nobeam: 1,
       props: [['bunk', 8.8, 2, 0], ['bunk', 8.8, 6, 0, { use: false }], ['table', 4, 5, 0, { wood: 1, n: 3 }], ['locker', 3.5, 0.5, 0, { n: 3 }], ['poster', 5, 8.75, 2, { text: 'WANTED\n賞金 50,000', c: '#ffe14d', h: 1.0 }], ['cabinet', 0.5, 6.5, 1, { w: 1.4 }], ['floorlamp', 1, 1.2, 0, { c: '#ff9ad8' }]] },
@@ -203,7 +204,7 @@ const OUT = {
       { id: 'lobby', name: '到着ロビー', x: 0, z: 0, w: 22, d: 16, h: 7, win: [['n', 2, 20, 0.5, 6.2]], deco: ['columns'],
         props: [T('交易所', 'market', 19.5, 3.5, 3, { c: '#4df0ff' }), ['seatrow', 7, 8, 0, { n: 5, c: 0x2a2a5a }], ['seatrow', 7, 9.2, 2, { n: 5, c: 0x2a2a5a }], ['seatrow', 15, 8, 0, { n: 5, c: 0x2a2a5a }], ['seatrow', 15, 9.2, 2, { n: 5, c: 0x2a2a5a }], ['vending', 21.3, 12, 3], ['vending', 21.3, 13.3, 3, { c: '#f4c', title: 'SNACK' }],
           ['hoload', 11, 4, 0, { text: '到着 ARRIVALS', c: '#4df0ff', y: 4.4, h: 0.9 }], S('NEON BAY', 11, 0.3, 0, { h: 0.9, y: 6.2, c: '#4df0ff', frame: 1 }), ['plant', 1.2, 14.6, 0, { s: 1.4, dark: 1 }], ['plant', 20.8, 14.8, 0, { s: 1.4, dark: 1 }], ['exit', 11, 15.8, 2, { label: '外へ出る', sign: '出口 EXIT', w: 3 }], N('旅行者', 'talk:tourist', 13, 5.6, 2.4, 0x3a6ea8), S('← ラーメン', 0.3, 12.4, 1, { h: 0.5, y: 3.2, c: '#ffb347' }), S('GAME →', 21.7, 4.8, 3, { h: 0.5, y: 3.2, c: '#4df0ff' })] },
-      { id: 'ramen', name: 'ラーメン横丁', x: -9, z: 4, w: 9, d: 8, h: 3.2, wall: ['shoji', 0xfff0d8, 0.9, 0], floor: hasTex('tatami') ? ['tatami', 0xf0f0f0, 0.9, 0] : ['wood', 0xb89068, 0.5, 0], ceil: ['wood', 0x6a4a30], ceil3: 'flat', nobeam: 1, deco: ['beams', 'lanterns'], lamps: 'lantern', trims: 'none', lamp: '#ffb880',
+      { id: 'ramen', name: 'ラーメン横丁', x: -9, z: 4, w: 9, d: 8, h: 3.2, wall: ['shoji', 0xfff0d8, 0.9, 0], floor: ['wood', 0xb89068, 0.5, 0], ceil: ['wood', 0x6a4a30], ceil3: 'flat', nobeam: 1, deco: ['beams', 'lanterns'], lamps: 'lantern', trims: 'none', lamp: '#ffb880',
         props: [['barcounter', 4.5, 2.3, 0, { w: 6, c: '#ffb347' }], N('ラーメン屋の店主', 'ramen', 4.5, 1.2, 0, 0xc04a2a, { visor: '#ffb347' }), S('ラーメン', 4.5, 0.3, 0, { h: 0.6, y: 2.75, c: '#ffb347', frame: 1 }), ['poster', 0.25, 5.4, 1, { text: '星屑\nトンコツ', c: '#ff5a3a', h: 1.1, y: 1.8 }], ['table', 2.4, 6, 0, { wood: 1, n: 3 }], ['barrel', 7.8, 7, 0]] },
       { id: 'shop', name: 'アーケード街', x: 22, z: 2, w: 12, d: 12, h: 5, trim: '#4df0ff', floor: ['carpet', 0x2a1a4a, 1, 0], ceil3: 'flat', nobeam: 1, deco: ['lanterns'],
         props: [['arcade', 2, 0.9, 0], ['arcade', 3.2, 0.9, 0, { c: '#f4c', title: 'NEON RUN' }], ['arcade', 4.4, 0.9, 0, { c: '#fd4', title: 'ASTRO' }], ['stall', 9, 2.2, 0, { c: 0x6a2a8a }], ['slot', 10.8, 8, 3], ['slot', 10.8, 9.2, 3], ['sofa', 3, 10.8, 2, { c: 0x5a1a6a }], ['pooltable', 6.6, 6.6, 0], S('GAME CENTER', 6, 0.3, 0, { h: 0.6, y: 3.9, c: '#4df0ff', flicker: 1 })] },
@@ -217,7 +218,7 @@ const OUT = {
       { id: 'ctrl', name: '精錬管制室', x: 0, z: 0, w: 16, d: 12, h: 5, win: [['n', 2, 14, 1, 4.2]],
         props: [['console', 4, 1.6, 0, { tall: 0, kind: 'graph' }], ['console', 8, 1.6, 0, { tall: 0, kind: 'bars' }], ['console', 12, 1.6, 0, { tall: 0, kind: 'radar' }], T('鉱石取引所', 'market', 14, 7, 3), ['barrel', 1.5, 6, 0], ['pipes', 0.4, 9, 1, { c: 0xc9a22e }], ['crate', 3, 10, 0, { n: 3 }], ['workbench', 12.5, 11.2, 2], ['tank', 1.6, 2.6, 0, { c: '#ff6a1e' }],
           ['exit', 8, 11.8, 2, { label: '外へ出る (耐熱服)', sign: '高温注意', c: '#ff6a1e' }], N('採掘班長', 'talk:miner', 10.5, 6, 2.6, 0xc06a1a, { visor: '#ff6a1e' }), ['steam', 6, 6, 0]] },
-      { id: 'bunk', name: '仮眠室', x: 16, z: 0, w: 8, d: 8, h: 3.5, lamp: '#ffe0c0', deco: ['cables'], lamps: 'bare', wall: hasTex('rust') ? ['rust', 0xd8d0c8, 0.9, 0.5] : ['rib', 0x6a5648, 0.8, 0.5],
+      { id: 'bunk', name: '仮眠室', x: 16, z: 0, w: 8, d: 8, h: 3.5, lamp: '#ffe0c0', deco: ['cables'], lamps: 'bare', wall: ['rib', 0x6a5648, 0.8, 0.5],
         props: [['bunk', 6.9, 2, 0], ['locker', 3, 0.5, 0, { n: 3 }], ['kitchen', 3.5, 7.4, 2, { w: 2.6 }], ['table', 3, 4, 0, { n: 2 }], ['fan', 4, 4, 0]] },
     ],
     doors: [['ctrl', 'bunk', 4, 2, 2.4, 'hatch']],
@@ -253,7 +254,7 @@ const OUT = {
       { id: 'main', name: '観測室', x: 0, z: 0, w: 16, d: 12, h: 4.2, win: [['n', 2, 14, 0.9, 3.5], ['w', 2, 9, 0.9, 3.5]], rug: [[8.6, 1.6, 4.6, 3.6, 'carpet', 0x8a2a20]],
         props: [['fireplace', 15.3, 3.4, 3], ['sofa', 10.4, 3.4, 1, { c: 0x8a3a2a }], ['desk', 4, 2, 0, { wood: 1, kind: 'graph' }], ['tank', 14.8, 10.9, 0, { c: '#a6f0ff' }], ['tank', 13.2, 11.1, 0, { c: '#6fe' }], ['kitchen', 0.6, 8.6, 1, { w: 2.6 }], ['plant', 1, 11, 0, { s: 1.2 }], ['bookshelf', 3.6, 11.55, 2], ['floorlamp', 9.2, 1, 0],
           T('氷晶取引所', 'market', 11.6, 10.4, 2), ['exit', 7.4, 11.8, 2, { label: '外へ出る (防寒服)', sign: '極寒注意', c: '#a6f0ff' }], N('観測員', 'talk:ice', 7, 5.4, 2.8, 0x3a6a9a)] },
-      { id: 'sleep', name: '寝室', x: 16, z: 2, w: 8, d: 8, h: 3.4, ...(hasTex('tatami') ? { floor: ['tatami', 0xf0f0f0, 0.9, 0] } : {}), rug: [[1.6, 2, 3.4, 4, 'carpet', 0x2a4a7a]],
+      { id: 'sleep', name: '寝室', x: 16, z: 2, w: 8, d: 8, h: 3.4, rug: [[1.6, 2, 3.4, 4, 'carpet', 0x2a4a7a]],
         props: [['bunk', 6.9, 2, 0, { c: 0x2a4a7a }], ['locker', 3, 0.5, 0, { n: 3 }], ['cabinet', 0.5, 2.4, 1, { w: 1.4 }], ['plant', 7, 7, 0], ['floorlamp', 4.6, 7.2, 0]] },
     ],
     doors: [['main', 'sleep', 8.5, 1.8, 2.3, 'wood']],
@@ -263,7 +264,7 @@ const OUT = {
 // ───────────────────────── 敵艦内 (シードから生成: 20 隻すべて異なる様式・3 種の間取り) ─────────────────────────
 function enemyBP(def) {
   const r = rng(def.seed * 7 + 3), gc = new THREE.Color(def.glow), dark = (k, base) => new THREE.Color(base).lerp(gc, k).getHex();
-  const ws = pick(r, ['bulk', 'rib', 'rock', 'wall', 'rust']), fs = pick(r, ['grate', 'plate', 'hex', 'concrete']), cave = ws === 'rock';
+  const ws = pick(r, ['bulk', 'rib', 'rock', 'wall', 'bulk']), fs = pick(r, ['grate', 'plate', 'hex', 'concrete']), cave = ws === 'rock';
   const theme = { wall: [ws, dark(0.14, cave ? 0x5a4a50 : 0x50545e), 0.8, 0.5], floor: [fs, dark(0.08, 0x6a6e76), 0.45, 0.7], ceil: [cave ? 'rock' : pick(r, ['ceil', 'rib']), dark(0.1, 0x2a2c32)], trim: def.glow, lamp: '#' + new THREE.Color(def.glow).lerp(new THREE.Color('#fff'), 0.55).getHexString(),
     frame: 0x121316, door: dark(0.3, 0x3a3a40), amb: [dark(0.6, 0x404050), 0x0c0c10, 0.42], gloss: 0.5, door3: pick(r, ['hatch', 'blast', 'slide']), trims: pick(r, ['low', 'neon', 'both']), lamps: cave ? 'bare' : pick(r, ['tube', 'panel', 'pendant']), cstyle: cave ? 'rock' : 'flat', ribs: !cave, deco: cave ? ['stal'] : pick(r, [['cables'], ['ducts'], ['cables', 'ducts'], []]) };
   const topo = def.idx % 3, n = 2 + def.tier + (r() < 0.5 ? 1 : 0), kinds = ['barracks', 'armory', 'cargo', 'medbay', 'reactor', 'brig', 'lab'].sort(() => r() - 0.5).slice(0, Math.min(n, topo === 1 ? 4 : 6));
@@ -308,10 +309,10 @@ function enemyBP(def) {
   return { name: def.name, sub: '敵艦内 — 制御コアを掌握せよ', seed: def.seed, spawn: [0, 3.2, 0], view: [0, -1], music: 'hostile', hostile: true, theme, rooms, doors, drones };
 }
 
-const BP = { 'station:haven': haven, 'station:vulcan': vulcan, 'station:aurora': aurora, 'station:bastion': bastion, 'station:rogue': rogue, 'ship:hayate': hayate, 'ship:raiden': raiden, 'ship:amatsu': amatsu };
+const BP = { 'station:haven': haven, 'station:vulcan': vulcan, 'station:aurora': aurora, 'station:bastion': bastion, 'station:rogue': rogue, 'ship:hayate': hayate, 'ship:raiden': raiden, 'ship:amatsu': amatsu, ...BP2 };
 export function blueprint(type, id, def) {
   if (type === 'enemy') return enemyBP(def);
   if (type === 'outpost') return OUT[id]();
   return BP[type + ':' + id]();
 }
-export const ALL_BLUEPRINTS = [['station', 'haven'], ['station', 'vulcan'], ['station', 'aurora'], ['station', 'bastion'], ['station', 'rogue'], ['ship', 'hayate'], ['ship', 'raiden'], ['ship', 'amatsu'], ['outpost', 'terra'], ['outpost', 'ignis'], ['outpost', 'sahar'], ['outpost', 'zephyr'], ['outpost', 'glacies']];
+export const ALL_BLUEPRINTS = [['station', 'haven'], ['station', 'vulcan'], ['station', 'aurora'], ['station', 'bastion'], ['station', 'rogue'], ['ship', 'hayate'], ['ship', 'raiden'], ['ship', 'amatsu'], ['outpost', 'terra'], ['outpost', 'ignis'], ['outpost', 'sahar'], ['outpost', 'zephyr'], ['outpost', 'glacies'], ...ALL2];

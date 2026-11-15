@@ -1,9 +1,9 @@
 // 惑星地表の環境: 地球 (earth.js) / 溶岩 / 砂漠 / 氷 / ガス巨星の雲海デッキ
 import * as THREE from 'three';
 import { Builder, mx, rockGeo } from '../gfx/builder.js';
-import { mat, aiMat, glow, texSet, hasTex, signMesh, screenMat } from '../gfx/textures.js';
-import { rng, rr, fbm, ridge, smooth, clamp, pick } from '../core/util.js';
-import { fxTime, makeGlowSprite } from '../gfx/fx.js';
+import { mat, glow, signMesh } from '../gfx/textures.js';
+import { rng, rr, fbm, ridge, smooth } from '../core/util.js';
+import { fxTime } from '../gfx/fx.js';
 import { BASES } from './defs.js';
 import { HP, V3, COL, N2, makeSky, gridTerrain, scatter, pad, node, beacon, forest, colorGeo, VegField, propGeo, craters, landmarks, scatterAt } from './surfkit.js';
 import { terra } from './earth.js';
@@ -48,31 +48,31 @@ function ignis() {
   const CONES = [[2900, 1800, 520, 430], [-900, 3700, 430, 340], [3900, -2700, 620, 540], [-4400, 900, 470, 390], [800, -4600, 560, 470]];
   const H = (x, z) => { const far = smooth(260, 800, Math.hypot(x, z)); let h = H0(x, z) + far * (craters(x, z, 1150, 3, 62, 0.42) + ridge(x * 0.0021, z * 0.0021, 3, 41) * 50 * smooth(0.42, 0.7, fbm(x * 0.0006, z * 0.0006, 2, 43)));
     for (const c of CONES) { const q = ((x - c[0]) ** 2 + (z - c[1]) ** 2) / (c[2] * c[2]); if (q < 9) h += c[3] * Math.exp(-q) - c[3] * 0.4 * Math.exp(-q * 22); } return h; };
-  { const tm = gridTerrain(H, (x, z, h, sl, c) => { const n = fbm(x * 0.01, z * 0.01, 3, 8), hot = smooth(6, -6, h); c[0] = 0.1 + n * 0.07 + hot * 0.5 + sl * 0.04; c[1] = 0.072 + n * 0.045 + hot * 0.08; c[2] = 0.064 + n * 0.035; }, { size: 15000, seg: 250, rough: 0.75, metal: 0.25, ns: 1.8, env: 0.8, tex: 'basalt' }); grp.add(tm); var TM = tm; }
+  { const tm = gridTerrain(H, (x, z, h, sl, c) => { const n = fbm(x * 0.01, z * 0.01, 3, 8), hot = smooth(6, -6, h); c[0] = 0.1 + n * 0.07 + hot * 0.5 + sl * 0.04; c[1] = 0.072 + n * 0.045 + hot * 0.08; c[2] = 0.064 + n * 0.035; }, { size: 15000, seg: 250, tex: 'basalt', rough: 0.75, metal: 0.25, ns: 1.2, env: 0.8 }); grp.add(tm); var TM = tm; }
   const lava = new THREE.Mesh(new THREE.PlaneGeometry(26000, 26000).rotateX(-HP), new THREE.ShaderMaterial({ uniforms: { uTime: fxTime }, vertexShader: 'varying vec3 vW;void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}', fragmentShader: LAVA_FS })); lava.position.y = -4; grp.add(lava);
-  const RK = mat('basalt', { color: 0x2a2220, rough: 0.8, metal: 0.2, uvs: 0, ns: 1.5 });
-  grp.add(scatter(rockGeo(1, 2, 5, 0.45), RK, 420, (o) => { const a = r() * 6.28, d = rr(r, 90, 2600), x = Math.cos(a) * d, z = Math.sin(a) * d, h = H(x, z); if (h < 0) return false; const s = Math.pow(r(), 3) * 16 + 1.2; o.position.set(x, h - s * 0.3, z); o.rotation.set(r() * 6, r() * 6, r() * 6); o.scale.set(s, s * rr(r, 0.7, 1.6), s); if (s > 3 && d < 700) cols.push({ x, z, r: s * 0.8 }); }));
+  const RK = mat('basalt', { color: 0x3a3230, rough: 0.8, metal: 0.2, uvs: 0, ns: 1.5 });
+  grp.add(scatter(rockGeo(1, 2, 5, 0.45), RK, 420, (o) => { const a = r() * 6.28, d = rr(r, 90, 2600), x = Math.cos(a) * d, z = Math.sin(a) * d, h = TM.heightAt(x, z); if (h < 0) return false; const s = Math.pow(r(), 3) * 16 + 1.2; o.position.set(x, h - s * 0.3, z); o.rotation.set(r() * 6, r() * 6, r() * 6); o.scale.set(s, s * rr(r, 0.7, 1.6), s); if (s > 3 && d < 700) cols.push({ x, z, r: s * 0.8 }); }));
   // 精錬基地
   const D = mat('hull', { color: 0x3a3430, rough: 0.8, metal: 0.6 }), RB = mat('rib', { color: 0x7a5a48, metal: 0.5 }), W = mat('wall', { color: 0x6a5648, rough: 0.7, metal: 0.5 }), G = glow('#ff6a1e', 4);
-  pad(B, 8.1, 32, '#ff8a2a');
+  pad(B, 8.6, 32, '#ff8a2a'); // 地形 (パッドの範囲で 8.3〜8.5m) より上に置く。以前は 8.1 でパッド全体が地面に埋もれていた
   B.box(W, 34, 12, 22, 70, 14, -10); B.box(D, 36, 1.4, 24, 70, 20.6, -10); B.box(glow('#ffc890', 2), 0.3, 4, 14, 52.9, 13, -10); B.box(D, 2, 4.4, 5, 52.5, 10.2, -10); B.box(G, 34.2, 0.4, 22.2, 70, 19, -10);
   for (const [x, z, h] of [[82, -34, 46], [92, -30, 60], [74, -40, 34]]) { B.cyl(RB, 3, 4.5, h, x, 8 + h / 2, z, 'y', 14); B.cyl(G, 3.1, 3.1, 0.8, x, 8 + h - 1, z, 'y', 14, true); beacon(beacons, x, 8 + h + 2, z, '#ff8a2a', 16); }
   for (let i = 0; i < 4; i++) { B.sph(RB, 7, 100, 15, -2 + i * 15, 1, 1, 1, 18); B.cyl(D, 0.6, 0.6, 15, 100, 11, 6 + i * 15 - 8, 'z', 8); }
   B.box(D, 60, 8.2, 40, 76, 4, -4); rects.push([52, -22, 108, 52]); items.push({ x: 51, z: -10, r: 5, label: '精錬管制室に入る', act: 'outpost' });
   const s1 = signMesh('フォージ採掘基地', '#ff8a2a', 3.2, { double: true, intensity: 3 }); s1.position.set(52.6, 17.4, -10); s1.rotation.y = -HP; grp.add(s1);
-  const nodes = []; for (let i = 0; i < 7; i++) { const a = i * 0.9 + 0.2, d = 110 + (i % 3) * 60; let x = Math.cos(a) * d - 30, z = Math.sin(a) * d; const n = node('#ff5a1e', 1.2, 60 + i); n.position.set(x, Math.max(H(x, z), -3), z); grp.add(n); nodes.push({ g: n, x, z, item: 'magma', label: 'マグマ晶を採取する' }); }
+  const nodes = []; for (let i = 0; i < 7; i++) { const a = i * 0.9 + 0.2, d = 110 + (i % 3) * 60; let x = Math.cos(a) * d - 30, z = Math.sin(a) * d; const n = node('#ff5a1e', 1.2, 60 + i); n.position.set(x, Math.max(TM.heightAt(x, z), -3), z); grp.add(n); nodes.push({ g: n, x, z, item: 'magma', label: 'マグマ晶を採取する' }); }
   // ── 全域を埋める: 黒曜石の尖塔・玄武岩のアーチと台地・マグマ結晶・噴気孔・放棄された採掘リグ・残骸 + 足元の岩場 ──
-  const obbs = [], hA = TM.heightAt, env2 = { grp, obbs, cols }, OB = mat('obsidian', { color: 0x4a4450, rough: 0.28, metal: 0.6, uvs: 0, ns: 1.6 }).clone(), RK2 = mat('rock', { color: 0x7a5a4a, rough: 0.85, metal: 0.15, uvs: 0, ns: 1.4 }).clone(), MC = glowMat('#ff5a1e', 1.5); OB.emissive.set(0x5a1c0c); OB.emissiveIntensity = 0.55; RK2.emissive.set(0x4a1808); RK2.emissiveIntensity = 0.5; // 溶岩の照り返しで岩の形が読めるように // 暗い大地でも輪郭が分かる明るさにする
+  const obbs = [], hA = TM.heightAt, env2 = { grp, obbs, cols }, OB = mat('basalt', { color: 0x514b56, rough: 0.28, metal: 0.6, uvs: 0, ns: 1.6 }).clone(), RK2 = mat('regolith', { color: 0x7a5a4a, rough: 0.85, metal: 0.15, uvs: 0, ns: 1.4 }).clone(), MC = glowMat('#ff5a1e', 1.5); OB.emissive.set(0x5a1c0c); OB.emissiveIntensity = 0.55; RK2.emissive.set(0x4a1808); RK2.emissiveIntensity = 0.5; // 溶岩の照り返しで岩の形が読めるように // 暗い大地でも輪郭が分かる明るさにする
   const inBase = (x, z) => Math.hypot(x, z) < 125 || (x > 44 && x < 116 && z > -48 && z < 60);
   strew(env2, r, hA, { free: (x, z, h) => h > 1.5 && !inBase(x, z), spire: { n: 320, m: OB, h1: 66 }, arch: { n: 46, m: RK2, w: 80 }, butte: { n: 40, m: RK2 }, crys: { n: 70, m: MC } });
-  for (const c of CONES) { const y = H(c[0], c[1]); B.cyl(G, c[2] * 0.17, c[2] * 0.17, 3, c[0], y + 4, c[1], 'y', 20); beacon(beacons, c[0], y + 30, c[1], '#ff6a1e', c[2] * 0.5); }
+  for (const c of CONES) { const y = TM.heightAt(c[0], c[1]); B.cyl(G, c[2] * 0.17, c[2] * 0.17, 3, c[0], y + 4, c[1], 'y', 20); beacon(beacons, c[0], y + 30, c[1], '#ff6a1e', c[2] * 0.5); }
   for (const [x, z] of pickPts(r, 26, 200, 6000, (x, z) => hA(x, z) > 2 && !inBase(x, z))) { const y = hA(x, z), s = rr(r, 1, 2.6); B.cyl(RK, 1.2 * s, 3.6 * s, 4 * s, x, y + 1.6 * s, z, 'y', 10); B.cyl(G, 1.05 * s, 1.05 * s, 0.4, x, y + 3.62 * s, z, 'y', 10); beacon(beacons, x, y + 5 * s, z, '#ff7a2a', 10 * s); cols.push({ x, z, r: 3 * s }); }
   for (const [x, z] of pickPts(r, 8, 500, 5200, (x, z) => hA(x, z) > 4 && !inBase(x, z))) { const y = hA(x, z); B.box(D, 14, 2, 14, x, y + 1, z); for (const [dx, dz] of [[-5, -5], [5, -5], [-5, 5], [5, 5]]) B.box(RB, 0.9, 44, 0.9, x + dx * 0.55, y + 22, z + dz * 0.55, 0, dz * 0.022, -dx * 0.022); B.box(RB, 5, 1.2, 5, x, y + 44, z); B.cyl(D, 0.5, 0.5, 40, x, y + 20, z, 'y', 8); B.sph(RB, 5, x + 13, y + 5, z + 4, 1, 1, 1, 14); B.cyl(D, 0.5, 0.5, 14, x + 7, y + 4, z + 2, 'x', 8); beacon(beacons, x, y + 46, z, '#f33', 12, 0.5); obbs.push([x, z, 8, 8, 1, 0, y + 45, 1]); }
   landmarks(env2, wreckGeo(), VCM(), pickPts(r, 7, 400, 6000, (x, z) => hA(x, z) > 3 && !inBase(x, z)).map(([x, z]) => { const L = rr(r, 60, 130); return [x, hA(x, z) - L * 0.03, z, L, L, r() * 6.28, rr(r, -0.1, 0.1)]; }), { solid: 0.18 });
   const veg = groundCover(grp, hA, [{ g: propGeo('boulder'), m: OB, tumble: 1, sink: 0.3, key: 'a' }, { g: propGeo('boulder2'), m: RK2, tumble: 1, sink: 0.25, key: 'b' }, { g: propGeo('slab'), m: RK2, tumble: 0.12, sink: 0.3, key: 'c' }, { g: propGeo('crystal'), m: MC, sink: 0.03, key: 'd' }],
     (x, z, h, v, d) => { d[0] = h < 0.6 || Math.hypot(x, z) < 46 || (x > 46 && x < 114 && z > -46 && z < 58) ? 0 : 0.22 + 0.5 * smooth(0.35, 0.7, fbm(x * 0.006, z * 0.006, 2, 15)); d[1] = v < 0.34 ? 0 : v < 0.62 ? 1 : v < 0.82 ? 2 : 3; }, { s1: 7 }); // 暗い大地なので発光する結晶を多めに
   grp.add(B.build());
-  return { id: 'ignis', group: grp, sky, H, heightAt: TM.heightAt, sunDir, sunCol: '#ff7a40', sunInt: 3.0, hemi: ['#a04a28', '#6a2210', 2.4], fog: [COL('#5a2010'), 0.00026], cols, rects, obbs, veg, items, anim, beacons, nodes, padY: 8.2, rain: [V3(3, 9, 1), 0.5, '#ff8a4a'], walkR: 3000, door: [49, -10, -HP], foot: [0, 40], look: [0.7, 0.95, 1.3], heat: 0.12, music: 'hostile', smoke: [-2600, 760, -1900], hazard: (x, z, h) => h < -2.5 };
+  return { id: 'ignis', group: grp, sky, H, heightAt: TM.heightAt, sunDir, sunCol: '#ff7a40', sunInt: 3.0, hemi: ['#a04a28', '#6a2210', 2.4], fog: [COL('#5a2010'), 0.00026], cols, rects, obbs, veg, items, anim, beacons, nodes, padY: 8.7, rain: [V3(3, 9, 1), 0.5, '#ff8a4a'], walkR: 3000, door: [49, -10, -HP], foot: [0, 40], look: [0.7, 0.95, 1.3], heat: 0.12, music: 'hostile', smoke: [-2600, 760, -1900], hazard: (x, z, h) => h < -2.5 };
 }
 
 // ───────────────────────── 砂漠の星 ─────────────────────────
@@ -84,9 +84,9 @@ function sahar() {
     return (dune + mesa) * flat; };
   // 起伏を強める: 蛇行する峡谷・風食の畝 (ヤルダン)・クレーター・遠方ほど高い砂丘
   const H = (x, z) => { const far = smooth(300, 900, Math.hypot(x, z)); return H0(x, z) + far * (craters(x, z, 1500, 5, 44, 0.3) - smooth(0.05, 0, Math.abs(fbm(x * 0.00045 + 7, z * 0.00045, 3, 55) - 0.5)) * 115 + ridge(x * 0.0032, z * 0.0009, 3, 61) * 30 + Math.pow(Math.abs(Math.sin(x * 0.0023 + z * 0.0011 + fbm(x * 0.0008, z * 0.0008, 2, 63) * 5)), 2) * 34); };
-  { const tm = gridTerrain(H, (x, z, h, sl, c) => { const n = fbm(x * 0.008, z * 0.008, 3, 6), rock = smooth(0.35, 0.9, sl) + smooth(120, 200, h) * 0.5; c[0] = 0.62 + n * 0.16 - rock * 0.3; c[1] = 0.36 + n * 0.1 - rock * 0.2; c[2] = 0.17 + n * 0.05 - rock * 0.07; if (h > 150 && sl < 0.3) { c[0] *= 0.8; c[1] *= 0.72; c[2] *= 0.7; } }, { size: 15000, seg: 250, rough: 1, ns: 0.8, uv: 0.06, tex: 'dune_sand' }); grp.add(tm); var TM = tm; }
+  { const tm = gridTerrain(H, (x, z, h, sl, c) => { const n = fbm(x * 0.008, z * 0.008, 3, 6), rock = smooth(0.35, 0.9, sl) + smooth(120, 200, h) * 0.5; c[0] = 0.62 + n * 0.16 - rock * 0.3; c[1] = 0.36 + n * 0.1 - rock * 0.2; c[2] = 0.17 + n * 0.05 - rock * 0.07; if (h > 150 && sl < 0.3) { c[0] *= 0.8; c[1] *= 0.72; c[2] *= 0.7; } }, { size: 15000, seg: 250, tex: 'ripple-sand', rough: 1, ns: 0.8, uv: 0.06 }); grp.add(tm); var TM = tm; }
   const RK = mat('sandstone', { color: 0xb07048, rough: 1, metal: 0, uvs: 0 });
-  grp.add(scatter(rockGeo(1, 2, 9, 0.4), RK, 360, (o) => { const a = r() * 6.28, d = rr(r, 80, 2400), x = Math.cos(a) * d, z = Math.sin(a) * d, s = Math.pow(r(), 3) * 12 + 0.8; o.position.set(x, H(x, z) - s * 0.3, z); o.rotation.set(r() * 6, r() * 6, r() * 6); o.scale.set(s, s * rr(r, 0.6, 1.8), s); if (s > 3 && d < 700) cols.push({ x, z, r: s * 0.8 }); }));
+  grp.add(scatter(rockGeo(1, 2, 9, 0.4), RK, 360, (o) => { const a = r() * 6.28, d = rr(r, 80, 2400), x = Math.cos(a) * d, z = Math.sin(a) * d, s = Math.pow(r(), 3) * 12 + 0.8; o.position.set(x, TM.heightAt(x, z) - s * 0.3, z); o.rotation.set(r() * 6, r() * 6, r() * 6); o.scale.set(s, s * rr(r, 0.6, 1.8), s); if (s > 3 && d < 700) cols.push({ x, z, r: s * 0.8 }); }));
   // オアシス・コロニー (ドーム群)
   const Wt = mat('flat', { color: 0xeee4d0, rough: 0.6, metal: 0.05 }), D = mat('hull', { color: 0x6a5a48, rough: 0.8, metal: 0.4 }), S = mat('solar', { metal: 0.9, env: 1.6 }), GL = new THREE.MeshStandardMaterial({ color: 0x9fe0d0, transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0.2, emissive: 0x3a8a6a, emissiveIntensity: 0.6, side: THREE.DoubleSide }); GL.userData.uvs = 0;
   pad(B, 0.1, 32, '#ffcf6a');
@@ -99,9 +99,9 @@ function sahar() {
   B.cyl(D, 0.3, 0.5, 34, 120, 17, -4, 'y', 8); beacon(beacons, 120, 35, -4, '#f33', 12, 0.6);
   cols.push({ x: 80, z: 0, r: 23.5 }, { x: 108, z: 26, r: 12 }, { x: 104, z: -26, r: 10 }); rects.push([56, 40, 90, 56]); items.push({ x: 53, z: 0, r: 5, label: 'コロニーのドームに入る', act: 'outpost' });
   const s1 = signMesh('オアシス・コロニー', '#ffcf6a', 2.6, { double: true, intensity: 2.6 }); s1.position.set(54, 6.6, 0); s1.rotation.y = -HP; grp.add(s1);
-  const nodes = []; for (let i = 0; i < 7; i++) { const a = i * 0.9 + 1.2, d = 100 + (i % 3) * 70, x = Math.cos(a) * d - 30, z = Math.sin(a) * d, n = node('#ffb347', 1, 80 + i); n.position.set(x, H(x, z), z); grp.add(n); nodes.push({ g: n, x, z, item: 'spice', label: '砂漠香料を採取する' }); }
+  const nodes = []; for (let i = 0; i < 7; i++) { const a = i * 0.9 + 1.2, d = 100 + (i % 3) * 70, x = Math.cos(a) * d - 30, z = Math.sin(a) * d, n = node('#ffb347', 1, 80 + i); n.position.set(x, TM.heightAt(x, z), z); grp.add(n); nodes.push({ g: n, x, z, item: 'spice', label: '砂漠香料を採取する' }); }
   // ── 全域を埋める: 奇岩の尖塔・天然のアーチ・卓状台地・ピラミッドと列柱・巨獣の骨・残骸・集水塔・オアシス + 足元の岩とサボテンと枯れ草 ──
-  const obbs = [], tiles = [], hA = TM.heightAt, env2 = { grp, obbs, cols }, SS = mat('sandstone', { color: 0xc8845a, rough: 1, metal: 0, uvs: 0 }), SS2 = mat('sandstone', { color: 0xd8a070, rough: 0.95, metal: 0, uvs: 0.02 }), BONE = mat('flat', { color: 0xe8dcc4, rough: 0.7, metal: 0 });
+  const obbs = [], tiles = [], hA = TM.heightAt, env2 = { grp, obbs, cols }, SS = mat('sandstone', { color: 0xc8845a, rough: 1, metal: 0, uvs: 0 }), SS2 = mat('gravel', { color: 0xd8a070, rough: 0.95, metal: 0, uvs: 0.02 }), BONE = mat('flat', { color: 0xe8dcc4, rough: 0.7, metal: 0 });
   const inBase = (x, z) => Math.hypot(x, z) < 130 || (x > 40 && x < 130 && z > -46 && z < 66);
   strew(env2, r, hA, { free: (x, z) => !inBase(x, z), spire: { n: 280, m: SS, h1: 46, clump: 0.38 }, arch: { n: 54, m: SS, w: 76 }, butte: { n: 50, m: SS2, w: 170, h: 110 } });
   const PYR = [[-3100, -2400, 300, 190], [-3520, -2050, 190, 120], [3600, 2900, 260, 165]], pg = new THREE.ConeGeometry(0.7071, 1, 4, 1).rotateY(Math.PI / 4).translate(0, 0.5, 0);
@@ -128,20 +128,19 @@ function glacies() {
   const H0 = (x, z) => { const d = Math.hypot(x, z), flat = smooth(60, 240, d), cr = Math.abs(fbm(x * 0.002 + 5, z * 0.002, 4, 13) - 0.5); return (fbm(x * 0.0009, z * 0.0009, 5, 7) * 110 + ridge(x * 0.003, z * 0.003, 4, 3) * 60 - smooth(0.03, 0.0, cr) * 46 + ridge(x * 0.0004, z * 0.0004, 3, 17) * 420 * smooth(1200, 3200, d)) * flat; };
   // 起伏を強める: 氷のクレーター・氷脈 (圧力で盛り上がった畝)・深い裂け目
   const H = (x, z) => { const far = smooth(280, 850, Math.hypot(x, z)); return H0(x, z) + far * (craters(x, z, 1300, 9, 52, 0.36) + ridge(x * 0.0045, z * 0.0013, 3, 71) * 36 - smooth(0.04, 0, Math.abs(fbm(x * 0.0007 + 2, z * 0.0007, 3, 73) - 0.5)) * 90); };
-  { const tm = gridTerrain(H, (x, z, h, sl, c) => { const n = fbm(x * 0.006, z * 0.006, 3, 4), deep = smooth(0.2, 0.9, sl); c[0] = 0.62 + n * 0.2 - deep * 0.42; c[1] = 0.74 + n * 0.16 - deep * 0.3; c[2] = 0.86 + n * 0.1 - deep * 0.08; }, { size: 15000, seg: 250, rough: 0.38, metal: 0.1, ns: 0.9, env: 1.6, uv: 0.03, tex: 'snowfield' }); grp.add(tm); var TM = tm; }
-  const GI = texSet('glacier'), ICE = new THREE.MeshStandardMaterial({ color: 0xbfe6ff, emissive: 0x16486a, emissiveIntensity: 0.35, roughness: 0.12, metalness: 0.05, normalMap: GI.normalMap, envMapIntensity: 1.4 }); ICE.normalScale.setScalar(0.6);
-  if (hasTex('glacier')) { ICE.map = GI.map; ICE.userData.uvs = 0.15; } // 氷河の氷 (青い亀裂・気泡)
-  grp.add(scatter(rockGeo(1, 2, 14, 0.5), ICE, 260, (o) => { const a = r() * 6.28, d = rr(r, 70, 2400), x = Math.cos(a) * d, z = Math.sin(a) * d, s = Math.pow(r(), 2.4) * 11 + 1.2; o.position.set(x, H(x, z) - s * 0.35, z); o.rotation.set(rr(r, -0.3, 0.3), r() * 6, rr(r, -0.3, 0.3)); o.scale.set(s, s * rr(r, 1.2, 3.2), s * rr(r, 0.7, 1.2)); if (d < 700 && s > 2) cols.push({ x, z, r: s * 0.8 }); }));
-  const D = mat('hull', { color: 0x3a4048, rough: 0.7, metal: 0.6 }), Wd = mat('log', { color: 0xc8a888, rough: 0.8, metal: 0 }), Wt = mat('flat', { color: 0xdfe8f0, rough: 0.5, metal: 0.1 }), WG = glow('#ffcf8a', 2.6);
+  { const tm = gridTerrain(H, (x, z, h, sl, c) => { const n = fbm(x * 0.006, z * 0.006, 3, 4), deep = smooth(0.2, 0.9, sl); c[0] = 0.62 + n * 0.2 - deep * 0.42; c[1] = 0.74 + n * 0.16 - deep * 0.3; c[2] = 0.86 + n * 0.1 - deep * 0.08; }, { size: 15000, seg: 250, tex: 'snow-crust', rough: 0.48, metal: 0.1, ns: 0.9, env: 1.6, uv: 0.03 }); grp.add(tm); var TM = tm; }
+  const ICE = mat('glacial-ice', { color: 0xbfe6ff, emissive: 0x16486a, ei: 0.35, rough: 0.22, metal: 0.05, env: 1.4, uvs: 0, ns: 0.6 });
+  grp.add(scatter(rockGeo(1, 2, 14, 0.5), ICE, 260, (o) => { const a = r() * 6.28, d = rr(r, 70, 2400), x = Math.cos(a) * d, z = Math.sin(a) * d, s = Math.pow(r(), 2.4) * 11 + 1.2; o.position.set(x, TM.heightAt(x, z) - s * 0.35, z); o.rotation.set(rr(r, -0.3, 0.3), r() * 6, rr(r, -0.3, 0.3)); o.scale.set(s, s * rr(r, 1.2, 3.2), s * rr(r, 0.7, 1.2)); if (d < 700 && s > 2) cols.push({ x, z, r: s * 0.8 }); }));
+  const D = mat('hull', { color: 0x3a4048, rough: 0.7, metal: 0.6 }), Wd = mat('wood', { color: 0xc8a888, rough: 0.8, metal: 0 }), Wt = mat('flat', { color: 0xdfe8f0, rough: 0.5, metal: 0.1 }), WG = glow('#ffcf8a', 2.6);
   pad(B, 0.1, 30, '#a6f0ff');
   B.box(Wd, 26, 7, 16, 66, 4.5, 0); B.add(Wt, new THREE.CylinderGeometry(9.2, 9.2, 26.4, 20, 1, false, 0, Math.PI).rotateZ(HP), mx(66, 8, 0), 0.1); for (let i = 0; i < 5; i++) { B.box(WG, 0.2, 2, 2.6, 52.9, 4.6, -6 + i * 3); if (i !== 2) B.box(WG, 2.6, 2, 0.2, 58 + i * 4, 4.6, 8.05); }
   B.box(D, 1.6, 4.2, 3, 52.6, 3.1, 0); for (const [x, z] of [[55, -7], [77, -7], [55, 7], [77, 7]]) B.cyl(D, 0.4, 0.5, 2, x, 0.6, z, 'y', 8);
   B.cyl(D, 0.3, 0.4, 16, 84, 8, -10, 'y', 8); B.add(Wt, new THREE.SphereGeometry(5, 20, 12, 0, 6.2832, 0, 1.2), mx(84, 17, -10, -2.3, 0.4, 0), 0); B.cyl(D, 0.2, 0.3, 26, 88, 13, 12, 'y', 6); beacon(beacons, 88, 26.5, 12, '#f33', 10, 0.6); beacon(beacons, 52.6, 6.4, 0, '#ffcf8a', 7);
   rects.push([52, -9, 80, 9]); cols.push({ x: 84, z: -10, r: 1.2 }); items.push({ x: 51, z: 0, r: 5, label: '研究所に入る', act: 'outpost' });
   const s1 = signMesh('氷床研究所', '#a6f0ff', 2.2, { double: true, intensity: 2.6 }); s1.position.set(52.7, 9, 0); s1.rotation.y = -HP; grp.add(s1);
-  const nodes = []; for (let i = 0; i < 7; i++) { const a = i * 0.9 + 2.2, d = 100 + (i % 3) * 65, x = Math.cos(a) * d - 30, z = Math.sin(a) * d, n = node('#6fe8ff', 1.3, 90 + i); n.position.set(x, H(x, z), z); grp.add(n); nodes.push({ g: n, x, z, item: 'ice', label: '氷晶を採取する' }); }
+  const nodes = []; for (let i = 0; i < 7; i++) { const a = i * 0.9 + 2.2, d = 100 + (i % 3) * 65, x = Math.cos(a) * d - 30, z = Math.sin(a) * d, n = node('#6fe8ff', 1.3, 90 + i); n.position.set(x, TM.heightAt(x, z), z); grp.add(n); nodes.push({ g: n, x, z, item: 'ice', label: '氷晶を採取する' }); }
   // ── 全域を埋める: 氷の尖塔 (セラック)・氷のアーチ・卓状氷山・発光する氷晶・凍りついた残骸・観測マスト + 足元の氷塊 ──
-  const obbs = [], hA = TM.heightAt, env2 = { grp, obbs, cols }, CY = glowMat('#5fe0ff', 1.3), DRK = mat('rock', { color: 0x3a4250, rough: 0.8, metal: 0.2, uvs: 0 }), ICE2 = ICE.clone(); ICE2.color.set(0xe4f4ff); ICE2.roughness = 0.3;
+  const obbs = [], hA = TM.heightAt, env2 = { grp, obbs, cols }, CY = glowMat('#5fe0ff', 1.3), DRK = mat('regolith', { color: 0x3a4250, rough: 0.8, metal: 0.2, uvs: 0 }), ICE2 = ICE.clone(); ICE2.color.set(0xe4f4ff); ICE2.roughness = 0.3;
   const inBase = (x, z) => Math.hypot(x, z) < 120 || (x > 44 && x < 96 && z > -20 && z < 22);
   strew(env2, r, hA, { free: (x, z) => !inBase(x, z), spire: { n: 320, m: ICE, h1: 70 }, arch: { n: 44, m: ICE, w: 70 }, butte: { n: 40, m: ICE2, w: 150, h: 70 }, crys: { n: 90, m: CY, h: 26 } });
   landmarks(env2, wreckGeo(), VCM(), pickPts(r, 7, 400, 6200, (x, z) => !inBase(x, z)).map(([x, z]) => { const L = rr(r, 60, 130); return [x, hA(x, z) - L * 0.05, z, L, L, r() * 6.28, rr(r, -0.12, 0.12)]; }), { solid: 0.18 });
@@ -169,7 +168,7 @@ function zephyr() {
   const cu = { uTime: fxTime, uSun: { value: sunDir }, uA: { value: COL('#ffe0b8') }, uB: { value: COL('#6a4a7a') }, uC: { value: COL('#2a6a8a') } };
   const cl = new THREE.Mesh(new THREE.PlaneGeometry(40000, 40000).rotateX(-HP), new THREE.ShaderMaterial({ uniforms: cu, vertexShader: 'varying vec3 vW;void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}', fragmentShader: CLOUD_FS })); cl.position.y = -420; grp.add(cl);
   // 巨大デッキ
-  const D = mat('hull', { color: 0x3a4a50, rough: 0.6, metal: 0.6 }), GD = aiMat('gold', { color: 0xd4a84a, rough: 0.25, metal: 1 }, 'flat'), P = mat('brass_deck', { color: 0xd8c090, rough: 0.3, metal: 0.6, uvs: 0.12, floor: 1 }), Wt = mat('wall', { color: 0x2c4a50, rough: 0.5, metal: 0.5 }), GL = new THREE.MeshStandardMaterial({ color: 0xffe2a8, transparent: true, opacity: 0.25, roughness: 0.05, metalness: 0.3, emissive: 0xffb050, emissiveIntensity: 0.5, side: THREE.DoubleSide }); GL.userData.uvs = 0;
+  const D = mat('hull', { color: 0x3a4a50, rough: 0.6, metal: 0.6 }), GD = mat('flat', { color: 0xd4a84a, rough: 0.25, metal: 1 }), P = mat('hex', { color: 0xd8c090, rough: 0.3, metal: 0.6, uvs: 0.12, floor: 1 }), Wt = mat('wall', { color: 0x2c4a50, rough: 0.5, metal: 0.5 }), GL = new THREE.MeshStandardMaterial({ color: 0xffe2a8, transparent: true, opacity: 0.25, roughness: 0.05, metalness: 0.3, emissive: 0xffb050, emissiveIntensity: 0.5, side: THREE.DoubleSide }); GL.userData.uvs = 0;
   B.cyl(P, R, R, 0.3, 0, -0.15, 0, 'y', 72); B.cyl(D, R + 2, R * 0.55, 34, 0, -17.4, 0, 'y', 72); B.cyl(D, R * 0.5, 8, 90, 0, -79, 0, 'y', 32); B.tor(GD, R + 1, 0.8, 0, 0.2, 0, HP, 0, 0, 96, 8); B.tor(glow('#ffd27a', 3), R - 0.5, 0.15, 0, 0.12, 0, HP, 0, 0, 96, 5);
   for (let i = 0; i < 48; i++) { const a = i * Math.PI / 24; B.cyl(GD, 0.12, 0.12, 1.3, Math.cos(a) * (R - 1.5), 0.65, Math.sin(a) * (R - 1.5), 'y', 6); }
   B.tor(GD, R - 1.5, 0.08, 0, 1.3, 0, HP, 0, 0, 96, 5);
@@ -191,7 +190,7 @@ function zephyr() {
   { const CL = new THREE.MeshStandardMaterial({ color: 0xffe6cc, roughness: 1, metalness: 0, emissive: 0x7a4634, emissiveIntensity: 0.5 }), L = [];
     for (const [x, z] of pickPts(r, 54, 750, 6900, () => true)) { const s = rr(r, 180, 460), n = 3 + Math.floor(r() * 4); for (let k = 0; k < n; k++) { const w = s * (1 - k * 0.13) * rr(r, 0.8, 1.1); L.push([x + rr(r, -0.3, 0.3) * s, -450 + k * s * 0.5, z + rr(r, -0.3, 0.3) * s, w, w * rr(r, 0.6, 0.85), r() * 6.28, 0]); } if (r() < 0.4) L.push([x, -450 + n * s * 0.5, z, s * 1.5, s * 0.28, r() * 6.28, 0]); }
     landmarks(env2, propGeo('blob'), CL, L, { shadow: false }); }
-  { const PT = mat('brass_deck', { color: 0xb8a070, rough: 0.5, metal: 0.6, uvs: 0.12 });
+  { const PT = mat('plate', { color: 0xb8a070, rough: 0.5, metal: 0.6, uvs: 0.12 });
     for (const [x, z] of pickPts(r, 16, 420, 5600, () => true)) { const y = Math.round(rr(r, -160, 620)), rad = rr(r, 26, 58), a = r() * 6.28, tx = x + Math.cos(a) * rad * 0.62, tz = z + Math.sin(a) * rad * 0.62, ux = x - Math.cos(a) * rad * 0.58, uz = z - Math.sin(a) * rad * 0.58;
       B.cyl(PT, rad, rad, 0.4, x, y - 0.2, z, 'y', 40); B.cyl(D, rad + 1.2, rad * 0.45, rad * 0.32, x, y - 0.4 - rad * 0.16, z, 'y', 40); B.cyl(D, rad * 0.3, 1.6, rad * 1.1, x, y - rad * 0.86, z, 'y', 16); B.tor(GD, rad + 0.6, 0.5, x, y + 0.1, z, HP, 0, 0, 56, 6); B.tor(glow('#ffd27a', 3), rad - 0.6, 0.12, x, y + 0.08, z, HP, 0, 0, 56, 5);
       B.cyl(D, 0.8, 1.2, 26, tx, y + 13, tz, 'y', 8); B.sph(GD, 5, tx, y + 31, tz, 1, 1.25, 1, 16); B.cyl(Wt, 3.4, 3.4, 5, ux, y + 2.5, uz, 'y', 14); B.cyl(GD, 3.6, 3.6, 0.3, ux, y + 5.1, uz, 'y', 14);

@@ -1,0 +1,16 @@
+{
+ "id": "s6_urban",
+ "group": "replace-extra",
+ "style": "City and building materials: roads, pavements, walls, roofs and interior finishes.",
+ "cells": [
+  {"name": "wet-asphalt", "kind": "tile", "prompt": "Dark fine-grained asphalt road surface, slightly damp, small stones visible.", "mean": [109, 109, 109], "rough": 69, "sat": 0.2, "normal": 3.0},
+  {"name": "cracked-asphalt", "kind": "tile", "prompt": "Weathered grey asphalt with long cracks, patched areas and loose grit.", "mean": [138, 138, 137], "rough": 222, "sat": 0.2, "normal": 3.5},
+  {"name": "board-concrete", "kind": "tile", "prompt": "Board-formed concrete wall with horizontal wooden plank imprints, tie holes and fine pores.", "mean": [184, 180, 178], "rough": 213, "sat": 0.3, "normal": 3.0},
+  {"name": "granite-pavers", "kind": "tile", "prompt": "Grey granite paving blocks in running bond with thin joints.", "mean": [165, 164, 165], "rough": 217, "sat": 0.3, "normal": 4.0},
+  {"name": "glazed-brick", "kind": "tile", "prompt": "Light grey glazed bricks in running bond with recessed mortar joints and a subtle glaze sheen.", "mean": [177, 173, 170], "rough": 56, "sat": 0.3, "normal": 3.5},
+  {"name": "zinc-roof", "kind": "tile", "prompt": "Standing-seam zinc roof: long vertical metal panels with raised seams and soft weathering.", "mean": [142, 148, 152], "rough": 77, "sat": 0.6, "normal": 3.0},
+  {"name": "technical-canvas", "kind": "tile", "prompt": "Beige technical canvas fabric: tight woven texture with faint stains and creases.", "mean": [194, 182, 168], "rough": 185, "sat": 1.0, "normal": 2.5},
+  {"name": "walnut", "kind": "tile", "prompt": "Walnut wood veneer planks with warm brown flowing grain.", "mean": [182, 149, 122], "rough": 134, "sat": 1.0, "normal": 2.0},
+  {"name": "medical-vinyl", "kind": "tile", "prompt": "Seamless white medical vinyl flooring with a subtle fine speckle.", "mean": [220, 219, 217], "rough": 122, "sat": 0.3, "normal": 1.2}
+ ]
+}

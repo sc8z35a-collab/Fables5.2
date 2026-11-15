@@ -1,7 +1,7 @@
 // 宇宙船モデル: 主人公機 3 隻 + 敵艦ジェネレータ (すべてプロシージャル)
 import * as THREE from 'three';
 import { Builder, loft, slab, mirrorX, mx } from '../gfx/builder.js';
-import { mat, aiMat, glow } from '../gfx/textures.js';
+import { mat, glow } from '../gfx/textures.js';
 import { rng, rr } from '../core/util.js';
 import { makePlume, makeGlowSprite } from '../gfx/fx.js';
 
@@ -33,7 +33,7 @@ function finish(b, o) {
 
 // ───────────────────────── ハヤテ (疾風) ─────────────────────────
 function hayate() {
-  const b = new Builder(), H = mat('hull', { color: 0xf2f4f8, rough: 0.62, metal: 0.25 }), A = mat('hull', { color: 0xff6a12, rough: 0.55, metal: 0.2 }), D = mat('heat_tiles', { color: 0x3a3f48, rough: 0.8, metal: 0.6 });
+  const b = new Builder(), H = mat('hull', { color: 0xf2f4f8, rough: 0.62, metal: 0.25 }), A = mat('hull', { color: 0xff6a12, rough: 0.55, metal: 0.2 }), D = mat('carbon-fiber', { color: 0x6a6f78, rough: 0.8, metal: 0.6 });
   const GC = glow('#55c8ff', 7), GO = glow('#ff8a2a', 3);
   b.add(H, loft([{ z: -8.5, w: 0.04, t: 0.04, y: -0.05 }, { z: -7.6, w: 0.22, t: 0.18, b: 0.16, y: -0.04 }, { z: -6, w: 0.48, t: 0.38, b: 0.32 }, { z: -4.2, w: 0.78, t: 0.62, b: 0.48 }, { z: -2.2, w: 1.02, t: 0.86, b: 0.6 },
     { z: 0, w: 1.18, t: 0.92, b: 0.66 }, { z: 2.5, w: 1.3, t: 0.82, b: 0.68 }, { z: 5, w: 1.25, t: 0.7, b: 0.62 }, { z: 6.6, w: 1.0, t: 0.55, b: 0.5 }, { z: 7.2, w: 0.8, t: 0.42, b: 0.4 }].map((s) => ({ e: 2.6, ...s })), 40));
@@ -64,7 +64,7 @@ function hayate() {
 
 // ───────────────────────── ライデン (雷電) ─────────────────────────
 function raiden() {
-  const b = new Builder(), H = mat('hull', { color: 0x8d96a3, rough: 0.6, metal: 0.4 }), A = mat('hull', { color: 0xb81f1f, rough: 0.55, metal: 0.25 }), D = mat('heat_tiles', { color: 0x30343c, rough: 0.8, metal: 0.6 });
+  const b = new Builder(), H = mat('titanium', { color: 0x8d96a3, rough: 0.6, metal: 0.4 }), A = mat('ablative', { color: 0xb81f1f, rough: 0.55, metal: 0.25 }), D = mat('blasted-steel', { color: 0x40454f, rough: 0.8, metal: 0.6 });
   const GE = glow('#ff9a3a', 7), GW = glow('#bfe8ff', 3.5), GR = glow('#ff3020', 4);
   const e = (a, ex = 6) => a.map((s) => ({ e: ex, ...s }));
   b.add(H, loft(e([{ z: -18, w: 0.6, t: 0.5, b: 0.6 }, { z: -16, w: 1.8, t: 1.1, b: 1.3 }, { z: -12, w: 3.0, t: 1.7, b: 1.9 }, { z: -6, w: 3.9, t: 2.2, b: 2.2 }, { z: 2, w: 4.3, t: 2.4, b: 2.3 }, { z: 10, w: 4.1, t: 2.3, b: 2.2 }, { z: 15, w: 3.4, t: 2.0, b: 1.9 }, { z: 17, w: 2.8, t: 1.6, b: 1.6 }], 5), 40));
@@ -93,7 +93,7 @@ function raiden() {
 
 // ───────────────────────── アマツ (天津) ─────────────────────────
 function amatsu() {
-  const b = new Builder(), H = mat('hull', { color: 0xfaf7ee, rough: 0.55, metal: 0.2 }), A = aiMat('gold', { color: 0xd4a84a, rough: 0.25, metal: 1 }, 'flat'), D = mat('heat_tiles', { color: 0x3a3f48, rough: 0.8, metal: 0.6 }), S = mat('solar', { rough: 1, metal: 0.9, env: 1.6 });
+  const b = new Builder(), H = mat('hull', { color: 0xfaf7ee, rough: 0.55, metal: 0.2 }), A = new THREE.MeshStandardMaterial({ color: 0xd4a84a, roughness: 0.25, metalness: 1 }), D = mat('carbon-fiber', { color: 0x6a6f78, rough: 0.8, metal: 0.6 }), S = mat('solar', { rough: 1, metal: 0.9, env: 1.6 });
   A.userData.uvs = 0;
   const GE = glow('#40ffd8', 7), GW = glow('#ffe2a8', 3);
   b.add(H, loft([{ z: -26, w: 0.1, t: 0.1 }, { z: -24, w: 1.0, t: 0.9, b: 0.7 }, { z: -20, w: 2.2, t: 2.0, b: 1.3 }, { z: -14, w: 3.0, t: 2.4, b: 1.7 }, { z: -6, w: 3.2, t: 2.3, b: 1.9 }, { z: 4, w: 2.8, t: 2.1, b: 1.9 }, { z: 14, w: 2.4, t: 1.9, b: 1.8 }, { z: 22, w: 2.0, t: 1.6, b: 1.6 }, { z: 25, w: 1.5, t: 1.2, b: 1.2 }].map((s) => ({ e: 2.2, ...s })), 48));
@@ -133,7 +133,7 @@ function amatsu() {
 export function buildEnemy(def) {
   const r = rng(def.seed), b = new Builder(), sc = rr(r, 0.9, 1.2);
   const tint = new THREE.Color(def.glow).multiplyScalar(0.12).add(new THREE.Color(0x3a3c46));
-  const H = mat('armor', { color: tint.getHex(), rough: 0.5, metal: 0.55 }), A = mat('hull', { color: new THREE.Color(def.glow).multiplyScalar(0.45).getHex(), rough: 0.5, metal: 0.4 }), D = mat('hull', { color: 0x1c1d24, rough: 0.8, metal: 0.7 });
+  const H = mat('hull', { color: tint.getHex(), rough: 0.5, metal: 0.55 }), A = mat('hull', { color: new THREE.Color(def.glow).multiplyScalar(0.45).getHex(), rough: 0.5, metal: 0.4 }), D = mat('hull', { color: 0x1c1d24, rough: 0.8, metal: 0.7 });
   const GL = glow(def.glow, 5), GE = glow(def.glow, 8);
   const F = (secs, seg = 8) => loft(secs, seg, true);
   const engines = [], guns = [];

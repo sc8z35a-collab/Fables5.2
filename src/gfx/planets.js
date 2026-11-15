@@ -3,130 +3,79 @@ import * as THREE from 'three';
 import { FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
 import { NOISE, FACE, FSQ_VS } from './glsl.js';
 import { rng } from '../core/util.js';
+import { celestialTex, readyTextures } from './materials.js';
 
 export const SCALE = 1000;
+const PLANET_IMAGES = ['earth', 'lava', 'ice', 'desert', 'gas'];
+export function preloadBackdrop() {
+  for (const id of [...PLANET_IMAGES, 'nebula', 'clouds', 'sun', 'rings']) celestialTex(id);
+  return readyTextures();
+}
 
 // ───────────────────────── ベイク用シェーダ ─────────────────────────
 const BAKE_FS = /* glsl */`
 precision highp float;
-uniform int uFace,uType,uPass; uniform float uSeed; varying vec2 vUv;
-${NOISE}
+uniform int uFace,uType,uPass;
+uniform sampler2D tSurface,tClouds;
+varying vec2 vUv;
 ${FACE}
-vec3 warp(vec3 p,float f,float a){return p+a*(vec3(fbm(p*f+1.3,4),fbm(p*f+5.7,4),fbm(p*f+9.1,4))-.5);}
-// ── 地球 ──
-float hE(vec3 p){vec3 q=warp(p,1.6,.5);float c=fbm(q*1.15+uSeed,8);float h=(c-.52)*2.4;float m=ridged(q*4.5+3.,6);h+=m*.3*smoothstep(-.02,.22,h);return h;}
-vec4 albE(vec3 p){
-  float h=hE(p),lat=abs(p.y),n1=fbm(p*6.+11.,5),n2=fbm(p*22.+3.,4);
-  if(h<0.){float d=-h;vec3 c=mix(vec3(.02,.2,.3),vec3(.004,.028,.1),smoothstep(0.,.28,d));
-    c=mix(c,vec3(.05,.34,.38),smoothstep(.035,0.,d)*.8);
-    float ice=smoothstep(.80,.88,lat+(n1-.5)*.14);c=mix(c,vec3(.85,.9,.95),ice);return vec4(c,1.-ice*.7);}
-  float temp=1.-lat*1.15-h*.55+(n1-.5)*.25;
-  float moist=fbm(p*3.2+27.,5)+(1.-abs(lat-.05)*2.)*.15;
-  moist-=smoothstep(.15,.3,lat)*smoothstep(.52,.34,lat)*.3;
-  vec3 desert=mix(vec3(.72,.58,.36),vec3(.55,.36,.2),n2);
-  vec3 grass=mix(vec3(.2,.32,.1),vec3(.34,.38,.16),n2);
-  vec3 forest=mix(vec3(.03,.13,.04),vec3(.07,.2,.06),n2);
-  vec3 c=mix(desert,grass,smoothstep(.36,.5,moist));c=mix(c,forest,smoothstep(.5,.66,moist));
-  c=mix(c,vec3(.36,.33,.26),smoothstep(.42,.25,temp));
-  c=mix(c,mix(vec3(.3,.25,.2),vec3(.44,.38,.32),n2),smoothstep(.3,.52,h));
-  c=mix(c,vec3(.92,.94,.97),clamp(smoothstep(.2,.08,temp)+smoothstep(.55,.7,h),0.,1.));
-  c=mix(c,vec3(.75,.68,.5),smoothstep(.015,0.,h)*.6);
-  return vec4(c,0.);}
-float emE(vec3 p){float h=hE(p);if(h<.002)return 0.;float lat=abs(p.y);
-  float pop=smoothstep(.5,.7,fbm(p*5.+61.,5))*smoothstep(.3,.02,h)*smoothstep(.85,.6,lat);
-  pop+=smoothstep(.06,0.,h)*.4*smoothstep(.45,.6,fbm(p*9.+3.,4));
-  float sp=pow(vnoise(p*260.),2.)*1.6+pow(vnoise(p*90.+7.),3.)*1.5;
-  return clamp(pop*sp,0.,1.);}
-float clE(vec3 p){vec3 q=warp(p+uSeed,2.2,.5);q=warp(q,7.,.12);float c=fbm(q*3.2,8);float lat=abs(p.y);
-  float cov=.47-.07*cos(lat*9.);float d=smoothstep(cov,cov+.26,c);d*=.6+.8*fbm(q*14.,4);return clamp(d,0.,1.);}
-// ── 溶岩 ──
-float baseL(vec3 p){return fbm(p*2.3+uSeed,8);}
-float hL(vec3 p){float c=baseL(p);vec2 w=worley2(p*6.+(c-.5)*2.);return c*.7+smoothstep(0.,.14,w.y-w.x)*.25+ridged(p*7.,5)*.15;}
-vec4 albL(vec3 p){float c=baseL(p),n=fbm(p*18.,5);vec3 col=mix(vec3(.03,.026,.026),vec3(.15,.11,.09),c*n*2.);col=mix(col,vec3(.28,.09,.04),smoothstep(.6,.8,c)*.5);return vec4(col,.15);}
-float emL(vec3 p){float c=baseL(p);vec2 w=worley2(p*6.+(c-.5)*2.);float cr=1.-smoothstep(0.,.1,w.y-w.x);
-  float pools=smoothstep(.4,.3,c);float e=cr*cr*(.35+.65*smoothstep(.58,.36,c))+pools*(.45+.55*fbm(p*30.,4));
-  vec2 w2=worley2(p*24.);e+=(1.-smoothstep(0.,.07,w2.y-w2.x))*.3*smoothstep(.62,.4,c);return clamp(e,0.,1.);}
-// ── 氷 ──
-float baseI(vec3 p){return fbm(p*2.6+uSeed,8);}
-float hI(vec3 p){float c=baseI(p);vec2 w=worley2(p*8.+(c-.5)*3.);return c*.55+smoothstep(0.,.05,w.y-w.x)*.12+ridged(p*9.,5)*.18;}
-vec4 albI(vec3 p){float c=baseI(p);vec2 w=worley2(p*8.+(c-.5)*3.);float cr=1.-smoothstep(0.,.05,w.y-w.x);float n=fbm(p*20.,5);
-  vec3 col=mix(vec3(.6,.77,.9),vec3(.93,.96,1.),smoothstep(.3,.65,c+n*.2));col=mix(col,vec3(.2,.44,.68),cr*.8);
-  col=mix(col,vec3(.3,.34,.4),smoothstep(.66,.8,c)*.6);float sea=smoothstep(.36,.3,c);col=mix(col,vec3(.04,.18,.33),sea*.85);
-  return vec4(col,.25+sea*.6);}
-// ── 砂漠 ──
-float baseD(vec3 p){return fbm(p*1.9+uSeed,8);}
-float canD(vec3 p){return smoothstep(.56,.72,fbm(p*3.3+50.,6));}
-float hD(vec3 p){float c=baseD(p);float r=ridged(p*5.+c*2.,6);vec2 w=worley2(p*11.);float crater=smoothstep(.0,.3,w.x)*.12;return c*.6+r*.28-canD(p)*.3+crater;}
-vec4 albD(vec3 p){float c=baseD(p),n=fbm(p*14.,5),can=canD(p),lat=abs(p.y);
-  vec3 col=mix(vec3(.7,.4,.19),vec3(.86,.62,.36),smoothstep(.3,.7,c));col=mix(col,vec3(.42,.2,.12),smoothstep(.45,.75,n)*.5);
-  col=mix(col,vec3(.3,.16,.12),can*.75);col=mix(col,vec3(.24,.2,.2),smoothstep(.68,.82,c)*.6);
-  float cap=smoothstep(.86,.93,lat+(n-.5)*.1);col=mix(col,vec3(.95,.93,.9),cap);return vec4(col,cap*.2);}
-// ── ガス巨星 ──
-vec4 albG(vec3 p){
-  vec3 w=p+.07*vec3(fbm(p*3.+uSeed,5)-.5,0.,fbm(p*3.+7.,5)-.5);
-  float turb=fbm(vec3(w.x*2.,w.y*13.,w.z*2.)+uSeed,7);
-  float y=w.y+(turb-.5)*.16;
-  float bands=sin(y*26.)*.5+.5,b2=sin(y*61.+turb*4.)*.5+.5;
-  vec3 c1=vec3(.2,.5,.66),c2=vec3(.09,.14,.42),c3=vec3(.82,.88,.92),c4=vec3(.46,.26,.62);
-  vec3 col=mix(c1,c2,smoothstep(.2,.8,bands));col=mix(col,c4,smoothstep(.55,.95,b2)*.45);
-  col=mix(col,c3,smoothstep(.56,.9,fbm(vec3(p.x*3.,p.y*22.,p.z*3.)+3.,6))*.65);
-  vec3 sc=normalize(vec3(.55,-.32,.77));vec3 dd=(p-sc)*vec3(1.,2.3,1.);float sd=length(dd);
-  float swirl=fbm(p*14.+vec3(atan(dd.z,dd.x)*2.,sd*20.,0.),5);
-  col=mix(col,mix(vec3(.9,.86,.8),vec3(.6,.2,.5),swirl),smoothstep(.2,.04,sd)*.85);
-  col*=.75+.5*fbm(p*40.,4);
-  return vec4(col,0.);}
-float height(vec3 p){if(uType==0)return max(hE(p),0.);if(uType==1)return hL(p);if(uType==2)return hI(p);if(uType==3)return hD(p);return 0.;}
+vec2 sphereUV(vec3 p){return vec2(.5+atan(p.z,abs(p.x)>1.e-6?p.x:1.e-6)/6.283185,.5+asin(clamp(p.y,-1.,1.))/3.141593);}
+vec3 projectPhoto(sampler2D tex,vec3 p){
+  vec3 w=pow(abs(p),vec3(5.));w/=max(w.x+w.y+w.z,1.e-6);
+  return textureLod(tex,p.zy*1.5+.17,0.).rgb*w.x+textureLod(tex,p.xz*1.5+.39,0.).rgb*w.y+textureLod(tex,p.xy*1.5+.61,0.).rgb*w.z;
+}
+vec3 globe(vec3 p){
+  if(uType==0)return textureLod(tSurface,sphereUV(p),0.).rgb;
+  if(uType==4){vec2 uv=sphereUV(p);return textureLod(tSurface,vec2(uv.x*2.,mix(.07,.93,uv.y)),0.).rgb;}
+  return projectPhoto(tSurface,p);
+}
+float waterMask(vec3 c){return smoothstep(.017,.12,c.b-max(c.g,c.r))*(1.-smoothstep(.3,.65,c.b));}
+float relief(vec3 c){
+  float l=dot(c,vec3(.25,.52,.23));
+  if(uType==0)l*=1.-waterMask(c);
+  if(uType==1)l=1.-l;
+  return l;
+}
 void main(){
-  vec3 p=normalize(faceDir(uFace,vUv*2.-1.));vec4 o=vec4(0.);
+  vec3 p=normalize(faceDir(uFace,vUv*2.-1.));
+  vec4 o=vec4(0.);
   if(uPass==0){
-    if(uType==0)o=albE(p);else if(uType==1)o=albL(p);else if(uType==2)o=albI(p);else if(uType==3)o=albD(p);else o=albG(p);
-    o.rgb=sqrt(clamp(o.rgb,0.,1.));
+    vec3 c=globe(p);
+    float spec=uType==0?waterMask(c):uType==1?.15:uType==2?.42:.08;
+    o=vec4(sqrt(clamp(c,0.,1.)),spec);
   }else if(uPass==1){
-    vec3 n=p;
-    if(uType!=4){float e=.0016;vec3 t1=normalize(cross(p,abs(p.y)>.99?vec3(1.,0.,0.):vec3(0.,1.,0.)));vec3 t2=cross(p,t1);
-      float h0=height(p),h1=height(normalize(p+t1*e)),h2=height(normalize(p+t2*e));
-      float k=uType==0?.035:.05;n=normalize(p-k*((h1-h0)/e*t1+(h2-h0)/e*t2));}
-    float em=0.;if(uType==0)em=emE(p);else if(uType==1)em=emL(p);
+    vec3 c=globe(p),n=p;
+    if(uType!=4){
+      float e=.003;
+      vec3 t=normalize(cross(p,abs(p.y)>.99?vec3(1.,0.,0.):vec3(0.,1.,0.))),b=cross(p,t);
+      float h=relief(c),dx=relief(globe(normalize(p+t*e)))-h,dy=relief(globe(normalize(p+b*e)))-h;
+      n=normalize(p-(dx*t+dy*b)*(uType==0?8.:13.));
+    }
+    float em=0.;
+    if(uType==0&&waterMask(c)<.25){float city=textureLod(tClouds,sphereUV(p)*7.,0.).r;em=.16*smoothstep(.57,.81,city);}
+    if(uType==1)em=smoothstep(.07,.55,c.r-max(c.g,c.b));
     o=vec4(n*.5+.5,em);
   }else{
-    float c=0.;
-    if(uType==0)c=clE(p);
-    else if(uType==1){vec3 q=warp(p+uSeed,2.,.5);c=smoothstep(.5,.78,fbm(q*2.6,7));}
-    else if(uType==2){vec3 q=warp(p+uSeed,2.,.6);c=smoothstep(.5,.8,fbm(vec3(q.x*2.,q.y*6.,q.z*2.),7));}
-    else if(uType==3){vec3 q=warp(p+uSeed,1.6,.6);c=smoothstep(.56,.86,fbm(q*2.2,7));}
-    o=vec4(c);
+    float c=projectPhoto(tClouds,normalize(p+vec3(.13,.07,-.2)*float(uType))).r;
+    o=vec4(smoothstep(.15,.9,c));
   }
   gl_FragColor=o;
 }`;
 
 const SKY_FS = /* glsl */`
 precision highp float;
-uniform int uFace; varying vec2 vUv;
-${NOISE}
+uniform int uFace;
+uniform sampler2D tNebula;
+varying vec2 vUv;
 ${FACE}
 void main(){
   vec3 d=normalize(faceDir(uFace,vUv*2.-1.));
-  vec3 ax=normalize(vec3(.25,.9,.35));float b=dot(d,ax),band=exp(-b*b*9.);
-  vec3 w=d*2.+.6*vec3(fbm(d*2.+3.,5),fbm(d*2.+11.,5),fbm(d*2.+19.,5));
-  float n=fbm(w*1.6,7),dust=fbm(w*3.+40.,6);
-  vec3 col=vec3(.55,.5,.68)*band*(.2+1.1*n)*.16;
-  col+=vec3(1.,.8,.55)*pow(band,3.)*n*.05;
-  col*=1.-smoothstep(.45,.68,dust)*band*.9;
-  float n1=fbm(d*1.5+5.,6),n2=fbm(d*2.2+w*.3+13.,6);
-  float m1=smoothstep(.52,.85,n1),m2=smoothstep(.5,.8,n2)*smoothstep(.4,.7,fbm(d*.9+21.,4));
-  col+=vec3(.1,.22,.7)*pow(m1,1.6)*.42*(.4+ridged(w*2.,5));
-  col+=vec3(.8,.14,.42)*pow(m2,1.8)*.4*(.3+n);
-  col+=vec3(.08,.55,.5)*pow(smoothstep(.55,.9,fbm(d*1.8+31.,6)),2.)*.22;
-  col+=vec3(.9,.45,.12)*pow(smoothstep(.6,.92,fbm(d*2.6+47.,6)),2.2)*.2*(1.-band);
-  for(int l=0;l<3;l++){
-    float sc=170.+float(l)*190.;vec3 p=d*sc,id=floor(p),h=hash33(id);
-    float thr=mix(.9,.55,band*n)+float(l)*.02;
-    if(h.x>thr){vec3 sp=id+.2+.6*hash33(id+3.1);float dist=length(p-sp);
-      float br=pow(hash13(id+7.7),10.)*3.+.06;
-      vec3 sc2=mix(vec3(.6,.75,1.),vec3(1.,.72,.45),hash13(id+1.9));sc2=mix(sc2,vec3(1.),.45);
-      col+=sc2*br*smoothstep(.14,0.,dist)*(.5+band*.8);}
-  }
-  gl_FragColor=vec4(sqrt(clamp(col*.9,0.,1.)),1.);
+  vec3 w=pow(abs(d),vec3(5.));w/=max(w.x+w.y+w.z,1.e-6);
+  vec3 n=textureLod(tNebula,d.zy*1.15+.53,0.).rgb*w.x
+        +textureLod(tNebula,d.xz*.94+.12,0.).rgb*w.y
+        +textureLod(tNebula,d.xy*1.26+.39,0.).rgb*w.z;
+  float b=dot(d,normalize(vec3(.25,.9,.35))),band=.38+.62*exp(-b*b*7.);
+  gl_FragColor=vec4(sqrt(clamp(n*band*.58,0.,1.)),1.);
 }`;
 
 // ───────────────────────── 実行時シェーダ ─────────────────────────
@@ -143,7 +92,7 @@ varying vec3 vObj,vWorld;
 ${NOISE}
 vec3 rotY(vec3 v,float a){float c=cos(a),s=sin(a);return vec3(c*v.x+s*v.z,v.y,-s*v.x+c*v.z);}
 vec3 bump(vec3 pos,vec3 N,float h,float sc){vec3 dx=dFdx(pos),dy=dFdy(pos);float hx=dFdx(h),hy=dFdy(h);vec3 r1=cross(dy,N),r2=cross(N,dx);float det=dot(dx,r1);
-  vec3 gr=sign(det)*(hx*r1+hy*r2);return normalize(abs(det)*N-sc*gr);}
+  vec3 gr=sign(det)*(hx*r1+hy*r2),n=abs(det)*N-sc*gr;return dot(n,n)>1.e-18?normalize(n):N;}
 void main(){
   vec3 od=normalize(vObj);
   vec4 A=textureCube(tA,od),B=textureCube(tB,od);
@@ -151,14 +100,14 @@ void main(){
   vec3 Ng=normalize(uRot*od);
   vec3 N=normalize(uRot*normalize(B.xyz*2.-1.));
   float px=length(fwidth(od));
-  float w1=smoothstep(.0009,.0003,px)*uDetail,w2=smoothstep(.00022,.00008,px)*uDetail,w3=smoothstep(.00006,.00002,px)*uDetail;
-  float dk=w1;
+  float w1=(1.-smoothstep(.0003,.0009,px))*uDetail,w2=(1.-smoothstep(.00008,.00022,px))*uDetail,w3=(1.-smoothstep(.00002,.00006,px))*uDetail;
+  float dk=w1,n=0.;
   if(w1>.001){
-    float n=(fbm(od*300.,3)-.5)*w1+(fbm(od*1200.,3)-.5)*w2*.6+(vnoise(od*5000.)-.5)*w3*.4;
-    float land=1.-A.a*.85;
-    alb*=1.+n*1.1*land;
-    N=bump(vWorld,N,n*land,.08);
+    n=(fbm(od*300.,3)-.5)*w1+(fbm(od*1200.,3)-.5)*w2*.6+(vnoise(od*5000.)-.5)*w3*.4;
   }
+  float land=1.-A.a*.85;
+  alb*=1.+n*1.1*land;
+  N=bump(vWorld,N,n*land,.08);
   vec3 V=normalize(cameraPosition-vWorld);
   float gdl=dot(Ng,uSun),ndl=dot(N,uSun);
   float day=smoothstep(-.1,.2,gdl);
@@ -192,11 +141,12 @@ void main(){
   vec2 ta=rsi(ro,rd,uRa);if(ta.x>ta.y||ta.y<0.)discard;
   vec2 tp=rsi(ro,rd,uRp);
   float t0=max(ta.x,0.),t1=ta.y;if(tp.x<tp.y&&tp.x>0.)t1=tp.x;
+  if(t1<=t0)discard;
   float H=uRa-uRp,dt=(t1-t0)/10.;vec3 acc=vec3(0.);float od=0.;
   for(int i=0;i<10;i++){
     vec3 p=ro+rd*(t0+(float(i)+.5)*dt);float r=length(p);float h=clamp((r-uRp)/H,0.,1.);
     float d=exp(-h*4.2)*(1.-h);
-    float mu=dot(p/r,uSun);float lit=smoothstep(-.28,.22,mu);
+    float mu=dot(p/max(r,1.e-5),uSun);float lit=smoothstep(-.28,.22,mu);
     vec3 tint=mix(uSunset,uCol,smoothstep(-.12,.35,mu));
     acc+=d*lit*tint*dt;od+=d*dt;
   }
@@ -208,15 +158,16 @@ void main(){
 }`;
 const RING_FS = /* glsl */`
 precision highp float;
-uniform vec3 uCenter,uSun,uTint;uniform float uRp,uIn,uOut;
+uniform vec3 uCenter,uSun,uTint;uniform float uRp,uIn,uOut;uniform sampler2D tRings;
 varying vec3 vWorld,vObj;
 float h1(float x){return fract(sin(x*127.1)*43758.5453);}
 float n1(float x){float i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(h1(i),h1(i+1.),f);}
 void main(){
   float r=length(vObj.xz);float t=(r-uIn)/(uOut-uIn);if(t<0.||t>1.)discard;
-  float d=.5*n1(t*13.)+.28*n1(t*47.)+.16*n1(t*170.)+.12*n1(t*700.)+.06*n1(t*2900.);
-  d*=1.-smoothstep(.022,.008,abs(t-.61))*.95;d*=1.-smoothstep(.012,.004,abs(t-.34))*.8;
-  float a=smoothstep(0.,.03,t)*smoothstep(1.,.94,t)*clamp(d*1.7-.2,0.,1.);
+  vec3 rings=texture2D(tRings,vec2(.42,t)).rgb;
+  float d=.64*rings.r+.24*n1(t*47.)+.12*n1(t*700.);
+  d*=.05+.95*smoothstep(.008,.022,abs(t-.61));d*=.2+.8*smoothstep(.004,.012,abs(t-.34));
+  float a=smoothstep(0.,.03,t)*(1.-smoothstep(.94,1.,t))*clamp(d*1.7-.2,0.,1.);
   vec3 ro=cameraPosition-uCenter,rd=vWorld-cameraPosition;float L=length(rd);rd/=L;
   float b=dot(ro,rd),cc=dot(ro,ro)-uRp*uRp,h=b*b-cc;
   if(h>0.){float t0=-b-sqrt(h);if(t0>0.&&t0<L)discard;}
@@ -228,19 +179,18 @@ void main(){
 }`;
 const SUN_FS = /* glsl */`
 precision highp float;
-uniform float uTime;varying vec2 vUv;
+uniform float uTime;uniform sampler2D tSun;varying vec2 vUv;
 ${NOISE}
 void main(){
-  vec2 p=vUv*2.-1.;float r=length(p)*8.;float a=atan(p.y,p.x);
-  float disc=smoothstep(1.015,.97,r);
-  vec3 sp=vec3(p*8.,uTime*.02);
-  float gran=fbm(sp*3.,5)*.5+fbm(sp*9.+3.,4)*.5;
+  vec2 p=vUv*2.-1.;float r=length(p)*8.;float a=atan(p.y,abs(p.x)>1.e-6?p.x:1.e-6);
+  float disc=1.-smoothstep(.97,1.015,r);
+  float gran=texture2D(tSun,p*4.+vec2(uTime*.012,-uTime*.005)).g;
   vec3 col=mix(vec3(1.,.55,.2),vec3(1.,.95,.8),smoothstep(.2,.8,gran))*disc*(30.+20.*gran)*(1.-.45*pow(r,3.)*disc);
   float co=max(r-1.,0.);
   float fl=fbm(vec3(cos(a)*2.5,sin(a)*2.5,uTime*.04)+co*.6,5);
   col+=vec3(1.,.62,.28)*exp(-co*2.4)*(1.-disc)*(2.+7.*fl);
-  col+=vec3(1.,.8,.55)*(1.-disc)*.5/(1.+co*co*3.)*smoothstep(8.,2.,r);
-  float fade=smoothstep(8.,5.,r);
+  col+=vec3(1.,.8,.55)*(1.-disc)*.5/(1.+co*co*3.)*(1.-smoothstep(2.,8.,r));
+  float fade=1.-smoothstep(5.,8.,r);
   gl_FragColor=vec4(col*fade,1.);
 }`;
 
@@ -248,8 +198,8 @@ void main(){
 class CubeBaker {
   constructor(renderer) {
     this.r = renderer;
-    this.pm = new THREE.ShaderMaterial({ vertexShader: FSQ_VS, fragmentShader: BAKE_FS, uniforms: { uFace: { value: 0 }, uType: { value: 0 }, uPass: { value: 0 }, uSeed: { value: 0 } }, depthTest: false, depthWrite: false });
-    this.sm = new THREE.ShaderMaterial({ vertexShader: FSQ_VS, fragmentShader: SKY_FS, uniforms: { uFace: { value: 0 } }, depthTest: false, depthWrite: false });
+    this.pm = new THREE.ShaderMaterial({ vertexShader: FSQ_VS, fragmentShader: BAKE_FS, uniforms: { uFace: { value: 0 }, uType: { value: 0 }, uPass: { value: 0 }, tSurface: { value: null }, tClouds: { value: celestialTex('clouds') } }, depthTest: false, depthWrite: false });
+    this.sm = new THREE.ShaderMaterial({ vertexShader: FSQ_VS, fragmentShader: SKY_FS, uniforms: { uFace: { value: 0 }, tNebula: { value: celestialTex('nebula') } }, depthTest: false, depthWrite: false });
     this.fsq = new FullScreenQuad(this.pm);
   }
   target(size) {
@@ -296,7 +246,7 @@ class Planet {
     }));
     this.atmo.frustumCulled = false; this.group.add(this.atmo);
     if (def.ring) {
-      this.ru = { uCenter: this.au.uCenter, uSun: this.u.uSun, uTint: { value: new THREE.Vector3(0.95, 0.78, 0.5) }, uRp: this.au.uRp, uIn: { value: def.ring[0] }, uOut: { value: def.ring[1] } };
+      this.ru = { uCenter: this.au.uCenter, uSun: this.u.uSun, uTint: { value: new THREE.Vector3(0.95, 0.78, 0.5) }, uRp: this.au.uRp, uIn: { value: def.ring[0] }, uOut: { value: def.ring[1] }, tRings: { value: celestialTex('rings') } };
       const rg = new THREE.RingGeometry(def.ring[0], def.ring[1], 256, 1); rg.rotateX(-Math.PI / 2);
       this.ring = new THREE.Mesh(rg, new THREE.ShaderMaterial({ vertexShader: PLANET_VS, fragmentShader: RING_FS, uniforms: this.ru, side: THREE.DoubleSide, transparent: true, ...off, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor }));
       this.ring.frustumCulled = false; this.ring.rotation.set(def.tilt ?? 0.2, 0, 0.08);
@@ -317,7 +267,7 @@ class Planet {
     const pm = this.baker.pm;
     do {
       const pass = Math.floor(j.step / 6), f = j.step % 6;
-      pm.uniforms.uType.value = TYPE[this.def.type]; pm.uniforms.uPass.value = pass; pm.uniforms.uSeed.value = this.def.seed ?? 0;
+      pm.uniforms.uType.value = TYPE[this.def.type]; pm.uniforms.uPass.value = pass; pm.uniforms.tSurface.value = celestialTex(this.def.type);
       this.baker.face(j.rts[pass], pm, f); j.step++;
     } while (all && j.step < j.n * 6);
     if (j.step >= j.n * 6) {
@@ -379,7 +329,7 @@ export class Backdrop {
     // 太陽
     const sd = bodies.find((b) => b.type === 'sun');
     this.sunPos = new THREE.Vector3().fromArray(sd.pos); this.sunR = sd.R;
-    this.sunU = { uTime: { value: 0 } };
+    this.sunU = { uTime: { value: 0 }, tSun: { value: celestialTex('sun') } };
     this.sun = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShaderMaterial({ uniforms: this.sunU, vertexShader: `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`, fragmentShader: SUN_FS, transparent: true, blending: THREE.AdditiveBlending, ...off }));
     this.sun.frustumCulled = false; this.scene.add(this.sun);
     this.planets = bodies.filter((b) => b.type !== 'sun').map((b) => new Planet(b, this.baker));
@@ -402,7 +352,7 @@ export class Backdrop {
     this.sunDir.copy(this.sunPos).sub(camPos).normalize();
     const sunDist = _v.copy(this.sunPos).sub(camPos).length();
     // 奥→手前の順に描画順を決める
-    const list = [...this.planets]; let near = null;
+    const list = this._list || (this._list = [...this.planets]); let near = null; // 並べ替え用の配列は使い回す
     for (const p of list) { p.dist = _v.copy(p.pos).sub(camPos).length(); if (!near || p.dist - p.R < near.dist - near.R) near = p; }
     list.sort((a, b) => b.dist - a.dist);
     let order = 0, sunPlaced = false;
@@ -419,7 +369,7 @@ export class Backdrop {
     let vis = 1;
     for (const p of this.planets) {
       _v.copy(p.pos).sub(camPos); const t = _v.dot(this.sunDir);
-      if (t > 0) { const d = Math.sqrt(Math.max(_v.lengthSq() - t * t, 0)), ang = this.sunR / sunDist * t; vis = Math.min(vis, THREE.MathUtils.smoothstep(d, p.R - ang, p.R + ang)); }
+      if (t > 0 && t < sunDist) { const d = Math.sqrt(Math.max(_v.lengthSq() - t * t, 0)), ang = this.sunR / sunDist * t; vis = Math.min(vis, THREE.MathUtils.smoothstep(d, p.R - ang, p.R + ang)); } // 太陽より奥の惑星は食を起こさない
     }
     this.sunVis = vis;
     _v2.copy(this.sun.position).project(c);
@@ -427,8 +377,8 @@ export class Backdrop {
   }
   /** 視線が惑星に遮られるか (near シーンの物体のカリング用) */
   occluded(camPos, objPos, objR = 0) {
+    _v.copy(objPos).sub(camPos); const L = _v.length(); if (L < 1e-6) return false; _v.multiplyScalar(1 / L); // 視線の向きは惑星ごとに計算し直さない
     for (const p of this.planets) {
-      _v.copy(objPos).sub(camPos); const L = _v.length(); _v.multiplyScalar(1 / L);
       _v2.copy(p.pos).sub(camPos); const t = _v2.dot(_v);
       if (t > 0 && t < L) { const d2 = _v2.lengthSq() - t * t; if (d2 < (p.R - objR) * (p.R - objR) && p.R > objR) return true; }
     }

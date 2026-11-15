@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 """gpt-image-2.5-sunburst で 3x3 のテクスチャシートを生成し、ゲーム用の 9 枚に切り分ける。
 
-使い方 (リポジトリのルートで):
-  python3 .claude/skills/gpt-image-textures/scripts/texgen.py prompt   SHEET.json   # 送るプロンプトを表示 (無料)
-  python3 .claude/skills/gpt-image-textures/scripts/texgen.py generate SHEET.json   # 画像を 1 枚生成 (有料)
-  python3 .claude/skills/gpt-image-textures/scripts/texgen.py process  SHEET.json   # 切り分け・継ぎ目消し・法線/粗さマップ
-  python3 .claude/skills/gpt-image-textures/scripts/texgen.py manifest              # src/gfx/texmanifest.js を作り直す
+使い方 (リポジトリのルートで。SHEET.json を省くと sheets/*.json すべて):
+  python3 .claude/skills/gpt-image-textures/scripts/texgen.py prompt   [SHEET.json]  # 送るプロンプトを表示 (無料)
+  python3 .claude/skills/gpt-image-textures/scripts/texgen.py generate [SHEET.json]  # まだ無いシートを生成 (有料)
+  python3 .claude/skills/gpt-image-textures/scripts/texgen.py process  [SHEET.json]  # 切り分け → assets/textures/packs/ai-*.zip
+  python3 .claude/skills/gpt-image-textures/scripts/texgen.py manifest               # src/gfx/texture-packs-ai.js を作り直す
+
+出力はゲームの画像パックと同じ形式 (無圧縮 ZIP の中に materials/<名前>/color|normal|roughness.webp など)。
+src/gfx/materials.js は ai-*.zip を既存のパックより後に登録するので、同じ名前の画像を置き換える。
 
 API キーは環境変数 OPENAI_API_KEY か --key-file で渡す (ファイルやコミットに書かない)。
 依存: Python 3.9+, numpy, Pillow
 """
-import argparse, base64, json, math, os, sys, time, urllib.error, urllib.request
+import argparse, base64, json, math, os, shutil, sys, time, urllib.error, urllib.request, zipfile
 from pathlib import Path
 
 import numpy as np
@@ -20,14 +23,17 @@ MODEL = 'gpt-image-2.5-sunburst'
 SIZE = 2880          # 1:1 で通る最大サイズ (画素数の上限 = 3840x2160 と同じ 829 万画素、辺は 16 の倍数)
 QUALITY = 'medium'
 GRID = 3             # 3x3 = 1 枚あたり 9 テクスチャ
-OUT_TILE = 1024      # 継ぎ目処理後のタイル解像度
+OUT_TILE = 1024      # 継ぎ目処理をする解像度
+MAT_SIZE = 512       # ゲームに入れる色・法線マップの解像度 (粗さはこの半分)
 
 SKILL = Path(__file__).resolve().parents[1]
 ROOT = SKILL.parents[2]
 SHEETS = SKILL / 'sheets'
 CACHE = SKILL / '.cache'
 TEX = ROOT / 'assets' / 'textures'
-MANIFEST = ROOT / 'src' / 'gfx' / 'texmanifest.js'
+PACKS = TEX / 'packs'
+STAGE = CACHE / 'stage'   # パックに詰める前の画像 (シートごと)
+MANIFEST = ROOT / 'src' / 'gfx' / 'texture-packs-ai.js'
 
 # ───────────────────────── プロンプト ─────────────────────────
 HEAD = ('Video game texture atlas. One square image divided into an exact 3x3 grid of nine equal square cells '
@@ -92,6 +98,10 @@ def generate(sheet, args):
             'usage': res.get('usage'), 'created': res.get('created'), 'cells': [c['name'] for c in sheet['cells']]}
     (TEX / 'sheets' / f"{sheet['id']}.json").write_text(json.dumps(meta, indent=1, ensure_ascii=False))
     print(f"{sheet['id']}: {im.size[0]}x{im.size[1]} in {meta['seconds']}s usage={meta['usage']}")
+
+
+def has_sheet_image(sheet):
+    return (CACHE / f"{sheet['id']}.png").exists() or (TEX / 'sheets' / f"{sheet['id']}.webp").exists()
 
 
 def load_sheet_image(sheet, required=True):
@@ -283,39 +293,54 @@ def scatter(rgb, a, n, count, scale, part, seed=1):
     return arr[..., :3], arr[..., 3]
 
 
-def save_rgba(rgb, a, path):
-    rgb = bleed(rgb, a)
-    Image.fromarray((np.dstack([np.clip(rgb, 0, 1), a]) * 255 + 0.5).astype(np.uint8), 'RGBA').save(path, 'WEBP', quality=90, method=6)
+def save_rgba(rgb, a, path, size=None):
+    rgb = bleed(rgb, a); path.parent.mkdir(parents=True, exist_ok=True)
+    im = Image.fromarray((np.dstack([np.clip(rgb, 0, 1), a]) * 255 + 0.5).astype(np.uint8), 'RGBA')
+    if size and im.size != size: im = im.resize(size, Image.LANCZOS)
+    im.save(path, 'WEBP', quality=90, method=6)
+
+
+def save_normal(n, path, size):
+    """法線マップを縮小してから長さ 1 に戻して保存"""
+    im = np.asarray(u8(n).resize((size, size), Image.LANCZOS), np.float32) / 255 * 2 - 1
+    im /= np.linalg.norm(im, axis=-1, keepdims=True) + 1e-6
+    save(im * 0.5 + 0.5, path, q=90)
 
 
 # ───────────────────────── 処理本体 ─────────────────────────
+# 画像はまずシートごとの作業フォルダ (.cache/stage/<id>/) に、ゲームの中の名前で書き出す:
+#   materials/<name>/color|normal|roughness.webp, vegetation/<kind>.webp, effects/windows.webp など
 def process(sheet):
-    img = load_sheet_image(sheet); TEX.mkdir(parents=True, exist_ok=True)
+    img = load_sheet_image(sheet); out = STAGE / sheet['id']
+    if out.exists(): shutil.rmtree(out)
     work = OUT_TILE + 192  # 継ぎ目処理の重なり幅 192px を足した作業サイズ (1 セル 960px - 余白 → 1216 に拡大)
     for i, c in enumerate(sheet['cells']):
         k, name = c['kind'], c['name']
-        if k in ('tile', 'water', 'emissive'):
+        if k in ('tile', 'emissive'):
             src = cell(img, i, 0.025)
             if src.shape[0] != work: src = np.asarray(u8(src).resize((work, work), Image.LANCZOS), np.float32) / 255
             if k != 'emissive': src = flatten_light(src, c.get('flatten', 0.8), src.shape[0] / 7)
             t = seamless(src)
             if k == 'emissive':
                 L = lum(t); t = t * np.clip((L - c.get('black', 0.12)) / 0.25, 0, 1)[..., None]
-                t = np.clip(t * (c['mean'][0] / 255 / max(t.mean(), 1e-4)), 0, 1)
-                save(t, TEX / f'{name}_e.webp', q=88); continue
-            h = height_map(t, c.get('invert', False), c.get('hp', 24))
-            save(normal_map(h, c.get('normal', 4.0)), TEX / f'{name}_n.webp', q=90)
-            save(rough_map(gblur(h, 2.5), c.get('rough', 150), c.get('rvar', 0.25)), TEX / f'{name}_r.webp', q=85, size=512)
-            if k == 'water': continue  # 水は法線だけ使う
+                t = np.clip(t * (np.mean(c['mean']) / 255 / max(t.mean(), 1e-4)), 0, 1)
+                (out / c['path']).parent.mkdir(parents=True, exist_ok=True); save(t, out / f"{c['path']}.webp", q=88, size=MAT_SIZE); continue
+            d = out / 'materials' / name; d.mkdir(parents=True, exist_ok=True)
+            h = height_map(t, c.get('invert', False), c.get('hp', 24)); nm = normal_map(h, c.get('normal', 4.0))
+            save_normal(nm, d / 'normal.webp', MAT_SIZE)
+            if c.get('also'): (out / c['also']).parent.mkdir(parents=True, exist_ok=True); save_normal(nm, out / f"{c['also']}.webp", MAT_SIZE)
+            save(rough_map(gblur(h, 2.5), c.get('rough', 150), c.get('rvar', 0.25)), d / 'roughness.webp', q=85, size=MAT_SIZE // 2)
             t = desat(t, c.get('sat', 1.0)); t = match_mean(t, c['mean'])
-            save(t, TEX / f'{name}_a.webp', q=86)
+            save(t, d / 'color.webp', q=86, size=MAT_SIZE)
         elif k == 'cutout' and c.get('role') == 'leaf':
-            rgb, a = key_magenta(cell(img, i, 0.012)); r2, a2 = fit(rgb, a, 512, 'top'); save_rgba(match_cut(r2, a2, c.get('mean')), a2, TEX / f'{name}.webp')
+            rgb, a = key_magenta(cell(img, i, 0.012)); r2, a2 = fit(rgb, a, 512, 'top')
+            save_rgba(match_cut(r2, a2, c.get('mean')), a2, out / f"{c['path']}.webp")
         # 植物の side / top は build_atlases でシートをまたいで組み立てる
+    print(f"{sheet['id']}: processed")
 
 
 def build_atlases(sheets):
-    """全シートの side / top 切り抜きを組み合わせて plant_<kind>.webp (1024x512) を作る"""
+    """side / top の切り抜きを組み合わせて vegetation/<kind>.webp (1024x512, 左=側面 / 右=真上) を作る"""
     side, top = {}, {}
     for sh in sheets:
         if not any(c['kind'] == 'cutout' and c.get('role') in ('side', 'top') for c in sh['cells']): continue
@@ -324,8 +349,8 @@ def build_atlases(sheets):
         for i, c in enumerate(sh['cells']):
             if c['kind'] != 'cutout' or c.get('role') not in ('side', 'top'): continue
             rgb, a = key_magenta(cell(img, i, 0.012))
-            (side if c['role'] == 'side' else top)[c['plant']] = (rgb, a, c)
-    for plant, (rgb, a, c) in side.items():
+            (side if c['role'] == 'side' else top)[c['plant']] = (rgb, a, c, sh['id'])
+    for plant, (rgb, a, c, sid) in side.items():
         sr, sa = fit(rgb, a, 512, 'side'); sr = match_cut(sr, sa, c.get('mean'))
         if plant in top:
             tr, ta = fit(top[plant][0], top[plant][1], 512, 'top'); tr = match_cut(tr, ta, top[plant][2].get('mean'))
@@ -333,50 +358,57 @@ def build_atlases(sheets):
             how = c.get('top', {'mode': 'rosette'})
             if how['mode'] == 'scatter': tr, ta = scatter(sr, sa, 512, how.get('count', 40), how.get('scale', 0.3), how.get('part', 0.4), seed=len(plant))
             else: tr, ta = rosette(sr, sa, 512, how.get('copies', 6), how.get('scale', 0.5), how.get('part', 1.0), how.get('jitter', 0.2), seed=len(plant))
-        rgb2 = np.concatenate([sr, tr], 1); a2 = np.concatenate([sa, ta], 1)
-        save_rgba(rgb2, a2, TEX / f'plant_{plant}.webp')
-        print(f'plant_{plant}.webp (top: {"generated" if plant in top else "composited"})')
+        save_rgba(np.concatenate([sr, tr], 1), np.concatenate([sa, ta], 1), STAGE / sid / 'vegetation' / f'{plant}.webp')
+        print(f'vegetation/{plant}.webp (top: {"generated" if plant in top else "composited"})')
+
+
+def write_packs():
+    """作業フォルダを無圧縮 ZIP (ゲームの readPack が読める形式) にまとめる → assets/textures/packs/ai-<id>.zip"""
+    PACKS.mkdir(parents=True, exist_ok=True)
+    for d in sorted(p for p in STAGE.glob('*') if p.is_dir()):
+        files = sorted(f for f in d.rglob('*.webp'))
+        if not files: continue
+        z = PACKS / f'ai-{d.name}.zip'
+        with zipfile.ZipFile(z, 'w', zipfile.ZIP_STORED) as zf:
+            for f in files:
+                zi = zipfile.ZipInfo(f.relative_to(d).as_posix(), date_time=(2026, 1, 1, 0, 0, 0)); zi.compress_type = zipfile.ZIP_STORED
+                zf.writestr(zi, f.read_bytes())
+        print(f'{z.relative_to(ROOT)}: {len(files)} images, {z.stat().st_size // 1024} KB')
 
 
 def make_preview(sheet, out):
-    out = Path(out); out.mkdir(parents=True, exist_ok=True); ims = []
+    out = Path(out); out.mkdir(parents=True, exist_ok=True); ims = []; d = STAGE / sheet['id']
     for c in sheet['cells']:
-        name = c['name']
-        for p in (f'{name}_a.webp', f'{name}_e.webp', f'{name}_n.webp', f'{name}.webp', f"plant_{c.get('plant', '')}.webp"):
-            if (TEX / p).exists():
-                im = Image.open(TEX / p).convert('RGBA'); bg = Image.new('RGBA', im.size, (60, 70, 60, 255)); bg.alpha_composite(im)
+        cand = [d / 'materials' / c['name'] / 'color.webp', d / f"{c.get('path', '-')}.webp", d / 'vegetation' / f"{c.get('plant', '-')}.webp"]
+        for p in cand:
+            if p.exists():
+                im = Image.open(p).convert('RGBA'); bg = Image.new('RGBA', im.size, (60, 70, 60, 255)); bg.alpha_composite(im)
                 im = bg.convert('RGB')
                 if im.size[0] == im.size[1]: im = Image.fromarray(np.tile(np.asarray(im), (2, 2, 1)))  # 2x2 で並べて継ぎ目を確認
                 im.thumbnail((512, 512)); box = Image.new('RGB', (512, 512), (20, 20, 20)); box.paste(im, ((512 - im.size[0]) // 2, (512 - im.size[1]) // 2)); ims.append(box); break
-    W = 512 * 3; H = 512 * math.ceil(len(ims) / 3); can = Image.new('RGB', (W, H), (20, 20, 20))
+    W = 512 * 3; H = 512 * math.ceil(max(len(ims), 1) / 3); can = Image.new('RGB', (W, H), (20, 20, 20))
     for i, im in enumerate(ims): can.paste(im, ((i % 3) * 512, (i // 3) * 512))
     can.save(out / f"{sheet['id']}_check.jpg", quality=85)
 
 
 # ───────────────────────── マニフェスト ─────────────────────────
-def manifest(sheets):
-    ent = {}
-    for sh in sheets:
-        for c in sh['cells']:
-            name, k = c['name'], c['kind']; e = None
-            if k == 'tile' and (TEX / f'{name}_a.webp').exists():
-                e = {'a': f'assets/textures/{name}_a.webp', 'n': f'assets/textures/{name}_n.webp', 'r': f'assets/textures/{name}_r.webp', 'mean': c['mean'], 'rough': c.get('rough', 150)}
-                if 'uvs' in c: e['uvs'] = c['uvs']
-            elif k == 'water' and (TEX / f'{name}_n.webp').exists():
-                e = {'n': f'assets/textures/{name}_n.webp', 'r': f'assets/textures/{name}_r.webp', 'mean': [255, 255, 255], 'rough': c.get('rough', 20)}
-            elif k == 'emissive' and (TEX / f'{name}_e.webp').exists():
-                e = {'e': f'assets/textures/{name}_e.webp'}
-            elif k == 'cutout' and c.get('role') == 'leaf' and (TEX / f'{name}.webp').exists():
-                e = {'cut': f'assets/textures/{name}.webp'}
-            elif k == 'cutout' and c.get('role') == 'side' and (TEX / f"plant_{c['plant']}.webp").exists():
-                ent['plant_' + c['plant']] = {'cut': f"assets/textures/plant_{c['plant']}.webp", 'sheet': sh['id']}
-            if e: e['sheet'] = sh['id']; ent[name] = e
-    body = ',\n'.join(f'  {json.dumps(k)}: {json.dumps(v, ensure_ascii=False)}' for k, v in ent.items())
+def manifest():
+    """assets/textures/packs/ai-*.zip の中身から src/gfx/texture-packs-ai.js を作る"""
+    packs = {}
+    for z in sorted(PACKS.glob('ai-*.zip')):
+        keys = []
+        with zipfile.ZipFile(z) as zf:
+            for n in zf.namelist():
+                k = n.rsplit('/', 1)[0] if n.startswith('materials/') else n[:-len('.webp')]
+                if k not in keys: keys.append(k)
+        packs[z.stem] = keys
+    body = ''.join(f"  {json.dumps(k)}: [\n" + ''.join(f'    {json.dumps(v)},\n' for v in vs) + '  ],\n' for k, vs in packs.items())
     js = ('// 自動生成: .claude/skills/gpt-image-textures/scripts/texgen.py manifest (手で編集しない)\n'
-          f'// {MODEL} ({SIZE}x{SIZE}, quality={QUALITY}) の 3x3 シートから切り出したテクスチャ。ここに無い材質は手続き生成\n'
-          'export const AITEX = {\n' + body + ('\n' if body else '') + '};\n')
+          f'// {MODEL} ({SIZE}x{SIZE}, quality={QUALITY}) の 3x3 シートから切り出した画像のパック。\n'
+          '// materials.js が TEXTURE_PACKS の後に登録するので、同じ名前の既存画像を置き換える。\n'
+          'export const AI_TEXTURE_PACKS = {\n' + body + '};\n')
     MANIFEST.write_text(js)
-    print(f'{MANIFEST.relative_to(ROOT)}: {len(ent)} entries')
+    print(f'{MANIFEST.relative_to(ROOT)}: {len(packs)} packs, {sum(len(v) for v in packs.values())} textures')
 
 
 def load_sheets(paths):
@@ -398,12 +430,14 @@ def main():
     if args.cmd in ('generate', 'all'):
         for s in sheets: generate(s, args)
     if args.cmd in ('process', 'all'):
-        for s in sheets: process(s)
-        build_atlases(load_sheets([]))
-        for s in sheets:
-            if args.preview: make_preview(s, args.preview)
+        everything = load_sheets([])  # パックは植物のようにシートをまたぐので、画像のあるシートは毎回すべて作り直す
+        done = [s for s in everything if has_sheet_image(s)]
+        for s in done: process(s)
+        build_atlases(everything); write_packs()
+        if args.preview:
+            for s in done: make_preview(s, args.preview)
     if args.cmd in ('manifest', 'process', 'all'):
-        manifest(load_sheets([]))
+        manifest()
 
 
 if __name__ == '__main__':

@@ -1,27 +1,27 @@
 // 内装の小道具ライブラリ。各関数は (P: Placer, o: オプション, e: 環境) を受け取る
 import * as THREE from 'three';
 import { Builder, mx, rockGeo } from '../gfx/builder.js';
-import { mat, aiMat, glow, screenMat, signMesh, leafMat, canopyGeo } from '../gfx/textures.js';
-import { fxTime, makeGlowSprite } from '../gfx/fx.js';
+import { mat, glow, screenMat, signMesh, leafMat, canopyGeo } from '../gfx/textures.js';
+import { makeGlowSprite } from '../gfx/fx.js';
 import { holoMat, glassMat } from './interior.js';
 
 const HP = Math.PI / 2;
 let _M;
-const MM = () => _M || (_M = {
+export const MM = () => _M || (_M = {
   dk: mat('hull', { color: 0x30343c, rough: 0.8, metal: 0.6 }), st: mat('rib', { color: 0x9aa2ad, metal: 0.7, rough: 0.7 }), wh: mat('flat', { color: 0xe6eaef, rough: 0.3, metal: 0.1 }),
-  bk: aiMat('carbon', { color: 0x3a3e46, rough: 0.4, metal: 0.5 }, 'flat', { color: 0x0e1014, rough: 0.4, metal: 0.5 }), ch: mat('flat', { color: 0xd0d5db, rough: 0.12, metal: 1 }), gd: aiMat('gold', { color: 0xd4a84a, rough: 0.25, metal: 1 }, 'flat'),
-  wd: mat('wood', { rough: 0.75, metal: 0 }), lf: mat('flat', { color: 0x256b2a, rough: 0.85, metal: 0 }), lf2: mat('flat', { color: 0x4f9a3a, rough: 0.85, metal: 0 }), tr: mat('flat', { color: 0x4a3524, rough: 0.9, metal: 0 }),
-  so: mat('flat', { color: 0x2a1e14, rough: 1, metal: 0 }),
+  bk: mat('flat', { color: 0x0e1014, rough: 0.4, metal: 0.5 }), ch: mat('stainless', { color: 0xd0d5db, rough: 0.12, metal: 1 }), gd: mat('flat', { color: 0xd4a84a, rough: 0.25, metal: 1 }),
+  wd: mat('walnut', { rough: 0.75, metal: 0 }), lf: mat('flat', { color: 0x256b2a, rough: 0.85, metal: 0 }), lf2: mat('flat', { color: 0x4f9a3a, rough: 0.85, metal: 0 }), tr: mat('flat', { color: 0x4a3524, rough: 0.9, metal: 0 }),
+  so: mat('wet-mud', { color: 0x2a1e14, rough: 1, metal: 0 }),
 });
-const fab = (c) => mat('leather', { color: c, rough: 0.8, metal: 0.02 }); // 椅子・ソファの張り地 (絨毯の細かい粒状模様だと砂のように見えるため)
-const crateM = (c) => mat('rib', { color: c, metal: 0.35, rough: 0.8 });
-const flat = (c, r = 0.5, m = 0.2) => mat('flat', { color: c, rough: r, metal: m });
-const CRATE = [0xb8452e, 0x2e7ab8, 0xc9a22e, 0x3aa86a, 0x7a808a, 0x8a4ab8];
-const scr = (P, kind, c, title, w, h, x, y, z, rx = 0, k = 1.5) => P.add(screenMat(kind, c, title, k), new THREE.PlaneGeometry(w, h), mx(x, y, z, rx, 0, 0));
-const blob = (P, m, r, x, y, z, seed, sy = 1) => P.add(m, rockGeo(r, 1, seed, 0.45), mx(x, y, z, 0, seed, 0, 1, sy, 1), 0);
+export const fab = (c) => mat('leather', { color: c, rough: 0.8, metal: 0.02 }); // 椅子・ソファの張り地
+export const crateM = (c) => mat('rib', { color: c, metal: 0.35, rough: 0.8 });
+export const flat = (c, r = 0.5, m = 0.2) => mat('flat', { color: c, rough: r, metal: m });
+export const CRATE = [0xb8452e, 0x2e7ab8, 0xc9a22e, 0x3aa86a, 0x7a808a, 0x8a4ab8];
+export const scr = (P, kind, c, title, w, h, x, y, z, rx = 0, k = 1.5) => P.add(screenMat(kind, c, title, k), new THREE.PlaneGeometry(w, h), mx(x, y, z, rx, 0, 0));
+export const blob = (P, m, r, x, y, z, seed, sy = 1) => P.add(m, rockGeo(r, 1, seed, 0.45), mx(x, y, z, 0, seed, 0, 1, sy, 1), 0);
 const LEAF = [0xffffff, 0xd8f0c0, 0xb0d890];
 /** 葉カードの茂み (中に暗い芯を入れて透けを防ぐ) */
-const bush = (P, e, R, n, x, y, z, flat = 0.8) => { P.add(leafMat(LEAF[Math.floor(e.rnd() * 3)]), canopyGeo(R, n, e.rnd, flat), mx(x, y, z), 0); P.add(mat('flat', { color: 0x163a18, rough: 0.9, metal: 0 }), rockGeo(R * 0.5, 1, x * 7 + z, 0.3), mx(x, y, z, 0, 0, 0, 1, flat, 1), 0); };
+export const bush = (P, e, R, n, x, y, z, flat = 0.8) => { P.add(leafMat(LEAF[Math.floor(e.rnd() * 3)]), canopyGeo(R, n, e.rnd, flat), mx(x, y, z), 0); P.add(mat('flat', { color: 0x163a18, rough: 0.9, metal: 0 }), rockGeo(R * 0.5, 1, x * 7 + z, 0.3), mx(x, y, z, 0, 0, 0, 1, flat, 1), 0); };
 
 // ── ホログラム ──
 export function makeHolo(kind, color, s = 1) {
@@ -81,7 +81,7 @@ export const PROPS = {
     const m = MM(), c = o.c || e.th.trim;
     P.box(m.dk, 0.56, 1.05, 0.3, 0, 0.52, 0); P.box(m.ch, 0.6, 0.05, 0.34, 0, 0.03, 0); P.add(m.dk, new THREE.BoxGeometry(0.86, 0.06, 0.6), mx(0, 1.18, 0.1, 0.75));
     scr(P, o.kind || 'bars', c, o.title || o.label, 0.78, 0.5, 0, 1.213, 0.132, 0.75 - HP); P.box(glow(c, 3), 0.04, 0.9, 0.31, 0.3, 0.55, 0); P.box(glow(c, 3), 0.04, 0.9, 0.31, -0.3, 0.55, 0);
-    const s = signMesh(o.label, c, 0.26, { double: true, intensity: 2.4 }); e.dyn(s, 0, 2.2, 0); e.anim((dt, t) => { s.position.y = 2.2 + Math.sin(t * 2 + e.x) * 0.04; });
+    const s = signMesh(o.label, c, 0.26, { double: true, intensity: 2.4 }); e.dyn(s, 0, 2.2, 0); e.anim((dt, t) => { s.position.y = e.y0 + 2.2 + Math.sin(t * 2 + e.x) * 0.04; });
     e.col(0.42); e.use(o.label, o.use, 2.5, o);
   },
   wallscreen(P, o, e) {
@@ -113,7 +113,7 @@ export const PROPS = {
   plant(P, o, e) { const m = MM(), s = o.s || 1; P.cyl(o.dark ? m.dk : m.wh, 0.3 * s, 0.22 * s, 0.45 * s, 0, 0.225 * s, 0, 'y', 16); P.cyl(m.so, 0.27 * s, 0.27 * s, 0.03, 0, 0.44 * s, 0, 'y', 12);
     for (let i = 0; i < 3; i++) P.add(m.tr, new THREE.CylinderGeometry(0.015 * s, 0.03 * s, 0.75 * s, 5), mx((i - 1) * 0.06 * s, 0.8 * s, 0, (i - 1) * 0.25, i * 2, (i - 1) * 0.3));
     bush(P, e, 0.46 * s, 18, 0, 1.18 * s, 0, 0.95); e.col(0.36 * s); },
-  tree(P, o, e) { const m = MM(), s = o.s || 1, bark = mat('bark', { color: 0x6a4a32, rough: 0.95, metal: 0, uvs: 1.4 });
+  tree(P, o, e) { const m = MM(), s = o.s || 1, bark = mat('wood', { color: 0x6a4a32, rough: 0.95, metal: 0, uvs: 1.4 });
     P.cyl(m.wh, 1.0, 1.0, 0.45, 0, 0.225, 0, 'y', 24); P.cyl(m.so, 0.9, 0.9, 0.04, 0, 0.45, 0, 'y', 20); P.tor(glow(e.th.trim, 2), 1.02, 0.025, 0, 0.1, 0, HP, 0, 0, 40, 5);
     P.cyl(bark, 0.1 * s, 0.2 * s, 2.5 * s, 0, 0.45 + 1.25 * s, 0, 'y', 9);
     for (const [x, y, z, rx, rz, l] of [[0.34, 2.5, 0.1, 0.1, -0.75, 1.3], [-0.3, 2.7, -0.12, 0.2, 0.7, 1.2], [0.05, 2.9, 0.3, 0.8, 0.05, 1.1], [0, 3.1, -0.28, -0.7, 0, 1.0]]) P.add(bark, new THREE.CylinderGeometry(0.035 * s, 0.085 * s, l * s, 6), mx(x * s, y * s, z * s, rx, 0, rz));
@@ -151,7 +151,7 @@ export const PROPS = {
   railing(P, o, e) { const m = MM(), w = o.w || 4; P.box(m.ch, w, 0.05, 0.05, 0, 1.05, 0); P.add(glassMat(), new THREE.BoxGeometry(w, 0.85, 0.02), mx(0, 0.55, 0), 0); for (let x = -w / 2; x <= w / 2 + 0.01; x += w / Math.max(1, Math.round(w / 1.6))) P.box(m.ch, 0.05, 1.05, 0.05, x, 0.52, 0); e.rect(w, 0.15); },
   sign(P, o, e) { const s = signMesh(o.text, o.c || e.th.trim, o.h || 0.6, { double: !!o.double, frame: o.frame, intensity: o.k || 2.4 }); e.dyn(s, 0, o.y || 2.6, 0.03); if (o.flicker) e.anim((dt, t) => { s.material.color.setScalar((o.k || 2.4) * (Math.sin(t * 13 + e.x) > 0.93 ? 0.35 : 1)); }); },
   npc(P, o, e) {
-    const g = e.dyn(makeNPC(o.suit, o.visor || e.th.trim)); const n = { g, x: e.x, z: e.z, yaw: e.ang, ph: e.x * 3 + e.z, walk: o.walk, t: 0 }; e.out.npcs.push(n);
+    const g = e.dyn(makeNPC(o.suit, o.visor || e.th.trim)); const n = { g, x: e.x, z: e.z, y: g.position.y, yaw: e.ang, ph: e.x * 3 + e.z, walk: o.walk, t: 0 }; e.out.npcs.push(n); // y = 台の上に立つときの足元の高さ
     e.col(0.4); if (o.use) e.use(o.label, o.use, 2.6, o);
   },
   slot(P, o, e) { const m = MM(), c = o.c || '#fd4'; P.box(flat(0x8a1420, 0.35, 0.4), 0.8, 1.7, 0.7, 0, 0.85, 0); scr(P, 'bars', c, '777', 0.62, 0.5, 0, 1.25, 0.356); P.box(m.gd, 0.84, 0.1, 0.74, 0, 1.7, 0); P.box(glow(c, 3), 0.7, 0.16, 0.04, 0, 1.56, 0.36); P.box(m.gd, 0.6, 0.06, 0.2, 0, 0.9, 0.42); P.cyl(m.ch, 0.025, 0.025, 0.5, 0.46, 1.25, 0.1, 'y', 6); P.sph(glow('#f33', 2), 0.06, 0.46, 1.52, 0.1); e.rect(0.85, 0.7); e.use(o.label || 'スロットで遊ぶ', 'casino', 2.3); },
@@ -176,7 +176,7 @@ export const PROPS = {
     const f = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 2.55), holoMat(c, 0.5)); e.dyn(f, 0, 1.3, 1.28); e.rect(3.2, 0.2, 0, 1.28); e.rect(0.2, 2.6, -1.5, 0); e.rect(0.2, 2.6, 1.5, 0); e.light(c, 10, 2, 6); },
   core(P, o, e) { const m = MM(), c = o.c || '#f43'; P.cyl(m.dk, 0.7, 0.95, 1.0, 0, 0.5, 0, 'y', 8); P.cyl(m.bk, 0.5, 0.5, 0.08, 0, 1.04, 0, 'y', 8); P.tor(glow(c, 4), 0.62, 0.03, 0, 1.02, 0, HP, 0, 0, 8, 5);
     const k = e.dyn(new THREE.Mesh(new THREE.IcosahedronGeometry(0.34, 0), glow(c, 5)), 0, 1.75, 0), w = e.dyn(new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(0.55, 1)), new THREE.LineBasicMaterial({ color: new THREE.Color(c).multiplyScalar(2), transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending })), 0, 1.75, 0);
-    e.anim((dt, t) => { k.rotation.y += dt * 1.3; k.rotation.x += dt * 0.7; w.rotation.y -= dt * 0.5; k.position.y = 1.75 + Math.sin(t * 2) * 0.06; }); e.light(c, 30, 1.8, 9); e.col(0.95); e.use(o.label || '制御コアを掌握する', 'core', 2.8); },
+    e.anim((dt, t) => { k.rotation.y += dt * 1.3; k.rotation.x += dt * 0.7; w.rotation.y -= dt * 0.5; k.position.y = e.y0 + 1.75 + Math.sin(t * 2) * 0.06; /* 台座の高さ (y0) を保ち、外殻の中心からずれないように */ }); e.light(c, 30, 1.8, 9); e.col(0.95); e.use(o.label || '制御コアを掌握する', 'core', 2.8); },
   exit(P, o, e) { const m = MM(), c = o.c || '#4f8', w = o.w || 2.0; P.box(m.dk, w + 0.5, 2.9, 0.16, 0, 1.45, 0.08); P.box(m.st, w, 2.5, 0.08, 0, 1.25, 0.17); for (let i = 0; i < 6; i++) P.add(glow('#fc4', 1.2), new THREE.PlaneGeometry(0.16, 0.5), mx(-w / 2 + 0.2 + i * (w - 0.4) / 5, 0.32, 0.215, 0, 0, 0.5), 0);
     P.add(m.bk, new THREE.CylinderGeometry(0.42, 0.42, 0.06, 20).rotateX(HP), mx(0, 1.5, 0.22)); P.add(glassMat(), new THREE.CircleGeometry(0.36, 20), mx(0, 1.5, 0.26), 0); P.box(glow(c, 4), w + 0.4, 0.06, 0.04, 0, 2.82, 0.18);
     const s = signMesh(o.sign || 'EXIT', c, 0.3, { intensity: 2.4 }); e.dyn(s, 0, 3.15, 0.1); e.use(o.label || 'エアロック', o.use || 'exit', 2.6, o); },
@@ -220,7 +220,7 @@ export const PROPS = {
   workbench(P, o, e) { const m = MM(); P.box(m.st, 2.4, 0.08, 0.9, 0, 0.92, 0); for (const [x, z] of [[-1.1, -0.38], [1.1, -0.38], [-1.1, 0.38], [1.1, 0.38]]) P.box(m.dk, 0.08, 0.9, 0.08, x, 0.45, z); P.box(m.dk, 2.2, 0.05, 0.8, 0, 0.3, 0); P.box(m.dk, 2.4, 1.2, 0.05, 0, 1.6, -0.43);
     for (let i = 0; i < 9; i++) P.add(i % 3 ? m.ch : flat(0xb8452e, 0.6, 0.3), new THREE.BoxGeometry(0.05, 0.3 + (i % 4) * 0.1, 0.03), mx(-1 + i * 0.25, 1.6 + (i % 2) * 0.12, -0.39, 0, 0, (i % 3 - 1) * 0.3));
     P.box(flat(0xb8452e, 0.5, 0.4), 0.3, 0.22, 0.26, 0.8, 1.07, 0.1); P.box(m.ch, 0.5, 0.06, 0.3, -0.5, 0.99, 0.05); P.add(glow('#ffe2b0', 3), new THREE.CylinderGeometry(0.03, 0.03, 1.6, 6).rotateZ(HP), mx(0, 2.15, -0.3), 0); P.box(crateM(0x2e7ab8), 0.5, 0.4, 0.4, -0.7, 0.53, 0); e.rect(2.4, 0.95); e.light('#ffe2b0', 8, 2, 5); if (o.use) e.use(o.label, o.use, 2.4, o); },
-  gantry(P, o, e) { const Y = aiMat('hazard', { color: 0xffffff, rough: 0.6, metal: 0.4 }, 'hull', { color: 0xe8a020, rough: 0.6, metal: 0.4 }), m = MM(), w = o.w || 30, h = e.room.h - 2.2; P.box(Y, w, 0.9, 0.5, 0, h, -0.9); P.box(Y, w, 0.9, 0.5, 0, h, 0.9); P.box(m.dk, 2.2, 0.7, 2.6, o.at || 3, h + 0.1, 0); P.cyl(m.dk, 0.03, 0.03, 4, o.at || 3, h - 2.2, 0, 'y', 6); P.add(m.st, new THREE.TorusGeometry(0.28, 0.07, 6, 14, Math.PI * 1.4), mx(o.at || 3, h - 4.45, 0, 0, 0, -0.6));
+  gantry(P, o, e) { const Y = mat('hull', { color: 0xe8a020, rough: 0.6, metal: 0.4 }), m = MM(), w = o.w || 30, h = e.room.h - 2.2; P.box(Y, w, 0.9, 0.5, 0, h, -0.9); P.box(Y, w, 0.9, 0.5, 0, h, 0.9); P.box(m.dk, 2.2, 0.7, 2.6, o.at || 3, h + 0.1, 0); P.cyl(m.dk, 0.03, 0.03, 4, o.at || 3, h - 2.2, 0, 'y', 6); P.add(m.st, new THREE.TorusGeometry(0.28, 0.07, 6, 14, Math.PI * 1.4), mx(o.at || 3, h - 4.45, 0, 0, 0, -0.6));
     for (let i = 0; i < 8; i++) P.add(glow('#fc4', 1.2), new THREE.PlaneGeometry(0.3, 0.7), mx(-w / 2 + 2 + i * (w - 4) / 7, h, 1.155, 0, 0, 0.5), 0); for (const s of [-1, 1]) P.box(m.dk, 0.5, 0.5, 3, s * (w / 2 - 0.3), h + 0.5, 0); },
   seatrow(P, o, e) { const m = MM(), n = o.n || 4, f = fab(o.c || 0x2a3a5a); for (let i = 0; i < n; i++) { const x = (i - (n - 1) / 2) * 0.62; P.box(f, 0.54, 0.1, 0.5, x, 0.46, 0); P.box(f, 0.54, 0.6, 0.09, x, 0.82, -0.24); P.box(m.ch, 0.04, 0.1, 0.5, x - 0.29, 0.6, 0); } P.box(m.dk, n * 0.62, 0.06, 0.4, 0, 0.38, 0); for (const s of [-1, 1]) P.box(m.ch, 0.06, 0.38, 0.4, s * (n * 0.31 - 0.1), 0.19, 0); e.rect(n * 0.62, 0.55); },
   tablelong(P, o, e) { const m = MM(), w = o.w || 3.6, top = o.wood ? m.wd : m.st; P.box(top, w, 0.06, 0.85, 0, 0.76, 0); for (const s of [-1, 1]) { P.box(m.dk, 0.08, 0.74, 0.7, s * (w / 2 - 0.3), 0.37, 0); P.box(top, w - 0.2, 0.05, 0.32, 0, 0.45, s * 0.78); P.box(m.dk, 0.06, 0.44, 0.28, w / 2 - 0.4, 0.22, s * 0.78); P.box(m.dk, 0.06, 0.44, 0.28, -w / 2 + 0.4, 0.22, s * 0.78); }

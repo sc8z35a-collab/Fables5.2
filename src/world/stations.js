@@ -1,36 +1,10 @@
-// 宇宙ステーション 5 基の外観 (それぞれ全く異なる構造)
+// 宇宙ステーション 9 基の外観 (それぞれ全く異なる構造)。追加の 4 基 (アトラス / メガトン / ファイザー / ウェポン) は stations2.js
 import * as THREE from 'three';
 import { Builder, mx, rockGeo, loft } from '../gfx/builder.js';
-import { mat, aiMat, hasTex, glow, texSet, windowsTex, texClone, signMesh } from '../gfx/textures.js';
-import { makeGlowSprite } from '../gfx/fx.js';
+import { mat, glow } from '../gfx/textures.js';
 import { rng, rr } from '../core/util.js';
-
-const V = (x, y, z) => new THREE.Vector3(x, y, z);
-const WM = new Map();
-function winMat(color = 0xd4dae2, glowCol = 0xffffff, k = 2.4) {
-  const key = color + '_' + glowCol + '_' + k; let m = WM.get(key); if (m) return m;
-  const s = texSet('hull'), e = texClone(windowsTex()); e.repeat.set(0.3, 0.3);
-  m = new THREE.MeshStandardMaterial({ color, map: s.map, normalMap: s.normalMap, roughnessMap: s.roughnessMap, roughness: 0.65, metalness: 0.3, emissiveMap: e, emissive: glowCol, emissiveIntensity: k });
-  m.userData.uvs = 0.09; WM.set(key, m);
-  return m;
-}
-/** ドッキングポート (襟 + 誘導灯)。dir は外向き単位ベクトル */
-function port(b, D, p, dir, col = '#6ff') {
-  const q = new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), dir), M = (g, off) => b.add(g[0], g[1], new THREE.Matrix4().compose(p.clone().addScaledVector(dir, off), q, V(1, 1, 1)), g[2]);
-  M([D, new THREE.CylinderGeometry(7, 9, 6, 24, 1, true)], -3); M([D, new THREE.CylinderGeometry(9.6, 9.6, 1.2, 24)], -5.5);
-  M([glow(col, 4), new THREE.TorusGeometry(7.4, 0.25, 6, 40).rotateX(Math.PI / 2), 0], 0.1);
-  M([glow(col, 2), new THREE.TorusGeometry(5.2, 0.12, 6, 32).rotateX(Math.PI / 2), 0], -1.5);
-  M([D, new THREE.CylinderGeometry(5, 5, 0.4, 24)], -4);
-  return { p: p.clone(), dir: dir.clone() };
-}
-function done(b, o) {
-  const obj = new THREE.Group(); obj.add(b.build());
-  o.obj = obj; o.anim = o.anim || [];
-  for (const l of o.lights || []) { const s = makeGlowSprite(l.c, l.s, l.k ?? 2); s.position.copy(l.p); (l.parent || obj).add(s); if (l.blink) o.anim.push((t) => { s.material.opacity = (t * l.blink + l.ph) % 1 < 0.12 ? 1 : 0.04; }); }
-  for (const s of o.signs || []) obj.add(s);
-  return o;
-}
-const sign = (text, color, h, x, y, z, ry = 0, rx = 0, o = {}) => { const m = signMesh(text, color, h, { double: true, intensity: 2.6, ...o }); m.position.set(x, y, z); m.rotation.set(rx, ry, 0, 'YXZ'); return m; };
+import { V, winMat, port, done, sign, sdBox } from './stationkit.js';
+import { BUILD2, SDF2 } from './stations2.js';
 
 // ───────────────────────── 1. ヘイヴン・リング (交易ハブ) ─────────────────────────
 function haven() {
@@ -63,7 +37,7 @@ function haven() {
 
 // ───────────────────────── 2. ヴァルカン造船廠 ─────────────────────────
 function vulcan() {
-  const b = new Builder(), H = mat('hull', { color: 0xc9b98f, rough: 0.7, metal: 0.35 }), Y = aiMat('hazard', { color: 0xffffff, rough: 0.6, metal: 0.3 }, 'hull', { color: 0xf0a020, rough: 0.6, metal: 0.3 }), D = mat('hull', { color: 0x363a42, rough: 0.85, metal: 0.6 }), W = winMat(0xb8b0a0, 0xffe0a0), RB = mat('rib', { color: 0x8a8f98, metal: 0.6 });
+  const b = new Builder(), H = mat('hull', { color: 0xc9b98f, rough: 0.7, metal: 0.35 }), Y = mat('hull', { color: 0xf0a020, rough: 0.6, metal: 0.3 }), D = mat('hull', { color: 0x363a42, rough: 0.85, metal: 0.6 }), W = winMat(0xb8b0a0, 0xffe0a0), RB = mat('rib', { color: 0x8a8f98, metal: 0.6 });
   const G = glow('#ffb347', 4), lights = [];
   b.box(D, 720, 14, 14, 0, 0, 0);
   for (let i = -8; i <= 8; i++) { b.box(H, 4, 22, 22, i * 44, 0, 0); for (const s of [-1, 1]) b.add(D, new THREE.CylinderGeometry(0.9, 0.9, 50, 6), mx(i * 44 + 22, 0, s * 9, 0, 0, Math.PI / 2 + s * 0.42)); }
@@ -102,8 +76,7 @@ function vulcan() {
 // ───────────────────────── 3. オーロラ天文台 ─────────────────────────
 function aurora() {
   const b = new Builder(), H = mat('hull', { color: 0xf4f7fb, rough: 0.5, metal: 0.25 }), W = winMat(0xf0f4f8, 0xc8f0ff), D = mat('hull', { color: 0x40464f, rough: 0.8, metal: 0.6 }), S = mat('solar', { metal: 0.9, env: 1.6 });
-  let A = new THREE.MeshStandardMaterial({ color: 0xd9b25a, roughness: 0.28, metalness: 1 }); A.userData.uvs = 0;
-  if (hasTex('gold')) A = mat('gold', { color: 0xd9b25a, rough: 0.28, metal: 1 }); // 彫金の金張り
+  const A = new THREE.MeshStandardMaterial({ color: 0xd9b25a, roughness: 0.28, metalness: 1 }); A.userData.uvs = 0;
   const C = glow('#8feaff', 4), lights = [];
   b.sph(W, 58, 0, 0, 0, 1, 1, 1, 48); b.tor(D, 59, 3, 0, 0, 0, Math.PI / 2, 0, 0, 80, 8); b.tor(C, 62.5, 0.5, 0, 0, 0, Math.PI / 2, 0, 0, 80, 5);
   b.tor(H, 96, 5, 0, 0, 0, Math.PI / 2, 0, 0, 96, 10); b.tor(C, 101.4, 0.35, 0, 0, 0, Math.PI / 2, 0, 0, 96, 5);
@@ -161,14 +134,14 @@ function bastion() {
 
 // ───────────────────────── 5. ローグズ・デン (小惑星基地) ─────────────────────────
 function rogue() {
-  const b = new Builder(), RK = mat('asteroid', { color: 0x6a5648, rough: 1, metal: 0.05, uvs: 0.012, ns: 1.6 }), D = mat('hull', { color: 0x2c2f36, rough: 0.85, metal: 0.6 }), W = winMat(0x5a5560, 0xff9ad8, 2.6), RB = mat('rib', { color: 0x9a5a3a, metal: 0.4 });
+  const b = new Builder(), RK = mat('rock', { color: 0x6a5648, rough: 1, metal: 0.05, uvs: 0.012, ns: 1.6 }), D = mat('hull', { color: 0x2c2f36, rough: 0.85, metal: 0.6 }), W = winMat(0x5a5560, 0xff9ad8, 2.6), RB = mat('rib', { color: 0x9a5a3a, metal: 0.4 });
   const cols = [0xb8452e, 0x2e7ab8, 0xc9a22e, 0x3aa86a, 0x8a4ab8], r = rng(55), lights = [], signs = [];
   const rock = rockGeo(170, 6, 7, 0.42); rock.scale(1.25, 0.85, 1);
   b.add(RK, rock);
   for (let i = 0; i < 7; i++) { const g = rockGeo(rr(r, 12, 34), 3, 20 + i, 0.4), a = r() * 6.28, d = rr(r, 250, 400); b.add(RK, g, mx(Math.cos(a) * d, rr(r, -90, 90), Math.sin(a) * d)); }
   // 岩に食い込む居住モジュール & コンテナ街
   b.box(W, 70, 38, 60, 60, 132, 20, 0.3); b.box(W, 44, 60, 40, -40, 138, -30, -0.4); b.box(W, 50, 30, 50, 10, 150, 70, 0.8); b.cyl(W, 22, 22, 50, 110, 96, -40, 'y', 12);
-  for (let i = 0; i < 26; i++) { const m = mat('container', { color: cols[i % 5], metal: 0.3 }); b.box(m, 6, 6, 14, rr(r, -60, 90), 148 + Math.floor(r() * 3) * 6.2, rr(r, -70, 60), Math.floor(r() * 2) * Math.PI / 2 + rr(r, -0.1, 0.1)); }
+  for (let i = 0; i < 26; i++) { const m = mat('rib', { color: cols[i % 5], metal: 0.3 }); b.box(m, 6, 6, 14, rr(r, -60, 90), 148 + Math.floor(r() * 3) * 6.2, rr(r, -70, 60), Math.floor(r() * 2) * Math.PI / 2 + rr(r, -0.1, 0.1)); }
   b.cyl(D, 3, 3, 90, -90, 150, 30, 'y', 8); b.add(D, new THREE.CylinderGeometry(26, 2, 10, 20, 1, true), mx(-90, 196, 30, 0.5, 0.4, 0));
   for (let i = 0; i < 5; i++) { const a = i * 1.3; b.add(RB, new THREE.CylinderGeometry(5, 5, 80, 10), mx(Math.cos(a) * 150, rr(r, -30, 60), Math.sin(a) * 120, r(), a, 1.2)); }
   // ドッキングアーム (岩から突き出す)
@@ -182,16 +155,29 @@ function rogue() {
   return o;
 }
 
-const BUILD = { haven, vulcan, aurora, bastion, rogue };
+const BUILD = { haven, vulcan, aurora, bastion, rogue, ...BUILD2 };
 export function buildStation(def) { const o = BUILD[def.id](); o.def = def; return o; }
 
+// ローグズ・デンの周囲の小岩: rogue() と同じ乱数列 (rng(55) の先頭から 4 回ずつ) で位置と大きさを再現する
+const ROGUE_ROCKS = (() => { const r = rng(55), out = []; for (let i = 0; i < 7; i++) { const rad = rr(r, 12, 34), a = r() * 6.28, d = rr(r, 250, 400), y = rr(r, -90, 90); out.push([Math.cos(a) * d, y, Math.sin(a) * d, rad * 1.15]); } return out; })();
 // ── 衝突判定用の近似距離関数 (ステーションのローカル座標) ──
-const sdBox = (x, y, z, cx, cy, cz, hx, hy, hz) => { const dx = Math.abs(x - cx) - hx, dy = Math.abs(y - cy) - hy, dz = Math.abs(z - cz) - hz; return Math.hypot(Math.max(dx, 0), Math.max(dy, 0), Math.max(dz, 0)) + Math.min(Math.max(dx, dy, dz), 0); };
 const SDF = {
-  haven: (x, y, z) => Math.min(Math.hypot(Math.hypot(x, y) - 250, z) - 28, Math.max(Math.hypot(x, y) - 50, Math.abs(z) - 100)),
-  vulcan: (x, y, z) => Math.min(sdBox(x, y, z, 0, 0, 0, 362, 12, 14), sdBox(x, y, z, -215, -62, 0, 82, 64, 50), sdBox(x, y, z, 0, -62, 0, 82, 64, 50), sdBox(x, y, z, 215, -62, 0, 82, 64, 50), sdBox(x, y, z, 392, 40, 0, 32, 66, 26)),
-  aurora: (x, y, z) => Math.min(Math.hypot(x, y, z) - 60, Math.hypot(Math.hypot(x, z) - 96, y) - 6, sdBox(x, y, z, 0, 0, 0, 345, 3, 44), Math.hypot(x, y - 26, Math.max(Math.abs(z + 110) - 65, 0)) - 17),
-  bastion: (x, y, z) => Math.min(Math.max(Math.hypot(x, z) - 158, Math.abs(y) - 64), Math.max(Math.hypot(x, z) - 74, Math.abs(y - 106) - 44), sdBox(x, y, z, 0, 0, 190, 10, 10, 60)),
-  rogue: (x, y, z) => Math.min((Math.hypot(x / 212, y / 145, z / 170) - 1) * 145, Math.hypot(x, y - 30, Math.max(Math.abs(z - 235) - 66, 0)) - 12),
+  haven: (x, y, z) => { // リングとハブに加え、スポーク 6 本・居住モジュール 6 基・後部マスト・通信ディッシュ・太陽電池パネル (以前は判定なし)
+    const r = Math.hypot(x, y); let d = Math.min(Math.hypot(r - 250, z) - 28, Math.max(r - 50, Math.abs(z) - 100), Math.max(r - 8, Math.max(z + 100, -z - 305)), Math.max(r - 39, Math.abs(z + 224) - 7));
+    for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3, c = Math.cos(a), s = Math.sin(a), u = x * c + y * s, v = -x * s + y * c; d = Math.min(d, Math.hypot(Math.max(Math.abs(u - 141) - 95, 0), v, z) - 8.5, sdBox(u, v, z, 105, 0, 0, 18, 8, 20), sdBox(u, v, z, 220, 0, 0, 11, 17, 15)); }
+    for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4, c = Math.cos(a), s = Math.sin(a), u = x * c + y * s, v = -x * s + y * c; d = Math.min(d, sdBox(u, v, z, 105, 0, -150, 23, 1, 55), Math.hypot(Math.max(Math.abs(u - 85) - 75, 0), v, z + 150) - 2); }
+    return d; },
+  vulcan: (x, y, z) => Math.min(sdBox(x, y, z, 0, 0, 0, 362, 12, 14), sdBox(x, y, z, -215, -62, 0, 82, 64, 50), sdBox(x, y, z, 0, -62, 0, 82, 64, 50), sdBox(x, y, z, 215, -62, 0, 82, 64, 50), sdBox(x, y, z, 392, 40, 0, 32, 66, 26),
+    Math.hypot(x + 330, Math.abs(y) - 34, z) - 23, Math.hypot(x + 378, Math.abs(y) - 34, z) - 23), // 球形燃料タンク 4 基 (以前は判定なし)
+  aurora: (x, y, z) => { // 主球・リング・太陽電池翼・望遠鏡に加え、直径約 180m のパラボラアンテナと下部ハブ (以前は判定が無くすり抜けられた)
+    const px = x, py = y - 96, pz = z - 30, h = py * 0.8776 - pz * 0.4794, rx = px, rz = py * 0.4794 + pz * 0.8776, rho = Math.hypot(rx, rz), dish = Math.max(rho - 92, (Math.abs(h - rho * rho / 300) - 2.5) / 1.2);
+    return Math.min(Math.hypot(x, y, z) - 60, Math.hypot(Math.hypot(x, z) - 96, y) - 6, sdBox(x, y, z, 0, 0, 0, 345, 3, 44), Math.hypot(x, y - 26, Math.max(Math.abs(z + 110) - 65, 0)) - 17, dish, Math.max(Math.hypot(x, z - 20) - 5, Math.abs(y - 80) - 30), Math.max(Math.hypot(x, z) - 20, Math.abs(y + 68) - 16)); },
+  bastion: (x, y, z) => { const r = Math.hypot(x, z); let d = Math.min(Math.max(r - 158, Math.abs(y) - 64), Math.max(r - 92, Math.abs(y - 84) - 24), Math.max(r - 60, Math.abs(y - 126) - 21), Math.max(r - 8, Math.abs(y - 190) - 46), sdBox(x, y, z, 0, 0, 190, 10, 10, 60), sdBox(x, y, z, 0, 0, 236, 15, 15, 13),
+      Math.max(r - 94, Math.abs(y + 86) - 26), Math.max(r - 44, Math.abs(y + 126) - 16)); // 下部の円錐部と最下段 (以前は判定が無く、下半分をすり抜けられた)
+    for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3 + Math.PI / 6; d = Math.min(d, Math.max(Math.hypot(x - Math.cos(a) * 150, z - Math.sin(a) * 150) - 27, Math.abs(y) - 106)); } // 6 本の柱と上下の砲塔
+    return d; },
+  rogue: (x, y, z) => { let d = Math.min((Math.hypot(x / 212, y / 145, z / 170) - 1) * 145, Math.hypot(x, y - 30, Math.max(Math.abs(z - 235) - 66, 0)) - 12, sdBox(x, y, z, 25, 148, 20, 85, 22, 75), sdBox(x, y, z, 0, 30, 292, 17, 17, 15));
+    for (const q of ROGUE_ROCKS) d = Math.min(d, Math.hypot(x - q[0], y - q[1], z - q[2]) - q[3]); return d; }, // 周囲の小岩 7 個と岩の上の居住区 (以前は判定なし)
 };
+Object.assign(SDF, SDF2);
 export function stationSDF(id, x, y, z) { return SDF[id](x, y, z); }

@@ -103,7 +103,7 @@ export class Debris {
   }
   update(dt, grav = 0, groundY = null) {
     const L = this.items; for (let i = L.length - 1; i >= 0; i--) { const d = L[i]; d.life -= dt; if (d.life <= 0) { L.splice(i, 1); continue; } d.v.y -= grav * dt; d.p.addScaledVector(d.v, dt); d.r.addScaledVector(d.w, dt); if (groundY != null && d.p.y < groundY(d.p.x, d.p.z) + 0.1) { d.p.y = groundY(d.p.x, d.p.z) + 0.1; d.v.multiplyScalar(0.4); d.v.y = Math.abs(d.v.y) * 0.3; d.w.multiplyScalar(0.5); } }
-    const n = (this.obj.count = L.length);
+    const n = (this.obj.count = L.length); if (!n) return; // 破片が無いときはバッファを GPU へ送り直さない
     for (let i = 0; i < n; i++) { const d = L[i], k = Math.min(1, d.life); _q.setFromEuler(_e.set(d.r.x, d.r.y, d.r.z)); _m.compose(d.p, _q, _s.setScalar(d.s * k)); this.obj.setMatrixAt(i, _m); this.obj.setColorAt(i, d.c); }
     this.obj.instanceMatrix.needsUpdate = true; if (this.obj.instanceColor) this.obj.instanceColor.needsUpdate = true;
   }

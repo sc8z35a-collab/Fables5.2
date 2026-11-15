@@ -1,10 +1,10 @@
 // 地球: 不規則な街区を持つ巨大都市 (河川・大通り・公園・港) + 農園地帯 + 雪国 + ジャングル + 海
 import * as THREE from 'three';
 import { Builder, mx, rockGeo, loft } from '../gfx/builder.js';
-import { mat, aiMat, glow, texSet, signMesh } from '../gfx/textures.js';
+import { mat, glow, imageTex, signMesh } from '../gfx/textures.js';
 import { rng, rr, fbm, ridge, smooth, clamp, lerp, pick } from '../core/util.js';
 import { fxTime, makeGlowSprite } from '../gfx/fx.js';
-import { HP, V3, COL, N2, makeSky, gridTerrain, scatter, pad, node, beacon, forest, colorGeo, ocean, VegField, propGeo, landmarks, hs2 } from './surfkit.js';
+import { HP, V3, COL, N2, makeSky, gridTerrain, pad, node, beacon, forest, colorGeo, ocean, VegField, propGeo, landmarks, hs2 } from './surfkit.js';
 
 // ── 地域マスク (CPU と GLSL で同じ式を使う) ──
 const coast = (x) => 1650 + 260 * Math.sin(x * 0.0011) + 140 * Math.sin(x * 0.0027 + 1);
@@ -38,26 +38,32 @@ function H(x, z) {
   return lerp(h, -42, smooth(EDGE - 1900, EDGE - 250, Math.max(Math.abs(x), Math.abs(z)))); // 四方を海に囲まれた大地
 }
 // 地形の追加シェーダ: 農地の区画・雪線・砂浜・凍った湖
-const TERRA_HEAD = 'uniform float uCan;uniform sampler2D uField;';
+const TERRA_HEAD = 'uniform float uCan;uniform sampler2D uField,tFoliage,tSnow,tIce,tSand,tMud;';
+const colorMap = (material) => ({ value: imageTex('materials/' + material + '/color') });
 const TERRA_FRAG = /* glsl */`
 float slope=1.-vTn.y,cst=1650.+260.*sin(vTw.x*.0011)+140.*sin(vTw.x*.0027+1.);
-float sSn=smoothstep(-3300.+500.*sin(vTw.x*.0008),-4500.+500.*sin(vTw.x*.0008),vTw.z);
+float sSn=1.-smoothstep(-4500.+500.*sin(vTw.x*.0008),-3300.+500.*sin(vTw.x*.0008),vTw.z);
 float sFa=smoothstep(2600.+300.*sin(vTw.z*.0012),3600.+300.*sin(vTw.z*.0012),vTw.x)*(1.-sSn);
+vec2 groundUV=vTw.xz*.14;
 if(sFa>.02&&vTw.y>1.){vec2 fp=mat2(.955,-.296,.296,.955)*vTw.xz;vec2 fc=floor(fp/vec2(190.,130.)),ff=fract(fp/vec2(190.,130.));float fh=texture2D(uField,(fc+vec2(64.5))/128.).r;
   vec3 crop=fh<.22?vec3(.5,.42,.13):fh<.45?vec3(.12,.3,.06):fh<.62?vec3(.26,.17,.09):fh<.78?vec3(.62,.56,.08):vec3(.17,.34,.1);
   float rows=.8+.2*sin((fh>.5?fp.x:fp.y)*1.7);
   crop=mix(crop,vec3(.1,.36,.08),step(.84,fh)*smoothstep(.47,.45,length(ff-.5)));
   float ed=smoothstep(0.,.035,min(min(ff.x,1.-ff.x),min(ff.y,1.-ff.y)));
-  diffuseColor.rgb=mix(diffuseColor.rgb,mix(vec3(.2,.16,.1),crop*rows,ed)*(.75+.5*tn2),sFa*smoothstep(1.,4.,vTw.y)*(1.-smoothstep(.2,.4,slope)));}
+  vec3 soil=mix(vec3(.2,.16,.1),texture2D(tMud,groundUV).rgb,.58);
+  diffuseColor.rgb=mix(diffuseColor.rgb,mix(soil,crop*rows,ed)*(.75+.5*tn2),sFa*smoothstep(1.,4.,vTw.y)*(1.-smoothstep(.2,.4,slope)));}
 if(sSn>.02){float line=smoothstep(40.,150.,vTw.y+tn1*90.);vec3 sc=mix(vec3(.82,.87,.95),vec3(.2,.19,.2)*(.7+.6*tn2),smoothstep(.34,.62,slope+tn2*.12));
+  sc*=mix(vec3(1.),texture2D(tSnow,groundUV).rgb*1.28,.63);
   diffuseColor.rgb=mix(diffuseColor.rgb,sc,sSn*line);
-  float pf=smoothstep(uCan*.72,uCan*1.02,td)*sSn*step(20.,vTw.y)*smoothstep(560.,470.,vTw.y)*smoothstep(.6,.4,slope);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.035,.075,.055),pf*smoothstep(.5,.66,vn2(vTw.xz*.045))*.7);
-  diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.46,.64,.78)*(.8+.3*tn2),smoothstep(250.,205.,length(vTw.xz-vec2(-360.,-5450.))));}
-float sJu=smoothstep(-2500.+400.*sin(vTw.z*.0009),-3500.+400.*sin(vTw.z*.0009),vTw.x)*(1.-sSn);
-if(sJu>.02){float cf=smoothstep(uCan*.72,uCan*1.02,td)*smoothstep(.75,.45,slope);float cb=vn2(vTw.xz*.085)*.6+vn2(vTw.xz*.23+9.)*.4;
+  float pf=smoothstep(uCan*.72,uCan*1.02,td)*sSn*step(20.,vTw.y)*(1.-smoothstep(470.,560.,vTw.y))*(1.-smoothstep(.4,.6,slope));diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.035,.075,.055),pf*smoothstep(.5,.66,vn2(vTw.xz*.045))*.7);
+  diffuseColor.rgb=mix(diffuseColor.rgb,mix(vec3(.46,.64,.78),texture2D(tIce,groundUV*.6).rgb,.46),1.-smoothstep(205.,250.,length(vTw.xz-vec2(-360.,-5450.))));}
+float sJu=(1.-smoothstep(-3500.+400.*sin(vTw.z*.0009),-2500.+400.*sin(vTw.z*.0009),vTw.x))*(1.-sSn);
+if(sJu>.02){float cf=smoothstep(uCan*.72,uCan*1.02,td)*(1.-smoothstep(.45,.75,slope));float cb=vn2(vTw.xz*.085)*.6+vn2(vTw.xz*.23+9.)*.4;
   vec3 can=mix(vec3(.012,.045,.014),vec3(.05,.17,.04),smoothstep(.2,.8,cb))*(.8+.5*tn1),flo=vec3(.06,.075,.035)*(.6+.8*tn2);
+  can=mix(can,texture2D(tFoliage,vTw.xz*.03).rgb*.36,.62);flo=mix(flo,texture2D(tMud,groundUV).rgb*.5,.4);
   diffuseColor.rgb=mix(diffuseColor.rgb,mix(flo,can,cf),sJu*smoothstep(.4,1.6,vTw.y));}
-float bch=smoothstep(5.,1.4,vTw.y)*smoothstep(-4.,.5,vTw.y)*smoothstep(cst-760.,cst-160.,vTw.z);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.62,.54,.38)*(.8+.4*tn2),bch);
+float bch=(1.-smoothstep(1.4,5.,vTw.y))*smoothstep(-4.,.5,vTw.y)*smoothstep(cst-760.,cst-160.,vTw.z);
+diffuseColor.rgb=mix(diffuseColor.rgb,mix(vec3(.62,.54,.38),texture2D(tSand,groundUV).rgb,.67)*(.8+.4*tn2),bch);
 diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.22,.2,.18)*(.7+.6*tn2),smoothstep(.45,.7,slope)*(1.-sSn));`;
 
 // ── 街区座標: 道路がゆるやかに曲がり、区画の大きさも不揃いになる写像 ──
@@ -78,6 +84,7 @@ void main(){vL=position*aSize;vS=aSize;vSeed=aSeed;vRot=aRot;vN=normal;vec4 w=mo
 const CITY_FS = /* glsl */`
 precision highp float;
 uniform vec3 uFogCol,uAmb,uSunDir,uSunCol,uSkyA,uSkyB;uniform float uFogDen,uTime;
+uniform sampler2D tFacade,tStucco,tBrick,tRoof;
 varying vec3 vL,vN,vW;flat varying vec3 vS;flat varying float vSeed;flat varying vec2 vRot;
 vec3 toL(vec3 v){return vec3(v.x*vRot.x+v.z*vRot.y,v.y,-v.x*vRot.y+v.z*vRot.x);}
 float h1(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
@@ -93,7 +100,7 @@ void main(){
     col=vec3(.05,.055,.06)*lightC*3.+vec3(1.,.12,.05)*smoothstep(vS.y-3.,vS.y-.5,vL.y)*(step(.5,fract(uTime*.7+vSeed))*5.+.5);
   }else if(n.y>.5){ // 屋上
     vec2 q=vL.xz;float rim=max(abs(q.x)/(vS.x*.5),abs(q.y)/(vS.z*.5));
-    col=base*lightC*(.7+.3*vn(q*.6));
+    col=base*lightC*mix(vec3(.75),texture2D(tRoof,q*.19).rgb*2.1,.6);
     vec2 uc=floor(q/5.);float unit=step(.72,h1(uc+vSeed))*step(abs(fract(q.x/5.)-.5),.36)*step(abs(fract(q.y/5.)-.5),.36);col=mix(col,vec3(.02,.022,.026)+uAmb*.4,unit);
     col+=vec3(1.,.2,.1)*step(.93,h1(uc+vSeed+4.))*smoothstep(.2,0.,length(fract(q/5.)-.5))*3.;
     col=mix(col,base*lightC*1.5,smoothstep(.93,.95,rim));col+=neon*smoothstep(.955,.975,rim)*step(.5,h1(vec2(vSeed,11.)))*2.2;
@@ -105,10 +112,11 @@ void main(){
     vec2 cell=floor(uv/cs),f=fract(uv/cs);
     // 枠 (方立・腰壁) とガラス
     float mx=mix(.07,.03,ground),sill=mix(style>.6?.1:.26,.1,ground),hd=mix(.06,.14,ground);
-    float glass=smoothstep(mx,mx+.02,f.x)*smoothstep(1.-mx,1.-mx-.02,f.x)*smoothstep(sill,sill+.015,f.y)*smoothstep(1.-hd,1.-hd-.015,f.y);
+    float glass=smoothstep(mx,mx+.02,f.x)*(1.-smoothstep(.98-mx,1.-mx,f.x))*smoothstep(sill,sill+.015,f.y)*(1.-smoothstep(.985-hd,1.-hd,f.y));
     // 室内 (レイと箱の交差)
     float D=mix(5.,9.,ground);vec3 rd=vec3(dot(V,tg),V.y,-dot(V,n));rd.z=max(rd.z,.001);
-    vec3 ro=vec3(f*cs,0.),tA=(vec3(cs,D)*step(0.,rd)-ro)/rd;float tH=min(min(tA.x,tA.y),tA.z);vec3 hp=ro+rd*tH;
+    vec3 ro=vec3(f*cs,0.),den=mix(vec3(-1.),vec3(1.),step(0.,rd))*max(abs(rd),vec3(1.e-4));
+    vec3 tA=(vec3(cs,D)*step(0.,rd)-ro)/den;float tH=min(min(tA.x,tA.y),tA.z);vec3 hp=ro+rd*tH;
     float rr=h1(cell+vSeed*13.);vec3 wall=mix(vec3(.62,.58,.5),vec3(.5,.58,.66),h1(cell*1.3+vSeed));vec3 room;
     if(tH==tA.z){room=wall*.85;float fu=step(hp.y,cs.y*(.25+.2*h1(cell+5.)))*step(.15,fract(hp.x/cs.x*2.+rr));room=mix(room,wall*.25,fu);
       if(ground>.5){vec2 sh=vec2(hp.x*1.9,hp.y*2.1),si=floor(sh),sf=fract(sh);float shelf=step(sf.y,.12);vec3 prod=.35+.45*cos(6.2832*(h1(si+vSeed)+vec3(0.,.33,.67)));room=mix(wall*.7,prod,step(.12,sf.y)*step(sf.y,.12+.6*h1(si+3.))*step(.08,sf.x)*step(sf.x,.92)*step(.25,h1(si+7.)));room=mix(room,wall*.3,shelf);}
@@ -122,16 +130,19 @@ void main(){
     float inten=mix(.25+1.1*pow(h1(cell+3.+vSeed),2.),.75+.5*h1(cell+3.),ground);
     vec3 interior=room*lc*inten*lit+room*.012*(1.-lit);
     float blind=step(.72,h1(cell+7.+vSeed))*(1.-ground)*step(1.-(.3+.6*h1(cell+8.)),f.y);interior=mix(interior,lc*inten*lit*.28*(.8+.2*step(.5,fract(f.y*18.))),blind);
-    float fres=.04+.96*pow(1.-max(dot(-V,n),0.),5.);vec3 gcol=interior*(1.-fres)+sky(reflect(V,n),sunL)*fres*.9;
+    float fres=.04+.96*pow(1.-clamp(dot(-V,n),0.,1.),5.);vec3 gcol=interior*(1.-fres)+sky(reflect(V,n),sunL)*fres*.9;
+    gcol*=mix(vec3(.7),texture2D(tFacade,(uv+.5*cs)/14.).rgb*2.1,.42);
     // 枠の質感
     vec3 frame=base*lightC*(.75+.25*vn(uv*vec2(.7,3.)))*(.6+.4*smoothstep(0.,.06,min(f.y,1.-f.y)));
+    vec3 wallPhoto=mix(texture2D(tStucco,uv*.48).rgb,texture2D(tBrick,uv*.55).rgb,step(.55,style));
+    frame*=mix(vec3(.74),wallPhoto*1.85,.55);
     frame=mix(frame,frame*.55,ground*(1.-glass));
     col=mix(frame,gcol,glass);
     // 1 階の看板帯・庇
     float band=ground*step(.86,f.y);col=mix(col,(.5+.5*cos(6.2832*(h1(vec2(cell.x,vSeed))+vec3(0.,.33,.67))))*(1.6+1.2*step(.5,h1(vec2(cell.x+2.,vSeed)))),band*step(.25,h1(vec2(cell.x,vSeed+3.))));
     // 遠景ではディテールを平均色へ
-    float px=max(fwidth(uv.x)/cs.x,fwidth(uv.y)/cs.y),k=smoothstep(.5,.18,px);
-    vec3 avg=frame*.5+mix(vec3(1.,.74,.5),vec3(.7,.8,1.),h1(vec2(vSeed,5.)))*(.05+.1*(1.-h1(vec2(vSeed,3.))))*(.5+h1(vec2(cell.y,vSeed))*mix(0.,1.,smoothstep(.9,.3,fwidth(uv.y)/cs.y)));col=mix(avg,col,k);
+    float px=max(fwidth(uv.x)/cs.x,fwidth(uv.y)/cs.y),k=1.-smoothstep(.18,.5,px);
+    vec3 avg=frame*.5+mix(vec3(1.,.74,.5),vec3(.7,.8,1.),h1(vec2(vSeed,5.)))*(.05+.1*(1.-h1(vec2(vSeed,3.))))*(.5+h1(vec2(cell.y,vSeed))*(1.-smoothstep(.3,.9,fwidth(uv.y)/cs.y)));col=mix(avg,col,k);
     // ネオンの縁取り
     float top=smoothstep(vS.y-2.2,vS.y-.7,vL.y);col+=neon*top*step(.5,h1(vec2(vSeed,11.)))*2.4;
     float edge=xf?abs(vL.z)/(vS.z*.5):abs(vL.x)/(vS.x*.5);col+=neon*smoothstep(.978,.992,edge)*step(.72,h1(vec2(vSeed,13.)))*2.;
@@ -189,6 +200,13 @@ export function terra() {
   const r = rng(2077), grp = new THREE.Group(), B = new Builder(), anim = [], cols = [], rects = [], obbs = [], decks = [], items = [], beacons = [], tiles = [];
   const sunDir = V3(-0.78, 0.27, 0.6).normalize(), fog = [COL('#4a3046'), 0.00016], fogDen = { value: fog[1] }, canU = { value: 1250 }, SKY = { zen: '#0a1238', hor: '#c8603a', sunCol: '#ffb070' };
   const sky = makeSky({ sun: sunDir, zen: SKY.zen, hor: SKY.hor, ground: '#141018', sunCol: '#ff9a50', cloudCol: '#e08a6a', cloud: 0.5, stars: 0.5, haze: 0.9, sunSize: 0.9993 });
+  const field = new THREE.DataTexture(FIELD, FN, FN, THREE.RedFormat);
+  field.wrapS = field.wrapT = THREE.RepeatWrapping;
+  field.needsUpdate = true;
+  const terrainUniforms = {
+    uCan: canU, uField: { value: field }, tFoliage: { value: imageTex('environment/foliage') },
+    tSnow: colorMap('snow-crust'), tIce: colorMap('glacial-ice'), tSand: colorMap('ripple-sand'), tMud: colorMap('wet-mud'),
+  };
   const tm = gridTerrain(H, (x, z, h, sl, c) => {
     const n = fbm(x * 0.004, z * 0.004, 3, 5), ju = mJungle(x, z), fa = mFarm(x, z), sn = mSnow(x, z);
     let R = 0.09 + n * 0.05, G2 = 0.17 + n * 0.07, B2 = 0.05 + n * 0.02;
@@ -197,22 +215,23 @@ export function terra() {
     R = lerp(R, 0.16 + n * 0.05, sn); G2 = lerp(G2, 0.19 + n * 0.05, sn); B2 = lerp(B2, 0.13, sn);
     if (h < -1.2) { R = 0.05; G2 = 0.07; B2 = 0.07; }
     c[0] = R; c[1] = G2; c[2] = B2;
-  }, { size: EDGE * 2, seg: 340, rough: 0.95, frag: TERRA_FRAG, head: TERRA_HEAD, uniforms: { uCan: canU, uField: { value: (() => { const t = new THREE.DataTexture(FIELD, FN, FN, THREE.RedFormat); t.magFilter = t.minFilter = THREE.NearestFilter; t.needsUpdate = true; return t; })() } }, key: 'terra', uv: 0.05, tex: 'earth_ground' });
+  }, { size: EDGE * 2, seg: 340, rough: 0.95, frag: TERRA_FRAG, head: TERRA_HEAD, uniforms: terrainUniforms, key: 'terra', uv: 0.05 });
   grp.add(tm);
   const hAt = tm.heightAt, heightAt = (x, z) => { const h = hAt(x, z); return mCity(x, z) >= 0.5 && !cityBlocked(x, z) ? Math.max(h, 0.02) : h; };
   grp.add(ocean((x, z) => (Math.abs(x) >= EDGE || Math.abs(z) >= EDGE ? -42 : hAt(x, z)), { sun: sunDir, sunCol: SKY.sunCol, zen: SKY.zen, hor: SKY.hor, fog, fogDen, size: 46000, seg: 170, level: SEA, shallow: '#0f3a44', deep: '#020f1e' }));
   // ── 都市の地面 (濡れた路面・平面反射) ──
-  const road = mat('asphalt', { color: 0x3a3c44, rough: 0.6, metal: 0.25, uvs: 0.08, floor: 1 }); roadPatch(road); road.polygonOffset = true; road.polygonOffsetFactor = 0; road.polygonOffsetUnits = -6; // 遠景でも地形とちらつかない
+  const road = mat('wet-asphalt', { color: 0x3a3c44, rough: 0.6, metal: 0.25, uvs: 0.08, floor: 1 }); roadPatch(road); road.polygonOffset = true; road.polygonOffsetFactor = 0; road.polygonOffsetUnits = -6; // 遠景でも地形とちらつかない
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(6400, 6400).rotateX(-HP), road); ground.geometry.attributes.uv.array.forEach((v, i, a) => { a[i] = v * 790; }); ground.position.set(0, 0.02, -500); ground.receiveShadow = true; ground.frustumCulled = false; grp.add(ground);
   { // 護岸: 川の両岸と海沿いの岸壁 (路面の縁から水面下まで)
     const P = [], quad = (x1, z1, x2, z2) => { P.push(x1, 0.03, z1, x2, 0.03, z2, x2, -6, z2, x1, 0.03, z1, x2, -6, z2, x1, -6, z1); };
     for (const sd of [-1, 1]) for (let z = -3100; z < 2100; z += 10) { const xa = riverX(z) + sd * 46, xb = riverX(z + 10) + sd * 46; if (mCity(xa, z) >= 0.5 && mCity(xb, z + 10) >= 0.5 && Math.hypot(xa, z) > 214) quad(xa, z, xb, z + 10); }
     for (let x = -2900; x < 2900; x += 10) { const za = coast(x) - 32, zb = coast(x + 10) - 32; if (Math.hypot(x * 0.9, za + 500) < 2550 && Math.abs(x - riverX(za)) > 46) quad(x, za, x + 10, zb); }
     const g = new THREE.BufferGeometry(), uv = []; g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); for (let i = 0; i < P.length; i += 3) uv.push((P[i] + P[i + 2]) * 0.08, P[i + 1] * 0.08); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals();
-    const wm = mat('concrete', { color: 0x565a62, rough: 0.9, metal: 0.1 }).clone(); wm.side = THREE.DoubleSide; const wall = new THREE.Mesh(g, wm); wall.frustumCulled = false; grp.add(wall);
+    const wm = mat('board-concrete', { color: 0x565a62, rough: 0.9, metal: 0.1 }).clone(); wm.side = THREE.DoubleSide; const wall = new THREE.Mesh(g, wm); wall.frustumCulled = false; grp.add(wall);
   }
   // ── ビル群: 街区ごとに敷地を割り、地区の密度に応じて高さと分割数を変える ──
   const cu = { uFogCol: { value: fog[0] }, uFogDen: fogDen, uTime: fxTime, uAmb: { value: COL('#4a4666') }, uSunDir: { value: sunDir }, uSunCol: { value: COL('#ff9a58') }, uSkyA: { value: COL('#141a44') }, uSkyB: { value: COL('#a8503a') } };
+  Object.assign(cu, { tFacade: colorMap('facade'), tStucco: colorMap('stucco'), tBrick: colorMap('glazed-brick'), tRoof: colorMap('zinc-roof') });
   const cityMat = new THREE.ShaderMaterial({ uniforms: cu, vertexShader: CITY_VS, fragmentShader: CITY_FS }), list = [], parks = [], plazas = [];
   const add = (x, z, w, h, d, th) => { list.push([x, z, w, h, d, th]); if (w > 5) obbs.push([x, z, w / 2, d / 2, Math.cos(th), Math.sin(th), h]); };
   for (let ix = -34; ix <= 34; ix++) for (let iz = -40; iz <= 26; iz++) {
@@ -241,7 +260,22 @@ export function terra() {
   const cityTrees = []; for (const [cx, cz] of parks) for (let i = 0; i < 26; i++) { const a = r() * 6.28, d = Math.sqrt(r()) * 30; cityTrees.push([cx + Math.cos(a) * d, 0, cz + Math.sin(a) * d, 9 + r() * 7, 8 + r() * 4]); }
   tiles.push(...forest(grp, cityTrees, 'oak', 900, 2600));
   const D = mat('hull', { color: 0x3a3f48, rough: 0.7, metal: 0.6 }), W = mat('wall', { color: 0x4a5262, rough: 0.6, metal: 0.5 }), GLS = mat('flat', { color: 0x0a1420, rough: 0.05, metal: 1, env: 2 }), ST = mat('marble', { color: 0xd8d4cc, rough: 0.5, metal: 0.05, uvs: 0.2 });
-  for (const [cx, cz] of plazas) { B.cyl(ST, 7, 8, 1.2, cx, 0.6, cz, 'y', 24); B.add(ST, new THREE.CylinderGeometry(0.4, 1.6, 26, 4), mx(cx, 14, cz, 0, 0.78, 0)); B.tor(glow('#4df0ff', 2.6), 7.6, 0.12, cx, 1.25, cz, HP, 0, 0, 40, 5); cols.push({ x: cx, z: cz, r: 8 }); }
+  // ── 緊急着陸帯 (最大 15 か所): アトラス救難基地の救助船「ミケーネ」が降りる広場。街じゅうに散らばるように選ぶ ──
+  const sites = []; { const cand = plazas.filter(([x, z]) => Math.hypot(x, z) > 340 && mCity(x, z) > 0.8); let cur = cand.length ? cand.reduce((a, c) => (Math.hypot(a[0], a[1]) < Math.hypot(c[0], c[1]) ? a : c)) : null;
+    while (sites.length < 15 && cur) { sites.push(cur); let best = null, bs = -1e9; for (const c of cand) { if (sites.includes(c)) continue; let d = 1e9; for (const q of sites) d = Math.min(d, Math.hypot(c[0] - q[0], c[1] - q[1])); const sc = Math.min(d, 1500) - Math.hypot(c[0], c[1] + 500) * 0.1; if (sc > bs) { bs = sc; best = c; } } cur = best; } }
+  const rescueSites = [], PADM = mat('cracked-asphalt', { color: 0x23262c, rough: 0.5, metal: 0.3, uvs: 0.12 }), GXM = glow('#35ff8a', 1.7), WHM = glow('#ffffff', 1.5), YLM = glow('#ffd23a', 1.4);
+  for (const [cx, cz] of plazas) {
+    const si = sites.findIndex((q) => q[0] === cx && q[1] === cz);
+    if (si < 0) { B.cyl(ST, 7, 8, 1.2, cx, 0.6, cz, 'y', 24); B.add(ST, new THREE.CylinderGeometry(0.4, 1.6, 26, 4), mx(cx, 14, cz, 0, 0.78, 0)); B.tor(glow('#4df0ff', 2.6), 7.6, 0.12, cx, 1.25, cz, HP, 0, 0, 40, 5); cols.push({ x: cx, z: cz, r: 8 }); continue; }
+    const p2 = invQ(Q(cx, cz, _o2)[0] + 3, Q(cx, cz, _o2)[1], _o), th = Math.atan2(p2[1] - cz, p2[0] - cx), ry = -th, M = (m, w, h, d, lx, y, lz) => B.add(m, new THREE.BoxGeometry(w, h, d), mx(cx + lx * Math.cos(th) - lz * Math.sin(th), y, cz + lx * Math.sin(th) + lz * Math.cos(th), 0, ry, 0));
+    B.cyl(PADM, 21, 21, 0.14, cx, 0.07, cz, 'y', 48); B.tor(WHM, 19.6, 0.16, cx, 0.16, cz, HP, 0, 0, 72, 4); B.tor(GXM, 16, 0.12, cx, 0.16, cz, HP, 0, 0, 64, 4); // 舗装と外周の灯
+    M(GXM, 12, 0.05, 3.2, 0, 0.17, 0); M(GXM, 3.2, 0.05, 12, 0, 0.17, 0); for (const s2 of [-1, 1]) { M(YLM, 0.3, 0.05, 30, s2 * 7.5, 0.17, 0); M(YLM, 15.3, 0.05, 0.3, 0, 0.17, s2 * 15); } // 緑十字と駐機枠
+    for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6 + 0.26, lx = Math.cos(a) * 20.3, lz = Math.sin(a) * 20.3; B.cyl(D, 0.14, 0.2, 1.1, cx + lx, 0.69, cz + lz, 'y', 6); B.sph(i % 2 ? GXM : WHM, 0.22, cx + lx, 1.34, cz + lz, 1, 1, 1, 8); }
+    for (const [lx, lz] of [[-17, -17], [17, -17], [-17, 17], [17, 17]]) { const x = cx + lx * Math.cos(th) - lz * Math.sin(th), z = cz + lx * Math.sin(th) + lz * Math.cos(th); B.cyl(D, 0.2, 0.34, 9, x, 4.5, z, 'y', 8); B.add(D, new THREE.BoxGeometry(1.6, 0.3, 0.7), mx(x, 9.1, z, 0.35, Math.atan2(cx - x, cz - z), 0)); B.add(glow('#dfffe8', 5), new THREE.BoxGeometry(1.3, 0.06, 0.5), mx(x, 8.93, z, 0.35, Math.atan2(cx - x, cz - z), 0)); cols.push({ x, z, r: 0.5 }); } // 四隅の投光塔
+    const sg = signMesh(`緊急着陸帯 ${String(si + 1).padStart(2, '0')}`, '#35ff8a', 1.6, { double: true, intensity: 2.2, frame: true }); sg.position.set(cx + 18.4 * Math.sin(th), 6.2, cz - 18.4 * Math.cos(th)); sg.rotation.y = ry; grp.add(sg); // 機首側の端に立つ標識
+    { const x = cx + (-18.4) * -Math.sin(th), z = cz + (-18.4) * Math.cos(th); for (const s2 of [-1, 1]) B.cyl(D, 0.1, 0.14, 5.4, x + s2 * 3.4 * Math.cos(th), 2.7, z + s2 * 3.4 * Math.sin(th), 'y', 6); }
+    rescueSites[si] = { x: cx, z: cz, y: 0.14, yaw: ry, th, name: `緊急着陸帯 ${String(si + 1).padStart(2, '0')}` };
+  }
   // ── 街灯 ──
   const lp = [], gp = [], lr = [];
   for (let k = -11; k <= 11; k++) for (let s = -1050; s <= 1050; s += 46) for (const ax of [0, 1]) { const side = (Math.round(s / 46) + k) % 2 ? 1 : -1, off = side * (hwid(k) + 1.6), p = ax ? invQ(k * BS + off, s + 23, _o) : invQ(s + 23, k * BS + off, _o), x = p[0], z = p[1];
@@ -272,12 +306,14 @@ export function terra() {
   const NC = 280, cars = new THREE.InstancedMesh(carGeo, new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false }), NC), lanes = [], o3 = new THREE.Object3D();
   for (let i = 0; i < NC; i++) { const air = i < 110, ax = r() < 0.5, k = Math.floor(rr(r, -12, 12)), dir = r() < 0.5 ? 1 : -1; lanes.push({ air, ax, k, dir, off: r() * 2600, sp: air ? rr(r, 38, 70) : rr(r, 10, 20), alt: air ? pick(r, [46, 84, 130, 180]) + rr(r, -3, 3) : 0.55, lat: dir * (air ? 5 : 3.2 + (r() < 0.5 && hwid(k) > 12 ? 3.6 : 0)) }); }
   cars.frustumCulled = false; grp.add(cars);
-  anim.push((dt, t) => { for (let i = 0; i < NC; i++) { const l = lanes[i], s = ((t * l.sp + l.off) % 2600) - 1300; let x, z, hd;
+  let carsInit = false; // 初回だけは必ず配置する (未配置のままだと全車が原点 = 着陸パッドに重なって見える)
+  anim.push((dt, t, cam) => { if (carsInit && cam && (Math.hypot(cam.x, cam.z + 500) > 4300 || cam.y > 2600)) return; carsInit = true; // 街から遠い・高すぎるときは豆粒以下なので 280 台の計算と転送を省く (近づけば時刻どおりの位置に戻る)
+    for (let i = 0; i < NC; i++) { const l = lanes[i], s = ((t * l.sp + l.off) % 2600) - 1300; let x, z, hd;
     if (l.air) { x = l.ax ? s * l.dir : l.k * 110 + l.lat; z = l.ax ? l.k * 110 + l.lat - 500 : s * l.dir - 500; hd = l.ax ? (l.dir > 0 ? -HP : HP) : l.dir > 0 ? Math.PI : 0; }
     else { const qa = l.k * BS - l.lat, qs = s * l.dir, p = l.ax ? invQ(qs, qa, _o) : invQ(qa, qs - 500, _o); x = p[0]; z = p[1]; const p2 = l.ax ? invQ(qs + 3 * l.dir, qa, _o2) : invQ(qa, qs - 500 + 3 * l.dir, _o2); hd = Math.atan2(-(p2[0] - x), -(p2[1] - z)); }
     const hide = !l.air && (Math.hypot(x, z) < 214 || mCity(x, z) < 0.6 || cityBlocked(x, z)); o3.position.set(x, hide ? -60 : l.alt, z); o3.rotation.set(0, hd, 0); o3.updateMatrix(); cars.setMatrixAt(i, o3.matrix); } cars.instanceMatrix.needsUpdate = true; });
   // ── モノレール: 大通りの中央を走る高架。駅と行き交う列車 ──
-  { const dir = [Math.cos(0.55), Math.sin(0.55)], MT = mat('concrete', { color: 0x70747e, rough: 0.8, metal: 0.2 }), at = (sv, lat = 0) => [300 + dir[0] * sv - dir[1] * lat, -300 + dir[1] * sv + dir[0] * lat];
+  { const dir = [Math.cos(0.55), Math.sin(0.55)], MT = mat('board-concrete', { color: 0x70747e, rough: 0.8, metal: 0.2 }), at = (sv, lat = 0) => [300 + dir[0] * sv - dir[1] * lat, -300 + dir[1] * sv + dir[0] * lat];
     let s0 = -3400, s1 = 3400; while (s0 < 0 && mCity(...at(s0)) < 0.62) s0 += 20; while (s1 > 0 && mCity(...at(s1)) < 0.62) s1 -= 20;
     const L = s1 - s0, mid = (s0 + s1) / 2, TY = 14;
     for (const lat of [-3.2, 3.2]) { const [bx, bz] = at(mid, lat); B.box(MT, L, 1.3, 1.0, bx, TY, bz, -0.55); }
@@ -311,12 +347,12 @@ export function terra() {
   for (let i = 0; i < 12; i++) { const a = i / 12 * 6.28 + 0.26, x = Math.cos(a) * 64, z = Math.sin(a) * 64; if (x > 38 && Math.abs(z - 30) < 24) continue; B.cyl(D, 0.2, 0.36, 12, x, 6, z, 'y', 8); B.box(D, 3.2, 0.25, 0.5, x - Math.cos(a) * 1.5, 12, z - Math.sin(a) * 1.5, -a); B.box(glow('#dfe8ff', 6), 1.2, 0.08, 0.34, x - Math.cos(a) * 2.5, 11.84, z - Math.sin(a) * 2.5, -a); beacon(beacons, x - Math.cos(a) * 2.5, 11.62, z - Math.sin(a) * 2.5, '#ffe6c8', 2.6); cols.push({ x, z, r: 0.6 }); }
   beacon(beacons, -78, 111.5, 46, '#f33', 14, 0.6);
   // ── 港: 桟橋・コンテナ・ガントリークレーン・貨物船・灯台 ──
-  const CR = aiMat('hazard', { color: 0xffffff, rough: 0.6, metal: 0.4 }, 'hull', { color: 0xe8a020, rough: 0.6, metal: 0.4 }), HU = mat('hull', { color: 0x2a3a4a, rough: 0.7, metal: 0.4 }), cc = [0xb8452e, 0x2e7ab8, 0xc9a22e, 0x3aa86a, 0x7a808a, 0x8a4ab8], PY = 0.4, QC = mat('concrete', { color: 0x6a6c72, rough: 0.9, metal: 0.1 });
+  const CR = mat('corten', { color: 0xe8a020, rough: 0.6, metal: 0.4 }), HU = mat('hull', { color: 0x2a3a4a, rough: 0.7, metal: 0.4 }), cc = [0xb8452e, 0x2e7ab8, 0xc9a22e, 0x3aa86a, 0x7a808a, 0x8a4ab8], PY = 0.4, QC = mat('granite-pavers', { color: 0x6a6c72, rough: 0.9, metal: 0.1 });
   for (const px of [500, 880, 1260]) { const pz = coast(px); B.box(QC, 70, 7, 330, px, PY - 3.5, pz + 120); decks.push([px - 35, pz - 45, px + 35, pz + 285, PY]); obbs.push([px, pz + 120, 35, 165, 1, 0, PY]);
-    for (let i = 0; i < 46; i++) { const n = 1 + Math.floor(r() * 3), x = px - 22 + (i % 4) * 9, z = pz - 20 + Math.floor(i / 4) * 16; for (let lv = 0; lv < n; lv++) B.box(mat('container', { color: cc[(i + lv * 2) % 6], metal: 0.3 }), 6, 2.6, 2.5, x, PY + 1.3 + lv * 2.62, z, HP); rects.push([x - 1.3, z - 3.05, x + 1.3, z + 3.05]); }
+    for (let i = 0; i < 46; i++) { const n = 1 + Math.floor(r() * 3), x = px - 22 + (i % 4) * 9, z = pz - 20 + Math.floor(i / 4) * 16; for (let lv = 0; lv < n; lv++) B.box(mat('rib', { color: cc[(i + lv * 2) % 6], metal: 0.3 }), 6, 2.6, 2.5, x, PY + 1.3 + lv * 2.62, z, HP); rects.push([x - 1.3, z - 3.05, x + 1.3, z + 3.05]); }
     for (const cz2 of [pz + 150, pz + 235]) { for (const sd of [-1, 1]) { B.box(CR, 3, 52, 3, px + sd * 30, PY + 26, cz2 - 9); B.box(CR, 3, 52, 3, px + sd * 30, PY + 26, cz2 + 9); B.box(CR, 3, 3, 21, px + sd * 30, PY + 14, cz2); cols.push({ x: px + sd * 30, z: cz2 - 9, r: 2.2 }, { x: px + sd * 30, z: cz2 + 9, r: 2.2 }); } B.box(CR, 110, 4, 5, px + 16, PY + 51, cz2); B.box(CR, 8, 6, 22, px + 8, PY + 47, cz2); B.cyl(D, 0.2, 0.2, 24, px + 50, PY + 37, cz2, 'y', 5); B.box(D, 3, 2.6, 6.5, px + 50, PY + 24, cz2); beacon(beacons, px + 70, PY + 54, cz2, '#f33', 12, 0.6); obbs.push([px + 16, cz2, 56, 11, 1, 0, PY + 54, 1]); }
     const sx = px + 68, sz = pz + 190; B.add(HU, loft([{ z: -90, w: 3, t: 5, b: 9 }, { z: -70, w: 13, t: 5, b: 10 }, { z: 60, w: 14, t: 5, b: 10 }, { z: 88, w: 10, t: 6, b: 8 }].map((q) => ({ e: 5, ...q })), 16), mx(sx, 4, sz)); B.box(mat('flat', { color: 0xe8e8e2, rough: 0.6, metal: 0.1 }), 20, 16, 14, sx, 17, sz + 66); B.box(glow('#ffe6b0', 2), 20.2, 1.2, 14.2, sx, 21, sz + 66); B.cyl(mat('flat', { color: 0xb8452e, rough: 0.6, metal: 0.2 }), 2.4, 2.8, 9, sx, 29, sz + 70, 'y', 12); obbs.push([sx, sz, 14, 90, 1, 0, 25, 1]);
-    for (let i = 0; i < 36; i++) { const n = 1 + Math.floor(r() * 3); for (let lv = 0; lv < n; lv++) B.box(mat('container', { color: cc[(i * 5 + lv) % 6], metal: 0.3 }), 6, 2.6, 2.5, sx - 8 + (i % 3) * 8, 10.4 + lv * 2.62, sz - 70 + Math.floor(i / 3) * 10, HP); } }
+    for (let i = 0; i < 36; i++) { const n = 1 + Math.floor(r() * 3); for (let lv = 0; lv < n; lv++) B.box(mat('rib', { color: cc[(i * 5 + lv) % 6], metal: 0.3 }), 6, 2.6, 2.5, sx - 8 + (i % 3) * 8, 10.4 + lv * 2.62, sz - 70 + Math.floor(i / 3) * 10, HP); } }
   { const lx = 2350, lz = coast(2350) + 60, ly = 3.2, RK2 = mat('rock', { color: 0x4a463e, rough: 1, metal: 0, uvs: 0, ns: 1.4 }); B.add(RK2, rockGeo(1, 3, 21, 0.28), mx(lx, -14, lz, 0, 0.4, 0, 34, 18.5, 30), 0); B.add(RK2, rockGeo(1, 2, 22, 0.3), mx(lx + 30, -9, lz + 14, 0, 1.4, 0, 16, 10, 20), 0);
     B.cyl(mat('flat', { color: 0xf0f0ea, rough: 0.6, metal: 0.05 }), 4, 6.5, 46, lx, ly + 23, lz, 'y', 16); B.cyl(mat('flat', { color: 0xb8252a, rough: 0.6, metal: 0.1 }), 4.7, 4.9, 5, lx, ly + 30, lz, 'y', 16); B.cyl(D, 5.6, 5.6, 0.8, lx, ly + 46.4, lz, 'y', 16); B.cyl(GLS, 3.2, 3.2, 5, lx, ly + 49.4, lz, 'y', 12); B.add(D, new THREE.ConeGeometry(4.2, 4, 12), mx(lx, ly + 54, lz)); obbs.push([lx, lz, 6, 6, 1, 0, ly + 56, 1]);
     const lb = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 26, 900, 12, 1, true).rotateZ(HP).translate(450, 0, 0), beamM('#fff2c8')); lb.position.set(lx, ly + 49.4, lz); grp.add(lb); const ls = makeGlowSprite('#fff2c8', 30, 3); ls.position.set(lx, ly + 49.4, lz); ls.material.fog = false; grp.add(ls); anim.push((dt) => { lb.rotation.y += dt * 0.5; }); }
@@ -347,13 +383,13 @@ export function terra() {
   const cab = [], vy = hAt(VILLAGE[0], VILLAGE[1]); for (let i = 0; i < 40; i++) { const a = i * 0.74 + r() * 0.3, d = 54 + (i % 5) * 34 + r() * 14, x = VILLAGE[0] + Math.cos(a) * d, z = VILLAGE[1] + Math.sin(a) * d, ry = -a - HP; cab.push([x, hAt(x, z), z, ry]); obbR(x, z, 4.8, 3.8, ry, hAt(x, z) + 8.5); if (i % 3 === 0) beacon(beacons, x - Math.cos(a) * 6, hAt(x, z) + 3.4, z - Math.sin(a) * 6, '#ffcf8a', 7); }
   for (let i = 0; i < 5; i++) { const a = i * 1.3 + 0.4, d = rr(r, 60, 150), x = LAKE[0] + Math.cos(a) * d, z = LAKE[1] + Math.sin(a) * d; cab.push([x, hAt(x, z), z, a]); obbR(x, z, 4.8, 3.8, a, hAt(x, z) + 8.5); beacon(beacons, x, hAt(x, z) + 3.4, z, '#ffcf8a', 6); } // 凍った湖の釣り小屋
   inst(cabin, FM, cab); inst(cabWin, GM, cab);
-  { const WD = mat('log', { color: 0x5a3a26, rough: 0.9, metal: 0 }), RK3 = mat('rock', { color: 0x5a5a60, rough: 1, metal: 0, uvs: 0 }); B.cyl(WD, 0.5, 0.6, 16, VILLAGE[0] + 9, vy + 8, VILLAGE[1] - 4, 'y', 8); B.sph(glow('#ffe2a8', 4), 0.9, VILLAGE[0] + 9, vy + 16.6, VILLAGE[1] - 4); beacon(beacons, VILLAGE[0] + 9, vy + 16.6, VILLAGE[1] - 4, '#ffe2a8', 26); cols.push({ x: VILLAGE[0] + 9, z: VILLAGE[1] - 4, r: 1.2 });
+  { const WD = mat('wood', { color: 0x5a3a26, rough: 0.9, metal: 0 }), RK3 = mat('rock', { color: 0x5a5a60, rough: 1, metal: 0, uvs: 0 }); B.cyl(WD, 0.5, 0.6, 16, VILLAGE[0] + 9, vy + 8, VILLAGE[1] - 4, 'y', 8); B.sph(glow('#ffe2a8', 4), 0.9, VILLAGE[0] + 9, vy + 16.6, VILLAGE[1] - 4); beacon(beacons, VILLAGE[0] + 9, vy + 16.6, VILLAGE[1] - 4, '#ffe2a8', 26); cols.push({ x: VILLAGE[0] + 9, z: VILLAGE[1] - 4, r: 1.2 });
     for (let k = 0; k < 9; k++) { const a = k * 0.698; B.add(RK3, rockGeo(0.42, 1, 40 + k, 0.3), mx(VILLAGE[0] + Math.cos(a) * 1.5, vy + 0.2, VILLAGE[1] + Math.sin(a) * 1.5), 0); } for (let k = 0; k < 4; k++) B.cyl(WD, 0.14, 0.16, 1.9, VILLAGE[0], vy + 0.6, VILLAGE[1], k % 2 ? 'x' : 'z', 6);
     for (let k = 0; k < 3; k++) { const a = k * 2.094 + 0.5; B.box(WD, 3.4, 0.5, 0.7, VILLAGE[0] + Math.cos(a) * 4.4, vy + 0.4, VILLAGE[1] + Math.sin(a) * 4.4, -a + HP); }
     const fire = makeGlowSprite('#ff9a3a', 7, 2.2); fire.position.set(VILLAGE[0], vy + 1.3, VILLAGE[1]); grp.add(fire); anim.push((dt, t) => { fire.scale.setScalar(6 + Math.sin(t * 13) * 0.8 + Math.sin(t * 7.3) * 0.6); }); beacon(beacons, VILLAGE[0], vy + 1.2, VILLAGE[1], '#ff8a2a', 12); cols.push({ x: VILLAGE[0], z: VILLAGE[1], r: 1.7 });
     const s2 = signMesh('雪見の里', '#ffe2a8', 3, { double: true, intensity: 2.2, frame: true }); s2.position.set(VILLAGE[0] + 14, vy + 7, VILLAGE[1] + 30); grp.add(s2); items.push({ x: VILLAGE[0], z: VILLAGE[1], r: 6.5, label: '村の焚き火で暖まる', act: 'rest', name: '雪見の里' }); }
   // ── ジャングル: 古代遺跡 (密林は植生フィールドが生成) ──
-  { const STN = mat('temple_stone', { color: 0x7a7468, rough: 1, metal: 0, uvs: 0.12 }), ty = hAt(TEMPLE[0], TEMPLE[1]); for (let i = 0; i < 6; i++) B.box(STN, 70 - i * 10, 6, 70 - i * 10, TEMPLE[0], ty + 3 + i * 6, TEMPLE[1]); B.box(STN, 16, 10, 16, TEMPLE[0], ty + 41, TEMPLE[1]); B.box(glow('#6dffb0', 3), 4, 6, 0.4, TEMPLE[0], ty + 40, TEMPLE[1] + 8.1);
+  { const STN = mat('moss-granite', { color: 0x7a7468, rough: 1, metal: 0, uvs: 0.12 }), ty = hAt(TEMPLE[0], TEMPLE[1]); for (let i = 0; i < 6; i++) B.box(STN, 70 - i * 10, 6, 70 - i * 10, TEMPLE[0], ty + 3 + i * 6, TEMPLE[1]); B.box(STN, 16, 10, 16, TEMPLE[0], ty + 41, TEMPLE[1]); B.box(glow('#6dffb0', 3), 4, 6, 0.4, TEMPLE[0], ty + 40, TEMPLE[1] + 8.1);
     for (let i = 0; i < 14; i++) B.box(STN, 12, 2, 3, TEMPLE[0], ty + 1 + i * 2.6, TEMPLE[1] + 38 - i * 2.9); for (const [dx, dz] of [[-50, 50], [50, 50], [-50, -50], [50, -50]]) { B.cyl(STN, 3, 3.6, 22, TEMPLE[0] + dx, ty + 11, TEMPLE[1] + dz, 'y', 8); B.sph(glow('#6dffb0', 2.5), 1.2, TEMPLE[0] + dx, ty + 23.4, TEMPLE[1] + dz); cols.push({ x: TEMPLE[0] + dx, z: TEMPLE[1] + dz, r: 3.8 }); beacon(beacons, TEMPLE[0] + dx, ty + 23.4, TEMPLE[1] + dz, '#6dffb0', 9); }
     for (let i = 0; i < 26; i++) { const a = r() * 6.28, d = 44 + r() * 50, x = TEMPLE[0] + Math.cos(a) * d, z = TEMPLE[1] + Math.sin(a) * d, sc = 1 + r() * 2.6; if (Math.abs(x - TEMPLE[0]) < 9 && z > TEMPLE[1]) continue; B.add(STN, rockGeo(1, 1, 60 + i, 0.3), mx(x, hAt(x, z) + sc * 0.2, z, r(), r() * 6, r(), sc * 1.4, sc * 0.8, sc), 0); if (sc > 1.6) cols.push({ x, z, r: sc }); }
     rects.push([TEMPLE[0] - 35, TEMPLE[1] - 35, TEMPLE[0] + 35, TEMPLE[1] + 35]); obbs.push([TEMPLE[0], TEMPLE[1], 35, 35, 1, 0, ty + 46, 1]); items.push({ x: TEMPLE[0], z: TEMPLE[1] + 42, r: 9, label: '古代遺跡を調べる', act: 'ruins', name: '古代遺跡' }); beacon(beacons, TEMPLE[0], ty + 50, TEMPLE[1], '#6dffb0', 30); }
@@ -377,11 +413,11 @@ export function terra() {
   const vf = new VegField(grp, vegAt, { tile: 400, step: 14, range: 1250, sway: 0.012, solid: true }), uf = new VegField(grp, underAt, { tile: 90, step: 4.5, range: 165, sway: 0.03 }); vf.u = canU;
   // ── 何もない場所をなくす ──
   const env2 = { grp, obbs, cols }, sample = (n, ok) => { const L = []; for (let i = 0; i < n * 10 && L.length < n; i++) { const x = rr(r, -EDGE + 900, EDGE - 900), z = rr(r, -EDGE + 900, EDGE - 900); if (ok(x, z)) L.push([x, z]); } return L; };
-  const RKT = mat('rock', { color: 0x6a665e, rough: 1, metal: 0, uvs: 0 }), RKS = mat('snowfield', { color: 0xd4dce8, rough: 0.7, metal: 0, uvs: 0 }), RKM = mat('mossy_rock', { color: 0x46563a, rough: 1, metal: 0, uvs: 0 }), RKD = mat('rock', { color: 0x4a463e, rough: 1, metal: 0, uvs: 0, ns: 1.4 });
+  const RKT = mat('gravel', { color: 0x6a665e, rough: 1, metal: 0, uvs: 0 }), RKS = mat('snow-crust', { color: 0xd4dce8, rough: 0.7, metal: 0, uvs: 0 }), RKM = mat('moss-granite', { color: 0x46563a, rough: 1, metal: 0, uvs: 0 }), RKD = mat('rock', { color: 0x4a463e, rough: 1, metal: 0, uvs: 0, ns: 1.4 });
   // 海: 岩礁の尖塔 (航路は避ける)・灯浮標・洋上プラットフォーム・洋上風車
   landmarks(env2, propGeo('spire'), RKD, sample(110, (x, z) => hAt(x, z) < -14 && !(Math.abs(x) < 3900 && z > coast(x) + 250 && z < coast(x) + 2750) && Math.hypot(x - 320, z - 4300) > 500).map(([x, z]) => { const hh = rr(r, 44, 120); return [x, Math.max(hAt(x, z), -36) - 4, z, hh * rr(r, 0.9, 1.6), hh, r() * 6.28, rr(r, -0.12, 0.12)]; }), { solid: 0.2 });
   { const buoy = colorGeo([[new THREE.CylinderGeometry(0.9, 1.2, 1.6, 10).translate(0, 0.3, 0), 0xc8382a], [new THREE.CylinderGeometry(0.12, 0.12, 3.2, 6).translate(0, 2.4, 0), 0xd8d8d8], [new THREE.SphereGeometry(0.3, 8, 6).translate(0, 4.1, 0), 0xffe14d]]), pts = sample(40, (x, z) => hAt(x, z) < -8 && Math.abs(x) < 9000 && Math.abs(z) < 9000); inst(buoy, FM, pts.map(([x, z]) => [x, SEA, z, 0])); pts.forEach(([x, z], i) => { if (i % 2 === 0) beacon(beacons, x, SEA + 4.2, z, i % 4 ? '#6dffb0' : '#f33', 7, 0.5 + (i % 3) * 0.2); }); }
-  for (const [x, z] of [[-2600, 4300], [2700, 5200], [-6800, 2600]]) { const RG = mat('hull', { color: 0x6a6258, rough: 0.7, metal: 0.5 }), YL = aiMat('hazard', { color: 0xffffff, rough: 0.6, metal: 0.4 }, 'hull', { color: 0xd8a020, rough: 0.6, metal: 0.4 }); // 洋上プラットフォーム (甲板に着陸できる)
+  for (const [x, z] of [[-2600, 4300], [2700, 5200], [-6800, 2600]]) { const RG = mat('hull', { color: 0x6a6258, rough: 0.7, metal: 0.5 }), YL = mat('hull', { color: 0xd8a020, rough: 0.6, metal: 0.4 }); // 洋上プラットフォーム (甲板に着陸できる)
     for (const [dx, dz] of [[-18, -18], [18, -18], [-18, 18], [18, 18]]) B.cyl(RG, 2.4, 2.8, 74, x + dx, -8, z + dz, 'y', 12); B.box(RG, 50, 5, 50, x, 29, z); B.box(YL, 50.4, 0.6, 50.4, x, 31.6, z); B.box(RG, 16, 9, 12, x - 12, 36.4, z - 14); B.box(glow('#ffe6b0', 2), 16.2, 1.4, 12.2, x - 12, 37.6, z - 14);
     for (const [dx, dz] of [[-2.4, -2.4], [2.4, -2.4], [-2.4, 2.4], [2.4, 2.4]]) B.box(YL, 0.7, 52, 0.7, x + 14 + dx, 58, z + 12 + dz, 0, dz * 0.012, -dx * 0.012); B.box(YL, 6.4, 0.8, 6.4, x + 14, 50, z + 12); B.box(YL, 6.4, 0.8, 6.4, x + 14, 68, z + 12); B.cyl(RG, 0.5, 0.5, 46, x - 22, 55, z + 20, 'y', 8, false); B.box(YL, 34, 1.2, 1.2, x + 2, 44, z - 22, 0.4, 0, 0.3);
     beacon(beacons, x - 22, 80, z + 20, '#ff8a2a', 30); beacon(beacons, x + 14, 85, z + 12, '#f33', 12, 0.6); obbs.push([x, z, 25, 25, 1, 0, 31.9], [x - 12, z - 14, 8, 6, 1, 0, 41, 1], [x + 14, z + 12, 3.6, 3.6, 1, 0, 84, 1]); cols.push({ x: x - 22, z: z + 20, r: 1 }); }
@@ -431,8 +467,8 @@ export function terra() {
   const RAIN = V3(6, -46, 2), SNOWV = V3(4, -7, 2), zone = (x, z) => { const sn = mSnow(x, z), ju = mJungle(x, z), ci = mCity(x, z); return sn > 0.4 ? [SNOWV, 0.75 * sn, '#ffffff'] : ju > 0.4 ? [RAIN, 0.7 * ju, '#9fb8c8'] : [RAIN, 0.45 * ci, '#9fb8ff']; };
   const region = (x, z) => (mSnow(x, z) > 0.5 ? '雪国' : mJungle(x, z) > 0.5 ? 'ジャングル' : mFarm(x, z) > 0.5 ? '農園地帯' : mCity(x, z) > 0.5 ? '巨大都市' : mSea(x, z) > 0.5 || Math.max(Math.abs(x), Math.abs(z)) > EDGE - 1300 ? '大洋' : '郊外');
   /** いまいる場所の呼び名 (HUD の見出し) */
-  const place = (x, z) => { if (Math.hypot(x, z) < 260) return 'ネオン・ベイ宇宙港'; if (Math.hypot(x - VILLAGE[0], z - VILLAGE[1]) < 420) return '雪見の里'; if (Math.hypot(x - TEMPLE[0], z - TEMPLE[1]) < 320) return '古代遺跡'; if (mSnow(x, z) > 0.5) return '白嶺山地'; if (mJungle(x, z) > 0.5) return '翠の密林'; if (mFarm(x, z) > 0.5) return 'みのり平原';
+  const place = (x, z) => { if (Math.hypot(x, z) < 260) return 'ネオン・ベイ宇宙港'; for (const q of rescueSites) if (q && Math.abs(x - q.x) < 34 && Math.abs(z - q.z) < 34) return q.name; if (Math.hypot(x - VILLAGE[0], z - VILLAGE[1]) < 420) return '雪見の里'; if (Math.hypot(x - TEMPLE[0], z - TEMPLE[1]) < 320) return '古代遺跡'; if (mSnow(x, z) > 0.5) return '白嶺山地'; if (mJungle(x, z) > 0.5) return '翠の密林'; if (mFarm(x, z) > 0.5) return 'みのり平原';
     if (mCity(x, z) > 0.5) return z > coast(x) - 260 && x > 300 && x < 1500 ? 'ネオン・ベイ港' : 'ネオン・ベイ市街'; return mSea(x, z) > 0.5 || Math.max(Math.abs(x), Math.abs(z)) > EDGE - 1300 ? '大洋' : 'ネオン・ベイ郊外'; };
   const pois = [{ x: 880, y: 40, z: coast(880) + 80, name: '港' }, ...(fh[0] ? [{ x: fh[0][0], y: fh[0][1] + 30, z: fh[0][2], name: '農園地帯' }] : []), { x: VILLAGE[0], y: vy + 40, z: VILLAGE[1], name: '雪見の里' }, { x: TEMPLE[0], y: hAt(TEMPLE[0], TEMPLE[1]) + 70, z: TEMPLE[1], name: '古代遺跡' }];
-  return { id: 'terra', group: grp, sky, H, heightAt, sunDir, sunCol: '#ffb078', sunInt: 3.0, hemi: ['#6a6aa8', '#2a2030', 1.25], expo: (x, z) => lerp(1.2, 1.02, mCity(x, z)), fog, fogDen, cols, rects, obbs, decks, items, anim, beacons, nodes, tiles, veg: [vf, uf, pf, hf, cf], zone, region, place, pois, blocked: cityBlocked, padY: 1.1, mirror: [road, 1.6], mirrorOn: (x, y, z) => y < 700 && mCity(x, z) > 0.2, rain: [RAIN, 0.45, '#9fb8ff'], walkR: 1e9, bounds: EDGE - 800, far: 34000, safeAlt: 780, door: [50, 30, -HP], foot: [0, 42], look: [0.42, 1.15, 0.95], music: 'neon', water: SEA, start: [320, 1500, 4300] };
+  return { id: 'terra', rescueSites: rescueSites.filter(Boolean), group: grp, sky, H, heightAt, sunDir, sunCol: '#ffb078', sunInt: 3.0, hemi: ['#6a6aa8', '#2a2030', 1.25], expo: (x, z) => lerp(1.2, 1.02, mCity(x, z)), fog, fogDen, cols, rects, obbs, decks, items, anim, beacons, nodes, tiles, veg: [vf, uf, pf, hf, cf], zone, region, place, pois, blocked: cityBlocked, padY: 1.1, mirror: [road, 1.6], mirrorOn: (x, y, z) => y < 700 && mCity(x, z) > 0.2, rain: [RAIN, 0.45, '#9fb8ff'], walkR: 1e9, bounds: EDGE - 800, far: 34000, safeAlt: 780, door: [50, 30, -HP], foot: [0, 42], look: [0.42, 1.15, 0.95], music: 'neon', water: SEA, start: [320, 1500, 4300] };
 }

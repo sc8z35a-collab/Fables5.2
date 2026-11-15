@@ -1,7 +1,7 @@
 {
   "name": "STARFABLE",
   "short_name": "STARFABLE",
-  "description": "ブラウザで動く 3D 宇宙アドベンチャー。5 つの宇宙ステーション、地球と 4 つの惑星、3 隻の自機、20 隻の敵艦 — すべて中に入れます。",
+  "description": "ブラウザで動く 3D 宇宙アドベンチャー。9 つの宇宙ステーション、地球と 4 つの惑星、3 隻の自機、15 機の救助船、20 隻の敵艦 — すべて中に入れます。",
   "start_url": "./index.html",
   "scope": "./",
   "display": "fullscreen",

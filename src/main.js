@@ -2,9 +2,9 @@
 import * as THREE from 'three';
 import { G, clamp } from './core/util.js';
 import { Gfx, QUALITY, DIST } from './gfx/renderer.js';
-import { Backdrop } from './gfx/planets.js';
+import { Backdrop, preloadBackdrop } from './gfx/planets.js';
 import { fxTime } from './gfx/fx.js';
-import { updateScreens, texturesReady } from './gfx/textures.js';
+import { readyTextures, updateScreens } from './gfx/textures.js';
 import { BODIES } from './world/defs.js';
 import { Input } from './ui/input.js';
 import { Hud } from './ui/hud.js';
@@ -20,13 +20,20 @@ const Q = new URLSearchParams(location.search);
 const bootEl = document.getElementById('boot'), bootFill = document.getElementById('boot-fill'), bootText = document.getElementById('boot-text');
 window.G = G; G.modes = {}; G.time = 0; G.tip = '';
 
+// ノッチ・パンチホール・ホームバーの安全領域 (env(safe-area-inset-*)) を測るための見えない要素
+const saProbe = document.createElement('div'); saProbe.style.cssText = 'position:fixed;left:0;top:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)'; document.body.appendChild(saProbe);
 function layout() {
   const w = window.innerWidth, h = window.innerHeight, portrait = h > w, W = portrait ? h : w, H = portrait ? w : h;
+  if (W <= 0 || H <= 0) return;
+  if (G.portrait !== portrait || G.W !== W || G.H !== H) G.input?.reset();
   Object.assign(G, { W, H, portrait, vw: w });
   app.style.width = W + 'px'; app.style.height = H + 'px';
   app.style.transform = portrait ? `translateX(${w}px) rotate(90deg)` : 'none';
   app.style.setProperty('--u', H / 100 + 'px');
-  G.gfx?.resize(W, H); G.hud?.resize();
+  // HUD とボタンをノッチの下に潜らせない。縦持ちでは画面を 90° 回しているので、上下左右の対応を入れ替える
+  { const cs = getComputedStyle(saProbe), t = parseFloat(cs.paddingTop) || 0, r = parseFloat(cs.paddingRight) || 0, b = parseFloat(cs.paddingBottom) || 0, l = parseFloat(cs.paddingLeft) || 0;
+    const [L, R, T, B] = portrait ? [t, b, r, l] : [l, r, t, b]; for (const [k, v] of [['--sl', L], ['--sr', R], ['--st', T], ['--sb', B]]) app.style.setProperty(k, v + 'px'); }
+  G.gfx?.resize(W, H); G.hud?.resize(); G.dirty = true; // 一時停止中でも、作り直したキャンバスに 1 度は描き直す
   for (const m of Object.values(G.modes)) if (m.camera) { m.camera.aspect = W / H; m.camera.updateProjectionMatrix(); }
 }
 /** 画面座標 → 横向きレイアウト座標 (縦持ち時は 90° 回転して常に横画面で表示する) */
@@ -43,19 +50,18 @@ const tweens = [];
 G.tween = (dur, fn) => new Promise((res) => tweens.push({ t: 0, dur, fn, res }));
 G.fade = (to, dur = 0.4, flash = false) => { const u = flash ? G.gfx.fx.uFlash : G.gfx.fx.uFade, from = u.value, tgt = flash ? 1 - to : to; return G.tween(dur, (k) => { u.value = from + (tgt - from) * k; }); };
 G.go = async (name, params = {}, o = {}) => {
-  if (G.busy) return; G.busy = true; G.ui.close();
+  if (G.busy) return; G.busy = true; G.input.reset(); G.ui.close();
   await G.fade(0, o.flash ? 1.0 : 0.35, o.flash);
   G.mode?.exit?.(name);
   if (o.flash) { G.gfx.fx.uFade.value = 0; }
   G.mode = G.modes[name]; G.modeName = name; G.hud.begin(); G.hud.setCtx([]);
   try { await G.mode.enter(params); } catch (e) { console.error(e); }
-  await texturesReady(6000); // 画像テクスチャが届く前に暗転を明けない
   G.busy = false;
   if (o.flash) { G.gfx.fx.uFade.value = 1; await G.fade(1, 0.9, true); } else await G.fade(1, 0.5);
 };
-G.setQuality = (name) => { if (G.p) { G.p.quality = name; if (!G.titleOn) save(); else try { localStorage.setItem('starfable-quality', name); } catch (e) { /* noop */ } } G.gfx.setQuality(name); for (const m of Object.values(G.modes)) m.onQuality?.(); };
-G.setRes = (r) => { if (G.p) G.p.res = r; try { localStorage.setItem('starfable-res', r); } catch (e) { /* noop */ } G.gfx.setRes(r); G.hud?.resize(); };
-G.setDist = (d) => { if (G.p) G.p.dist = d; try { localStorage.setItem('starfable-dist', d); } catch (e) { /* noop */ } G.drawDist = DIST[d][1]; G.distName = d; for (const m of Object.values(G.modes)) m.onQuality?.(); };
+G.setQuality = (name) => { G.dirty = true; if (G.p) { G.p.quality = name; if (!G.titleOn) save(); else try { localStorage.setItem('starfable-quality', name); } catch (e) { /* noop */ } } G.gfx.setQuality(name); for (const m of Object.values(G.modes)) m.onQuality?.(); };
+G.setRes = (r) => { G.dirty = true; if (G.p) G.p.res = r; try { localStorage.setItem('starfable-res', r); } catch (e) { /* noop */ } G.gfx.setRes(r); G.hud?.resize(); };
+G.setDist = (d) => { G.dirty = true; if (G.p) G.p.dist = d; try { localStorage.setItem('starfable-dist', d); } catch (e) { /* noop */ } G.drawDist = DIST[d][1]; G.distName = d; for (const m of Object.values(G.modes)) m.onQuality?.(); };
 G.drawDist = 1; G.distName = 'mid';
 G.checkVictory = () => { if (remaining() === 0 && !G.p.flags.won) { G.p.flags.won = 1; earn(50000); save(); setTimeout(() => { G.hud.banner('星系解放', 'ヴォイド艦隊 全艦無力化', 5); setTimeout(() => G.ui.victory(), 4000); }, 2500); } };
 G.start = (fresh) => {
@@ -87,6 +93,7 @@ async function boot() {
   G.input = new Input(app); G.hud = new Hud(app); G.ui = new UI(app); G.audio = new AudioSys();
   G.hud.show(false);
   await prog(0.06, '星図を生成中…');
+  await preloadBackdrop();
   G.backdrop = new Backdrop(G.gfx.renderer, BODIES, G.gfx.q);
   await prog(0.2, '惑星を形成中…');
   const terra = BODIES.find((b) => b.id === 'terra');
@@ -94,16 +101,19 @@ async function boot() {
   let n = 0; while (G.backdrop.bakeNext()) await prog(0.2 + ++n * 0.07, '惑星を形成中… ' + n + '/5');
   await prog(0.6, '環境光を計算中…');
   G.env = G.gfx.envFromScene(G.backdrop.envScene());
-  G.p = load() || newGame(); G.p.quality = G.gfx.qName;
+  G.p = load() || newGame(); G.p.quality = G.gfx.qName; G.audio.setOn(G.p.sound !== false); // タイトル画面でも保存済みのサウンド設定 (OFF) を守る
   await prog(0.66, '艦隊を配備中…');
   G.space = G.modes.space = new SpaceMode();
-  n = 0; while (G.space.buildStations()) await prog(0.66 + ++n * 0.05, 'ステーションを建造中… ' + n + '/5');
+  n = 0; while (G.space.buildStations()) await prog(0.66 + ++n * 0.029, 'ステーションを建造中… ' + n + '/9');
   await prog(0.93, '各施設を準備中…');
   G.modes.interior = new InteriorMode(); G.modes.surface = new SurfaceMode();
-  await prog(0.97, 'テクスチャを読み込み中…'); await texturesReady(12000);
   await prog(1, '発進準備完了');
   window.addEventListener('resize', layout); window.addEventListener('orientationchange', () => setTimeout(layout, 250));
-  document.addEventListener('visibilitychange', () => { const c = G.audio.ctx; if (c) document.hidden ? c.suspend() : c.resume(); last = performance.now(); });
+  document.addEventListener('visibilitychange', () => {
+    const c = G.audio.ctx; if (c) { if (document.hidden) c.suspend(); else if (G.audio.on) c.resume(); } last = performance.now(); // サウンド OFF のときは止めたままにする
+    // アプリを切り替えたら自動で一時停止メニューを開く (戻った瞬間に戦闘の真っ只中、とならないように)
+    if (document.hidden && G.p && !G.titleOn && !G.busy && !G.ui.isOpen) G.ui.pause();
+  });
   // 起動: タイトル or デバッグ用の直接開始
   G.mode = G.space; G.modeName = 'space';
   const auto = Q.get('auto');
@@ -113,20 +123,27 @@ async function boot() {
     await G.mode.enter(auto === 'space' ? params : { near: 'haven' });
     if (auto !== 'space') { G.mode.exit(); G.mode = G.modes[auto]; G.modeName = auto; await G.mode.enter(params); }
   } else { G.titleOn = true; G.space.enter({ title: true }); G.ui.title(); }
-  bootEl.style.opacity = 0; setTimeout(() => bootEl.remove(), 900);
+  await readyTextures();
+  bootEl.classList.add('fadeout'); setTimeout(() => bootEl.remove(), 900);
   requestAnimationFrame(frame);
 }
 
-let last = performance.now(), frames = 0;
+let last = performance.now(), frames = 0, fpsN = 0, fpsT = 0;
 function frame(now) {
   requestAnimationFrame(frame);
-  const dt = clamp((now - last) / 1000, 0.001, 0.05); last = now; G.time += dt; fxTime.value = G.time % 3600;
+  const raw = (now - last) / 1000, dt = clamp(raw, 0.001, 0.05); last = now; G.time += dt; fxTime.value = G.time % 3600;
+  if (G.p?.fps) { fpsN++; fpsT += raw; if (fpsT >= 0.5) { G.hud.setFps(fpsN / fpsT); fpsN = 0; fpsT = 0; } } // FPS 表示 (設定で ON のとき)
   for (let i = tweens.length - 1; i >= 0; i--) { const t = tweens[i]; t.t += dt; const k = Math.min(1, t.t / t.dur); t.fn(k); if (k >= 1) { tweens.splice(i, 1); t.res(); } }
   const m = G.mode; if (!m) return;
-  if (!G.busy && !(G.ui.isOpen && !G.titleOn)) m.update(dt);
+  const paused = G.ui.isOpen && !G.titleOn && !G.busy;
+  if (!G.busy && !paused) m.update(dt);
   else if (G.busy) m.idle?.(dt);
-  G.hud.update(dt); G.audio.update(dt); updateScreens(dt, G.time);
-  if (m.render) m.render(dt); else G.gfx.render(dt, m.scene, m.camera, m.far === false ? null : G.backdrop);
+  G.hud.update(dt); G.audio.update(dt);
+  // メニューを開いて止まっている間は 3D を描き直さない (画面は最後のフレームのまま。電池と発熱の節約)。画面サイズが変わったときと演出中だけ描く
+  if (!paused || G.dirty || tweens.length) {
+    updateScreens(dt, G.time); G.dirty = false;
+    if (m.render) m.render(dt); else G.gfx.render(dt, m.scene, m.camera, m.far === false ? null : G.backdrop);
+  }
   G.input.endFrame();
   if (++frames === 20) window.__ready = true;
 }
