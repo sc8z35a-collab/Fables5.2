@@ -12,7 +12,7 @@ import { buildMycenae, cloneShared, makeBot } from '../world/rescue.js';
 import { LOW_HULL } from './space.js';
 import { LOW_HP } from './interior.js';
 import { Builder, mx } from '../gfx/builder.js';
-import { mat, glow, aoMat, signMesh } from '../gfx/textures.js';
+import { mat, glow, aoMat, signMesh, readyTextures } from '../gfx/textures.js';
 
 const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _q = new THREE.Quaternion(), _e = new THREE.Euler(0, 0, 0, 'YXZ'), _col = new THREE.Color();
 const PAD_R = 34, CS = 64, gk = (x, z) => Math.floor(x / CS) * 4096 + Math.floor(z / CS);
@@ -36,12 +36,16 @@ export class SurfaceMode {
   model(id) { if (!this.models[id]) { const m = buildShip(id); m.obj.traverse((o) => { if (o.isMesh && !o.userData.plume) o.castShadow = true; }); this.models[id] = m; } syncDamage(this.models[id], id); return this.models[id]; }
   dropShip(id) { const m = this.models[id]; if (m && this.ship.m !== m) m.obj.parent?.remove(m.obj); delete this.models[id]; }
 
-  load(id) {
+  async load(id) {
     if (this.env) { for (const v of this.env.veg || []) v.clear(); this.scene.remove(this.env.group, this.env.sky); this.env.group.traverse((o) => { o.geometry?.dispose(); if (o.isInstancedMesh) o.dispose(); }); for (const s of this.sprites) this.scene.remove(s); this.sprites = []; }
     const e = (this.env = buildSurface(id)); this.bodyId = id; this.scene.add(e.group, e.sky);
+    await readyTextures();
     this.sun.color.set(e.sunCol); this.sun.intensity = e.sunInt; this.hemi.color.set(e.hemi[0]); this.hemi.groundColor.set(e.hemi[1]); this.hemi.intensity = e.hemi[2];
     this.scene.fog = new THREE.FogExp2(e.fog[0], e.fog[1]);
-    const tmp = new THREE.Scene(); tmp.add(e.sky); this.envRT?.dispose(); this.envRT = G.gfx.pmrem.fromScene(tmp, 0, 1, 20000); this.scene.environment = this.envRT.texture; this.scene.environmentIntensity = 0.9; this.scene.add(e.sky); // 前の星の環境マップは捨てる (着陸のたびに GPU メモリが増えないように)
+    if (G.gfx.pmrem) {
+      const tmp = new THREE.Scene(); tmp.add(e.sky);
+      this.envRT?.dispose(); this.envRT = G.gfx.pmrem.fromScene(tmp, 0, 1, 20000); this.scene.environment = this.envRT.texture; this.scene.environmentIntensity = 0.9; this.scene.add(e.sky);
+    }
     if (e.mirror && !e.mirror[0].userData.mir) { e.mirror[0].userData.mir = 1; this.mirror.apply(e.mirror[0], e.mirror[1]); }
     this.mirror.y = e.mirror ? 0.03 : -9999;
     for (const b of e.beacons) { const s = makeGlowSprite(b.c, b.s, 2.2); s.position.copy(b.p); s.userData.blink = b.blink; s.material.fog = false; this.scene.add(s); this.sprites.push(s); }
@@ -58,7 +62,7 @@ export class SurfaceMode {
     // (デバッグ用 URL で拠点や着陸中の救助船に直接入り、外へ出たときなど。以前は毎フレーム例外で止まっていた)
     if (o.resume && (!this.env || (o.body && o.body !== this.bodyId))) o = { ...o, resume: false, parked: true, body: o.body || this.bodyId || 'terra' };
     if (!o.resume) {
-      if (this.bodyId !== o.body || !this.env) { G.hud.show(true); G.hud.banner('大気圏突入', `${body(o.body).name} の地表を展開中…`, 8); await new Promise((r) => setTimeout(r, 90)); this.load(o.body); } else for (const [i, n] of this.env.nodes.entries()) n.g.visible = G.p.flags[`n_${o.body}_${i}`] !== G.p.day;
+      if (this.bodyId !== o.body || !this.env) { G.hud.show(true); G.hud.banner('大気圏突入', `${body(o.body).name} の地表を展開中…`, 8); await new Promise((r) => setTimeout(r, 90)); await this.load(o.body); } else for (const [i, n] of this.env.nodes.entries()) n.g.visible = G.p.flags[`n_${o.body}_${i}`] !== G.p.day;
       if (s.m) this.scene.remove(s.m.obj);
       s.m = this.model(G.p.ship); s.id = G.p.ship; this.scene.add(s.m.obj); if (s.m.gear) s.m.gear.visible = false; this._engines(true);
       s.clear = -(new THREE.Box3().setFromObject(s.m.gear || s.m.body).min.y - s.m.obj.position.y) + 0.05;

@@ -22,6 +22,7 @@ export class UI {
   /** build(body, api) で中身を作る。api.refresh() で再描画 */
   open(title, sub, build, o = {}) {
     this.close();
+    G.input?.reset();
     const wrap = el('div', 'panel-wrap', '', this.app), p = el('div', 'panel' + (o.small ? ' small' : ''), '', wrap), ph = el('div', 'ph', '', p);
     el('h2', '', `${title}<small>${sub || ''}</small>`, ph); const cr = el('div', 'cr', '', ph);
     if (!o.noClose) { const x = el('button', 'px', '×', ph); x.onclick = () => { SFX('ui'); this.close(); }; }
@@ -52,7 +53,7 @@ export class UI {
       // タイトル画面で選び直した画質を、セーブデータに残っていた古い画質で上書きしない
       const q = G.gfx.qName;
       if (fresh) { wipe(); G.p = newGame(ship); G.p.quality = q; } else { G.p = saved; G.p.ship = ship; G.p.quality = q; }
-      t.classList.add('fadeout'); setTimeout(() => t.remove(), 900);
+      t.inert = true; t.classList.add('fadeout'); setTimeout(() => t.remove(), 900);
       G.start(fresh);
     };
     if (saved) { const c = el('button', 'cb', `つづきから<small>${saved.day || 1} 日目・${fmtCr(saved.credits || 0)}</small>`, menu); c.onclick = () => go(false); } // どのデータから再開するかが分かるように

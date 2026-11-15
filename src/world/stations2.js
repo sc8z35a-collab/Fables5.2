@@ -165,7 +165,7 @@ void main(){vec3 d=normalize(vP);float t=uTime*.1;float a=fbm3(d*3.+vec3(0.,t,t*
   vec3 col=mix(vec3(1.,.24,.03),vec3(1.,.85,.45),v)*(1.1+v*3.4)+vec3(1.,.55,.2)*fr*2.6;gl_FragColor=vec4(col,1.);}` });
 
 function megaton() {
-  const U = 0.014, b = new Builder(), r = rng(4242), H = mat('hull', { color: 0x9aa0a8, rough: 0.62, metal: 0.45, uvs: U }), D = mat('hull', { color: 0x2a2e36, rough: 0.85, metal: 0.65, uvs: U }), W = winMat(0x7d838c, 0xffd9a0, 2.8, U), W2 = winMat(0xb4b8be, 0xcfe8ff, 2.4, U), WT = winMat(0x8a9098, 0xffd9a0, 2.8, 0.035), WT2 = winMat(0xaab0b8, 0xcfe8ff, 2.6, 0.035);
+  const U = 0.014, b = new Builder(), r = rng(4242), H = mat('hull', { color: 0x9aa0a8, rough: 0.62, metal: 0.45, uvs: U }), D = mat('oxidized-hull', { color: 0x454a55, rough: 0.85, metal: 0.65, uvs: U }), W = winMat(0x7d838c, 0xffd9a0, 2.8, U), W2 = winMat(0xb4b8be, 0xcfe8ff, 2.4, U), WT = winMat(0x8a9098, 0xffd9a0, 2.8, 0.035), WT2 = winMat(0xaab0b8, 0xcfe8ff, 2.6, 0.035);
   const BR = metal(0xc8a04a, 0.3), MIR = Object.assign(new THREE.MeshStandardMaterial({ color: 0xd6dfee, roughness: 0.05, metalness: 1, envMapIntensity: 2.4 }), { userData: { uvs: 0 } }), CG = cityGlass(), RDM = radiatorMat(), Y = glow('#ffd27a', 4), O = glow('#ff9a3a', 4);
   const L = 2200, R = 250, WIN = [0, 120, 240].map((d) => d * RAD), LAND = [60, 180, 300].map((d) => d * RAD), lights = [], signs = [];
   const er = (a) => V(Math.cos(a), Math.sin(a), 0), et = (a) => V(-Math.sin(a), Math.cos(a), 0), ez = V(0, 0, 1);
@@ -306,7 +306,7 @@ function fizer() {
 
 // ───────────────────────── 9. ウェポン (電磁投射砲) ─────────────────────────
 function weapon() {
-  const U = 0.05, b = new Builder(), r = rng(1337), H = mat('hull', { color: 0x4a505a, rough: 0.6, metal: 0.6, uvs: U }), D = mat('hull', { color: 0x1e2127, rough: 0.82, metal: 0.7, uvs: U }), Y = mat('hull', { color: 0xf2b90a, rough: 0.55, metal: 0.3, uvs: U }), W = winMat(0x40454e, 0xffd0a0, 2.2, U), RL = metal(0x8a929e, 0.34), CU = metal(0xc8743a, 0.32);
+  const U = 0.05, b = new Builder(), r = rng(1337), H = mat('welded-steel', { color: 0x4a505a, rough: 0.6, metal: 0.6, uvs: U }), D = mat('hull', { color: 0x1e2127, rough: 0.82, metal: 0.7, uvs: U }), Y = mat('hull', { color: 0xf2b90a, rough: 0.55, metal: 0.3, uvs: U }), W = winMat(0x40454e, 0xffd0a0, 2.2, U), RL = metal(0x8a929e, 0.34), CU = metal(0xc8743a, 0.32);
   const GR = glow('#ff3a2a', 4), lights = [], signs = [];
   // ── 砲身: 2 本のレールと 9 基の加速環 ──
   const ZM = -300, ZB = -30, NRING = 9, PERIOD = 22, ringM = [];

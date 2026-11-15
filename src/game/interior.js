@@ -8,7 +8,7 @@ import { buildShip } from '../world/ships.js';
 import { Mirror } from '../gfx/renderer.js';
 import { Particles, makeGlowSprite } from '../gfx/fx.js';
 import { syncDamage } from '../gfx/damage.js';
-import { mat, glow, aoMat, activeScreens, dropScreens } from '../gfx/textures.js';
+import { mat, glow, aoMat, activeScreens, dropScreens, readyTextures } from '../gfx/textures.js';
 import { ENEMIES, SHIPS, station, body } from '../world/defs.js';
 import { stats, save, earn, addCargo, event, remaining, rescueState, disaster, objective } from './state.js';
 
@@ -153,10 +153,11 @@ export class InteriorMode {
     if (o.type === 'ship' && o.via === 'airlock') { const ex = it.items.find((i) => i.act === 'exit'); if (ex) { const r = roomAt(it, ex.x, ex.z - 1.6); this.pos.set(ex.x, 0, ex.z - 1.8); this.yaw = 0; if (!r) this.pos.set(s[0], 0, s[1]); } }
     this.pos.y = floorY(it, this.pos.x, this.pos.z); this.lastRoom = null; this._vis(true);
     this._slot();
+    await readyTextures();
     // 反射プローブ (初回のみ)
     this._lights(0, true);
-    if (!it.env) { const r = G.gfx.renderer, rt = new THREE.WebGLCubeRenderTarget(128, { type: THREE.HalfFloatType }), cc = new THREE.CubeCamera(0.1, 300, rt); cc.position.set(this.pos.x, 1.7, this.pos.z); this.scene.environment = null; this.mirror.u.uMirrorOn.value = 0; r.autoClear = true; cc.update(r, this.scene); r.autoClear = false; r.setRenderTarget(null); it.envRT?.dispose(); it.envRT = G.gfx.pmrem.fromCubemap(rt.texture); it.env = it.envRT.texture; rt.dispose(); }
-    this.scene.environment = it.env; this.scene.environmentIntensity = 0.5; G.gfx.look(0.4, 1.15, 0.92);
+    if (!it.env && G.gfx.pmrem) { const r = G.gfx.renderer, rt = new THREE.WebGLCubeRenderTarget(128, { type: THREE.HalfFloatType }), cc = new THREE.CubeCamera(0.1, 300, rt); cc.position.set(this.pos.x, 1.7, this.pos.z); this.scene.environment = null; this.mirror.u.uMirrorOn.value = 0; r.autoClear = true; cc.update(r, this.scene); r.autoClear = false; r.setRenderTarget(null); it.envRT?.dispose(); it.envRT = G.gfx.pmrem.fromCubemap(rt.texture); it.env = it.envRT.texture; rt.dispose(); }
+    this.scene.environment = it.env ?? null; this.scene.environmentIntensity = 0.5; G.gfx.look(0.4, 1.15, 0.92);
     this.hostile = !!it.bp.hostile; this.gun.visible = this.hostile; this.suit = 60; for (const sh of this.shots) { sh.life = 0; sh.m.visible = false; }
     this.camera.aspect = G.W / G.H; this.camera.fov = 72; this.camera.updateProjectionMatrix();
     G.hud.setMode('fps'); G.hud.showBar('sh', this.hostile); G.hud.show(true); G.hud.setTarget(null); /* 防護服 (SUIT) が減るのは敵艦の中だけ */ G.gfx.fx.uSun.value.z = 0; G.gfx.fx.uWarp.value = 0; G.gfx.fx.uHeat.value = 0;

@@ -14,8 +14,8 @@ const ADD = { transparent: true, blending: THREE.AdditiveBlending, depthWrite: f
 let _B;
 const BM = () => _B || (_B = {
   br: mat('flat', { color: 0xc8a04a, rough: 0.3, metal: 1 }),   // 真鍮
-  cu: mat('flat', { color: 0xc8743a, rough: 0.32, metal: 1 }),  // 銅
-  rl: mat('flat', { color: 0x8a929e, rough: 0.3, metal: 1 }),   // 研磨鋼
+  cu: mat('verdigris', { color: 0xc8743a, rough: 0.32, metal: 1 }),  // 銅
+  rl: mat('stainless', { color: 0x8a929e, rough: 0.3, metal: 1 }),   // 研磨鋼
   gm: mat('flat', { color: 0x4a505a, rough: 0.5, metal: 0.65 }), // 砲金
   yl: mat('flat', { color: 0xf2b90a, rough: 0.55, metal: 0.3 }), // 警戒色
   iv: mat('flat', { color: 0xf0e8d4, rough: 0.35, metal: 0.15 }), // 象牙色
