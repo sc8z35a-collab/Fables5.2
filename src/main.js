@@ -2,9 +2,9 @@
 import * as THREE from 'three';
 import { G, clamp } from './core/util.js';
 import { Gfx, QUALITY, DIST } from './gfx/renderer.js';
-import { Backdrop } from './gfx/planets.js';
+import { Backdrop, preloadBackdrop } from './gfx/planets.js';
 import { fxTime } from './gfx/fx.js';
-import { updateScreens } from './gfx/textures.js';
+import { readyTextures, updateScreens } from './gfx/textures.js';
 import { BODIES } from './world/defs.js';
 import { Input } from './ui/input.js';
 import { Hud } from './ui/hud.js';
@@ -24,6 +24,8 @@ window.G = G; G.modes = {}; G.time = 0; G.tip = '';
 const saProbe = document.createElement('div'); saProbe.style.cssText = 'position:fixed;left:0;top:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)'; document.body.appendChild(saProbe);
 function layout() {
   const w = window.innerWidth, h = window.innerHeight, portrait = h > w, W = portrait ? h : w, H = portrait ? w : h;
+  if (W <= 0 || H <= 0) return;
+  if (G.portrait !== portrait || G.W !== W || G.H !== H) G.input?.reset();
   Object.assign(G, { W, H, portrait, vw: w });
   app.style.width = W + 'px'; app.style.height = H + 'px';
   app.style.transform = portrait ? `translateX(${w}px) rotate(90deg)` : 'none';
@@ -48,7 +50,7 @@ const tweens = [];
 G.tween = (dur, fn) => new Promise((res) => tweens.push({ t: 0, dur, fn, res }));
 G.fade = (to, dur = 0.4, flash = false) => { const u = flash ? G.gfx.fx.uFlash : G.gfx.fx.uFade, from = u.value, tgt = flash ? 1 - to : to; return G.tween(dur, (k) => { u.value = from + (tgt - from) * k; }); };
 G.go = async (name, params = {}, o = {}) => {
-  if (G.busy) return; G.busy = true; G.ui.close();
+  if (G.busy) return; G.busy = true; G.input.reset(); G.ui.close();
   await G.fade(0, o.flash ? 1.0 : 0.35, o.flash);
   G.mode?.exit?.(name);
   if (o.flash) { G.gfx.fx.uFade.value = 0; }
@@ -91,6 +93,7 @@ async function boot() {
   G.input = new Input(app); G.hud = new Hud(app); G.ui = new UI(app); G.audio = new AudioSys();
   G.hud.show(false);
   await prog(0.06, '星図を生成中…');
+  await preloadBackdrop();
   G.backdrop = new Backdrop(G.gfx.renderer, BODIES, G.gfx.q);
   await prog(0.2, '惑星を形成中…');
   const terra = BODIES.find((b) => b.id === 'terra');
@@ -120,7 +123,8 @@ async function boot() {
     await G.mode.enter(auto === 'space' ? params : { near: 'haven' });
     if (auto !== 'space') { G.mode.exit(); G.mode = G.modes[auto]; G.modeName = auto; await G.mode.enter(params); }
   } else { G.titleOn = true; G.space.enter({ title: true }); G.ui.title(); }
-  bootEl.style.opacity = 0; setTimeout(() => bootEl.remove(), 900);
+  await readyTextures();
+  bootEl.classList.add('fadeout'); setTimeout(() => bootEl.remove(), 900);
   requestAnimationFrame(frame);
 }
 

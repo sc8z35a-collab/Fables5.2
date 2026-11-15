@@ -2,7 +2,6 @@
 import * as THREE from 'three';
 import { Builder, Placer, mx, loft } from '../gfx/builder.js';
 import { mat, glow } from '../gfx/textures.js';
-import '../gfx/textures2.js';
 import { makeGlowSprite, fxTime } from '../gfx/fx.js';
 import { G } from '../core/util.js';
 import { V, sign } from './stationkit.js';
@@ -35,7 +34,7 @@ export function kit(o = {}) {
   const u = o.uvs ?? 0.04;
   return { H: mat('hull', { color: 0xe6e9ee, rough: 0.55, metal: 0.3, uvs: u }), D: mat('hull', { color: 0x30353d, rough: 0.82, metal: 0.6, uvs: u }), Y: mat('hull', { color: 0xf2b90a, rough: 0.55, metal: 0.3, uvs: u }), A: mat('hull', { color: 0xff5412, rough: 0.55, metal: 0.2, uvs: u }),
     DS: mat('hull', { color: 0xe4e7ec, rough: 0.5, metal: 0.45, uvs: u, side: THREE.DoubleSide }), DD: mat('hull', { color: 0x1c1e22, rough: 0.8, metal: 0.7, uvs: u, side: THREE.DoubleSide }),
-    S: mat('solar', { metal: 0.9, env: 1.6 }), GL: glass(), HZ: mat('hazard', { rough: 0.6, metal: 0.3, uvs: 0.08 }), GR: mat('grate', { color: 0x8a9096, rough: 0.6, metal: 0.7, uvs: 0.25 }), CU: metal(0xc8743a, 0.32), ...o };
+    S: mat('solar', { metal: 0.9, env: 1.6 }), GL: glass(), HZ: mat('hazard', { rough: 0.6, metal: 0.3, uvs: 0.08 }), GR: mat('perforated', { color: 0x8a9096, rough: 0.6, metal: 0.7, uvs: 0.25 }), CU: mat('verdigris', { color: 0xd5a689, metal: 0.8, rough: 0.55 }), ...o };
 }
 const BM = new Map();
 /** 光錐 (投光器・探照灯)。UV の v = 0 が光源側 */

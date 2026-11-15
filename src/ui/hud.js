@@ -22,7 +22,8 @@ export class Hud {
     this.cross = el('div', 'cross', '', r); this.prompt = el('div', 'prompt', '', r);
     this.ctx = el('div', 'ctx', '', r);
     this.fpsEl = el('div', 'fps', '', r); this.fpsEl.style.display = 'none';
-    this.bMap.onclick = () => { G.audio?.ui(); G.ui.map(); }; this.bMenu.onclick = () => { G.audio?.ui(); G.ui.pause(); };
+    this.bMap.onclick = () => { if (!G.busy) { G.audio?.ui(); G.ui.map(); } };
+    this.bMenu.onclick = () => { if (!G.busy) { G.audio?.ui(); G.ui.pause(); } };
     this._cr = -1; this._loc = ''; this._obj = ''; this._sp = ''; this._bt = 0; this._once = {};
     this.resize();
   }
@@ -35,7 +36,7 @@ export class Hud {
   _place() { if (!this.msgs) return; const b = this.tl.offsetTop + this.tl.offsetHeight; this.msgs.style.top = Math.max(this.u * 21, b + this.u * 1.2) + 'px'; }
   show(on) { this.root.classList.toggle('hide', !on); }
   setMode(m) {
-    this.mode = m; const f = m === 'space' || m === 'atmo'; this.root.classList.toggle('title', m === 'title');
+    this.mode = m; const f = m === 'space' || m === 'atmo'; this.root.classList.toggle('is-title', m === 'title');
     this.bars.style.display = m === 'title' ? 'none' : ''; this.speed.style.display = f ? '' : 'none';
     this.cross.style.display = m === 'fps' ? 'block' : 'none'; if (m !== 'fps') { this.prompt.style.display = 'none'; this._pr = null; }
     // 非表示にしたら記憶も消す (同じ名前の目標を再び選んだときに表示されなくなるのを防ぐ)
@@ -79,7 +80,13 @@ export class Hud {
     // 毎フレーム呼ばれるので、前回と同じ並び (ラベルと種類) なら文字列を組み立てずに戻る
     const prev = this._ctxPrev; let same = !!prev && prev.length === list.length; if (same) for (let i = 0; i < list.length; i++) if (prev[i].label !== list[i].label || prev[i].cls !== list[i].cls) { same = false; break; }
     if (same) return; this._ctxPrev = list.map((c) => ({ label: c.label, cls: c.cls })); this.ctx.innerHTML = '';
-    list.forEach((c, i) => { const b = el('button', 'cb ' + (c.cls || ''), c.label, this.ctx); b.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); G.audio?.unlock(); G.audio?.ui(); this.ctxList[i]?.fn(); }, { passive: false }); });
+    list.forEach((c, i) => {
+      const b = el('button', 'cb ' + (c.cls || ''), c.label, this.ctx);
+      b.onclick = () => {
+        if (G.busy || G.ui.isOpen) return;
+        G.audio?.unlock(); G.audio?.ui(); this.ctxList[i]?.fn();
+      };
+    });
   }
   /** FPS 表示 (設定 → FPS 表示)。v = null で隠す */
   setFps(v) { if (v == null) { this.fpsEl.style.display = 'none'; return; } this.fpsEl.style.display = ''; this.fpsEl.textContent = `${Math.round(v)} FPS`; this.fpsEl.classList.toggle('low', v < 25); }

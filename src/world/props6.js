@@ -42,7 +42,7 @@ export const PROPS6 = {
   },
   /** ミケーネの操縦シミュレーター: 6 本の脚で揺れる訓練用キャビン */
   simpod(P, o, e) {
-    const m = MM(), A = flat(0xff5412, 0.5, 0.2), WD = mat('flat', { color: 0xf2f3ef, rough: 0.4, metal: 0.2, side: THREE.DoubleSide }), g = new THREE.Group(), cab = new THREE.Group(), b = new Builder();
+    const m = MM(), A = flat(0xff5412, 0.5, 0.2), WD = mat('ceramic-cloth', { color: 0xf2f3ef, rough: 0.4, metal: 0.2, side: THREE.DoubleSide }), g = new THREE.Group(), cab = new THREE.Group(), b = new Builder();
     P.cyl(m.dk, 1.55, 1.75, 0.16, 0, 0.08, 0, 'y', 24); P.tor(glow('#35ff8a', 2), 1.6, 0.02, 0, 0.17, 0, HP, 0, 0, 40, 5);
     for (let i = 0; i < 6; i++) { const a = i * TAU / 6 + 0.26; P.add(m.ch, new THREE.CylinderGeometry(0.035, 0.045, 0.82, 8), mx(Math.cos(a) * 1.0, 0.52, Math.sin(a) * 1.0, -Math.sin(a) * 0.45, 0, Math.cos(a) * 0.45)); P.sph(m.dk, 0.07, Math.cos(a) * 1.2, 0.2, Math.sin(a) * 1.2, 1, 1, 1, 8); }
     b.box(m.dk, 1.7, 0.12, 2.4, 0, 0.06, 0); b.add(WD, new THREE.SphereGeometry(1.2, 22, 14, 0, Math.PI), mx(0, 0.95, 0.1, 0, Math.PI, 0, 0.74, 0.9, 1.05), 0);
@@ -78,7 +78,7 @@ export const PROPS6 = {
   },
   /** 遠心分離機: 透明な蓋の下でローターが回っては止まる */
   centrifuge(P, o, e) {
-    const m = MM(), c = o.c || '#6fe8ff', WD = mat('flat', { color: 0xe6eaef, rough: 0.3, metal: 0.1, side: THREE.DoubleSide });
+    const m = MM(), c = o.c || '#6fe8ff', WD = mat('technical-canvas', { color: 0xe6eaef, rough: 0.3, metal: 0.1, side: THREE.DoubleSide });
     P.box(m.wh, 1.0, 0.9, 0.9, 0, 0.45, 0); P.box(m.dk, 1.02, 0.06, 0.92, 0, 0.03, 0); P.add(WD, new THREE.CylinderGeometry(0.46, 0.5, 0.42, 24, 1, true), mx(0, 1.11, 0)); P.cyl(m.dk, 0.45, 0.45, 0.02, 0, 0.99, 0, 'y', 24);
     P.add(glassMat(), new THREE.SphereGeometry(0.44, 20, 8, 0, TAU, 0, 1.1), mx(0, 1.14, 0, 0, 0, 0, 1, 0.6, 1), 0);
     P.tor(glow(c, 2.4), 0.47, 0.012, 0, 1.32, 0, HP, 0, 0, 32, 5); scr(P, 'bars', c, '', 0.34, 0.16, 0.2, 0.7, 0.455, 0, 1.4); P.box(glow('#35ff8a', 2.6), 0.04, 0.04, 0.01, -0.3, 0.74, 0.455);

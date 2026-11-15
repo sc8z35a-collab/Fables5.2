@@ -8,10 +8,10 @@ const HP = Math.PI / 2, TAU = Math.PI * 2;
 let _M;
 const MM = () => _M || (_M = {
   H: mat('hull', { color: 0xf4f5f1, rough: 0.5, metal: 0.25 }),      // 白い外板
-  A: mat('hull', { color: 0xff5412, rough: 0.5, metal: 0.2 }),       // インターナショナル・オレンジ
+  A: mat('ablative', { color: 0xff5412, rough: 0.5, metal: 0.2 }),       // インターナショナル・オレンジ
   D: mat('hull', { color: 0x30353d, rough: 0.8, metal: 0.6 }),       // 機械部
-  K: mat('flat', { color: 0x14171b, rough: 0.5, metal: 0.55 }),      // 黒い樹脂・ゴム
-  C: mat('flat', { color: 0xd4d9df, rough: 0.14, metal: 1 }),        // 磨いた金属
+  K: mat('rubber-chips', { color: 0x14171b, rough: 0.5, metal: 0.55 }),      // 黒い樹脂・ゴム
+  C: mat('anodized-aluminum', { color: 0xd4d9df, rough: 0.14, metal: 1 }),        // 磨いた金属
   W: mat('flat', { color: 0x241a10, rough: 0.2, metal: 0.3, emissive: '#ffcf90', ei: 1.5 }), // 室内灯のともる窓
   GL: Object.assign(new THREE.MeshStandardMaterial({ color: 0x06121f, roughness: 0.04, metalness: 1, envMapIntensity: 2.6 }), { userData: { uvs: 0 } }),
 });

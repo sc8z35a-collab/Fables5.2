@@ -9,11 +9,11 @@ const HP = Math.PI / 2;
 let _M;
 export const MM = () => _M || (_M = {
   dk: mat('hull', { color: 0x30343c, rough: 0.8, metal: 0.6 }), st: mat('rib', { color: 0x9aa2ad, metal: 0.7, rough: 0.7 }), wh: mat('flat', { color: 0xe6eaef, rough: 0.3, metal: 0.1 }),
-  bk: mat('flat', { color: 0x0e1014, rough: 0.4, metal: 0.5 }), ch: mat('flat', { color: 0xd0d5db, rough: 0.12, metal: 1 }), gd: mat('flat', { color: 0xd4a84a, rough: 0.25, metal: 1 }),
-  wd: mat('wood', { rough: 0.75, metal: 0 }), lf: mat('flat', { color: 0x256b2a, rough: 0.85, metal: 0 }), lf2: mat('flat', { color: 0x4f9a3a, rough: 0.85, metal: 0 }), tr: mat('flat', { color: 0x4a3524, rough: 0.9, metal: 0 }),
-  so: mat('flat', { color: 0x2a1e14, rough: 1, metal: 0 }),
+  bk: mat('flat', { color: 0x0e1014, rough: 0.4, metal: 0.5 }), ch: mat('stainless', { color: 0xd0d5db, rough: 0.12, metal: 1 }), gd: mat('flat', { color: 0xd4a84a, rough: 0.25, metal: 1 }),
+  wd: mat('walnut', { rough: 0.75, metal: 0 }), lf: mat('flat', { color: 0x256b2a, rough: 0.85, metal: 0 }), lf2: mat('flat', { color: 0x4f9a3a, rough: 0.85, metal: 0 }), tr: mat('flat', { color: 0x4a3524, rough: 0.9, metal: 0 }),
+  so: mat('wet-mud', { color: 0x2a1e14, rough: 1, metal: 0 }),
 });
-export const fab = (c) => mat('padded', { color: c, rough: 0.8, metal: 0.02 }); // 椅子・ソファの張り地 (絨毯の細かい粒状模様だと砂のように見えるため)
+export const fab = (c) => mat('leather', { color: c, rough: 0.8, metal: 0.02 }); // 椅子・ソファの張り地
 export const crateM = (c) => mat('rib', { color: c, metal: 0.35, rough: 0.8 });
 export const flat = (c, r = 0.5, m = 0.2) => mat('flat', { color: c, rough: r, metal: m });
 export const CRATE = [0xb8452e, 0x2e7ab8, 0xc9a22e, 0x3aa86a, 0x7a808a, 0x8a4ab8];
