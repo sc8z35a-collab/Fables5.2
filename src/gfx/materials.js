@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { G } from '../core/util.js';
 import { TEXTURE_PACKS } from './texture-packs.js';
+import { AI_TEXTURE_PACKS } from './texture-packs-ai.js';
 
 // 1 m あたりの繰り返し数。すべての素材に色・法線・粗さの WebP がある。
 export const MATERIAL_UVS = Object.freeze({
@@ -24,7 +25,8 @@ const textures = new Map();
 const pending = new Set();
 const packs = new Map();
 const packByTexture = new Map();
-for (const [name, paths] of Object.entries(TEXTURE_PACKS)) for (const path of paths) packByTexture.set(path, name);
+// AI 生成のパック (.claude/skills/gpt-image-textures) は後から登録し、同じ名前の画像を置き換える。
+for (const [name, paths] of Object.entries({ ...TEXTURE_PACKS, ...AI_TEXTURE_PACKS })) for (const path of paths) packByTexture.set(path, name);
 let aniso = 1;
 
 export function setImageAniso(value) { aniso = value; }

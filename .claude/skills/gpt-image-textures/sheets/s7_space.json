@@ -1,0 +1,16 @@
+{
+ "id": "s7_space",
+ "group": "replace-extra",
+ "style": "Spacecraft and space-station surfaces: labs, hazard markings, armor, composites and heat shields.",
+ "cells": [
+  {"name": "lab", "kind": "tile", "prompt": "Clean white laboratory wall made of large square panels with thin precise seams.", "mean": [219, 216, 211], "rough": 49, "sat": 0.2, "normal": 1.5},
+  {"name": "hazard", "kind": "tile", "prompt": "Worn diagonal yellow-and-black hazard stripes painted on steel, scratches and chipped paint.", "mean": [154, 126, 58], "rough": 196, "sat": 1.0, "normal": 3.0},
+  {"name": "blasted-steel", "kind": "tile", "prompt": "Sandblasted steel plate with fine uniform matte grain and faint handling marks.", "mean": [158, 157, 157], "rough": 126, "sat": 0.2, "normal": 2.5},
+  {"name": "welded-steel", "kind": "tile", "prompt": "Steel plates joined by visible weld seams in a cross pattern, heat tint near the welds.", "mean": [166, 166, 167], "rough": 125, "sat": 0.3, "normal": 3.5},
+  {"name": "armor", "kind": "tile", "prompt": "Dark gunmetal armor plate with chamfered corners, recessed bolts and panel seams.", "mean": [103, 103, 103], "rough": 136, "sat": 0.15, "normal": 4.0},
+  {"name": "carbon-fiber", "kind": "tile", "prompt": "Woven carbon-fibre composite with a diagonal 2x2 twill weave.", "mean": [113, 112, 112], "rough": 198, "sat": 0.1, "normal": 2.0},
+  {"name": "oxidized-hull", "kind": "tile", "prompt": "Oxidized grey spaceship hull plating with chipped paint, corrosion blooms and rivets.", "mean": [132, 131, 129], "rough": 132, "sat": 0.4, "normal": 4.0},
+  {"name": "ablative", "kind": "tile", "prompt": "Pale grey ceramic ablative heat-shield tiles in a square grid with scorched edges.", "mean": [187, 187, 186], "rough": 184, "sat": 0.2, "normal": 3.5},
+  {"name": "anodized-aluminum", "kind": "tile", "prompt": "Brushed anodized aluminium with fine horizontal brushing lines.", "mean": [199, 200, 202], "rough": 67, "sat": 0.2, "normal": 1.5}
+ ]
+}

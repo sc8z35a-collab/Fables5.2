@@ -1,0 +1,16 @@
+{
+ "id": "s1_metal",
+ "group": "replace",
+ "style": "Hard-surface science-fiction spacecraft and space-station materials, realistic industrial aerospace look, used but well kept.",
+ "cells": [
+  {"name": "hull", "kind": "tile", "prompt": "Spaceship outer hull: light grey painted metal armor panels of many different rectangular sizes, recessed panel seams, rows of flush rivets, a few small square access hatches and vent slots, faint soot streaks and light weathering.", "mean": [163, 164, 168], "rough": 125, "sat": 0.15, "normal": 4.5},
+  {"name": "wall", "kind": "tile", "prompt": "Space-station corridor wall seen straight-on: light grey modular wall panels, a band of vent slats near the top, a horizontal pipe band, big smooth bolted panels in the middle, darker kick plates along the bottom edge with a thin worn yellow strip.", "mean": [150, 150, 153], "rough": 127, "sat": 0.15, "normal": 4.0},
+  {"name": "plate", "kind": "tile", "prompt": "Steel diamond-plate (checker plate) floor made of 2x2 large square plates with bolted corners, raised diamond pattern, scuffs, boot marks and grime in the corners.", "mean": [156, 155, 154], "rough": 127, "sat": 0.1, "normal": 3.5},
+  {"name": "grate", "kind": "tile", "prompt": "Industrial galvanized steel bar grating floor (catwalk grate) seen from above: parallel flat bars with cross rods, deep dark void between the bars.", "mean": [82, 81, 81], "rough": 151, "sat": 0.1, "normal": 5.0},
+  {"name": "hex", "kind": "tile", "prompt": "Science-fiction floor of hexagonal metal tiles: slightly raised satin grey hex plates with bevelled edges and dark gaps, a few tiles with small inset center plates.", "mean": [85, 85, 88], "rough": 203, "sat": 0.1, "normal": 3.5},
+  {"name": "rib", "kind": "tile", "prompt": "Ribbed steel sheet with evenly spaced vertical rounded ribs and two horizontal reinforcing bands, light scratches and grime.", "mean": [139, 139, 141], "rough": 140, "sat": 0.12, "normal": 4.0},
+  {"name": "ceil", "kind": "tile", "prompt": "Science-fiction ceiling: grid of square dark grey metal ceiling panels with deep seams, some panels with ventilation slats, some with a recessed light strip (unlit).", "mean": [216, 216, 218], "rough": 207, "sat": 0.1, "normal": 4.0},
+  {"name": "bulk", "kind": "tile", "prompt": "Heavy riveted steel bulkhead: large staggered rectangular steel plates with dense rows of round rivets along every edge, rust streaks running down, grime and oil stains.", "mean": [191, 191, 194], "rough": 120, "sat": 0.2, "normal": 4.5},
+  {"name": "smooth", "kind": "tile", "prompt": "Smooth white composite wall panels of a clean futuristic interior: large square panels with thin precise seams, a few small inset ventilation grilles, matte finish.", "mean": [201, 200, 199], "rough": 126, "sat": 0.1, "normal": 2.5}
+ ]
+}

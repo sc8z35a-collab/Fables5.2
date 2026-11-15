@@ -1,0 +1,16 @@
+{
+ "id": "s5_terrain",
+ "group": "replace-extra",
+ "style": "Planetary ground and rock surfaces for volcanic, icy, desert, lunar and earth-like worlds.",
+ "cells": [
+  {"name": "basalt", "kind": "tile", "prompt": "Dark grey vesicular basalt lava rock with many small gas holes, cracks and rough grit.", "mean": [105, 103, 103], "rough": 228, "sat": 0.4, "normal": 5.0},
+  {"name": "snow-crust", "kind": "tile", "prompt": "Wind-crusted snow surface seen from above: wavy sastrugi ridges, icy crust and soft blue shadows.", "mean": [203, 211, 221], "rough": 208, "sat": 1.0, "normal": 3.0, "hp": 40},
+  {"name": "glacial-ice", "kind": "tile", "prompt": "Clear blue glacial ice with white fracture lines, trapped bubbles and frost.", "mean": [159, 187, 209], "rough": 55, "sat": 1.0, "normal": 3.0},
+  {"name": "sandstone", "kind": "tile", "prompt": "Layered beige sandstone with fine wavy horizontal strata and small erosion pits.", "mean": [173, 163, 152], "rough": 217, "sat": 1.0, "normal": 4.0},
+  {"name": "ripple-sand", "kind": "tile", "prompt": "Pale fine sand seen from above with regular wind ripples.", "mean": [194, 182, 170], "rough": 213, "sat": 1.0, "normal": 3.0, "hp": 40},
+  {"name": "regolith", "kind": "tile", "prompt": "Grey lunar regolith: fine dust with scattered pebbles, small rocks and tiny craters.", "mean": [139, 139, 139], "rough": 221, "sat": 0.3, "normal": 4.5},
+  {"name": "moss-granite", "kind": "tile", "prompt": "Speckled grey granite with patches of green moss and lichen.", "mean": [126, 122, 114], "rough": 225, "sat": 1.0, "normal": 4.5},
+  {"name": "wet-mud", "kind": "tile", "prompt": "Dark brown wet mud with puddle sheen, footprints-free, small stones and cracks.", "mean": [95, 84, 77], "rough": 232, "sat": 1.0, "normal": 3.5},
+  {"name": "gravel", "kind": "tile", "prompt": "Loose grey mixed gravel of small angular and rounded stones seen from above.", "mean": [127, 126, 126], "rough": 224, "sat": 0.4, "normal": 5.0}
+ ]
+}
