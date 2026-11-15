@@ -1,0 +1,32 @@
+{
+ "id": "s4_plants",
+ "model": "gpt-image-2.5-sunburst",
+ "size": "2880x2880",
+ "quality": "medium",
+ "seconds": 29.1,
+ "usage": {
+  "input_tokens": 583,
+  "input_tokens_details": {
+   "image_tokens": 0,
+   "text_tokens": 583
+  },
+  "output_tokens": 1483,
+  "output_tokens_details": {
+   "image_tokens": 1483,
+   "text_tokens": 0
+  },
+  "total_tokens": 2066
+ },
+ "created": 1794748579,
+ "cells": [
+  "oak_side",
+  "jungle_side",
+  "bush_side",
+  "pine_side",
+  "palm_side",
+  "wheat_side",
+  "corn_side",
+  "fern_side",
+  "leaf"
+ ]
+}

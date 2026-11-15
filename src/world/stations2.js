@@ -5,7 +5,8 @@
 //   ウェポン  : ステーションそのものが電磁投射砲 (小規模)。定期的に標的へ試射する
 import * as THREE from 'three';
 import { Builder, mx, rockGeo } from '../gfx/builder.js';
-import { mat, glow, cv, ctex } from '../gfx/textures.js';
+import { mat, glow, cv, ctex, imageTex } from '../gfx/textures.js';
+import { hasImage } from '../gfx/materials.js';
 import { makeGlowSprite, fxTime } from '../gfx/fx.js';
 import { G, rng, rr } from '../core/util.js';
 import { V, winMat, port, done, sign, sdBox } from './stationkit.js';
@@ -143,6 +144,7 @@ function atlas() {
 // ───────────────────────── 7. メガトン (巨大軌道都市) ─────────────────────────
 /** 居住筒の窓の奥に見える街明かり */
 function cityGlass() {
+  if (hasImage('effects/city-lights')) { const t = imageTex('effects/city-lights', { fill: [0, 0, 0, 255] }); t.repeat.set(1, 8); return glassLit(t); }
   const s = 1024, c = cv(s), x = c.getContext('2d'), r = rng(909); x.fillStyle = '#000'; x.fillRect(0, 0, s, s);
   const den = (i, j) => 0.5 + 0.5 * Math.sin(i * 0.41 + 1.3) * Math.cos(j * 0.33 + 0.7) + 0.35 * Math.sin(i * 0.13 - j * 0.19);
   for (let i = 0; i < 64; i++) for (let j = 0; j < 64; j++) {
@@ -151,6 +153,9 @@ function cityGlass() {
   }
   x.globalAlpha = 0.55; for (let i = 0; i < 8; i++) { x.fillStyle = '#ffd9a0'; for (let k = 0; k < 128; k++) { x.fillRect(i * 128 + 62, k * 8 + 2, 3, 3); x.fillRect(k * 8 + 2, i * 128 + 62, 3, 3); } } x.globalAlpha = 1;
   const t = ctex(c, true); t.repeat.set(1, 8);
+  return glassLit(t);
+}
+function glassLit(t) {
   const m = new THREE.MeshStandardMaterial({ color: 0x0a1626, roughness: 0.07, metalness: 1, envMapIntensity: 2.2, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 2.6 }); m.userData.uvs = 0;
   return m;
 }

@@ -1,0 +1,16 @@
+{
+ "id": "s15_obj_machines",
+ "group": "objects",
+ "style": "Close-up surfaces of sci-fi machines, computers and equipment, light neutral tone so the game can tint them.",
+ "cells": [
+  {"name": "locker-steel", "kind": "tile", "prompt": "Steel locker door with vertical vent slots, a small nameplate frame and painted finish.", "mean": [175, 175, 175], "rough": 170, "sat": 0.1, "normal": 3.0, "uvs": 0.5, "norm": "linear", "contrast": 0.1},
+  {"name": "server-rack", "kind": "tile", "prompt": "Server rack front: stacked 1U and 2U units with vent perforations, drive bays and small unlit indicator holes.", "mean": [228, 228, 228], "rough": 235, "sat": 0.1, "normal": 3.0, "uvs": 0.5, "norm": "linear", "contrast": 0.1},
+  {"name": "vent-grille", "kind": "tile", "prompt": "Louvred metal ventilation grille with horizontal slats and screws.", "mean": [163, 164, 168], "rough": 125, "sat": 0.1, "normal": 3.5, "uvs": 0.5, "norm": "linear", "contrast": 0.1},
+  {"name": "pipe-insulation", "kind": "tile", "prompt": "Pipe insulation lagging wrapped in aluminium foil bands with clamps.", "mean": [228, 228, 228], "rough": 235, "sat": 0.1, "normal": 2.5, "uvs": 1.0, "norm": "linear", "contrast": 0.1},
+  {"name": "control-panel", "kind": "tile", "prompt": "Sci-fi control desk surface: rows of square buttons, toggle switches, small knobs and labelled-free panels.", "mean": [228, 228, 228], "rough": 235, "sat": 0.1, "normal": 3.0, "uvs": 0.6, "norm": "linear", "contrast": 0.1},
+  {"name": "reactor-shell", "kind": "tile", "prompt": "Heavy reactor housing: thick bolted steel segments, warning-free, heat-stained.", "mean": [163, 164, 168], "rough": 125, "sat": 0.1, "normal": 3.5, "uvs": 0.3, "norm": "linear", "contrast": 0.1},
+  {"name": "column-cladding", "kind": "tile", "prompt": "Futuristic column cladding: vertical metal panels with grooves and inset strips.", "mean": [163, 164, 168], "rough": 125, "sat": 0.1, "normal": 3.0, "uvs": 0.4, "norm": "linear", "contrast": 0.1},
+  {"name": "arcade-cabinet", "kind": "tile", "prompt": "Retro arcade cabinet side art: bold abstract space shapes and stars, colourful.", "mean": [150, 150, 190], "rough": 200, "sat": 1.0, "normal": 1.2, "uvs": 0.5, "norm": "linear", "contrast": 0.12},
+  {"name": "polished-granite", "kind": "tile", "prompt": "Polished black-and-grey granite with crystal speckles.", "mean": [228, 228, 228], "rough": 60, "sat": 0.1, "normal": 1.0, "uvs": 0.5, "norm": "linear", "contrast": 0.1}
+ ]
+}

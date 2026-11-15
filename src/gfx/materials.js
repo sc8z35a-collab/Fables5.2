@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { G } from '../core/util.js';
 import { TEXTURE_PACKS } from './texture-packs.js';
-import { AI_TEXTURE_PACKS } from './texture-packs-ai.js';
+import { AI_TEXTURE_PACKS, AI_MATERIAL_UVS } from './texture-packs-ai.js';
 
 // 1 m あたりの繰り返し数。すべての素材に色・法線・粗さの WebP がある。
 export const MATERIAL_UVS = Object.freeze({
@@ -18,6 +18,7 @@ export const MATERIAL_UVS = Object.freeze({
   'glazed-brick': .5, 'zinc-roof': .36, stucco: .35, facade: .45, corten: .35,
   'technical-canvas': 1, leather: .85, 'ceramic-cloth': .95, cork: .7, walnut: .45,
   porcelain: .55, laminate: .78,
+  ...AI_MATERIAL_UVS, // AI で追加した素材 (物の質感など)
 });
 
 const ROOT = new URL('../../assets/textures/', import.meta.url);
@@ -30,6 +31,8 @@ for (const [name, paths] of Object.entries({ ...TEXTURE_PACKS, ...AI_TEXTURE_PAC
 let aniso = 1;
 
 export function setImageAniso(value) { aniso = value; }
+/** パックに画像があるか (素材は 'materials/<名前>'、それ以外は 'effects/windows' のように拡張子なしで) */
+export const hasImage = (path) => packByTexture.has(path);
 
 async function readPack(name) {
   const response = await fetch(new URL('packs/' + name + '.zip', ROOT));

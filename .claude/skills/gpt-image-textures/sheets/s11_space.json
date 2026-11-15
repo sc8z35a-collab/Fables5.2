@@ -1,0 +1,16 @@
+{
+ "id": "s11_space",
+ "group": "replace-rest",
+ "style": "Space and planet imagery for a space game: planet surface maps, clouds, nebula, planetary rings and the sun. Each cell is a flat texture that fills the whole cell.",
+ "cells": [
+  {"name": "sky-earth", "kind": "image", "path": "celestial/earth", "seam": "x", "size": 1024, "prompt": "Whole planet Earth as an equirectangular map stretched to fill the square: real continents in their real positions, deep blue oceans, green and brown land, white polar ice at the top and bottom edges, no clouds.", "mean": [43, 70, 84], "sat": 1.0, "ov": 64},
+  {"name": "sky-desert", "kind": "image", "path": "celestial/desert", "seam": "xy", "size": 1024, "prompt": "Rusty red-orange desert planet surface seen from orbit: canyons, craters, dune fields and dark basalt plains.", "mean": [156, 83, 53], "sat": 1.0},
+  {"name": "sky-ice", "kind": "image", "path": "celestial/ice", "seam": "xy", "size": 1024, "prompt": "Icy moon surface seen from orbit: blue-white ice sheets with long cracks, ridges and pressure bands.", "mean": [138, 183, 215], "sat": 1.0},
+  {"name": "sky-lava", "kind": "image", "path": "celestial/lava", "seam": "xy", "size": 1024, "prompt": "Volcanic planet surface seen from orbit: black cooled crust broken by glowing orange-red lava rivers and cracks.", "mean": [36, 23, 22], "sat": 1.0},
+  {"name": "sky-gas", "kind": "image", "path": "celestial/gas", "seam": "x", "size": 1024, "prompt": "Gas giant cloud bands as an equirectangular map: horizontal cream, orange and brown bands with swirling storms and one large oval storm.", "mean": [153, 128, 111], "sat": 1.0, "ov": 64},
+  {"name": "sky-clouds", "kind": "image", "path": "celestial/clouds", "seam": "xy", "size": 512, "prompt": "White cloud formations seen from above on a pure black background, swirling patches with clear gaps.", "mean": [55, 55, 56], "sat": 0.0},
+  {"name": "sky-nebula", "kind": "image", "path": "celestial/nebula", "seam": "xy", "size": 512, "prompt": "Deep-space nebula: wispy blue and teal gas clouds with scattered stars on black.", "mean": [31, 46, 62], "sat": 1.0},
+  {"name": "sky-rings", "kind": "image", "path": "celestial/rings", "seam": "xy", "size": 512, "prompt": "Planetary ring material seen edge-on as thin horizontal bands of beige, grey and brown, straight lines across the whole cell.", "mean": [139, 127, 117], "sat": 1.0},
+  {"name": "sky-sun", "kind": "image", "path": "celestial/sun", "seam": "xy", "size": 512, "prompt": "Close-up of the solar surface: bright orange-yellow plasma granulation cells and darker lanes.", "mean": [227, 114, 9], "sat": 1.0}
+ ]
+}

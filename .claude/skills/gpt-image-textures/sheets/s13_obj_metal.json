@@ -1,0 +1,16 @@
+{
+ "id": "s13_obj_metal",
+ "group": "objects",
+ "style": "Close-up metal and paint finishes of machines and fittings, light neutral tone so the game can tint them.",
+ "cells": [
+  {"name": "brass", "kind": "tile", "prompt": "Polished brass with soft hand-rubbed swirls and slight tarnish spots.", "mean": [228, 228, 228], "rough": 230, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035},
+  {"name": "copper", "kind": "tile", "prompt": "Polished copper with soft swirls and light oxidation spots.", "mean": [228, 228, 228], "rough": 230, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035},
+  {"name": "chrome", "kind": "tile", "prompt": "Mirror-polished chrome with faint fine scratches.", "mean": [228, 228, 228], "rough": 230, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035},
+  {"name": "gunmetal", "kind": "tile", "prompt": "Gunmetal blued steel with fine machining marks and light wear.", "mean": [228, 228, 228], "rough": 230, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035},
+  {"name": "safety-yellow", "kind": "tile", "prompt": "Worn safety-yellow painted steel with chips and scuffs, shown in light neutral tone.", "mean": [228, 228, 228], "rough": 230, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035},
+  {"name": "ivory-enamel", "kind": "tile", "prompt": "Ivory baked enamel paint on metal with soft sheen and tiny crazing.", "mean": [228, 228, 228], "rough": 230, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035},
+  {"name": "orange-paint", "kind": "tile", "prompt": "Weathered painted steel with brush marks, scratches and small dents, light neutral tone.", "mean": [228, 228, 228], "rough": 235, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035},
+  {"name": "red-paint", "kind": "tile", "prompt": "Glossy fire-engine paint on steel with light scratches and polish swirls, light neutral tone.", "mean": [228, 228, 228], "rough": 225, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035},
+  {"name": "machined-steel", "kind": "tile", "prompt": "Machined steel work surface with circular milling marks and oil stains.", "mean": [175, 175, 175], "rough": 170, "sat": 0.1, "normal": 2.0, "uvs": 0.5, "norm": "linear", "contrast": 0.1}
+ ]
+}

@@ -13,8 +13,8 @@ import { RESCUE } from './defs.js';
 const HP = Math.PI / 2;
 const ADD = { transparent: true, blending: THREE.AdditiveBlending, depthWrite: false };
 let _B;
-const BM = () => _B || (_B = { br: mat('flat', { color: 0xc8a04a, rough: 0.3, metal: 1 }), cu: mat('flat', { color: 0xc8743a, rough: 0.32, metal: 1 }), rl: mat('flat', { color: 0x8a929e, rough: 0.3, metal: 1 }), gm: mat('flat', { color: 0x4a505a, rough: 0.5, metal: 0.65 }), yl: mat('flat', { color: 0xf2b90a, rough: 0.55, metal: 0.3 }),
-  or: mat('flat', { color: 0xff6a1e, rough: 0.6, metal: 0.1 }), rd: mat('flat', { color: 0xc8201e, rough: 0.45, metal: 0.3 }), gn: mat('marble', { color: 0x2c5a4e, rough: 0.2, metal: 0.05 }), iv: mat('laminate', { color: 0xf0e8d4, rough: 0.35, metal: 0.15 }) });
+const BM = () => _B || (_B = { br: mat('brass', { color: 0xc8a04a, rough: 0.3, metal: 1 }), cu: mat('copper', { color: 0xc8743a, rough: 0.32, metal: 1 }), rl: mat('chrome', { color: 0x8a929e, rough: 0.3, metal: 1 }), gm: mat('gunmetal', { color: 0x4a505a, rough: 0.5, metal: 0.65 }), yl: mat('safety-yellow', { color: 0xf2b90a, rough: 0.55, metal: 0.3 }),
+  or: mat('orange-paint', { color: 0xff6a1e, rough: 0.6, metal: 0.1 }), rd: mat('red-paint', { color: 0xc8201e, rough: 0.45, metal: 0.3 }), gn: mat('marble', { color: 0x2c5a4e, rough: 0.2, metal: 0.05 }), iv: mat('laminate', { color: 0xf0e8d4, rough: 0.35, metal: 0.15 }) });
 const GX = () => glow('#35ff8a', 2.2);
 const LIQ = ['#4dffd8', '#b48cff', '#ff7ab8', '#ffd23a', '#6fe8ff', '#8aff6a'];
 /** 文字入りの小さな銘板 (発光しない塗装)。同じ文字は使い回す */

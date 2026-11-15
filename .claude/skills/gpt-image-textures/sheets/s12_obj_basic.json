@@ -1,0 +1,16 @@
+{
+ "id": "s12_obj_basic",
+ "group": "objects",
+ "style": "Close-up surface materials of everyday objects and props, neutral light colours so they can be tinted in the game.",
+ "cells": [
+  {"name": "white-plastic", "kind": "tile", "prompt": "Slightly textured white ABS plastic with fine moulded stipple and faint scuffs.", "mean": [228, 228, 228], "rough": 235, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035},
+  {"name": "black-plastic", "kind": "tile", "prompt": "Black textured ABS plastic with fine stipple and light scratches, shown lit so the texture is visible.", "mean": [228, 228, 228], "rough": 235, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035},
+  {"name": "matte-plastic", "kind": "tile", "prompt": "Matte light-grey injection-moulded plastic with a soft orange-peel texture.", "mean": [228, 228, 228], "rough": 235, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035},
+  {"name": "gloss-paint", "kind": "tile", "prompt": "Glossy light-grey painted surface with very faint orange peel and tiny dust specks.", "mean": [228, 228, 228], "rough": 220, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035},
+  {"name": "painted-metal", "kind": "tile", "prompt": "Light-grey powder-coated metal with fine texture, small chips and edge wear.", "mean": [228, 228, 228], "rough": 235, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035},
+  {"name": "brushed-metal", "kind": "tile", "prompt": "Light brushed metal with fine straight brushing lines.", "mean": [228, 228, 228], "rough": 220, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035},
+  {"name": "cotton-cloth", "kind": "tile", "prompt": "Light grey woven cotton fabric with visible threads.", "mean": [228, 228, 228], "rough": 245, "sat": 0.1, "normal": 2.0, "uvs": 1.0, "norm": "linear", "contrast": 0.1},
+  {"name": "plastic-crate", "kind": "tile", "prompt": "Ribbed moulded plastic crate side: vertical ribs, handle cut-out shapes and small vents.", "mean": [139, 139, 139], "rough": 140, "sat": 0.1, "normal": 3.0, "uvs": 0.5, "norm": "linear", "contrast": 0.1},
+  {"name": "gold-leaf", "kind": "tile", "prompt": "Light gold-leaf surface with subtle hammered texture and fine cracks.", "mean": [228, 228, 228], "rough": 230, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035}
+ ]
+}

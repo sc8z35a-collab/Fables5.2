@@ -1,0 +1,16 @@
+{
+ "id": "s17_obj_gear",
+ "group": "objects",
+ "style": "Close-up materials of robots, equipment, tents and buildings, light neutral tone so the game can tint them.",
+ "cells": [
+  {"name": "robot-shell", "kind": "tile", "prompt": "White robot shell plastic with subtle panel lines and small screws.", "mean": [228, 228, 228], "rough": 230, "sat": 0.1, "normal": 0.35, "uvs": 1.0, "norm": "linear", "contrast": 0.035},
+  {"name": "mli-blanket", "kind": "tile", "prompt": "Spacecraft multi-layer insulation blanket: quilted silvery-white foil with stitched seams and crinkles.", "mean": [228, 228, 228], "rough": 230, "sat": 0.1, "normal": 2.5, "uvs": 0.5, "norm": "linear", "contrast": 0.1},
+  {"name": "ripstop-tent", "kind": "tile", "prompt": "Ripstop nylon tent fabric with a square grid weave, light neutral tone.", "mean": [228, 228, 228], "rough": 240, "sat": 0.1, "normal": 1.5, "uvs": 1.0, "norm": "linear", "contrast": 0.1},
+  {"name": "marine-paint", "kind": "tile", "prompt": "Thick marine paint on concrete with streaks and salt stains, light neutral tone.", "mean": [228, 228, 228], "rough": 235, "sat": 0.1, "normal": 0.35, "uvs": 0.2, "norm": "linear", "contrast": 0.035},
+  {"name": "prefab-panel", "kind": "tile", "prompt": "Prefabricated insulated wall panel with horizontal ribs and rivet lines, light neutral tone.", "mean": [228, 228, 228], "rough": 230, "sat": 0.1, "normal": 0.35, "uvs": 0.25, "norm": "linear", "contrast": 0.035},
+  {"name": "gun-finish", "kind": "tile", "prompt": "Parkerized gun metal finish with fine grit texture and light wear.", "mean": [228, 228, 228], "rough": 230, "sat": 0.1, "normal": 0.35, "uvs": 4.0, "norm": "linear", "contrast": 0.035},
+  {"name": "terminal-casing", "kind": "tile", "prompt": "Rugged terminal casing: rubberised corners, screws and fine texture, light neutral tone.", "mean": [163, 164, 168], "rough": 125, "sat": 0.1, "normal": 0.35, "uvs": 1.0, "norm": "linear", "contrast": 0.035},
+  {"name": "olive-drab", "kind": "tile", "prompt": "Olive drab military paint on steel with stencil-free scuffs and wear, light neutral tone.", "mean": [228, 228, 228], "rough": 235, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035},
+  {"name": "quartz-countertop", "kind": "tile", "prompt": "Engineered quartz countertop with fine sparkling grains.", "mean": [228, 228, 228], "rough": 200, "sat": 0.1, "normal": 0.35, "uvs": 0.5, "norm": "linear", "contrast": 0.035}
+ ]
+}

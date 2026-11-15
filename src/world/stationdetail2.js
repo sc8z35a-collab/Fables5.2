@@ -87,7 +87,7 @@ export function detailFizer(b, c) {
 /** c: { H, D, Y, RL, CU, GR, RK, ZM, ZB, TZ, PERIOD, signs } */
 export function detailWeapon(b, c) {
   const { H, D, Y, RL, CU, GR, RK, ZM, TZ, PERIOD } = c, m = kit({ H, D, Y, uvs: 0.05 }), r = rng(3141), F = [], up = V(0, 1, 0);
-  const K = mat('flat', { color: 0x14171b, rough: 0.6, metal: 0.3 }), INS = mat('flat', { color: 0xe8e6e0, rough: 0.35, metal: 0.05 }), AR = mat('armor', { color: 0x596069, rough: 0.6, metal: 0.7, uvs: 0.07 }), GA = glow('#ffb060', 2);
+  const K = mat('black-plastic', { color: 0x14171b, rough: 0.6, metal: 0.3 }), INS = mat('mli-blanket', { color: 0xe8e6e0, rough: 0.35, metal: 0.05 }), AR = mat('armor', { color: 0x596069, rough: 0.6, metal: 0.7, uvs: 0.07 }), GA = glow('#ffb060', 2);
   // ── 砲身: 給電ケーブル・冷却管・ボルト列・加速環の機器・安定翼・支持トラス ──
   for (const sx of [-1, 1]) for (const sy of [-1, 1]) {
     const pts = []; for (let j = -2; j <= 16; j++) { const sag = j % 2 ? 1.5 : 0; pts.push(V(sx * (24.3 + sag * 0.6), sy * (23.3 + sag * 0.6), -48 - j * 15)); }

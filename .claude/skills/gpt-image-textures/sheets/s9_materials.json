@@ -1,0 +1,16 @@
+{
+ "id": "s9_materials",
+ "group": "replace-rest",
+ "style": "Floors, walls and fabrics for stations, hospitals and cities.",
+ "cells": [
+  {"name": "rubber-chips", "kind": "tile", "prompt": "Recycled rubber floor: dark grey rubber with black and light grey granules.", "mean": [120, 120, 122], "rough": 197, "sat": 0.1, "normal": 2.5},
+  {"name": "perforated", "kind": "tile", "prompt": "Perforated aluminium sheet with a dense regular grid of small round holes.", "mean": [179, 179, 181], "rough": 132, "sat": 0.1, "normal": 3.5},
+  {"name": "felt", "kind": "tile", "prompt": "Grey wool felt with soft fibrous texture.", "mean": [136, 135, 136], "rough": 194, "sat": 0.1, "normal": 2.0},
+  {"name": "polycarbonate", "kind": "tile", "prompt": "Frosted white polycarbonate panel with very faint internal ribs.", "mean": [215, 217, 221], "rough": 49, "sat": 0.1, "normal": 0.8},
+  {"name": "stucco", "kind": "tile", "prompt": "Fine light-grey sand-finish stucco wall.", "mean": [196, 193, 191], "rough": 211, "sat": 0.2, "normal": 2.0},
+  {"name": "facade", "kind": "tile", "prompt": "Modern building facade of square blue-grey glass and metal curtain-wall panels with dark mullions.", "mean": [113, 128, 137], "rough": 66, "sat": 1.0, "normal": 2.5},
+  {"name": "corten", "kind": "tile", "prompt": "Weathering corten steel with an even orange-brown rust patina.", "mean": [150, 102, 78], "rough": 134, "sat": 1.0, "normal": 2.5},
+  {"name": "leather", "kind": "tile", "prompt": "Pale beige leather upholstery with fine natural grain and soft creases.", "mean": [186, 173, 158], "rough": 131, "sat": 1.0, "normal": 2.0},
+  {"name": "ceramic-cloth", "kind": "tile", "prompt": "Off-white woven ceramic fibre cloth with a tight basket weave.", "mean": [209, 205, 199], "rough": 181, "sat": 0.3, "normal": 2.0}
+ ]
+}

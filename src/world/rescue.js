@@ -140,7 +140,7 @@ export function cloneShared(group) { const g = new THREE.Group(); group.traverse
  * 戻り値の userData.tick(dt, t, yawToPlayer, dist) で頭・腕・目が動く
  */
 export function makeBot(o = {}) {
-  const m = MM(), sit = o.pose === 'sit', acc = o.accent || 0xff5412, eyeC = o.eye || '#6fe8ff', A = mat('flat', { color: acc, rough: 0.45, metal: 0.25 }), Wm = mat('flat', { color: o.body || 0xf2f3f0, rough: 0.4, metal: 0.2 });
+  const m = MM(), sit = o.pose === 'sit', acc = o.accent || 0xff5412, eyeC = o.eye || '#6fe8ff', A = mat('flat', { color: acc, rough: 0.45, metal: 0.25 }), Wm = mat('robot-shell', { color: o.body || 0xf2f3f0, rough: 0.4, metal: 0.2 });
   const g = new THREE.Group(), b = new Builder(), cap = (B, mt, r, l, x, y, z, rx = 0, rz = 0) => B.add(mt, new THREE.CapsuleGeometry(r, l, 4, 12), mx(x, y, z, rx, 0, rz), 0);
   const y0 = sit ? -0.4 : 0; // 上半身の高さ
   // 胴体

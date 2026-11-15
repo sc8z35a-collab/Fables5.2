@@ -1,0 +1,32 @@
+{
+ "id": "s14_obj_furniture",
+ "model": "gpt-image-2.5-sunburst",
+ "size": "2880x2880",
+ "quality": "medium",
+ "seconds": 29.2,
+ "usage": {
+  "input_tokens": 452,
+  "input_tokens_details": {
+   "image_tokens": 0,
+   "text_tokens": 452
+  },
+  "output_tokens": 1483,
+  "output_tokens_details": {
+   "image_tokens": 1483,
+   "text_tokens": 0
+  },
+  "total_tokens": 1935
+ },
+ "created": 1794749170,
+ "cells": [
+  "pool-felt",
+  "piano-lacquer",
+  "bed-linen",
+  "velvet",
+  "seat-fabric",
+  "mahogany",
+  "book-spines",
+  "terracotta",
+  "stage-boards"
+ ]
+}

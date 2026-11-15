@@ -1,0 +1,32 @@
+{
+ "id": "s3_nature",
+ "model": "gpt-image-2.5-sunburst",
+ "size": "2880x2880",
+ "quality": "medium",
+ "seconds": 29.5,
+ "usage": {
+  "input_tokens": 641,
+  "input_tokens_details": {
+   "image_tokens": 0,
+   "text_tokens": 641
+  },
+  "output_tokens": 1483,
+  "output_tokens_details": {
+   "image_tokens": 1483,
+   "text_tokens": 0
+  },
+  "total_tokens": 2124
+ },
+ "created": 1794748579,
+ "cells": [
+  "rock",
+  "grass",
+  "water",
+  "solar",
+  "windows",
+  "oak_top",
+  "jungle_top",
+  "pine_top",
+  "palm_top"
+ ]
+}

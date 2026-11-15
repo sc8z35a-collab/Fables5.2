@@ -1,0 +1,16 @@
+{
+ "id": "s16_obj_world",
+ "group": "objects",
+ "style": "Close-up materials of outdoor objects, vehicles and buildings on Earth, light neutral tone so the game can colour them.",
+ "cells": [
+  {"name": "leaves", "kind": "tile", "prompt": "Dense overlapping leaves of a shrub filling the whole frame, light neutral green-grey.", "mean": [200, 210, 190], "rough": 245, "sat": 0.3, "normal": 3.0, "uvs": 1.0, "norm": "linear", "contrast": 0.1},
+  {"name": "tree-bark", "kind": "tile", "prompt": "Tree bark with vertical furrows and ridges.", "mean": [200, 190, 180], "rough": 245, "sat": 0.3, "normal": 4.0, "uvs": 1.0, "norm": "linear", "contrast": 0.1},
+  {"name": "train-livery", "kind": "tile", "prompt": "Painted train car body panel: smooth metal with fine rivet lines and panel seams, light neutral tone.", "mean": [228, 228, 228], "rough": 235, "sat": 0.1, "normal": 0.35, "uvs": 0.25, "norm": "linear", "contrast": 0.035},
+  {"name": "clothing-fabric", "kind": "tile", "prompt": "Close-up of mixed clothing fabric: denim and cotton weave, light neutral tone.", "mean": [228, 228, 228], "rough": 245, "sat": 0.1, "normal": 2.0, "uvs": 2.0, "norm": "linear", "contrast": 0.1},
+  {"name": "weathered-paint", "kind": "tile", "prompt": "Weathered painted wooden boards of a farm building: peeling paint and grain, light neutral tone.", "mean": [228, 228, 228], "rough": 240, "sat": 0.1, "normal": 3.0, "uvs": 0.4, "norm": "linear", "contrast": 0.1},
+  {"name": "house-siding", "kind": "tile", "prompt": "Horizontal lap siding of a suburban house with fine wood-grain texture, light neutral tone.", "mean": [228, 228, 228], "rough": 235, "sat": 0.1, "normal": 2.5, "uvs": 0.4, "norm": "linear", "contrast": 0.1},
+  {"name": "boat-gelcoat", "kind": "tile", "prompt": "Fibreglass boat hull gelcoat with faint waterline stains and hairline scratches, light neutral tone.", "mean": [228, 228, 228], "rough": 225, "sat": 0.1, "normal": 0.35, "uvs": 0.3, "norm": "linear", "contrast": 0.035},
+  {"name": "shipping-container", "kind": "tile", "prompt": "Corrugated steel shipping container wall with vertical corrugations, light neutral tone.", "mean": [139, 139, 139], "rough": 140, "sat": 0.1, "normal": 3.5, "uvs": 0.5, "norm": "linear", "contrast": 0.1},
+  {"name": "turbine-composite", "kind": "tile", "prompt": "White fibreglass composite tower surface with faint seams and streaks.", "mean": [228, 228, 228], "rough": 230, "sat": 0.1, "normal": 0.35, "uvs": 0.1, "norm": "linear", "contrast": 0.035}
+ ]
+}
