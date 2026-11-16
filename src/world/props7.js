@@ -37,7 +37,7 @@ export const PROPS7 = {
   vwindow(P, o, e) { const w = o.w || 1.6, h = o.h || 1.1, y = o.y || 1.5; P.box(white(), w + 0.12, h + 0.12, 0.06, 0, y, 0.03); P.box(white(), w + 0.2, 0.05, 0.16, 0, y - h / 2 - 0.06, 0.08);
     front(P, 'mg-vwindow', w, h, 0, y, 0.062, { glow: 0.85, rough: 0.2, uv: o.uv }, () => { P.add(glow('#bfe2ff', 1.0), new THREE.PlaneGeometry(w, h * 0.6), mx(0, y + h * 0.2, 0.062), 0); P.add(glow('#e8f4ff', 1.1), new THREE.PlaneGeometry(w, h * 0.4), mx(0, y - h * 0.3, 0.062), 0); });
     P.box(white(), 0.04, h, 0.03, 0, y, 0.075); if (o.cur !== false) for (const s of [-1, 1]) P.box(tm('mg-curtain', 'cotton-cloth', { color: o.cc || 0xe8dcc8, rough: 0.95, metal: 0 }), 0.32, h + 0.4, 0.05, s * (w / 2 + 0.1), y + 0.05, 0.14);
-    e.light('#e4f2ff', 5, y, 6); },
+    e.light('#e4f2ff', 3, y, 4); },
   homeshelf(P, o, e) { const w = o.w || 1.0, H = o.h || 1.8; P.box(wood(o.c || 0xb89870), w, H, 0.34, 0, H / 2, 0);
     front(P, 'mg-bookshelf', w - 0.04, H - 0.04, 0, H / 2, 0.172, {}, () => { for (let j = 0; j < 4; j++) { const y = 0.1 + j * (H - 0.2) / 4; P.box(MM().bk, w - 0.06, (H - 0.2) / 4 - 0.04, 0.02, 0, y + (H - 0.2) / 8, 0.165); let x = -w / 2 + 0.07; let i = 0; while (x < w / 2 - 0.2) { const bw = Math.min(w / 2 - 0.05 - x, 0.16 + ((i * 37 + j * 11) % 4) * 0.06); P.box(mat('book-spines', { color: COLORS[(i + j * 3) % 8], rough: 0.8, metal: 0 }), bw, 0.22 + ((i + j) % 3) * 0.03, 0.22, x + bw / 2, y + 0.14, 0.04); x += bw + 0.02; i++; } } });
     e.rect(w, 0.34); },
@@ -116,6 +116,34 @@ export const PROPS7 = {
   /** 閉まった店のシャッター (路地の壁。昔の店の名残) */
   shutter(P, o, e) { const w = o.w || 2.4, h = o.h || 2.2; P.box(MM().st, w + 0.2, 0.3, 0.3, 0, h + 0.15, 0.15); for (const s of [-1, 1]) P.box(MM().st, 0.08, h, 0.1, s * (w / 2 + 0.04), h / 2, 0.05);
     P.add(tm('mg-shutter', 'zinc-roof', { color: 0xc8ccd0, rough: 0.5, metal: 0.5 }), new THREE.PlaneGeometry(w, h), mx(0, h / 2, 0.03), has('mg-shutter') ? 0 : undefined); P.box(MM().dk, w, 0.06, 0.06, 0, 0.05, 0.05); },
+  /** 上の階の家並み (広場や大通りの壁の上部): 階ごとの床の帯、窓 (中の灯りとカーテン)、ベランダ (手すり・洗濯物・鉢)、室外機、縦の配管。区画の幅も灯りも不揃い */
+  facade(P, o, e) {
+    const W = o.w || 10, y0 = o.yb || 3.8, y1 = o.yt || 6, sh = o.story || 2.7, // yb〜yt = 家並みの下端と上端 (y0 は小道具全体を持ち上げる設定なので使わない)
+      rnd = e.rnd, pick = (a) => a[Math.floor(rnd() * a.length)], band = flat(o.band || 0xd0cabe, 0.6, 0.2), fr = white(), rail = MM().ch;
+    for (let y = y0; y + 1.5 <= y1; y += sh) {
+      P.box(band, W, 0.22, 0.12, 0, y, 0.06); let x = -W / 2 + rnd() * 0.6;
+      while (x < W / 2 - 1.6) {
+        const bw = Math.min(W / 2 - x, 2.6 + rnd() * 2.4), cx = x + bw / 2, wh = Math.min(1.3, y1 - y - 0.45), wy = y + 0.4 + wh / 2, ww = Math.max(0.8, Math.min(bw - 0.8, 1.1 + rnd() * 1.0)); if (wh < 0.6) break;
+        P.box(fr, ww + 0.12, wh + 0.12, 0.06, cx, wy, 0.03); const lit = rnd() < 0.78;
+        P.add(glow(lit ? pick(['#ffe2b0', '#fff0d8', '#dceeff', '#ffd8a8']) : '#7a8a98', lit ? 1.05 : 0.45), new THREE.PlaneGeometry(ww, wh), mx(cx, wy, 0.065), 0);
+        if (rnd() < 0.7) { const cc = flat(pick([0xe8dcc8, 0xc8d8e8, 0xf0d0c8, 0xd8e8c8, 0xe8e0f0]), 0.9, 0), k = 0.18 + rnd() * 0.22; P.box(cc, ww * k, wh, 0.03, cx - ww / 2 + ww * k / 2, wy, 0.08); P.box(cc, ww * 0.22, wh, 0.03, cx + ww / 2 - ww * 0.11, wy, 0.08); }
+        P.box(fr, 0.03, wh, 0.05, cx, wy, 0.075);
+        const r1 = rnd(); if (r1 < 0.45) { // ベランダ
+          const bd = 0.75, bl = bw - 0.3, n = Math.max(2, Math.round(bl / 0.5)); P.box(band, bl, 0.1, bd, cx, y + 0.05, bd / 2); P.box(rail, bl, 0.04, 0.04, cx, y + 1.0, bd - 0.02); for (const s2 of [-1, 1]) P.box(rail, 0.04, 0.04, bd, cx + s2 * bl / 2, y + 1.0, bd / 2);
+          for (let k = 0; k <= n; k++) P.box(rail, 0.025, 0.95, 0.025, cx - bl / 2 + k * bl / n, y + 0.55, bd - 0.02);
+          const r2 = rnd(); if (r2 < 0.45 && y + 1.75 < y1) for (let k = 0; k < 3; k++) { const lh = 0.35 + rnd() * 0.25; P.add(flat(COLORS[Math.floor(rnd() * 8)], 0.95, 0), new THREE.PlaneGeometry(0.32, lh), mx(cx - 0.5 + k * 0.48, y + 1.55 - lh / 2, bd * 0.5), 0); }
+          else if (r2 < 0.85) { const px = cx + (rnd() < 0.5 ? -1 : 1) * (bl / 2 - 0.35); P.cyl(mat('terracotta', { rough: 0.9, metal: 0 }), 0.14, 0.1, 0.22, px, y + 0.21, bd * 0.5, 'y', 8); P.add(MM().lf2, new THREE.IcosahedronGeometry(0.24, 0), mx(px, y + 0.5, bd * 0.5)); }
+        } else if (r1 < 0.75) P.box(white(), 0.7, 0.48, 0.26, cx + (rnd() < 0.5 ? -1 : 1) * (ww / 2 + 0.5), y + 0.62, 0.13); // 室外機
+        x += bw;
+      }
+      if (rnd() < 0.6) { const hh = Math.min(sh, y1 - y); P.cyl(flat(0xd8d0c0, 0.5, 0.3), 0.05, 0.05, hh, -W / 2 + 0.3 + rnd() * (W - 0.6), y + hh / 2, 0.08, 'y', 6); }
+    }
+  },
+  /** 玄関の土間 (住戸の入口の内側): 石の床と上がり框、脱いだ靴 */
+  genkan(P, o, e) { const w = o.w || 1.3, d = o.d || 0.95; P.add(tm('mg-genkan', 'granite-pavers', { color: 0x8a8680, rough: 0.6, metal: 0.05 }), new THREE.PlaneGeometry(w, d).rotateX(-HP), mx(0, 0.009, d / 2), 0.8); P.box(wood(o.c || 0x8a6a4a), w, 0.05, 0.07, 0, 0.025, d);
+    if (o.shoes !== false) for (let i = 0; i < (o.n ?? 2); i++) { const x = -w / 2 + 0.25 + i * 0.32, c = flat([0x2a2c30, 0x6a4a30, 0xe8e8e4, 0x3a6ea8][(i + (o.seed | 0)) % 4], 0.6, 0.1); for (const s2 of [-0.06, 0.06]) P.box(c, 0.1, 0.07, 0.26, x + s2, 0.035, d * 0.5); } },
+  /** 配管シャフト (通路の壁から張り出した、床から天井までの点検口つきの箱) */
+  shaft(P, o, e) { const w = o.w || 0.9, dp = o.d || 0.42, h = o.h || 2.8; P.box(flat(o.c || 0xe0dcd2, 0.7, 0.2), w, h, dp, 0, h / 2, dp / 2); P.box(MM().st, w * 0.62, 1.5, 0.02, 0, 1.05, dp + 0.01); P.box(MM().ch, 0.12, 0.03, 0.03, w * 0.2, 1.05, dp + 0.03); P.box(flat(0xe8c020, 0.5, 0.1), 0.24, 0.1, 0.01, 0, 1.95, dp + 0.012); e.rect(w, dp, 0, dp / 2); },
   // ───────── 商店 ─────────
   shopcounter(P, o, e) { const w = o.w || 2.0; P.box(wood(o.c || 0xc8a070), w, 1.0, 0.6, 0, 0.5, 0); P.box(mat('quartz-countertop', { color: 0xe8e4dc, rough: 0.35, metal: 0.1 }), w + 0.06, 0.04, 0.66, 0, 1.02, 0);
     front(P, 'mg-register', w, 0.96, 0, 0.5, 0.302, {}); P.box(MM().bk, 0.36, 0.14, 0.3, w / 2 - 0.35, 1.11, -0.05); P.box(MM().bk, 0.26, 0.2, 0.03, w / 2 - 0.35, 1.28, -0.16, 0, -0.3); P.add(glow('#8adfff', 1.2), new THREE.PlaneGeometry(0.22, 0.14), mx(w / 2 - 0.35, 1.29, -0.145, -0.3), 0); e.rect(w, 0.6); if (o.use) e.use(o.label || 'カウンター', o.use, 2.4, o); },

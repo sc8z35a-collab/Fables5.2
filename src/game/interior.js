@@ -303,11 +303,14 @@ export class InteriorMode {
   _lights(dt, snap) {
     // 全ライトを毎フレーム並べ替えず、近い順に必要な数 (4〜6 灯) だけを選ぶ
     const L = this.cur.lights, p = this.pos, n = this.pool.length, near = this._near || (this._near = []); near.length = 0;
+    const RG = this.cur.roomGroups;
     for (const l of L) {
+      if (l.room && RG[l.room] && !RG[l.room].visible) continue; // 見えていない部屋の灯りは使わない (壁を透かして小部屋を白く飛ばさない)
       const d = (l.x - p.x) ** 2 + (l.z - p.z) ** 2; l._d = d; if (near.length === n && d >= near[n - 1]._d) continue;
       let i = near.length < n ? near.length : n - 1; while (i > 0 && near[i - 1]._d > d) { near[i] = near[i - 1]; i--; } near[i] = l;
     }
-    for (let i = 0; i < n; i++) { const pl = this.pool[i], l = near[i]; if (!l) { pl.intensity = 0; continue; } const d = Math.sqrt(l._d), f = 1 - THREE.MathUtils.smoothstep(d, 18, 34); pl.position.set(l.x, l.y, l.z); pl.color.copy(l.c); pl.distance = l.d * 1.6; pl.intensity = snap ? l.i * f : damp(pl.intensity, l.i * f, 8, dt); }
+    const cur = this.lastRoom?.id; // 隣の部屋の灯りは戸口から漏れる分だけ (0.45 倍)
+    for (let i = 0; i < n; i++) { const pl = this.pool[i], l = near[i]; if (!l) { pl.intensity = 0; continue; } const d = Math.sqrt(l._d), f = (1 - THREE.MathUtils.smoothstep(d, 18, 34)) * (l.room && cur && l.room !== cur ? 0.45 : 1); pl.position.set(l.x, l.y, l.z); pl.color.copy(l.c); pl.distance = l.d * 1.6; pl.intensity = snap ? l.i * f : damp(pl.intensity, l.i * f, 8, dt); }
   }
   _interact() {
     const it = this.cur, p = this.pos, fx = -Math.sin(this.yaw), fz = -Math.cos(this.yaw); let best = null, bs = 1e9;

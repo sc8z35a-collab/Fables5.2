@@ -96,12 +96,12 @@ function door(out, th, axis, line, pos, dw, dh, style = th.door3 || 'slide', o =
 // ───────────────────────── 照明器具 ─────────────────────────
 function lamps(B, out, r, th, pts, style) {
   const DK = mat('blasted-steel', { color: th.frame ?? 0x2c3038, rough: 0.8, metal: 0.6 }), c = r.lamp || th.lamp, LM = glow(c, 3.2), h = r.h, GD = flat(0xd4a84a, 0.25, 1);
-  const light = (x, y, z, k = 1) => out.lights.push({ x, y: Math.min(y, 4.2 + h * 0.25), z, c: new THREE.Color(c), i: (r.li ?? 1) * (9 + h * 3) * k, d: Math.max(14, h * 3) });
+  const light = (x, y, z, k = 1) => out.lights.push({ x, y: Math.min(y, 4.2 + h * 0.25), z, c: new THREE.Color(c), i: (r.li ?? 1) * (9 + h * 3) * k, d: r.ld ?? Math.max(14, h * 3), room: r.id }); // ld = 灯りの届く距離 (天井の低い小部屋は短く) // room = その灯りのある部屋 (見えていない部屋の灯りは壁を透かして照らさないよう使わない)
   pts.forEach(([x, z, y, rot = 0], i) => {
     if (style === 'tube') { B.box(DK, 2.3, 0.1, 0.34, x, y - 0.05, z, rot); B.box(LM, 2.1, 0.04, 0.22, x, y - 0.12, z, rot); light(x, y - 0.6, z); } // 細い蛍光管は遠目に引っかき傷のように見えるので乳白カバー付きの照明器具に
     else if (style === 'pendant') { const ly = Math.max(2.5, Math.min(y - 1.0, 3.6)); B.cyl(DK, 0.012, 0.012, y - ly, x, (y + ly) / 2, z, 'y', 4); B.add(th.shade ? flat(th.shade, 0.6, 0.1) : DK, new THREE.CylinderGeometry(0.08, 0.36, 0.26, 16, 1, true), mx(x, ly + 0.05, z), 0); B.sph(glow(c, 4.5), 0.09, x, ly - 0.02, z, 1, 1, 1, 10); light(x, ly - 0.3, z); }
     else if (style === 'spot') { B.cyl(DK, 0.16, 0.16, 0.05, x, y - 0.025, z, 'y', 12); B.add(glow(c, 5), new THREE.CircleGeometry(0.11, 12).rotateX(HP), mx(x, y - 0.055, z), 0); light(x, y - 0.5, z, 0.8); }
-    else if (style === 'lantern') { const ly = Math.max(2.5, Math.min(y - 0.9, 3.4)), lc = ['#ff5a3a', '#ffb347', '#ff7a5a'][i % 3]; B.cyl(DK, 0.01, 0.01, y - ly, x, (y + ly) / 2, z, 'y', 4); B.sph(glow(lc, 1.7), 0.26, x, ly - 0.25, z, 1, 1.2, 1, 12); B.cyl(DK, 0.1, 0.1, 0.05, x, ly + 0.06, z, 'y', 8); B.cyl(DK, 0.1, 0.1, 0.05, x, ly - 0.56, z, 'y', 8); out.lights.push({ x, y: ly - 0.4, z, c: new THREE.Color(lc), i: (r.li ?? 1) * (8 + h * 2.4), d: 13 }); }
+    else if (style === 'lantern') { const ly = Math.max(2.5, Math.min(y - 0.9, 3.4)), lc = ['#ff5a3a', '#ffb347', '#ff7a5a'][i % 3]; B.cyl(DK, 0.01, 0.01, y - ly, x, (y + ly) / 2, z, 'y', 4); B.sph(glow(lc, 1.7), 0.26, x, ly - 0.25, z, 1, 1.2, 1, 12); B.cyl(DK, 0.1, 0.1, 0.05, x, ly + 0.06, z, 'y', 8); B.cyl(DK, 0.1, 0.1, 0.05, x, ly - 0.56, z, 'y', 8); out.lights.push({ x, y: ly - 0.4, z, c: new THREE.Color(lc), i: (r.li ?? 1) * (8 + h * 2.4), d: 13, room: r.id }); }
     else if (style === 'chandelier') { const ly = Math.max(2.9, y - 1.6), R = Math.min(1.6, Math.min(r.w, r.d) * 0.12); B.cyl(GD, 0.03, 0.03, y - ly, x, (y + ly) / 2, z, 'y', 6); B.tor(GD, R, 0.04, x, ly, z, HP, 0, 0, 32, 6); B.tor(GD, R * 0.55, 0.03, x, ly + 0.3, z, HP, 0, 0, 24, 6);
       for (let k = 0; k < 10; k++) { const a = k * TAU / 10; B.sph(glow(c, 5), 0.06, x + Math.cos(a) * R, ly + 0.1, z + Math.sin(a) * R, 1, 1.4, 1, 8); if (k % 2) B.sph(glow(c, 5), 0.05, x + Math.cos(a) * R * 0.55, ly + 0.38, z + Math.sin(a) * R * 0.55, 1, 1.4, 1, 8); } light(x, ly - 0.3, z, 1.5); }
     else if (style === 'bare') { B.cyl(DK, 0.01, 0.01, 0.5, x, y - 0.25, z, 'y', 4); B.sph(glow(c, 5), 0.06, x, y - 0.54, z, 1, 1.3, 1, 8); light(x, y - 0.8, z, 0.8); }
@@ -167,6 +167,10 @@ function deco(B, r, th, out, kinds, rnd) {
         const [px, , pz] = along(t, 0, 0); if (out.doors.some((d) => Math.hypot(d.x - px, d.z - pz) < d.dw / 2 + W2 / 2 + 0.5)) { t -= 3; continue; }
         for (const s of [-1, 1]) { const [x, , z] = along(t, s * (W2 / 2 - T - 0.08), 0); B.box(FM, long ? 0.3 : 0.16, h, long ? 0.16 : 0.3, x, h / 2, z); const [bx, , bz] = along(t, s * (W2 / 2 - T - 0.36), 0); B.add(FM, new THREE.BoxGeometry(long ? 0.1 : 0.6, 0.1, long ? 0.6 : 0.1), long ? mx(bx, h - 0.42, bz, s * 0.8, 0, 0) : mx(bx, h - 0.42, bz, 0, 0, -s * 0.8)); }
         B.box(FM, long ? 0.3 : W2 - 2 * T, 0.22, long ? W2 - 2 * T : 0.3, px, h - 0.11, pz); } }
+    else if (k === 'soffit') { // 天井の下がり壁 (ダクトや梁を包んだ箱)。位置も長さも深さも不揃いで、照明は避ける
+      const W2 = long ? r.d : r.w, cs = r.ceil || th.ceil, SM = mat(cs[0], { color: cs[1], rough: 0.9, metal: 0.2 }), lp = (r.lampPts || []).map(([lx, lz]) => (long ? r.x + lx : r.z + lz));
+      for (let t = 2 + rnd() * 4; t < L - 2; t += 5 + rnd() * 9) { const len = 0.8 + rnd() * 2.2, drop = Math.min(h - 2.35, 0.28 + rnd() * 0.35), c0 = (long ? x0 : z0) + t; if (drop < 0.2) break; if (lp.some((p) => Math.abs(p - c0) < len / 2 + 0.7)) continue;
+        const p = along(t, 0, h - drop / 2); B.box(SM, long ? len : W2 - 2 * T, drop, long ? W2 - 2 * T : len, ...p); B.box(DK, long ? len + 0.04 : W2 - 2 * T, 0.03, long ? W2 - 2 * T : len + 0.04, p[0], h - drop, p[2]); } }
     else if (k === 'coves') { // 天井際の間接照明 (壁をなめる光の帯)
       const lm = glow(r.lamp || th.lamp, 2.4); B.box(DK, r.w - 2 * T, 0.12, 0.42, cx, h - 0.42, z0 + 0.21); B.box(DK, r.w - 2 * T, 0.12, 0.42, cx, h - 0.42, z1 - 0.21); B.box(DK, 0.42, 0.12, r.d - 2 * T, x0 + 0.21, h - 0.42, cz); B.box(DK, 0.42, 0.12, r.d - 2 * T, x1 - 0.21, h - 0.42, cz);
       B.box(lm, r.w - 2 * T - 0.9, 0.04, 0.1, cx, h - 0.34, z0 + 0.3); B.box(lm, r.w - 2 * T - 0.9, 0.04, 0.1, cx, h - 0.34, z1 - 0.3); B.box(lm, 0.1, 0.04, r.d - 2 * T - 0.9, x0 + 0.3, h - 0.34, cz); B.box(lm, 0.1, 0.04, r.d - 2 * T - 0.9, x1 - 0.3, h - 0.34, cz); }
@@ -345,7 +349,7 @@ export function buildInterior(bp) {
       rect: (w, d, ox = 0, oz = 0) => { const v = new THREE.Vector3(ox, 0, oz).applyMatrix4(base), hw = (sw ? d : w) / 2, hd = (sw ? w : d) / 2; out.rects.push([v.x - hw, v.z - hd, v.x + hw, v.z + hd, y0]); },
       use: (label, act, range = 2.4, extra = {}) => { const it = { x: wx, z: wz, y: 1.2 + y0, r: range, label, act, room: r.id, ...extra }; out.items.push(it); return it; },
       dyn: (obj, x = 0, y = 0, z = 0) => { obj.position.set(x, y, z).applyMatrix4(base); obj.rotation.y += ang; DG[r.id].add(obj); return obj; },
-      light: (c, i, y = 2, d = 12) => out.lights.push({ x: wx, y: y + y0, z: wz, c: new THREE.Color(c), i, d }),
+      light: (c, i, y = 2, d = 12) => out.lights.push({ x: wx, y: y + y0, z: wz, c: new THREE.Color(c), i, d, room: r.id }),
       anim: (f, always) => { const g = guard(f, type); g.room = always ? null : groups[r.id]; out.anim.push(g); }, // 既定では部屋が見えている間だけ動かす (always = 隣の部屋からも聞こえる砲など)
     };
     try { fn(P, o, env); } catch (err) { if (mode !== 'geo') console.warn('[小道具] 設置に失敗:', type, 'in', r.id, err); }

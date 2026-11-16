@@ -21,14 +21,14 @@ const WOOD = [0xc8a880, 0xb08860, 0x8a6a4a, 0xd8c0a0, 0x6a5040, 0xe0d0b8];
 const DIST = {
   main: { name: '本通り', f: [6.5, 11], d: [5, 11], h: [4.2, 4.8], shop: 1, gap: 0.08, g: [1, 2.5] },
   market: { name: '市場通り', f: [3.6, 6.2], d: [4.6, 8], h: [3.2, 3.6], shop: 0.92, gap: 0.08, g: [0.8, 2] },
-  old: { name: '錨町', f: [2.9, 5.2], d: [4.0, 7.8], h: [2.45, 2.7], shop: 0.16, svc: 0.05, gap: 0.12, g: [0.5, 2.2] },
-  view: { name: '展望町', f: [7.2, 11.5], d: [8, 12.5], h: [2.8, 3.0], shop: 0.04, svc: 0.08, gap: 0.12, g: [1.2, 3] },
-  green: { name: '緑ヶ丘', f: [5.6, 9], d: [5.6, 11.5], h: [2.55, 2.7], shop: 0.05, svc: 0.12, gap: 0.1, g: [1, 2.6] },
-  ninth: { name: '第 9 区', f: [5.2, 8.6], d: [6, 10], h: [2.6, 2.75], shop: 0.05, svc: 0.1, gap: 0.08, g: [1, 2.4] },
-  dorm: { name: '鋳物町', f: [3.3, 4.6], d: [4.2, 6.4], h: [2.5, 2.6], shop: 0.05, svc: 0.1, gap: 0.1, g: [0.8, 2] },
-  port: { name: '港町', f: [3.8, 6.2], d: [5, 9], h: [2.5, 2.7], shop: 0.1, svc: 0.12, gap: 0.12, g: [1, 2.6] },
-  crew: { name: '船員街', f: [3.1, 5.6], d: [4.2, 8], h: [2.45, 2.65], shop: 0.12, svc: 0.06, gap: 0.12, g: [0.6, 2.2] },
-  hikari: { name: 'ひかり台', f: [5.0, 8.4], d: [5.6, 9.8], h: [2.55, 2.7], shop: 0.06, svc: 0.1, gap: 0.08, g: [1, 2.4] },
+  old: { name: '錨町', nook: 0.05, f: [2.9, 5.2], d: [4.0, 7.8], h: [2.45, 2.7], shop: 0.16, svc: 0.05, gap: 0.12, g: [0.5, 2.2] },
+  view: { name: '展望町', nook: 0.05, f: [7.2, 11.5], d: [8, 12.5], h: [2.8, 3.0], shop: 0.04, svc: 0.08, gap: 0.12, g: [1.2, 3] },
+  green: { name: '緑ヶ丘', nook: 0.06, f: [5.6, 9], d: [5.6, 11.5], h: [2.55, 2.7], shop: 0.05, svc: 0.12, gap: 0.1, g: [1, 2.6] },
+  ninth: { name: '第 9 区', nook: 0.06, f: [5.2, 8.6], d: [6, 10], h: [2.6, 2.75], shop: 0.05, svc: 0.1, gap: 0.08, g: [1, 2.4] },
+  dorm: { name: '鋳物町', nook: 0.05, f: [3.3, 4.6], d: [4.2, 6.4], h: [2.5, 2.6], shop: 0.05, svc: 0.1, gap: 0.1, g: [0.8, 2] },
+  port: { name: '港町', nook: 0.05, f: [3.8, 6.2], d: [5, 9], h: [2.5, 2.7], shop: 0.1, svc: 0.12, gap: 0.12, g: [1, 2.6] },
+  crew: { name: '船員街', nook: 0.05, f: [3.1, 5.6], d: [4.2, 8], h: [2.45, 2.65], shop: 0.12, svc: 0.06, gap: 0.12, g: [0.6, 2.2] },
+  hikari: { name: 'ひかり台', nook: 0.06, f: [5.0, 8.4], d: [5.6, 9.8], h: [2.55, 2.7], shop: 0.06, svc: 0.1, gap: 0.08, g: [1, 2.4] },
 };
 /** 新しい 2 街区は、家具・小物・照明の選び方を似た街区から借りる */
 const LIKE = { crew: 'port', hikari: 'green' };
@@ -141,7 +141,7 @@ export function megatonPlan(has = () => false) {
   // ── 2. 通路 ──
   for (const [id, name, dist, x0, z0, x1, z1, h, o = {}] of CORR) {
     const pal = PAL[dist] || PAL.civic;
-    add({ ...rect(x0, z0, x1, z1), id, name, h, dist, corr: 1, o, floor: pal.floor, wall: pal.wall, ceil: pal.ceil, trims: 'low', ribs: false, lamps: o.lamps || ({ old: 'bare', main: 'panel', market: 'tube', view: 'spot', green: 'panel', ninth: 'panel', dorm: 'tube', port: 'pendant', svc: 'tube', civic: 'panel', crew: 'bare', hikari: 'panel' })[dist], li: dist === 'old' || dist === 'crew' ? 1.15 : 1.05 });
+    add({ ...rect(x0, z0, x1, z1), id, name, h, dist, corr: 1, o, floor: pal.floor, wall: pal.wall, ceil: pal.ceil, trims: 'low', ribs: false, lamps: o.lamps || ({ old: 'bare', main: 'panel', market: 'tube', view: 'spot', green: 'panel', ninth: 'panel', dorm: 'tube', port: 'pendant', svc: 'tube', civic: 'panel', crew: 'bare', hikari: 'panel' })[dist], li: dist === 'old' || dist === 'crew' ? 0.95 : 0.85, ld: q(Math.max(8, h * 3.2)) });
     stats.corridors.add(name.replace(/の溜まり$/, '').replace(/ [一二三]丁目$/, ''));
   }
   // ── 3. 通路どうしの継ぎ目 (触れ合う通路・広場を開口でつなぐ) ──
@@ -174,6 +174,9 @@ export function megatonPlan(has = () => false) {
       let t = Rn(0, 0.5), prevDoorEnd = false;
       while (t < L - 2.4) {
         if (chance(P.gap)) { t += Rn(P.g[0], P.g[1]); continue; }
+        if (P.nook && chance(P.nook) && t + 3 < L - 0.5) { // 通路の溜まり (浅い凹み。ベンチや自販機のある休憩の場所)
+          const f2 = q5(Math.min(L - 0.5 - t, Rn(2.6, 4.6))), d2 = q5(Rn(1.6, 2.8)), cc = lotRect(s, side, q5(t), f2, d2);
+          if (free(cc)) { const lot = makeLot(cc, s, side, (long ? s.x : s.z) + t + f2 / 2, blk); lot.pre = 'nook'; lots.push(lot); t += f2; continue; } }
         let f = Rn(P.f[0], P.f[1]); if (P.f[0] < 4 && chance(0.4)) f = Rn(P.f[0], (P.f[0] + P.f[1]) / 2); // 小さい区画を多めに
         if (t + f > L - 0.1) { f = L - 0.1 - t; if (f < Math.max(2.6, P.f[0] * 0.7)) break; }
         t = q5(t); f = q5(f); let c = null; for (let d = q5(Rn(P.d[0], P.d[1])); d >= P.d[0] - 1e-6; d = q5(d - 0.4)) { const cc = lotRect(s, side, t, f, d); if (free(cc)) { c = cc; break; } }
@@ -197,6 +200,7 @@ export function megatonPlan(has = () => false) {
     const P = DIST[r.dist], s = byId[r.seg], sh = s.o.shop ?? P.shop, area = r.w * r.d;
     const lw = r.side === 'n' || r.side === 's' ? r.w : r.d; // 間口
     let kind = 'home';
+    if (r.pre === 'nook') { r.kind = 'svc'; r.svc = 'nook'; r.h = s.h; continue; }
     if (r.dist === 'main' || r.dist === 'market') kind = area > 14 ? 'shop' : 'svc';
     else if (chance(sh) && lw >= 3.4) kind = 'shop';
     else if (chance(P.svc || 0)) kind = 'svc';
@@ -250,6 +254,7 @@ export function megatonPlan(has = () => false) {
     const at = (w) => { const lo = e.lo + w / 2 + 0.3, hi = e.hi - w / 2 - 0.3; return hi < lo ? (e.lo + e.hi) / 2 : Math.min(Math.max(r.dpos, lo), hi); }, dh = Math.min(2.2, s.h - 0.6);
     if (r.kind === 'shop') { const wide = Math.min(e.hi - e.lo - 1.0, r.dist === 'main' ? 4.2 : 3.2), open = SHOPS.open.has(r.shop) && wide >= 2.2, w = open ? wide : r.dist === 'main' ? 2.4 : 1.6, p2 = open ? (e.lo + e.hi) / 2 : at(w);
       r.doorW = w; r.doorH = r.dist === 'main' ? 3.0 : dh; link(s.id, r.id, p2, w, r.doorH, open ? 'open' : 'glass', open ? { vr: 18, frame: 0x6a5a4a } : { r: 2.2, vr: 5 }); r.dpos = q(p2); stats.shops++; }
+    else if (r.svc === 'nook') { r.doorW = q(Math.min(e.hi - e.lo - 0.6, 4)); r.doorH = q(Math.min(s.h - 0.3, 2.6)); link(s.id, r.id, (e.lo + e.hi) / 2, r.doorW, r.doorH, 'open', { vr: 14, plain: 1, frame: 0xe0dcd4 }); stats.nooks = (stats.nooks || 0) + 1; }
     else if (r.kind === 'svc') { const big = r.svc === 'stairs' || r.svc === 'elev'; r.doorW = big ? 1.8 : 1.3; r.doorH = dh; link(s.id, r.id, at(r.doorW), r.doorW, dh, big ? 'open' : 'slide', big ? { vr: 10, frame: 0xd8d4cc } : { r: 2.0, vr: 3 }); stats.services++; }
     else { r.doorW = 1.15; r.doorH = Math.min(2.15, s.h - 0.45); r.hand = chance(0.5) ? 1 : -1; const p = at(1.15); r.dpos = q(p); link(s.id, r.id, p, 1.15, r.doorH, 'home', { r: 1.7, vr: 2.6, hand: r.hand, mat: pick(DMAT), c: pick(DCOL) }); }
   }
@@ -269,10 +274,13 @@ export function megatonPlan(has = () => false) {
   for (const r of rooms) for (const w of r.win || []) r.opens.push({ side: w[0], a: w[1], b: w[2], win: 1 });
 
   // ── 7. 家具・店の備品・共用室 ──
+  byIdOf = (id) => byId[id];
   for (const r of rooms) {
     if (r.sub || r.lot) furnishHome(r, PAL, rnd);
   }
   // ── 8. 通路の照明と生活の小物 ──
+  const DH = new Map(); for (const d of doors) { DH.set(d[0] + '|' + d[1], d[4]); DH.set(d[1] + '|' + d[0], d[4]); } doorsH = (a, b) => DH.get(a + '|' + b);
+  for (const r of rooms) if (r.corr) r.street = r.name.replace(/の溜まり$/, '').replace(/ [一二三]丁目$/, '');
   for (const r of rooms) if (r.corr) dressCorridor(r, rooms, byId, rnd);
   // 小道具の形は、その部屋を近くで初めて見たときに作る (画面の絵を描く小道具を含む部屋は除く: 2 回作ると無駄な画面が残るため)
   for (const r of rooms) r.lazy = r.props.length > 0 && r.props.every((p) => LAZY_OK.has(p[0])) ? 1 : 0;
@@ -296,7 +304,7 @@ export function megatonPlan(has = () => false) {
   }
 }
 
-const LAZY_OK = new Set(['shutter', 'fridge', 'washer', 'tvset', 'wardrobe', 'shoebox', 'aircon', 'vwindow', 'homeshelf', 'bed2', 'futon', 'dining', 'chair', 'lowtable', 'homesofa', 'homekit', 'homedesk', 'fakedoor', 'toilet', 'washbasin', 'shower', 'bathtub', 'homefront', 'bicycle', 'laundry', 'trashbins', 'mailboxes', 'meterbox', 'firehose', 'exitsign', 'addrplate', 'noticeboard', 'posters', 'elevator', 'stairup',
+const LAZY_OK = new Set(['facade', 'genkan', 'shaft', 'shutter', 'fridge', 'washer', 'tvset', 'wardrobe', 'shoebox', 'aircon', 'vwindow', 'homeshelf', 'bed2', 'futon', 'dining', 'chair', 'lowtable', 'homesofa', 'homekit', 'homedesk', 'fakedoor', 'toilet', 'washbasin', 'shower', 'bathtub', 'homefront', 'bicycle', 'laundry', 'trashbins', 'mailboxes', 'meterbox', 'firehose', 'exitsign', 'addrplate', 'noticeboard', 'posters', 'elevator', 'stairup',
   'shopcounter', 'goodsshelf', 'drinkcase', 'produce', 'noren', 'menuboard', 'awning', 'stool', 'barberchair', 'blackboard', 'schooldesks', 'hospbed', 'reception', 'bathmural', 'bathpool', 'washrow', 'libshelf', 'playset', 'shrine', 'boxes', 'valvepanel', 'breaker', 'louver', 'districtmap', 'floorarrow', 'pottree', 'pond',
   'plant', 'bunk', 'locker', 'bench', 'table', 'tablelong', 'npc', 'sign', 'planter', 'streetlamp', 'tree', 'crate', 'pipes', 'tank', 'cylinders', 'newsstand', 'garmentrack', 'glassshelf', 'workbench', 'toolcart', 'barcounter', 'capsule', 'seatrow', 'luggage']);
 /** 2 つの部屋の接する辺 (エンジンの扉判定と同じ順で調べる) */
@@ -356,7 +364,7 @@ function layout(r, rnd) {
 function furnishHome(r, PAL, rnd) {
   const L = layout(r, rnd), H = PAL.home, pick = (a) => a[Math.floor(rnd() * a.length)], ch = (p) => rnd() < p, Rn = (a, b) => a + rnd() * (b - a);
   const blank = pick(BLANK), wood = pick(WOOD), dist = like(r.dist);
-  r.trims = 'none'; r.ribs = false; r.ceil = H.ceil; r.li = 0.95;
+  r.trims = 'none'; r.ribs = false; r.ceil = H.ceil; r.li = 0.7; r.ld = 7;
   const homeWall = dist === 'view' ? (ch(0.5) ? H.panel : H.paper) : dist === 'old' || dist === 'port' ? (ch(0.4) ? PAL.old.wall : H.paper) : dist === 'dorm' ? PAL.dorm.wall : H.paper;
   r.lamps = ({ old: pick(['bare', 'pendant']), port: pick(['bare', 'pendant']), dorm: 'panel', view: pick(['spot', 'pendant']), ninth: pick(['panel', 'spot']), green: pick(['panel', 'pendant']) })[dist] || 'panel';
   const S = r.sub;
@@ -367,6 +375,8 @@ function furnishHome(r, PAL, rnd) {
   if (S === 'lk' || S === 'ldk' || S === 'ldk1') r.floor = pick([H.oak, H.oak, H.vinyl]);
   if (S === 'tatami') r.floor = H.tatami; if (S === 'bed' || S === 'kids') r.floor = pick([H.oak, H.carpet]); if (S === 'bath') { r.floor = H.bathf; r.wall = H.batht; r.lamps = 'spot'; }
   r.wall = r.wall || (S === 'kids' ? H.pattern : homeWall);
+  const ent = r.lot && r.opens.find((o) => !o.win && o.to === r.seg); // 玄関 (通路への扉) の内側に土間
+  if (ent) { const c = (ent.a + ent.b) / 2, at = ent.side === 'n' ? [c, T, 0] : ent.side === 's' ? [c, r.d - T, 2] : ent.side === 'w' ? [T, c, 1] : [r.w - T, c, 3]; r.props.push(['genkan', q(at[0]), q(at[1]), at[2], { w: 1.4, d: Math.min(1.0, (ent.side === 'n' || ent.side === 's' ? r.d : r.w) * 0.3), n: r.vacant ? 0 : 1 + Math.floor(rnd() * 3), seed: Math.floor(rnd() * 9), shoes: !r.vacant }]); }
   if (S === 'empty') { if (ch(0.7)) L.center('boxes', 1.6, 0.8, { n: 3 + Math.floor(rnd() * 3), seed: Math.floor(rnd() * 9) }, Math.floor(rnd() * 2)); if (ch(0.5)) L.wall('boxes', 1.6, 0.8, { n: 2 + Math.floor(rnd() * 3), seed: 3 }); return; }
   const kitchen = (w) => { const s = L.wall('homekit', w, 0.62, { w, upper: r.h > 2.45 }, null, true); if (s) { L.wall('fridge', 0.68, 0.66, {}, [s], true) || L.wall('fridge', 0.68, 0.66, {}, null, true); } return s; };
   const sleep = (dbl) => (dist === 'old' && ch(0.55) && S !== 'bed' ? L.wall('futon', 1.0, 2.0, { c: blank }) : L.wall('bed2', dbl ? 1.5 : 1.0, 2.15, { c: blank, w: dbl ? 1.5 : 1.0, wc: wood }));
@@ -398,16 +408,20 @@ function furnishHome(r, PAL, rnd) {
 
 function furnishShop(r, PAL, rnd, L) {
   const pick = (a) => a[Math.floor(rnd() * a.length)], ch = (p) => rnd() < p, t = r.shop, SH = shopTypes().def[t] || shopTypes().def.conv;
-  r.floor = r.dist === 'main' ? PAL.main.floor : PAL.shop.floor; r.wall = PAL.shop.wall; r.trims = 'none'; r.ribs = false; r.lamps = SH.lamps || 'panel'; r.li = 1.15; r.name = r.shopName || SH.names[0];
+  r.floor = r.dist === 'main' ? PAL.main.floor : PAL.shop.floor; r.wall = PAL.shop.wall; r.trims = 'none'; r.ribs = false; r.lamps = SH.lamps || 'panel'; r.li = 0.9; r.ld = 9; r.name = r.shopName || SH.names[0];
   if (SH.floor) r.floor = SH.floor(PAL);
   for (const [k, fw, fd, o, mode, n = 1] of SH.items) for (let i = 0; i < n; i++) { if (mode === 'c') L.center(k, fw, fd, { ...o }, o.rot || 0); else if (mode === 'm') L.mount(k, fw, { ...o }); else L.wall(k, fw, fd, { ...o, seed: Math.floor(rnd() * 9) }, null, mode === 't'); }
   if (SH.npc) L.center('npc', 0.8, 0.8, { label: SH.npc[0], use: SH.npc[1], suit: pick(SUIT), visor: '#ffd27a' }, Math.floor(rnd() * 4));
   if (ch(0.3)) L.center('npc', 0.8, 0.8, { label: '客', use: 'talk:mgres', suit: pick(SUIT) }, Math.floor(rnd() * 4));
 }
 
+let byIdOf = () => null;
 function furnishSvc(r, PAL, rnd, L) {
   const pick = (a) => a[Math.floor(rnd() * a.length)], ch = (p) => rnd() < p, s = r.svc, base = PAL[r.dist] || PAL.civic;
-  r.floor = base.floor; r.wall = base.wall; r.trims = 'none'; r.ribs = false; r.li = 1.0; r.lamps = 'panel';
+  r.floor = base.floor; r.wall = base.wall; r.trims = 'none'; r.ribs = false; r.li = 0.8; r.ld = 8; r.lamps = 'panel';
+  if (s === 'nook') { // 通路と同じ床・壁・天井のまま、少し広がった場所
+    const c = byIdOf(r.seg); r.floor = c.floor; r.wall = c.wall; r.ceil = c.ceil; r.lamps = c.lamps; r.trims = c.trims; r.name = c.name;
+    L.wall(pick(['bench', 'bench', 'vending']), 2.0, 0.65, { c: pick(SUIT) }, null, false) || L.wall('plant', 0.6, 0.6, { s: 0.7 }); if (ch(0.6)) L.wall(pick(['plant', 'pottree', 'trashbins']), 1.2, 0.6, { s: 0.7, n: 2 }); if (ch(0.6)) L.mount(pick(['noticeboard', 'posters', 'vwindow']), 1.4, { w: 1.2, h: 0.8, y: 1.5, cur: false, seed: Math.floor(rnd() * 9) }); if (ch(0.3)) L.center('npc', 0.8, 0.8, { label: '休んでいる住人', use: 'talk:mgres3', suit: pick(SUIT) }, Math.floor(rnd() * 4)); return; }
   const nm = { stairs: '階段室', elev: 'エレベーターホール', laundry: '共同洗濯室', meeting: '集会所', bikes: '自転車置き場', trash: 'ゴミ置き場', storage: '倉庫', pump: 'ポンプ室' };
   r.name = `${DIST[r.dist].name} ${nm[s]}`; const base2 = PAL[r.dist] || base; r.floor = base2.floor; r.wall = base2.wall;
   if (s === 'stairs') {
@@ -427,7 +441,7 @@ function furnishSvc(r, PAL, rnd, L) {
   if (s === 'meeting') { L.center('tablelong', 3.0, 0.85, { w: 3.0, wood: 1 }); for (let i = 0; i < 4; i++) L.wall('chair', 0.5, 0.5, { c: pick(WOOD) }); L.mount('noticeboard', 1.4, {}); L.mount('posters', 1.2, { seed: 4 }); L.wall('homeshelf', 1.0, 0.34, {}, null, true); if (ch(0.5)) L.center('npc', 0.8, 0.8, { label: '自治会長', use: 'talk:mgchair', suit: pick(SUIT) }); return; }
   if (s === 'bikes') { for (let i = 0; i < 4; i++) L.wall('bicycle', 1.5, 0.55, { seed: Math.floor(rnd() * 9) }); L.mount('addrplate', 0.6, {}); return; }
   if (s === 'trash') { L.wall('trashbins', 1.9, 0.6, { n: 3 }); if (ch(0.6)) L.wall('trashbins', 1.3, 0.6, { n: 2 }); L.wall('boxes', 1.6, 0.8, { n: 3, seed: 2 }); return; }
-  if (s === 'storage') { L.wall('boxes', 1.6, 0.8, { n: 5, seed: 1 }); L.wall('homeshelf', 1.0, 0.34, {}, null, true); L.wall('crate', 1.2, 1.2, { n: 3 }); return; }
+  if (s === 'storage') { L.wall('boxes', 1.6, 0.8, { n: 5, seed: 1 }); L.wall('homeshelf', 1.0, 0.34, {}, null, true); L.wall('boxes', 1.6, 0.8, { n: 3, seed: 6 }); return; }
   if (s === 'pump') { r.deco = ['mgpipes']; L.wall('tank', 1.3, 1.3, { c: '#8adfff' }); L.mount('valvepanel', 1.4, {}); L.mount('breaker', 0.8, {}); L.wall('pipes', 1.0, 0.6, { c: 0x6a9a7a }); return; }
 }
 
@@ -465,6 +479,7 @@ function shopTypes() {
 }
 
 // ───────────────────────── 通路の照明・生活の小物 ─────────────────────────
+let doorsH = () => null;
 function dressCorridor(c, rooms, byId, rnd) {
   const pick = (a) => a[Math.floor(rnd() * a.length)], ch = (p) => rnd() < p, Rn = (a, b) => a + rnd() * (b - a);
   const long = c.w >= c.d, L = long ? c.w : c.d, W = long ? c.d : c.w, Wi = W - 2 * T, d = like(c.dist), P = c.props;
@@ -472,6 +487,7 @@ function dressCorridor(c, rooms, byId, rnd) {
   const pts = []; for (let t = Rn(1, 2.6); t < L - 0.8; t += Rn(3.4, 5.8)) { const off = W > 5 ? (ch(0.5) ? -1 : 1) * W * Rn(0.15, 0.28) : 0; pts.push(long ? [q(t), q(W / 2 + off), 0] : [q(W / 2 + off), q(t), HP]); }
   c.lampPts = pts;
   c.deco = ({ old: ch(0.7) ? ['mgpipes'] : ['mgpipes', 'cables'], main: ['frames', 'tray'], market: ['frames', 'mgpipes'], green: ['rail'], view: ['coves'], ninth: ['frames'], dorm: ['mgpipes', 'tray'], port: ['mgpipes', 'frames'], svc: ['mgpipes', 'tray', 'frames', 'floorlights'], civic: ['rail'] })[d];
+  if (c.h >= 2.75 && d !== 'main' && d !== 'view' && ch(0.6)) c.deco = [...c.deco, 'soffit']; // ダクトを包んだ下がり天井 (所々)
   // 壁ぞいの空き区間
   const sidesL = long ? ['n', 's'] : ['w', 'e'], floorItems = [], endOpen = (long ? ['w', 'e'] : ['n', 's']).map((e) => c.opens.some((o) => o.side === e));
   const nearOpen = (t, k) => c.opens.some((o) => sidesL.includes(o.side) && t > o.a - k && t < o.b + k) || (endOpen[0] && t < 2.2) || (endOpen[1] && t > L - 2.2);
@@ -488,21 +504,21 @@ function dressCorridor(c, rooms, byId, rnd) {
       put('homefront', o.side, mid, 0, { w: 1.15, hand: o.side === 'n' || o.side === 'e' ? hand : -hand, win: winOK ? (o.side === 'n' || o.side === 'e' ? wpos : -wpos) : 0, k: clutter ? k : 0, kx, seed: Math.floor(rnd() * 9), mc: pick([0x6a5a4a, 0x4a5a6a, 0x8a3a3a, 0x3a6a4a]), lamp: d !== 'old' || ch(0.6) });
       if (clutter) floorItems.push({ side: o.side, a: mid + hand * 1.0 - 0.3, b: mid + hand * 1.0 + 0.3, dep: 0.45 });
     } else if (R.kind === 'shop') {
-      const [x, z, rot] = off(o.side, mid, 0.09), y = Math.min(c.h - 0.22, (R.doorH || 2.2) + 0.42); P.push(S(R.name, x, z, rot, { h: 0.3, y: q(y), c: pick(['#ffe2b8', '#fff4dc', '#c8f0ff', '#ffd0e0']), frame: 1, k: 1.7 }));
+      const [x, z, rot] = off(o.side, mid, 0.09), y = Math.min(c.h - 0.22, (R.doorH || 2.2) + 0.42); P.push(S(R.name, x, z, rot, { h: 0.3, y: q(y), c: pick(['#ffe2b8', '#fff4dc', '#c8f0ff', '#ffd0e0']), frame: 1, k: 1.7, size: 64 }));
       if (['diner', 'ramen', 'tea', 'sweets'].includes(R.shop)) put('noren', o.side, mid, 0, { w: Math.min(1.8, o.b - o.a - 0.2), y: Math.min(2.3, c.h - 0.4), c: pick([0x2a3a6a, 0x8a2a20, 0x2c5a4e]) });
       if (['grocer', 'fish', 'flower', 'bakery', 'tools', 'cloth', 'books', 'butcher'].includes(R.shop) && c.h >= 3.2) put('awning', o.side, mid, 0, { w: o.b - o.a + 0.6, y: Math.min(2.9, c.h - 0.4), c: pick([0xb8452e, 0x2e7ab8, 0x3aa86a, 0xc9a22e]) });
-    } else if (R.kind === 'svc') { const [x, z, rot] = off(o.side, mid, 0.09); P.push(S(R.name.split(' ').slice(-1)[0], x, z, rot, { h: 0.22, y: q(Math.min(c.h - 0.2, (R.doorH || 2.2) + 0.35)), c: '#e8f4ff', frame: 1, k: 1.4 })); }
+    } else if (R.kind === 'svc') { const [x, z, rot] = off(o.side, mid, 0.09); P.push(S(R.name.split(' ').slice(-1)[0], x, z, rot, { h: 0.22, y: q(Math.min(c.h - 0.2, (R.doorH || 2.2) + 0.35)), c: '#e8f4ff', frame: 1, k: 1.4, size: 56 })); }
   }
   // 壁だけの区間に、街区らしい物を
   const ITEMS = {
-    old: [['shutter', 2.6, 0], ['meterbox', 0.6, 0], ['bicycle', 1.5, 0.5], ['laundry', 1.3, 0.4], ['plant', 0.6, 0.5], ['trashbins', 1.3, 0.56, { n: 2 }], ['posters', 1.2, 0], ['louver', 0.9, 0], ['breaker', 0.7, 0], ['firehose', 0.8, 0], ['boxes', 1.2, 0.6, { n: 2 }]],
+    old: [['shutter', 2.6, 0], ['shaft', 0.9, 0.42], ['meterbox', 0.6, 0], ['bicycle', 1.5, 0.5], ['laundry', 1.3, 0.4], ['plant', 0.6, 0.5], ['trashbins', 1.3, 0.56, { n: 2 }], ['posters', 1.2, 0], ['louver', 0.9, 0], ['breaker', 0.7, 0], ['firehose', 0.8, 0], ['boxes', 1.2, 0.6, { n: 2 }]],
     main: [['bench', 2.0, 0.6], ['vending', 1.0, 0.7], ['pottree', 0.7, 0.7], ['districtmap', 2.0, 0, { use: false }], ['posters', 1.4, 0], ['firehose', 0.8, 0], ['newsstand', 1.4, 0.7]],
     market: [['shutter', 2.6, 0], ['produce', 2.0, 1.0], ['boxes', 1.6, 0.8], ['vending', 1.0, 0.7], ['trashbins', 1.9, 0.56], ['posters', 1.2, 0]],
-    green: [['noticeboard', 1.3, 0], ['bicycle', 1.5, 0.5], ['plant', 0.6, 0.5], ['firehose', 0.8, 0], ['meterbox', 0.6, 0], ['bench', 2.0, 0.6], ['exitsign', 0.5, 0], ['mailboxes', 1.4, 0.3, { w: 1.4 }]],
+    green: [['shaft', 1.0, 0.42], ['noticeboard', 1.3, 0], ['bicycle', 1.5, 0.5], ['plant', 0.6, 0.5], ['firehose', 0.8, 0], ['meterbox', 0.6, 0], ['bench', 2.0, 0.6], ['exitsign', 0.5, 0], ['mailboxes', 1.4, 0.3, { w: 1.4 }]],
     view: [['pottree', 0.7, 0.7], ['bench', 2.0, 0.6], ['posters', 1.2, 0, { w: 1.0, h: 0.7, seed: 6 }], ['firehose', 0.8, 0], ['exitsign', 0.5, 0]],
-    ninth: [['pottree', 0.7, 0.7], ['bench', 2.0, 0.6], ['noticeboard', 1.3, 0], ['bicycle', 1.5, 0.5], ['vending', 1.0, 0.7], ['firehose', 0.8, 0], ['exitsign', 0.5, 0]],
-    dorm: [['laundry', 1.3, 0.4], ['meterbox', 0.6, 0], ['breaker', 0.7, 0], ['valvepanel', 1.4, 0], ['boxes', 1.2, 0.6, { n: 2 }], ['vending', 1.0, 0.7], ['bicycle', 1.5, 0.5], ['firehose', 0.8, 0]],
-    port: [['shutter', 2.6, 0], ['boxes', 1.6, 0.8], ['meterbox', 0.6, 0], ['bicycle', 1.5, 0.5], ['trashbins', 1.9, 0.56], ['laundry', 1.3, 0.4], ['valvepanel', 1.4, 0], ['firehose', 0.8, 0], ['vending', 1.0, 0.7]],
+    ninth: [['shaft', 1.0, 0.4], ['pottree', 0.7, 0.7], ['bench', 2.0, 0.6], ['noticeboard', 1.3, 0], ['bicycle', 1.5, 0.5], ['vending', 1.0, 0.7], ['firehose', 0.8, 0], ['exitsign', 0.5, 0]],
+    dorm: [['shaft', 0.9, 0.45], ['laundry', 1.3, 0.4], ['meterbox', 0.6, 0], ['breaker', 0.7, 0], ['valvepanel', 1.4, 0], ['boxes', 1.2, 0.6, { n: 2 }], ['vending', 1.0, 0.7], ['bicycle', 1.5, 0.5], ['firehose', 0.8, 0]],
+    port: [['shutter', 2.6, 0], ['shaft', 0.9, 0.42], ['boxes', 1.6, 0.8], ['meterbox', 0.6, 0], ['bicycle', 1.5, 0.5], ['trashbins', 1.9, 0.56], ['laundry', 1.3, 0.4], ['valvepanel', 1.4, 0], ['firehose', 0.8, 0], ['vending', 1.0, 0.7]],
     svc: [['valvepanel', 1.4, 0], ['breaker', 0.7, 0], ['louver', 0.9, 0], ['firehose', 0.8, 0], ['exitsign', 0.5, 0], ['cylinders', 1.4, 0.5, { n: 3 }]],
     civic: [['noticeboard', 1.3, 0], ['pottree', 0.7, 0.7], ['bench', 2.0, 0.6], ['firehose', 0.8, 0], ['exitsign', 0.5, 0], ['posters', 1.2, 0, { seed: 3 }]],
   }[d] || [];
@@ -514,7 +530,7 @@ function dressCorridor(c, rooms, byId, rnd) {
       while (t < b0 - 0.6) { if (!ch(d === 'old' || d === 'port' || d === 'dorm' ? 0.55 : 0.4)) { t += Rn(0.8, 2.2); continue; }
         const [k, w, dep, o = {}] = pick(ITEMS); if (t + w > b0) { t += 0.5; continue; }
         if (dep && !lane(side, t, t + w, dep)) { t += 0.6; continue; }
-        const mid = t + w / 2, oo = { ...o, seed: Math.floor(rnd() * 9) };
+        const mid = t + w / 2, oo = { ...o, seed: Math.floor(rnd() * 9), ...(k === 'shaft' ? { h: c.h, w, c: pick([0xe0dcd2, 0xd8d4c8, 0xc8d0c8]) } : {}) };
         if (k === 'bicycle' || k === 'bench' || k === 'laundry' || k === 'trashbins' || k === 'boxes' || k === 'produce' || k === 'cylinders') put(k, side, mid, dep, oo, w); // 長手方向に沿って置く
         else if (dep) put(k, side, mid, dep, oo, w); else put(k, side, mid, 0, { ...oo, y: k === 'louver' ? Math.min(c.h - 0.45, 2.3) : k === 'exitsign' ? Math.min(c.h - 0.3, 2.3) : oo.y });
         t += w + Rn(0.3, 1.6); }
@@ -523,10 +539,16 @@ function dressCorridor(c, rooms, byId, rnd) {
   // 行き止まり: 景色の画面か植木
   for (const end of long ? ['w', 'e'] : ['n', 's']) { if (c.opens.some((o) => o.side === end)) continue;
     const mid = W / 2, pos = end === 'w' ? [T, mid, 1] : end === 'e' ? [L - T, mid, 3] : end === 'n' ? [mid, T, 0] : [mid, L - T, 2]; if (Wi >= 1.6) P.push(['vwindow', q(pos[0]), q(pos[1]), pos[2], { w: Math.min(1.4, Wi - 0.4), h: 0.9, y: 1.5, cur: false }]); }
+  // 上の階の家並み (天井の高い大通りの壁の上部)
+  if (c.h >= 5.5) for (const side of sidesL) { const [x, z, rot] = at(side, L / 2, 0); P.push(['facade', q(x), q(z), rot, { w: q(L - 1.4), yb: 3.75, yt: q(c.h - 0.15), story: 2.6 }]); }
+  // 行き先の札 (別の通りへの継ぎ目の上に、その通りの名前)
+  for (const o of c.opens) { const R = byId[o.to]; if (!R || !R.corr || R.street === c.street) continue; const dd = doorsH(c.id, R.id); if (dd == null || c.h - dd < 0.42) continue;
+    const mid = (o.a + o.b) / 2, side = o.side, pos = side === 'n' ? [mid, T + 0.08, 0] : side === 's' ? [mid, (long ? W : L) - T - 0.08, 2] : side === 'w' ? [T + 0.08, mid, 1] : [(long ? L : W) - T - 0.08, mid, 3];
+    P.push(S(`→ ${R.street}`, q(pos[0]), q(pos[1]), pos[2], { h: 0.22, y: q(Math.min(c.h - 0.17, dd + 0.3)), c: '#e8f6ff', frame: 1, k: 1.35, size: 56 })); }
   // 番地札 (区間ごとに 1 枚)
   { const side = sidesL[1], t = Math.min(L - 0.5, Math.max(0.5, L * Rn(0.25, 0.6))); if (!nearOpen(t, 0.5)) { const [x, z, rot] = at(side, t, 0); P.push(['addrplate', q(x), q(z), rot, { y: Math.min(c.h - 0.4, 2.1) }]); } }
   // 通りの名札 (最初の区間の入口近くに)
-  if (c.o.st) { const side = sidesL[0], t = Math.min(2.2, L / 3), [x, z, rot] = at(side, t, 0); P.push(S(c.o.st, q(x + (side === 'w' ? 0.03 : 0)), q(z + (side === 'n' ? 0.03 : 0)), rot, { h: 0.26, y: q(Math.min(c.h - 0.3, 2.35)), c: '#fff2d8', frame: 1, k: 1.5 })); }
+  if (c.o.st) { const side = sidesL[0], t = Math.min(2.2, L / 3), [x, z, rot] = at(side, t, 0); P.push(S(c.o.st, q(x + (side === 'w' ? 0.03 : 0)), q(z + (side === 'n' ? 0.03 : 0)), rot, { h: 0.26, y: q(Math.min(c.h - 0.3, 2.35)), c: '#fff2d8', frame: 1, k: 1.5, size: 64 })); }
   // 本通りの中央: 植え込み・ベンチ・街灯を不揃いに (両端の継ぎ目の前は空ける)
   if (c.o.mid) for (let t = Rn(6.5, 9); t < L - 6.5; t += Rn(7, 12)) { const cz = W / 2 + Rn(-0.6, 0.6), kind = pick(['planter', 'planter', 'streetlamp', 'kiosk']); if (kind === 'planter') { P.push(['planter', q(long ? t : cz), q(long ? cz : t), long ? 0 : 1, { w: Rn(3, 5), flowers: 1 }]); P.push(['bench', q(long ? t : cz + 1.1), q(long ? cz + 1.1 : t), long ? 0 : 1, { c: 0x5a6a7a }]); } else if (kind === 'streetlamp') P.push(['streetlamp', q(long ? t : cz), q(long ? cz : t), 0]); else P.push(['pottree', q(long ? t : cz), q(long ? cz : t), 0, { s: 1.1 }]); }
   // 人通り
@@ -561,6 +583,7 @@ function facilities(PAL, rnd) {
       ['planter', 16, 39.5, 0, { w: 6, flowers: 1 }], ['planter', 3, 13, 1, { w: 5, flowers: 1 }], ['stall', 27, 21.5, 3, { c: 0x3a6ea8, use: 'cafe', label: '屋台コーヒー' }], ['newsstand', 2.2, 35, 0], ['infopillar', 12, 41.5, 0], ['vending', 31.4, 43.5, 3], ['vending', 31.4, 42.3, 3, { c: '#ffd27a', title: 'TEA' }],
       ['clock', 16, 0.3, 0, { r: 1.6, y: 7.6 }], ['hoload', 16, 4, 0, { text: 'MEGATON\n中央広場', c: '#ffd27a', y: 8.4, h: 1.6 }], ['bicycle', 31.5, 17, 3, { seed: 2 }], ['bicycle', 31.5, 18.7, 3, { seed: 5 }], ['playset', 5.5, 36.5, 0],
       S('区役所', 15, 0.3, 0, { h: 0.5, y: 3.5, c: '#fff2d8' }), S('診療所', 8, 45.7, 2, { h: 0.45, y: 3.3, c: '#c8f0ff' }), S('交番', 31.7, 10, 3, { h: 0.45, y: 3.2, c: '#ff8a7a' }), S('郵便局', 0.3, 6.5, 1, { h: 0.4, y: 3.1 }), S('取引所', 0.3, 42, 1, { h: 0.4, y: 3.4 }), S('学校通り ↓', 23.75, 45.7, 2, { h: 0.4, y: 3.6 }),
+      ['facade', 6.75, 0.2, 0, { w: 12.5, yb: 4.6, yt: 10.8 }], ['facade', 25.25, 0.2, 0, { w: 12.5, yb: 4.6, yt: 10.8 }], ['facade', 16, 45.8, 2, { w: 31, yb: 4.6, yt: 10.8 }], ['facade', 0.2, 23, 1, { w: 45, yb: 4.6, yt: 10.8 }], ['facade', 31.8, 23, 3, { w: 45, yb: 4.6, yt: 10.8 }],
       N('市民', 'talk:megacitizen2', 12.5, 19, 0.8, 0x8a3a3a), N('子ども', 'talk:mgkid', 8, 33, 2, 0xd86a8a), N('老人', 'talk:mgres3', 21.5, 37, -2.4, 0x6a6a72), N('楽士', 'talk:megamusician', 19, 41.5, 3, 0x1c1c22), N('学生', 'talk:megastudent', 25, 12, -1, 0x4a6ac8)] }));
   // 東口広場 (鋳物町と展望町への分かれ道)
   P(R('gate', '東口広場', 212, 18, 232, 40, 7, { join: 1, floor: M.floor, wall: PAL.svc.wall, ceil: C.ceil, deco: ['frames', 'mgpipes'], lamps: 'panel',
@@ -623,7 +646,7 @@ function facilities(PAL, rnd) {
   // 緑ヶ丘: 公園と光庭
   P(R('park', '緑ヶ丘公園', 118, 96, 146, 122, 7, { join: 1, jcap: 4, ceil3: 'skyceil', floor: PAL.park.grass, wall: G.wall, rug: [[0, 11.5, 28, 3, PAL.park.path, 0xd8d0c0], [12.5, 0, 3, 26, PAL.park.path, 0xd8d0c0], [17.2, 1.4, 5.6, 6.4, PAL.park.play, 0xd86a4a]],
     props: [['pond', 6, 6, 0, { r: 3 }], ['playset', 20, 5, 0], ['tree', 3, 20, 0, { s: 1.2 }], ['tree', 9, 22, 0], ['tree', 24, 21, 0, { s: 1.15 }], ['tree', 21, 17, 0, { s: 0.9 }], ['tree', 3, 2.5, 0], ['tree', 25.5, 10, 0], ['bench', 9, 10.4, 0, { c: 0x6a8a4a }], ['bench', 18, 10.4, 0, { c: 0x6a8a4a }], ['bench', 11.4, 19, 1, { c: 0x6a8a4a }],
-      ['streetlamp', 11.6, 9.6, 0], ['streetlamp', 16.4, 15.6, 0], ['planter', 20, 24.8, 0, { w: 6, flowers: 1 }], N('庭師', 'talk:megagardener', 5, 10, 1, 0x3a7a4a), N('子ども', 'talk:mgkid', 19, 8.6, 2, 0xe8c020), N('子ども', 'talk:mgkid', 22, 7.4, -2, 0x3a8ae8), N('ご隠居', 'talk:mgres3', 9.4, 11.2, 2, 0x6a6a72), S('緑ヶ丘公園', 0.3, 13, 1, { h: 0.4, y: 3.4, c: '#bfffc8' })] }));
+      ['streetlamp', 11.6, 9.6, 0], ['streetlamp', 16.4, 15.6, 0], ['planter', 20, 24.8, 0, { w: 6, flowers: 1 }], N('庭師', 'talk:megagardener', 5, 10, 1, 0x3a7a4a), ['facade', 14, 0.2, 0, { w: 27, yb: 3.7, yt: 6.85 }], ['facade', 14, 25.8, 2, { w: 27, yb: 3.7, yt: 6.85 }], ['facade', 27.8, 13, 3, { w: 25, yb: 3.7, yt: 6.85 }], ['facade', 0.2, 13, 1, { w: 25, yb: 3.7, yt: 6.85 }], N('子ども', 'talk:mgkid', 19, 8.6, 2, 0xe8c020), N('子ども', 'talk:mgkid', 22, 7.4, -2, 0x3a8ae8), N('ご隠居', 'talk:mgres3', 9.4, 11.2, 2, 0x6a6a72), S('緑ヶ丘公園', 0.3, 13, 1, { h: 0.4, y: 3.4, c: '#bfffc8' })] }));
   P(R('court1', '一号棟・二号棟の光庭', 86, 100, 98, 112, 4, { join: 1, jcap: 3, ceil3: 'skyceil', floor: PAL.park.grass, wall: G.wall, rug: [[4.7, 0, 2.6, 12, PAL.park.path, 0xd8d0c0]], props: [['tree', 2.6, 3, 0], ['tree', 9.4, 8.8, 0, { s: 0.95 }], ['bench', 9.6, 3, 3, { c: 0x6a8a4a }], ['laundry', 2.4, 9.4, 1, { w: 1.8, seed: 3 }], ['bicycle', 10.6, 6, 1, { seed: 4 }], ['planter', 2.4, 6.2, 1, { w: 2.4, flowers: 1 }]] }));
   P(R('court9', '第 9 区 中庭', 176, 124, 192, 144, 5, { join: 1, jcap: 2.4, ceil3: 'skyceil', floor: PAL.park.grass, wall: PAL.ninth.wall, rug: [[6.7, 0, 2.6, 20, PAL.park.path, 0xd8d0c0], [9.4, 3, 5.2, 4.2, PAL.park.play, 0x4a8ad8]], props: [['tree', 3, 4, 0, { s: 1.1 }], ['tree', 13, 15, 0], ['tree', 3, 16, 0, { s: 0.9 }], ['playset', 12, 5, 3], ['bench', 4.6, 10, 1, { c: 0x6a8a4a }], ['bench', 11.4, 10, 3, { c: 0x6a8a4a }], ['pond', 12.6, 17.2, 0, { r: 1.4 }], ['planter', 8, 19.4, 0, { w: 4, flowers: 1 }], N('子ども', 'talk:mgkid', 10, 7, 1, 0x3a8ae8), N('住人', 'talk:mgres2', 5.5, 13, 1.4, 0x8a6a2a)] }));
   // 船員会館・ひかり台集会所
