@@ -46,17 +46,21 @@ CUT = ('CUTOUT cells: one isolated subject, fully visible, on a perfectly flat u
        '(#FF00FF, RGB 255,0,255) that fills the rest of the cell; no ground, no pot, no shadow, no gradient on the '
        'background; crisp clean silhouette; keep a small magenta margin around the subject. ')
 EMI = ('EMISSIVE cells: glowing elements on a pure black background (#000000); nothing else lit. ')
+PIC = ('PICTURE cells: one single object or picture seen exactly straight on, filling the cell edge to edge, '
+       'soft uniform shadowless lighting, no perspective, not tiled, no text. ')
 
 
 def build_prompt(sheet):
-    kinds = {c['kind'] for c in sheet['cells']}
+    pic = lambda c: c['kind'] == 'tile' and c.get('seam') == ''  # 面に 1 枚の絵として貼るマス (家電の正面・扉など)
+    kinds = {'picture' if pic(c) else c['kind'] for c in sheet['cells']}
     p = HEAD + (sheet.get('style', '') + ' ' if sheet.get('style') else '')
     if kinds & {'tile', 'image'}: p += TILE
+    if 'picture' in kinds: p += PIC
     if 'cutout' in kinds: p += CUT
     if 'emissive' in kinds: p += EMI
     p += 'Cells in reading order (left to right, top to bottom):\n'
     for i, c in enumerate(sheet['cells']):
-        tag = {'tile': 'TILE', 'image': 'TILE', 'cutout': 'CUTOUT', 'emissive': 'EMISSIVE'}[c['kind']]
+        tag = 'PICTURE' if pic(c) else {'tile': 'TILE', 'image': 'TILE', 'cutout': 'CUTOUT', 'emissive': 'EMISSIVE'}[c['kind']]
         p += f"{i + 1}. (row {i // 3 + 1}, column {i % 3 + 1}) [{tag}] {c['prompt']}\n"
     return p
 

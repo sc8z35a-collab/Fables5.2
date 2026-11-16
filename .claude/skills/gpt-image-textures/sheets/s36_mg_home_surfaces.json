@@ -1,0 +1,134 @@
+{
+ "id": "s36_mg_home_surfaces",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板 (src/world/megaton.js) の改修用。画像が無いあいだは既存の素材に色を付けて代用している。自分で作った 3x3 の画像を assets/textures/sheets/<id>.webp に置くか、texgen.py generate で生成する",
+ "style": "Floors and walls inside small, bright apartments in a space-habitat city. Flat, evenly lit, top-down for floors and front-on for walls, no furniture, no shadows.",
+ "cells": [
+  {
+   "name": "mg-floor-oak",
+   "kind": "tile",
+   "prompt": "Apartment floor from above: light oak floorboards, long narrow planks with natural grain.",
+   "mean": [
+    196,
+    160,
+    118
+   ],
+   "rough": 150,
+   "sat": 0.5,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-tatami",
+   "kind": "tile",
+   "prompt": "Japanese tatami mats seen from directly above: two mats side by side with green-gold woven rush and dark cloth borders.",
+   "mean": [
+    190,
+    186,
+    130
+   ],
+   "rough": 220,
+   "sat": 0.5,
+   "normal": 2.5,
+   "uvs": 0.55
+  },
+  {
+   "name": "mg-floor-cushion",
+   "kind": "tile",
+   "prompt": "Kitchen cushion-floor vinyl from above: soft beige wood-look pattern with a slight emboss.",
+   "mean": [
+    214,
+    198,
+    172
+   ],
+   "rough": 160,
+   "sat": 0.35,
+   "normal": 1.5,
+   "uvs": 0.5
+  },
+  {
+   "name": "mg-floor-carpet",
+   "kind": "tile",
+   "prompt": "Bedroom wall-to-wall carpet from above: short soft pile in muted blue-grey.",
+   "mean": [
+    150,
+    160,
+    172
+   ],
+   "rough": 240,
+   "sat": 0.25,
+   "normal": 1.5,
+   "uvs": 0.5
+  },
+  {
+   "name": "mg-floor-bath",
+   "kind": "tile",
+   "prompt": "Bathroom floor from above: small white square tiles with grey grout, anti-slip texture.",
+   "mean": [
+    214,
+    218,
+    220
+   ],
+   "rough": 90,
+   "sat": 0.1,
+   "normal": 2.0,
+   "uvs": 1.0
+  },
+  {
+   "name": "mg-wallpaper",
+   "kind": "tile",
+   "prompt": "White woven-texture wallpaper (fabric-look vinyl), very subtle pattern, front-on.",
+   "mean": [
+    232,
+    228,
+    220
+   ],
+   "rough": 230,
+   "sat": 0.1,
+   "normal": 1.2,
+   "uvs": 0.5
+  },
+  {
+   "name": "mg-wallpaper-kids",
+   "kind": "tile",
+   "prompt": "Children room wallpaper: pale cream with tiny stars and planets pattern, soft colours, front-on.",
+   "mean": [
+    228,
+    220,
+    206
+   ],
+   "rough": 230,
+   "sat": 0.3,
+   "normal": 1.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-wall-wood",
+   "kind": "tile",
+   "prompt": "Wood wall panelling: vertical tongue-and-groove light cedar boards, front-on.",
+   "mean": [
+    196,
+    160,
+    120
+   ],
+   "rough": 170,
+   "sat": 0.45,
+   "normal": 2.0,
+   "uvs": 0.5
+  },
+  {
+   "name": "mg-wall-bath",
+   "kind": "tile",
+   "prompt": "Bathroom wall: pale aqua glossy rectangular tiles with white grout, front-on.",
+   "mean": [
+    196,
+    218,
+    222
+   ],
+   "rough": 70,
+   "sat": 0.3,
+   "normal": 1.5,
+   "uvs": 0.8
+  }
+ ]
+}

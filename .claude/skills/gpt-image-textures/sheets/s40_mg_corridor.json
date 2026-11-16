@@ -1,0 +1,80 @@
+{
+ "id": "s40_mg_corridor",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板 (src/world/megaton.js) の改修用。画像が無いあいだは既存の素材に色を付けて代用している。自分で作った 3x3 の画像を assets/textures/sheets/<id>.webp に置くか、texgen.py generate で生成する",
+ "style": "Small everyday fixtures on the corridor walls of a space-habitat apartment block. Each cell is ONE item seen exactly straight on, filling the cell, flat even light, no shadows, no readable text (blank or abstract labels only).",
+ "cells": [
+  {
+   "name": "mg-nameplate",
+   "kind": "tile",
+   "prompt": "An apartment nameplate above an intercom button panel, mounted on a wall, blank plate.",
+   "seam": "",
+   "rough": 100,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-mailboxes",
+   "kind": "tile",
+   "prompt": "A bank of grey metal apartment mailboxes, rows of small doors with number plates (blank).",
+   "seam": "",
+   "rough": 110,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-meterbox",
+   "kind": "tile",
+   "prompt": "A utility meter box with a small glass window showing electric and water meters.",
+   "seam": "",
+   "rough": 120,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-firehose",
+   "kind": "tile",
+   "prompt": "A red fire hose cabinet with a glass door, the coiled hose visible inside, a red lamp on top.",
+   "seam": "",
+   "rough": 90,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-exit-sign",
+   "kind": "tile",
+   "prompt": "A green emergency exit sign: a white running figure pictogram and an arrow, no words.",
+   "seam": "",
+   "rough": 60,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-address",
+   "kind": "tile",
+   "prompt": "A blue enamel address plate with white abstract symbols, slightly worn edges.",
+   "seam": "",
+   "rough": 80,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-noticeboard",
+   "kind": "tile",
+   "prompt": "A cork notice board with pinned community notices, a lost-cat flyer, a calendar and photos (no readable text).",
+   "seam": "",
+   "rough": 200,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-posters",
+   "kind": "tile",
+   "prompt": "Three community posters side by side: a festival, a clean-up day and a health check, colourful illustrations, no readable text.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-trash-sign",
+   "kind": "tile",
+   "prompt": "A garbage sorting sign with coloured icons for burnable, plastic, cans and paper, no words.",
+   "seam": "",
+   "rough": 100,
+   "normal": 1.5
+  }
+ ]
+}

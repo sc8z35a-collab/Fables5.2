@@ -72,6 +72,7 @@ python3 $S/scripts/texgen.py process --preview /tmp/check          # 切り分�
 | `s12_obj_basic` 〜 `s17_obj_gear` | **物の質感 54 種** (新規)。白/黒の樹脂、塗装、金属、布、家具、機械、地球の乗り物・建物、ロボット、断熱材、テントなど。使っている場所は下の表 |
 | `s18_effects` 〜 `s22_ground` | ユーザーが別に生成した 1254×1254 の画像。使わないマスは `"skip": true` と理由 (`why`) を書いてある。`image` で `mean` を省くと明るさを変えない。発光マップは `emissiveImg(path, 単色の設定, 画像があるときの設定)` (`textures.js`) で付ける |
 | `s23_stations` 〜 `s27_farm` | ユーザーが別に生成した画像 (45 マスすべて使用)。扉・敷物・着陸パッドのように面に 1 枚の絵として貼るものは `"seam": ""` で継ぎ目処理をせず、コード側で元の UV (Builder の `uvs` = 0) のまま貼る |
+| `s33_mg_streets` 〜 `s43_mg_public` | **メガトン船内の改修用 99 枚 (画像はまだ無い)**。名前はすべて `mg-` で始まり、`src/world/megaton.js` (床・壁・天井・扉)、`props7.js` (家具・家電・通路の小物・店・公共施設)、`interior.js` (配管 `mg-pipe`・ケーブルラック `mg-cable-tray`・骨組み `mg-frame`・人工の空 `mg-sky`) が使う。画像が無いあいだは既存の素材に色を付けて代用する (`palette()` の `m(名前, 代わりの素材, 色)`、`props7.js` の `tm()`、正面の絵は `face()` が false を返して従来の作り)。`seam: ""` のマスは 1 枚の絵で、`prompt` では `[PICTURE]` (継ぎ目なしにしない) として頼む |
 | `s28_shop` 〜 `s32_ship` | ユーザーが別に生成した画像 (45 マス中 35 を使用)。機械や店の正面の絵は `props.js` の `face(P, 名前, 幅, 高さ, x, y, z, { uv, glow, rx, ry })` で面に 1 枚貼る (画像が無ければ false を返し、従来の作りになる) |
 
 ### 物の質感 (シート 12〜17) を使っている場所

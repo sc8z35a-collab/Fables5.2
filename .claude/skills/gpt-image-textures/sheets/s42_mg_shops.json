@@ -1,0 +1,98 @@
+{
+ "id": "s42_mg_shops",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板 (src/world/megaton.js) の改修用。画像が無いあいだは既存の素材に色を付けて代用している。自分で作った 3x3 の画像を assets/textures/sheets/<id>.webp に置くか、texgen.py generate で生成する",
+ "style": "Small neighbourhood shops of a space-habitat city: diners, grocers and corner stores. Each cell is ONE item seen exactly straight on (or from directly above for floors), filling the cell, flat even light, no shadows, no readable text.",
+ "cells": [
+  {
+   "name": "mg-noren",
+   "kind": "tile",
+   "prompt": "A shop entrance noren curtain: navy cloth split into three panels with a white circular emblem, no letters.",
+   "seam": "",
+   "rough": 230,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-menu",
+   "kind": "tile",
+   "prompt": "A diner menu wall: a row of wooden menu tags hanging side by side with abstract brush strokes instead of words.",
+   "seam": "",
+   "rough": 180,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-shelf-goods",
+   "kind": "tile",
+   "prompt": "A store shelf packed with daily goods and snacks in colourful packages, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-drinks",
+   "kind": "tile",
+   "prompt": "A glass-door drinks refrigerator front: rows of bottles and cans, bright inside light.",
+   "seam": "",
+   "rough": 60,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-produce",
+   "kind": "tile",
+   "prompt": "A greengrocer display seen from above: crates of tomatoes, oranges, cabbages and hydroponic lettuce.",
+   "seam": "",
+   "rough": 200,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-awning",
+   "kind": "tile",
+   "prompt": "Shop awning canvas: wide stripes in red and cream, slightly weathered fabric, front-on.",
+   "mean": [
+    180,
+    120,
+    110
+   ],
+   "rough": 230,
+   "sat": 0.5,
+   "normal": 1.5,
+   "uvs": 0.5
+  },
+  {
+   "name": "mg-register",
+   "kind": "tile",
+   "prompt": "The front of a shop counter: wood panels with a small brand-free emblem, a register just visible on top.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-park-path",
+   "kind": "tile",
+   "prompt": "Park footpath from above: compacted light brown earth with fine gravel and a few fallen leaves.",
+   "mean": [
+    170,
+    150,
+    120
+   ],
+   "rough": 230,
+   "sat": 0.35,
+   "normal": 2.5,
+   "uvs": 0.4
+  },
+  {
+   "name": "mg-play-floor",
+   "kind": "tile",
+   "prompt": "Playground safety flooring from above: colourful rubber crumb (red, blue, yellow) with seams.",
+   "mean": [
+    170,
+    110,
+    100
+   ],
+   "rough": 230,
+   "sat": 0.6,
+   "normal": 2.0,
+   "uvs": 0.5
+  }
+ ]
+}

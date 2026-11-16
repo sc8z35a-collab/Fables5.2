@@ -1,0 +1,104 @@
+{
+ "id": "s43_mg_public",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板 (src/world/megaton.js) の改修用。画像が無いあいだは既存の素材に色を付けて代用している。自分で作った 3x3 の画像を assets/textures/sheets/<id>.webp に置くか、texgen.py generate で生成する",
+ "style": "Public facilities of a space-habitat neighbourhood: school, clinic, bathhouse, library and a small shrine. Each cell is ONE surface or item, front-on or top-down, flat even light, no shadows, no readable text.",
+ "cells": [
+  {
+   "name": "mg-blackboard",
+   "kind": "tile",
+   "prompt": "A school blackboard with chalk drawings of planets, orbits and simple diagrams, no words.",
+   "seam": "",
+   "rough": 220,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-counter",
+   "kind": "tile",
+   "prompt": "The front of a ward office service counter: white panels with a number display slot (blank) and a small step.",
+   "seam": "",
+   "rough": 120,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-hospital-curtain",
+   "kind": "tile",
+   "prompt": "Hospital privacy curtain fabric: pale mint green with soft folds, front-on.",
+   "mean": [
+    176,
+    210,
+    196
+   ],
+   "rough": 230,
+   "sat": 0.3,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-clinic-floor",
+   "kind": "tile",
+   "prompt": "Clinic floor from above: white sheet vinyl with a faint grey fleck, very clean.",
+   "mean": [
+    222,
+    226,
+    224
+   ],
+   "rough": 120,
+   "sat": 0.08,
+   "normal": 1.0,
+   "uvs": 0.4
+  },
+  {
+   "name": "mg-gym-floor",
+   "kind": "tile",
+   "prompt": "School gym floor from above: light maple boards with painted court lines in blue and red.",
+   "mean": [
+    206,
+    170,
+    120
+   ],
+   "rough": 120,
+   "sat": 0.5,
+   "normal": 1.5,
+   "uvs": 0.15
+  },
+  {
+   "name": "mg-bath-mural",
+   "kind": "tile",
+   "prompt": "A public bathhouse mural: a big ringed gas-giant planet rising over a sea of golden clouds, painted in a classic bathhouse style.",
+   "seam": "",
+   "rough": 110,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-bath-tile",
+   "kind": "tile",
+   "prompt": "Public bath tiles: small white and pale blue square tiles in a simple pattern, glossy, front-on.",
+   "mean": [
+    200,
+    216,
+    224
+   ],
+   "rough": 60,
+   "sat": 0.3,
+   "normal": 1.5,
+   "uvs": 1.0
+  },
+  {
+   "name": "mg-library-shelf",
+   "kind": "tile",
+   "prompt": "A library bookshelf front packed with books of many colours, neat rows, no readable titles.",
+   "seam": "",
+   "rough": 180,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-shrine",
+   "kind": "tile",
+   "prompt": "The front of a small wooden Shinto shrine (hokora): little lattice doors, a straw rope with white paper streamers, offerings.",
+   "seam": "",
+   "rough": 170,
+   "normal": 1.5
+  }
+ ]
+}

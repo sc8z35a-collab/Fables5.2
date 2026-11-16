@@ -59,7 +59,7 @@ const TALK = {
   evacuee3: ['「毛布と温かい飲み物をもらった。ロボットなのに、手つきがやさしいんだ」'],
   // ── メガトン ──
   megadock: ['「メガトンへようこそ。全長 3 キロ、人口は百万。迷ったらアトリウムの案内係に聞け」', '「ここの合金と燃料電池は星系一安い。代わりに食料と水はいつも足りない。運んでくれば儲かるぞ」'],
-  megaguide: ['「ここはグランド・アトリウム。ガラスの天井の向こうは宇宙でございます。東に取引所と駅とホテル、西に空中庭園と重工区画、突き当たりがメガトン炉でございます」', '「頭上を走っているのは連絡列車です。吹き抜けの端から端まで、およそ 10 秒で結んでおります」'],
+  megaguide: ['「メガトン第 7 居住甲板へようこそ。東へ本通りを進むと中央広場、区役所と駅はその先でございます。北は錨町、南は市場と緑ヶ丘団地でございます」', '「この甲板だけで 300 戸を超えるお住まいがございます。迷われましたら、壁の青い番地札と案内図をご覧ください」', '「港の北の船員街は、船乗りの下宿がひしめく古い町です。夜は会館が賑やかでございますよ」'],
   megacitizen: ['「生まれも育ちもメガトンさ。地球？ 行ったことはないけど、空が青いんだって？」', '「炉が止まった日は一度もない。あの音が聞こえないと、かえって眠れないよ」'],
   megacitizen2: ['「庭園の池の鯉、もう三代目なんですよ。ゼファーの環を眺めながら餌をやるのが日課で」', '「アペックスの展望ラウンジには行きました？ 環が窓いっぱいに広がるんです」'],
   megatrader: ['「取引所の電光掲示を見たか。希ガスは今が買いだ…いや、売りか？」', '「ゼファーの雲海で採れた希ガスを、ここが星系じゅうに流している。メガトンは巨大な心臓さ」'],
@@ -74,7 +74,41 @@ const TALK = {
   megastation: ['「2 番線はリング線、前部リング行きです。炉心線は点検のため運休しております」'],
   megaforge: ['「取鍋ひとつで 30 トン。注ぎ損ねたら床が抜ける。だからロボットより先に、人間が腹を決めるんだ」', '「船の改修なら、そこの端末で受けるぞ。材料は目の前で鋳込んでる」'],
   megamusician: ['「一曲いかがです？ ピアノはご自由に。ここの客は、環を見ながら聴くのが好きでね」'],
-  megahotel: ['「いらっしゃいませ。カプセルは 32 室、灯りが緑の部屋が空いております」'],
+  megahotel: ['「いらっしゃいませ。灯りが緑のカプセルが空いております。カウンターでお申し付けください」', '「本通りの真ん中ですから、駅にも港にもすぐでございます」'],
+  // ── メガトン 第 7 居住甲板の住人 ──
+  mgres: ['「この廊下の配管、ときどきコンって鳴るでしょう。お湯が通る音よ。慣れると時計代わりになるの」', '「うちは三代この区画。窓はないけど、壁の景色画面は毎朝ちがう街を映してくれるわ」', '「今日の当番は廊下の掃除。ほら、玄関マットの下まで拭くのがこの階の流儀でね」', '「市場通りの八百屋、水耕レタスが安いのよ。夕方の値引きを狙ってるの」', '「隣の部屋の子がピアノを始めたの。壁が薄いから、上達していくのがよく分かるわ」', '「港から帰ってくる人のために、玄関灯はひと晩じゅう点けておくのがここの習わし」', '「ここは人工重力が 0.9G。地球育ちの親戚は、来るたびに体が軽いって喜ぶの」'],
+  mgres2: ['「引っ越してきたばかりです。番地札が青いのが錨町、緑が団地、白が第 9 区…で合ってます？」', '「ひかり台の新しい部屋に当たったんです。抽選倍率 40 倍！」', '「休みの日は子どもと公園へ。人工の空でも、雲が流れると気持ちがいいですよ」', '「エレベーターは点検中ばかり。結局みんな階段を使うから、足腰が丈夫になります」'],
+  mgres3: ['「わしが若いころは、この通路も裸電球だけでな。今は明るくなったもんじゃ」', '「辻の祠には毎朝お茶を供えとる。炉が止まらんように、とな」', '「錨湯の一番風呂は年寄りの特権じゃよ。あんたも浸かっていきなされ」', '「港の汽笛…いや、ドックの警報か。あれを聞くと、昔の航海を思い出すわい」'],
+  mgkid: ['「ねえねえ、宇宙船乗りなの？ かっこいい！ 大きくなったらぼくも乗る！」', '「公園の滑り台、いちばん上から見ると団地の屋根がぜんぶ見えるんだよ」', '「学校の理科で、炉のしくみを習ったよ。1 億度なんだって！」', '「かくれんぼしてるの。ないしょにしてね」'],
+  mgshop: ['「いらっしゃい！ 見ていくだけでもどうぞ」', '「この通りで 30 年。品ぞろえは小さくても、頼まれたものは何でも取り寄せるよ」', '「お兄さん船乗り？ 港から来たなら、のど乾いてるでしょう」'],
+  mgbank: ['「メガトン信用金庫でございます。お預け入れは港の端末からもできますよ」', '「炉の電力債が人気でございます。100 年止まったことがない、が売り文句でして」'],
+  mgbooks: ['「航海記録の古本なら奥の棚です。ゼファーの雲海を初めて越えた船の日誌もありますよ」', '「子ども向けの星図絵本がよく売れるんです。この甲板には子どもが多いから」'],
+  mgbakery: ['「焼きたてですよ！ 小麦は第 3 甲板の水耕農場から毎朝届くんです」', '「いちばん人気は、メガトン炉の形のメロンパン。中がとろっと熱いのがミソ」'],
+  mgdrug: ['「宇宙線よけのサプリならこちら。船乗りさんには定番ですよ」', '「お薬はファイザーから定期便で入ってきます。切らしたことはありません」'],
+  mgrealty: ['「今なら錨町に空き部屋がありますよ。狭いですが、銭湯まで 30 秒！」', '「展望町は窓つきの物件。本物の星が見える分、お家賃もそれなりで…」'],
+  mgsweets: ['「いらっしゃい。金平糖は 1 個 1 クレジット。子どもたちのお小遣いで買える値段にしてあるのよ」', '「この店は甲板ができた年からやってるの。店番は三代目、わたし」'],
+  mgrepair: ['「直せない機械はない。ただし炉は勘弁な」', '「最近は景色画面の修理ばかりだ。みんな窓が恋しいんだよ」'],
+  mgbarber: ['「いらっしゃい。無重力区画から来た人は、髪が爆発してるからすぐ分かるね」', '「顔そりもできますよ。ここは港の男たちの溜まり場でね」'],
+  mgflower: ['「花はみんな第 3 甲板の温室育ち。いちばん売れるのは、玄関に飾る小さな鉢なんです」'],
+  mgbath: ['「いらっしゃい。湯はメガトン炉の廃熱で沸かしてるから、いつでも熱々だよ」', '「タオルは貸すよ。湯船で温まっていきな。疲れがとれるからね」'],
+  mgbath2: ['「ふう…この壁の絵、惑星ゼファーの雲海だよ。湯気でかすむと本物みたいでね」', '「一日の終わりはここに限る。あんたも肩までつかりな」'],
+  mglook: ['「ここは錨町の見晴らし窓。この甲板で、本物の星が見える数少ない場所じゃ」', '「若いもんは景色画面で十分と言うが、わしは本物の闇が好きでな」'],
+  mgclerk: ['「住民課です。転入届は番号札を取ってお待ちください」', '「仕事の依頼は右端の窓口です。船をお持ちなら、運搬の仕事がたくさんありますよ」', '「この甲板の人口は 2,184 人。毎月少しずつ増えています」'],
+  mgnursery: ['「お昼寝の時間なので、少しだけお静かにお願いしますね」', '「子どもたちの将来の夢、いちばん多いのは船乗りなんです」'],
+  mgpost: ['「郵便はメガトンじゅう、半日で届きます。星系の外へは、次の定期便で」', '「集合ポストの鍵をなくした方が、今日だけで 3 人目です」'],
+  mgpolice: ['「交番です。落とし物ならこちらへ。手配中の賞金首は、そこの端末で確認できますよ」', '「この甲板は平和なもんです。いちばん多い通報は、迷子と猫ですね」'],
+  mgnurse: ['「受付はこちらです。処置室で治療を受けられますよ」', '「宇宙線の検診は年に一度。船乗りさんは特に忘れずに」'],
+  mgteacher: ['「授業中ですよ…あら、見学の方？ どうぞ後ろからご覧ください」', '「この学校の生徒は 120 人。全員がこの甲板の子です」', '「今日は炉のしくみの授業。いつか子どもたちが炉を守るんです」'],
+  mgworker: ['「鋳造工場の 3 交代は、夜勤がいちばん給料がいい。眠いけどな」', '「食堂の日替わりは鉄板焼き。工場の熱でついでに焼いてる…ってのは冗談だ」'],
+  mgporter: ['「港の荷は全部ここを通る。食料と水がいちばん多いな」', '「重い箱は運搬ボットに任せる。人間は伝票とにらめっこさ」'],
+  mgmech: ['「空気も水も、この部屋から甲板じゅうへ送ってる。止まったら 3 日で大騒ぎだ」', '「配管の色で中身が分かるんだ。緑は水、黄は燃料、赤は消火用」'],
+  mgguard: ['「東ゲートです。ここから先、北は展望町、南は鋳物町。気密扉の前では立ち止まらないように」'],
+  mgchair: ['「自治会長です。来月は甲板祭り。廊下に提灯を吊るして、みんなで踊るんですよ」', '「ゴミの分別だけは守ってくださいね。ここでは捨てた物も全部資源ですから」'],
+  mgsailor: ['「若いの、船乗りか。この会館の壁の写真は、みんな帰ってこなかった船だ。…帰ってくるんだぞ」', '「船員街の下宿は安くて狭い。だが窓口のばあさんの味噌汁は星系一だ」'],
+  mgelev: ['エレベーターの表示板は「点検中」。横に貼り紙 ─「階段をご利用ください。自治会」', 'ボタンを押してみたが、点検中の札が揺れただけだった。'],
+  mgstairs: ['階段の上には黄色い柵。「上階 改装工事中 ─ 関係者以外立入禁止」'],
+  mgupper: ['扉には黄色い札 ─「上階は改装工事中です。完成予定：来年の甲板祭りまでに」', '扉の向こうから、かすかに工事の音が聞こえる。'],
+  mgshrine: ['小さな祠に、お茶と金平糖が供えてある。札には「炉心安全・家内安全」。', '鈴を鳴らすと、狭い路地にやさしい音が響いた。'],
   maneki: ['三毛の招き猫が、前足でゆっくり手招きしている。操縦ボット「ミケ」の名は、どうやらこの猫からもらったらしい。', '首の鈴に、小さく「全員無事帰還」と彫ってある。'],
   memorial: ['黒い石板に、数えきれない名前が淡く灯っている。足もとの小さな灯は、基地ができた日から一度も消えていないという。', '銘 ─「彼らが運んだ命は、いまも灯りつづけている」。花輪は今朝、誰かが取り替えたばかりだ。'],
   simpod: ['訓練用のキャビンが、6 本の脚の上でゆっくり揺れている。画面には、煙の上がる街と 15 の着陸帯。', '「横風 18 メートル、視界 300。着陸帯 7 へ進入せよ」─ 無人のキャビンで、訓練シナリオだけが流れ続けている。'],
@@ -151,7 +185,7 @@ export class InteriorMode {
     const s = o.at || it.bp.spawn; this.pos.set(s[0], 0, s[1]); this.yaw = s[2] ?? 0; this.pitch = 0;
     if (it.slot && !o.at) this.yaw = Math.atan2(s[0] - it.slot.x, s[1] - it.slot.z);
     if (o.type === 'ship' && o.via === 'airlock') { const ex = it.items.find((i) => i.act === 'exit'); if (ex) { const r = roomAt(it, ex.x, ex.z - 1.6); this.pos.set(ex.x, 0, ex.z - 1.8); this.yaw = 0; if (!r) this.pos.set(s[0], 0, s[1]); } }
-    this.pos.y = floorY(it, this.pos.x, this.pos.z); this.lastRoom = null; this._vis(true);
+    this.pos.y = floorY(it, this.pos.x, this.pos.z); this.lastRoom = null; this._vis('probe'); // 反射プローブ用に、立ち位置から全方向に見える部屋だけ
     this._slot();
     await readyTextures();
     // 反射プローブ (初回のみ)
@@ -216,7 +250,7 @@ export class InteriorMode {
     }
     p.y = damp(p.y, floorY(it, p.x, p.z), 14, dt);
     // 扉
-    for (const d of it.doors) { if (d.open) continue; const near = Math.hypot(d.x - p.x, d.z - p.z) < 3.2 || it.drones.some((q) => q.alive && Math.hypot(d.x - q.x, d.z - q.z) < 2.4); if (near !== d.was) { d.was = near; if (Math.hypot(d.x - p.x, d.z - p.z) < 12) G.audio?.sfx('door'); } d.k = damp(d.k, near ? 1 : 0, d.mode === 'y' ? 5 : 9, dt); if (d.mode === 'y') d.panels[0].position.y = d.k * d.dh * 0.97; else { d.panels[0].position.x = -(d.dw / 4 + d.k * d.dw * 0.49); d.panels[1].position.x = d.dw / 4 + d.k * d.dw * 0.49; } }
+    for (const d of it.doors) { if (d.open) continue; const near = Math.hypot(d.x - p.x, d.z - p.z) < (d.r ?? 3.2) || it.drones.some((q) => q.alive && Math.hypot(d.x - q.x, d.z - q.z) < 2.4); if (near !== d.was) { d.was = near; if (Math.hypot(d.x - p.x, d.z - p.z) < 12) G.audio?.sfx('door'); } d.k = damp(d.k, near ? 1 : 0, d.mode === 'y' ? 5 : d.mode === 'h' ? 6 : 9, dt); if (d.mode === 'y') d.panels[0].position.y = d.k * d.dh * 0.97; else if (d.mode === 'h') d.panels[0].rotation.y = d.k * 1.45 * d.sw; else { d.panels[0].position.x = -(d.dw / 4 + d.k * d.dw * 0.49); d.panels[1].position.x = d.dw / 4 + d.k * d.dw * 0.49; } }
     this._vis();
     for (const f of it.anim) if (!f.room || f.room.visible) f(dt, this.time); // 閉じた扉の向こう (非表示の部屋) の小道具は動かさない
     for (const n of it.npcs) { const a = Math.atan2(p.x - n.x, p.z - n.z), d = Math.hypot(p.x - n.x, p.z - n.z); let da = (d < 7 ? a : n.yaw) - n.g.rotation.y; da = Math.atan2(Math.sin(da), Math.cos(da)); n.g.rotation.y += da * Math.min(1, dt * 3); n.g.position.y = (n.y || 0) + Math.sin(this.time * 1.6 + n.ph) * 0.012; } // 台の上の人物が床まで沈まないよう足元の高さを保つ
@@ -235,15 +269,30 @@ export class InteriorMode {
   idle(dt) { this._far(dt); }
   /** 見えない部屋は描かない: 現在の部屋 + 開いている扉の先だけを表示 */
   _vis(all) {
-    const it = this.cur, p = this.pos; if (all) { for (const id in it.roomGroups) it.roomGroups[id].visible = true; return; }
+    const it = this.cur, p = this.pos; if (all === true) { for (const id in it.roomGroups) it.roomGroups[id].visible = true; for (const id in it.detail || {}) it.detail[id].visible = true; for (const d of it.doors) if (d.grp) d.grp.visible = true; return; }
     const rm = roomAt(it, p.x, p.z) || this.lastRoom; if (!rm) return; this.lastRoom = rm;
-    const vis = this._visSet || (this._visSet = new Set()); vis.clear(); vis.add(rm.id); this._visAdd(rm.id, 0); // 集合は毎フレーム作らず使い回す
+    const vis = this._visSet || (this._visSet = new Set()); vis.clear(); vis.add(rm.id); // 集合は毎フレーム作らず使い回す
+    const H = all === 'probe' ? Math.PI : Math.atan(Math.tan(this.camera.fov * Math.PI / 360) * this.camera.aspect) + 0.15; this._fwd = Math.atan2(-Math.cos(this.yaw), -Math.sin(this.yaw)); this._visAdd(rm.id, 0, -H, H);
     for (const id in it.roomGroups) it.roomGroups[id].visible = vis.has(id);
+    if (it.detail) { const R = it.roomById || (it.roomById = Object.fromEntries(it.rooms.map((r) => [r.id, r]))); for (const id of vis) { const r = R[id], g = it.detail[id]; if (!r || !g) continue; const dx = Math.max(r.x - p.x, 0, p.x - r.x - r.w), dz = Math.max(r.z - p.z, 0, p.z - r.z - r.d); g.visible = Math.hypot(dx, dz) < 24 + Math.sqrt(r.w * r.d) * 0.9; const f = g.visible && it.lazy?.[id]; if (f) { delete it.lazy[id]; try { f(); } catch (err) { console.warn('[内装] 部屋の小道具:', id, err); } } } } // 遠い部屋は家具・小物を省いて殻だけ描く。小道具の形は、近くで初めて見えたときに作る
+    for (const d of it.doors) if (d.grp) d.grp.visible = vis.has(d.ra) || vis.has(d.rb); // 扉 (枠と戸板) は両側の部屋のどちらかが見えているときだけ描く
   }
-  /** 扉が開いている (または近い) 隣の部屋を見える部屋に加える。開け放した扉の先は 2 部屋先まで */
-  _visAdd(id, depth) {
-    const it = this.cur, p = this.pos, vis = this._visSet;
-    for (const a of it.adj[id] || []) { const d = a.d; if (vis.has(a.to)) continue; if (d.open || d.k > 0.02 || Math.hypot(d.x - p.x, d.z - p.z) < 9) { vis.add(a.to); if (depth < 2 && (d.open || d.k > 0.5)) this._visAdd(a.to, depth + 1); } }
+  /** 扉が開いている (または近い) 隣の部屋を見える部屋に加える。開口 (扉・継ぎ目) を通して見える範囲 (lo〜hi: 視線の向きからの角度) を開口ごとに狭めていき、
+   *  見通せない部屋の先はたどらない (2D のポータル判定)。遠くまで開け放しの通りが続いても、実際に見える部屋だけを描く */
+  _visAdd(id, depth, lo, hi) {
+    const it = this.cur, p = this.pos, vis = this._visSet, md = it.bp.visDepth ?? 2;
+    for (const a of it.adj[id] || []) {
+      const d = a.d; if (vis.has(a.to)) continue; const dist = Math.hypot(d.x - p.x, d.z - p.z), w = this._wedge(d, lo, hi), op = d.open && w && dist < (d.ovr ?? 1e9);
+      if (op || d.k > 0.02 || dist < (d.vr ?? 9)) { vis.add(a.to); if (depth < md && w && (op || d.k > 0.5)) this._visAdd(a.to, depth + 1, w[0], w[1]); }
+    } // vr = 閉じた扉の先を先に描き始める距離、ovr = 開け放しの間口 (店の正面) の先を描く距離
+  }
+  /** 開口 d を通して見える角度の範囲 (今の範囲 lo〜hi との共通部分)。見えなければ null */
+  _wedge(d, lo, hi) {
+    const s = d.seg; if (!s) return [lo, hi]; const px = this.pos.x, pz = this.pos.z, ex = s[2] - s[0], ez = s[3] - s[1], t = Math.max(0, Math.min(1, ((px - s[0]) * ex + (pz - s[1]) * ez) / (ex * ex + ez * ez || 1)));
+    if (Math.hypot(s[0] + ex * t - px, s[1] + ez * t - pz) < 0.9) return [lo, hi]; // 開口の中に立っている
+    const f = this._fwd, rel = (x, z) => { let a = Math.atan2(z - pz, x - px) - f; while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
+    let a0 = rel(s[0], s[1]), a1 = rel(s[2], s[3]); if (a0 > a1) [a0, a1] = [a1, a0]; if (a1 - a0 > Math.PI) return null; // 背後をまたぐ
+    const l = Math.max(lo, a0 - 0.01), h = Math.min(hi, a1 + 0.01); return h > l ? [l, h] : null;
   }
   _cam(dt) {
     const c = this.camera; c.position.set(this.pos.x, this.pos.y + 1.68 + Math.sin(this.bob * 2) * 0.03, this.pos.z); c.rotation.set(this.pitch, this.yaw, 0, 'YXZ'); c.updateMatrixWorld();
