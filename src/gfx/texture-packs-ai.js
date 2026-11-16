@@ -86,6 +86,12 @@ export const AI_TEXTURE_PACKS = {
     "materials/robot-shell",
     "materials/terminal-casing",
   ],
+  "ai-s19_fluids": [
+    "effects/cloud-sea",
+    "effects/lava-flow",
+    "effects/radiator",
+    "materials/oasis-water",
+  ],
   "ai-s1_metal": [
     "materials/bulk",
     "materials/ceil",
@@ -96,6 +102,21 @@ export const AI_TEXTURE_PACKS = {
     "materials/rib",
     "materials/smooth",
     "materials/wall",
+  ],
+  "ai-s20_glass": [
+    "effects/greenhouse",
+    "effects/lit-windows",
+    "materials/neon-wall",
+  ],
+  "ai-s21_people": [
+    "materials/cable-bundle",
+    "materials/enemy-plating",
+    "materials/rescue-hull",
+    "materials/workwear",
+  ],
+  "ai-s22_ground": [
+    "materials/cobble-fan",
+    "materials/ruin-carving",
   ],
   "ai-s2_interior": [
     "materials/brick",
@@ -239,4 +260,12 @@ export const AI_MATERIAL_UVS = {
   "terminal-casing": 1.0,
   "olive-drab": 0.5,
   "quartz-countertop": 0.5,
+  "oasis-water": 0.15,
+  "neon-wall": 0.25,
+  "workwear": 2.0,
+  "rescue-hull": 0.15,
+  "enemy-plating": 0.11,
+  "cable-bundle": 2.0,
+  "cobble-fan": 0.4,
+  "ruin-carving": 0.12,
 };

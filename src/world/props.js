@@ -51,7 +51,7 @@ export function makeHolo(kind, color, s = 1) {
 
 // ── 人物 (宇宙服の NPC) ──
 export function makeNPC(color = 0x3a6ea8, visor = '#6fe8ff') {
-  const b = new Builder(), suit = flat(color, 0.6, 0.2), dk = flat(0x1c1f25, 0.5, 0.5), wh = flat(0xdfe4ea, 0.4, 0.2), cap = (m, r, l, x, y, z, rz = 0, rx = 0) => b.add(m, new THREE.CapsuleGeometry(r, l, 4, 12), mx(x, y, z, rx, 0, rz), 0);
+  const b = new Builder(), suit = mat('workwear', { color, rough: 0.6, metal: 0.2 }), dk = flat(0x1c1f25, 0.5, 0.5), wh = flat(0xdfe4ea, 0.4, 0.2), cap = (m, r, l, x, y, z, rz = 0, rx = 0) => b.add(m, new THREE.CapsuleGeometry(r, l, 4, 12), mx(x, y, z, rx, 0, rz), 0);
   cap(suit, 0.21, 0.42, 0, 1.2, 0); cap(dk, 0.2, 0.12, 0, 0.92, 0); b.add(wh, new THREE.SphereGeometry(0.155, 20, 14), mx(0, 1.68, 0), 0);
   b.add(glow(visor, 2.2), new THREE.SphereGeometry(0.13, 16, 10, 0, Math.PI, 0.9, 1.0).rotateY(-HP), mx(0, 1.7, 0.05), 0);
   b.box(dk, 0.3, 0.42, 0.16, 0, 1.27, -0.22); b.add(wh, new THREE.TorusGeometry(0.17, 0.035, 6, 20).rotateX(HP), mx(0, 1.52, 0), 0);

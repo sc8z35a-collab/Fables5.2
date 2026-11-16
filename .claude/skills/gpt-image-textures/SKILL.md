@@ -26,6 +26,7 @@ python3 $S/scripts/texgen.py generate $S/sheets/s2_interior.json   # 1 枚生成
 python3 $S/scripts/texgen.py process --preview /tmp/check          # 切り分け → パック → texture-packs-ai.js
 ```
 
+- 自分で作った 3×3 の画像を使うときは `assets/textures/sheets/<id>.webp` に置いてシート JSON を書けば、`generate` は飛ばされて `process` で切り分けられる (大きさは自由)
 - `generate` は、そのシートの画像 (`.cache/<id>.png` か `assets/textures/sheets/<id>.webp`) があれば API を呼ばない。作り直すときは `--force`
 - `process` は画像のあるシートを毎回すべて作り直す (植物はシート 3 と 4 にまたがるため)
 - 生成後は `.cache/<id>.png` かプレビュー `<id>_check.jpg` (タイルは 2×2 に並べて継ぎ目を確認できる) を目で見て、マスがずれていないか・背景が指定どおりかを確かめてからコミットする
@@ -69,6 +70,7 @@ python3 $S/scripts/texgen.py process --preview /tmp/check          # 切り分�
 | `s10_mixed` | cork, porcelain, laminate, 地球の森の樹冠 (`environment/foliage`), メガトンの街明かり (`effects/city-lights`), 低木・とうもろこし・シダ・麦の真上の姿 |
 | `s11_space` | 惑星 (earth, desert, ice, lava, gas), 雲, 星雲, 環, 太陽 (`celestial/*`) |
 | `s12_obj_basic` 〜 `s17_obj_gear` | **物の質感 54 種** (新規)。白/黒の樹脂、塗装、金属、布、家具、機械、地球の乗り物・建物、ロボット、断熱材、テントなど。使っている場所は下の表 |
+| `s18_effects` 〜 `s22_ground` | ユーザーが別に生成した 1254×1254 の画像。使わないマスは `"skip": true` と理由 (`why`) を書いてある。`image` で `mean` を省くと明るさを変えない。発光マップは `emissiveImg(path, 単色の設定, 画像があるときの設定)` (`textures.js`) で付ける |
 
 ### 物の質感 (シート 12〜17) を使っている場所
 

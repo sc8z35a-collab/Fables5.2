@@ -160,6 +160,7 @@ function glassLit(t) {
   return m;
 }
 function radiatorMat() {
+  if (hasImage('effects/radiator')) { const m = new THREE.MeshStandardMaterial({ color: 0x1a1210, roughness: 0.7, metalness: 0.5, emissiveMap: imageTex('effects/radiator'), emissive: 0xffffff, emissiveIntensity: 2.4 }); m.userData.uvs = 0; return m; }
   const c = cv(512, 64), x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 512, 0); g.addColorStop(0, '#ffb060'); g.addColorStop(0.25, '#ff5a1a'); g.addColorStop(0.65, '#8a1c08'); g.addColorStop(1, '#200604'); x.fillStyle = g; x.fillRect(0, 0, 512, 64);
   x.fillStyle = 'rgba(0,0,0,.75)'; for (let i = 0; i < 26; i++) x.fillRect(i * 20, 0, 3, 64); for (let j = 0; j < 4; j++) x.fillRect(0, j * 16, 512, 2);
   const m = new THREE.MeshStandardMaterial({ color: 0x1a1210, roughness: 0.7, metalness: 0.5, emissiveMap: ctex(c, true, false), emissive: 0xffffff, emissiveIntensity: 2.4 }); m.userData.uvs = 0; return m;

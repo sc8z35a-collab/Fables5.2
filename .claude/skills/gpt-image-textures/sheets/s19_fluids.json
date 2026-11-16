@@ -1,0 +1,16 @@
+{
+ "id": "s19_fluids",
+ "group": "user",
+ "source": "ユーザーが別に生成した画像 (1254x1254)。合う場所があるマスだけ使い、使わないマスは skip にしてある。",
+ "cells": [
+  {"name": "lava-flow", "kind": "image", "path": "effects/lava-flow", "size": 512, "prompt": "Lava sea surface", "sat": 0.0, "mean": [128, 128, 128]},
+  {"name": "cloud-sea", "kind": "image", "path": "effects/cloud-sea", "size": 512, "prompt": "Gas giant cloud sea", "sat": 0.0, "mean": [128, 128, 128]},
+  {"name": "ocean-foam", "kind": "tile", "prompt": "Ocean whitecaps and foam", "skip": true, "why": "海はシェーダーで描いていて、作り直しが要る"},
+  {"name": "oasis-water", "kind": "tile", "prompt": "Clear oasis water surface", "mean": [200, 200, 200], "rough": 235, "sat": 0.5, "normal": 2.0, "norm": "linear", "contrast": 0.12, "uvs": 0.15},
+  {"name": "plasma", "kind": "tile", "prompt": "Fusion plasma", "skip": true, "why": "プラズマはシェーダーで描いている"},
+  {"name": "radiator", "kind": "image", "path": "effects/radiator", "size": 512, "seam": "", "prompt": "Glowing hot radiator fins"},
+  {"name": "stars", "kind": "tile", "prompt": "Starfield", "skip": true, "why": "星空はシェーダーで描いている"},
+  {"name": "aurora", "kind": "tile", "prompt": "Aurora", "skip": true, "why": "オーロラは空のシェーダーで描いている"},
+  {"name": "corona", "kind": "tile", "prompt": "Solar corona", "skip": true, "why": "太陽はシェーダーで描いている"}
+ ]
+}

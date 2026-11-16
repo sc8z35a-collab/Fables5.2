@@ -3,7 +3,7 @@
 //   どの関数も「静的な部品を Builder に追加 → 動く部品を後から載せる関数を返す」という 2 段構え
 import * as THREE from 'three';
 import { Builder, mx } from '../gfx/builder.js';
-import { mat, glow } from '../gfx/textures.js';
+import { mat, glow, emissiveImg } from '../gfx/textures.js';
 import { makeGlowSprite } from '../gfx/fx.js';
 import { rng } from '../core/util.js';
 import { V } from './stationkit.js';
@@ -158,7 +158,7 @@ export function detailAtlas(b, c) {
 // ───────────────────────── メガトン ─────────────────────────
 /** 回転居住リング (rb) の艤装。戻り値 = リングと一緒に回る灯火のリスト */
 export function detailMegaRing(rb, c) {
-  const { D, WT, BR, R, er, et, ez } = c, RG = 640, F = [], GRN = mat('flat', { color: 0x0c2a18, rough: 0.08, metal: 0.85, emissive: '#3aff8a', ei: 0.55 });
+  const { D, WT, BR, R, er, et, ez } = c, RG = 640, F = [], GRN = emissiveImg('effects/greenhouse', { color: 0x0c2a18, rough: 0.08, metal: 0.85, emissive: '#3aff8a', ei: 0.55 }, { emissive: '#d8ffe0', ei: 0.9 });
   for (let i = 0; i < 36; i++) {
     const a = i * TAU / 36 + 0.05, e = er(a);
     rb.add(D, new THREE.TorusGeometry(48.5, 2.4, 5, 28).rotateX(HP), mx(e.x * RG, e.y * RG, 0, 0, 0, a)); // 環に被さるフープ

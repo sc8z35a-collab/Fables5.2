@@ -325,6 +325,7 @@ def process(sheet):
     work = OUT_TILE + 192  # 継ぎ目処理の重なり幅 192px を足した作業サイズ (1 セル 960px - 余白 → 1216 に拡大)
     for i, c in enumerate(sheet['cells']):
         k, name = c['kind'], c['name']
+        if c.get('skip'): continue  # ゲームで使わないマス (合う場所が無い・コードの作り直しが要るもの)
         if k in ('tile', 'emissive'):
             src = cell(img, i, 0.025)
             if src.shape[0] != work: src = np.asarray(u8(src).resize((work, work), Image.LANCZOS), np.float32) / 255
@@ -346,7 +347,8 @@ def process(sheet):
             src = cell(img, i, 0.02); ov = c.get('ov', 192); seam = c.get('seam', 'xy')
             src = np.asarray(u8(src).resize((OUT_TILE + ov, OUT_TILE + ov), Image.LANCZOS), np.float32) / 255
             if seam: src = seamless(src, OUT_TILE, seam)
-            t = match_mean(desat(src, c.get('sat', 1.0)), c['mean'])
+            t = desat(src, c.get('sat', 1.0))
+            if 'mean' in c: t = match_mean(t, c['mean'], c.get('keep_hue', False))  # mean が無ければ元の明るさのまま
             (out / c['path']).parent.mkdir(parents=True, exist_ok=True)
             im = u8(t).resize((c.get('size', MAT_SIZE),) * 2, Image.LANCZOS); im.save(out / f"{c['path']}.webp", 'WEBP', quality=88, method=6)
         elif k == 'cutout' and c.get('role') == 'leaf':

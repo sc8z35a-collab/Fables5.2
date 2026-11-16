@@ -133,7 +133,7 @@ function amatsu() {
 export function buildEnemy(def) {
   const r = rng(def.seed), b = new Builder(), sc = rr(r, 0.9, 1.2);
   const tint = new THREE.Color(def.glow).multiplyScalar(0.12).add(new THREE.Color(0x3a3c46));
-  const H = mat('hull', { color: tint.getHex(), rough: 0.5, metal: 0.55 }), A = mat('hull', { color: new THREE.Color(def.glow).multiplyScalar(0.45).getHex(), rough: 0.5, metal: 0.4 }), D = mat('hull', { color: 0x1c1d24, rough: 0.8, metal: 0.7 });
+  const H = mat('enemy-plating', { color: tint.getHex(), rough: 0.5, metal: 0.55 }), A = mat('hull', { color: new THREE.Color(def.glow).multiplyScalar(0.45).getHex(), rough: 0.5, metal: 0.4 }), D = mat('hull', { color: 0x1c1d24, rough: 0.8, metal: 0.7 });
   const GL = glow(def.glow, 5), GE = glow(def.glow, 8);
   const F = (secs, seg = 8) => loft(secs, seg, true);
   const engines = [], guns = [];

@@ -1,0 +1,16 @@
+{
+ "id": "s21_people",
+ "group": "user",
+ "source": "ユーザーが別に生成した画像 (1254x1254)。合う場所があるマスだけ使い、使わないマスは skip にしてある。",
+ "cells": [
+  {"name": "workwear", "kind": "tile", "prompt": "Work clothes fabric", "mean": [210, 210, 210], "rough": 240, "sat": 0.2, "normal": 1.5, "norm": "linear", "contrast": 0.1, "uvs": 2.0},
+  {"name": "spacesuit", "kind": "tile", "prompt": "Spacesuit fabric", "skip": true, "why": "合う場所が無い"},
+  {"name": "visor", "kind": "tile", "prompt": "Helmet visor", "skip": true, "why": "景色の写り込みが入っている"},
+  {"name": "rescue-hull", "kind": "tile", "prompt": "Rescue ship hull panels with orange stripes", "mean": [200, 200, 200], "rough": 130, "sat": 0.6, "normal": 2.5, "norm": "linear", "contrast": 0.12, "uvs": 0.15},
+  {"name": "enemy-plating", "kind": "tile", "prompt": "Enemy warship plating with glowing lines", "mean": [183, 183, 183], "rough": 130, "sat": 0.0, "normal": 3.0, "uvs": 0.11},
+  {"name": "cockpit", "kind": "tile", "prompt": "Cockpit instrument panel", "skip": true, "why": "操作卓の質感はすでにある (control-panel)"},
+  {"name": "tire", "kind": "tile", "prompt": "Tire tread", "skip": true, "why": "合う場所が無い"},
+  {"name": "cargo-net", "kind": "tile", "prompt": "Cargo net", "skip": true, "why": "合う場所が無い"},
+  {"name": "cable-bundle", "kind": "tile", "prompt": "Bundled cables and wire ropes", "mean": [200, 200, 200], "rough": 200, "sat": 0.0, "normal": 3.0, "norm": "linear", "contrast": 0.12, "uvs": 2.0}
+ ]
+}

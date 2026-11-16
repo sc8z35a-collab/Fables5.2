@@ -1,7 +1,7 @@
 // 惑星地表の環境: 地球 (earth.js) / 溶岩 / 砂漠 / 氷 / ガス巨星の雲海デッキ
 import * as THREE from 'three';
 import { Builder, mx, rockGeo } from '../gfx/builder.js';
-import { mat, glow, signMesh } from '../gfx/textures.js';
+import { mat, glow, signMesh, imageTex } from '../gfx/textures.js';
 import { rng, rr, fbm, ridge, smooth } from '../core/util.js';
 import { fxTime } from '../gfx/fx.js';
 import { BASES } from './defs.js';
@@ -33,10 +33,10 @@ const mastGeo = () => colorGeo([[new THREE.CylinderGeometry(0.008, 0.014, 1, 6).
 
 // ───────────────────────── 溶岩の星 ─────────────────────────
 const LAVA_FS = /* glsl */`
-precision highp float;uniform float uTime;varying vec3 vW;
+precision highp float;uniform float uTime;uniform sampler2D tDetail;varying vec3 vW;
 ${N2}
 void main(){vec2 p=vW.xz*.02;float n=fbm2(p+vec2(uTime*.02,0.)+fbm2(p*2.-uTime*.03)*1.2);float c=smoothstep(.35,.75,n);
-  vec3 col=mix(vec3(.5,.04,0.),vec3(4.,1.1,.12),c)+vec3(6.,4.,1.5)*pow(c,6.);float crust=smoothstep(.42,.3,n);col=mix(col,vec3(.03,.02,.02),crust*.9);
+  vec3 col=mix(vec3(.5,.04,0.),vec3(4.,1.1,.12),c)+vec3(6.,4.,1.5)*pow(c,6.);col*=.5+dot(texture2D(tDetail,vW.xz*.004+vec2(uTime*.002,0.)).rgb,vec3(.3,.5,.2));float crust=smoothstep(.42,.3,n);col=mix(col,vec3(.03,.02,.02),crust*.9);
   float d=length(vW-cameraPosition);col=mix(col,vec3(.16,.04,.02),1.-exp(-d*d*2.5e-7));gl_FragColor=vec4(col,1.);}`;
 function ignis() {
   const r = rng(303), grp = new THREE.Group(), B = new Builder(), anim = [], cols = [], rects = [], items = [], beacons = [], sunDir = V3(0.4, 0.22, -0.6).normalize();
@@ -49,7 +49,7 @@ function ignis() {
   const H = (x, z) => { const far = smooth(260, 800, Math.hypot(x, z)); let h = H0(x, z) + far * (craters(x, z, 1150, 3, 62, 0.42) + ridge(x * 0.0021, z * 0.0021, 3, 41) * 50 * smooth(0.42, 0.7, fbm(x * 0.0006, z * 0.0006, 2, 43)));
     for (const c of CONES) { const q = ((x - c[0]) ** 2 + (z - c[1]) ** 2) / (c[2] * c[2]); if (q < 9) h += c[3] * Math.exp(-q) - c[3] * 0.4 * Math.exp(-q * 22); } return h; };
   { const tm = gridTerrain(H, (x, z, h, sl, c) => { const n = fbm(x * 0.01, z * 0.01, 3, 8), hot = smooth(6, -6, h); c[0] = 0.1 + n * 0.07 + hot * 0.5 + sl * 0.04; c[1] = 0.072 + n * 0.045 + hot * 0.08; c[2] = 0.064 + n * 0.035; }, { size: 15000, seg: 250, tex: 'basalt', rough: 0.75, metal: 0.25, ns: 1.2, env: 0.8 }); grp.add(tm); var TM = tm; }
-  const lava = new THREE.Mesh(new THREE.PlaneGeometry(26000, 26000).rotateX(-HP), new THREE.ShaderMaterial({ uniforms: { uTime: fxTime }, vertexShader: 'varying vec3 vW;void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}', fragmentShader: LAVA_FS })); lava.position.y = -4; grp.add(lava);
+  const lava = new THREE.Mesh(new THREE.PlaneGeometry(26000, 26000).rotateX(-HP), new THREE.ShaderMaterial({ uniforms: { uTime: fxTime, tDetail: { value: imageTex('effects/lava-flow', { srgb: false, fill: [128, 128, 128, 255] }) } }, vertexShader: 'varying vec3 vW;void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}', fragmentShader: LAVA_FS })); lava.position.y = -4; grp.add(lava);
   const RK = mat('basalt', { color: 0x3a3230, rough: 0.8, metal: 0.2, uvs: 0, ns: 1.5 });
   grp.add(scatter(rockGeo(1, 2, 5, 0.45), RK, 420, (o) => { const a = r() * 6.28, d = rr(r, 90, 2600), x = Math.cos(a) * d, z = Math.sin(a) * d, h = TM.heightAt(x, z); if (h < 0) return false; const s = Math.pow(r(), 3) * 16 + 1.2; o.position.set(x, h - s * 0.3, z); o.rotation.set(r() * 6, r() * 6, r() * 6); o.scale.set(s, s * rr(r, 0.7, 1.6), s); if (s > 3 && d < 700) cols.push({ x, z, r: s * 0.8 }); }));
   // 精錬基地
@@ -112,7 +112,7 @@ function sahar() {
     B.add(BONE, new THREE.CylinderGeometry(R0 * 0.07, R0 * 0.05, R0 * 3.4, 8).rotateZ(HP), mx(x, y + R0 * 0.86, z, 0, ry, 0), 0); B.add(BONE, rockGeo(R0 * 0.34, 1, 9, 0.25), mx(x + c * R0 * 1.95, y + R0 * 0.6, z - s2 * R0 * 1.95, 0, ry, 0, 1.5, 0.8, 0.9), 0); cols.push({ x, z, r: R0 * 0.3 }); }
   landmarks(env2, wreckGeo(), VCM(), pickPts(r, 8, 400, 6200, (x, z) => !inBase(x, z)).map(([x, z]) => { const L = rr(r, 60, 140); return [x, hA(x, z) - L * 0.04, z, L, L, r() * 6.28, rr(r, -0.12, 0.12)]; }), { solid: 0.18 });
   { const pts = pickPts(r, 22, 170, 4200, (x, z) => !inBase(x, z)); landmarks(env2, mastGeo(), VCM(), pts.map(([x, z]) => [x, hA(x, z), z, 26, 26, r() * 6.28, 0]), { shadow: true }); pts.forEach(([x, z], i) => { cols.push({ x, z, r: 1.4 }); if (i % 2 === 0) beacon(beacons, x, hA(x, z) + 26.6, z, i % 4 ? '#ffcf6a' : '#f33', 7, i % 4 ? 0 : 0.7); }); }
-  { const WAT = mat('flat', { color: 0x1c5a6a, rough: 0.06, metal: 0.4, env: 2 }), palms = []; for (const [x, z] of pickPts(r, 7, 500, 5600, (x, z) => !inBase(x, z) && Math.abs(hA(x + 30, z) - hA(x - 30, z)) < 14)) { const y = hA(x, z); B.cyl(WAT, 30, 30, 0.5, x, y + 0.45, z, 'y', 28); for (let i = 0; i < 26; i++) { const a = r() * 6.28, d = rr(r, 30, 62), px = x + Math.cos(a) * d, pz = z + Math.sin(a) * d; palms.push([px, hA(px, pz) - 0.3, pz, 9 + r() * 6, 7 + r() * 3]); cols.push({ x: px, z: pz, r: 0.6 }); } beacon(beacons, x, y + 2, z, '#6fe8ff', 16); } tiles.push(...forest(grp, palms, 'palm', 1200, 5200)); }
+  { const WAT = mat('oasis-water', { color: 0x1c5a6a, rough: 0.06, metal: 0.4, env: 2 }), palms = []; for (const [x, z] of pickPts(r, 7, 500, 5600, (x, z) => !inBase(x, z) && Math.abs(hA(x + 30, z) - hA(x - 30, z)) < 14)) { const y = hA(x, z); B.cyl(WAT, 30, 30, 0.5, x, y + 0.45, z, 'y', 28); for (let i = 0; i < 26; i++) { const a = r() * 6.28, d = rr(r, 30, 62), px = x + Math.cos(a) * d, pz = z + Math.sin(a) * d; palms.push([px, hA(px, pz) - 0.3, pz, 9 + r() * 6, 7 + r() * 3]); cols.push({ x: px, z: pz, r: 0.6 }); } beacon(beacons, x, y + 2, z, '#6fe8ff', 16); } tiles.push(...forest(grp, palms, 'palm', 1200, 5200)); }
   const cactus = colorGeo([[new THREE.CylinderGeometry(0.09, 0.11, 1, 8).translate(0, 0.5, 0), 0x3f7a3a], [new THREE.SphereGeometry(0.09, 8, 6).translate(0, 1, 0), 0x4a8a42], [new THREE.CylinderGeometry(0.055, 0.055, 0.26, 6).rotateZ(HP).translate(0.2, 0.46, 0), 0x3f7a3a], [new THREE.CylinderGeometry(0.055, 0.06, 0.32, 6).translate(0.33, 0.6, 0), 0x3f7a3a], [new THREE.SphereGeometry(0.055, 6, 5).translate(0.33, 0.76, 0), 0x4a8a42], [new THREE.CylinderGeometry(0.05, 0.05, 0.22, 6).rotateZ(HP).translate(-0.18, 0.62, 0), 0x3f7a3a], [new THREE.CylinderGeometry(0.05, 0.055, 0.24, 6).translate(-0.29, 0.72, 0), 0x3f7a3a]]);
   const veg = groundCover(grp, hA, [{ g: propGeo('boulder'), m: SS, tumble: 1, sink: 0.3, key: 'a' }, { g: propGeo('boulder2'), m: SS2, tumble: 1, sink: 0.25, key: 'b' }, { g: propGeo('slab'), m: SS, tumble: 0.12, sink: 0.3, key: 'c' }, { g: cactus, m: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8, metalness: 0 }), key: 'v' }],
     (x, z, h, v, d) => { d[0] = Math.hypot(x, z) < 50 || (x > 44 && x < 126 && z > -42 && z < 62) ? 0 : 0.07 + 0.36 * smooth(0.38, 0.72, fbm(x * 0.006, z * 0.006, 2, 15)); d[1] = v < 0.34 ? 0 : v < 0.58 ? 1 : v < 0.76 ? 2 : 3; });
@@ -153,11 +153,11 @@ function glacies() {
 
 // ───────────────────────── ガス巨星: 雲海デッキ ─────────────────────────
 const CLOUD_FS = /* glsl */`
-precision highp float;uniform float uTime;uniform vec3 uSun,uA,uB,uC;varying vec3 vW;
+precision highp float;uniform float uTime;uniform vec3 uSun,uA,uB,uC;uniform sampler2D tDetail;varying vec3 vW;
 ${N2}
 float hgt(vec2 p){return fbm2(p*.0011+vec2(uTime*.006,0.))*.7+fbm2(p*.004-uTime*.01)*.3;}
 void main(){vec2 p=vW.xz;float h=hgt(p),e=14.;vec3 n=normalize(vec3(hgt(p+vec2(e,0.))-h,.085,hgt(p+vec2(0.,e))-h)*vec3(-1.,1.,-1.));
-  float l=max(dot(n,uSun),0.),v=smoothstep(.3,.75,h);vec3 col=mix(uB,uA,v)*(.35+l*1.25)+uC*pow(1.-v,2.)*.4;
+  float l=max(dot(n,uSun),0.),v=smoothstep(.3,.75,h);vec3 col=mix(uB,uA,v)*(.35+l*1.25)+uC*pow(1.-v,2.)*.4;col*=.6+.8*dot(texture2D(tDetail,p*.00045+vec2(uTime*.002,0.)).rgb,vec3(.3,.5,.2));
   vec3 V=normalize(cameraPosition-vW);col+=uA*pow(1.-max(dot(n,V),0.),3.)*.35;
   float fl=step(.9965,fract(sin(floor(uTime*3.)*91.7)*4371.))*smoothstep(900.,0.,length(p-vec2(sin(floor(uTime*3.)*7.)*2600.,cos(floor(uTime*3.)*5.)*2600.)));col+=vec3(.8,.85,1.)*fl*6.;
   float d=length(vW-cameraPosition);col=mix(col,vec3(.86,.6,.42),1.-exp(-d*d*4.5e-8));gl_FragColor=vec4(col,1.);}`;
@@ -165,7 +165,7 @@ function zephyr() {
   const r = rng(606), grp = new THREE.Group(), B = new Builder(), anim = [], cols = [], rects = [], items = [], beacons = [], sunDir = V3(0.7, 0.2, -0.5).normalize();
   const sky = makeSky({ sun: sunDir, zen: '#1a2a5a', hor: '#f0a060', ground: '#c88a5a', sunCol: '#ffd9a0', cloudCol: '#ffd0b0', cloud: 0.35, stars: 0.35, ring: 1.3, ringN: V3(0.25, 0.42, 0.87), haze: 1.0, sunSize: 0.99965 });
   const R = 150, H = (x, z) => (Math.hypot(x, z) < R ? 0 : -400);
-  const cu = { uTime: fxTime, uSun: { value: sunDir }, uA: { value: COL('#ffe0b8') }, uB: { value: COL('#6a4a7a') }, uC: { value: COL('#2a6a8a') } };
+  const cu = { uTime: fxTime, tDetail: { value: imageTex('effects/cloud-sea', { srgb: false, fill: [128, 128, 128, 255] }) }, uSun: { value: sunDir }, uA: { value: COL('#ffe0b8') }, uB: { value: COL('#6a4a7a') }, uC: { value: COL('#2a6a8a') } };
   const cl = new THREE.Mesh(new THREE.PlaneGeometry(40000, 40000).rotateX(-HP), new THREE.ShaderMaterial({ uniforms: cu, vertexShader: 'varying vec3 vW;void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}', fragmentShader: CLOUD_FS })); cl.position.y = -420; grp.add(cl);
   // 巨大デッキ
   const D = mat('hull', { color: 0x3a4a50, rough: 0.6, metal: 0.6 }), GD = mat('gold-leaf', { color: 0xd4a84a, rough: 0.25, metal: 1 }), P = mat('hex', { color: 0xd8c090, rough: 0.3, metal: 0.6, uvs: 0.12, floor: 1 }), Wt = mat('wall', { color: 0x2c4a50, rough: 0.5, metal: 0.5 }), GL = new THREE.MeshStandardMaterial({ color: 0xffe2a8, transparent: true, opacity: 0.25, roughness: 0.05, metalness: 0.3, emissive: 0xffb050, emissiveIntensity: 0.5, side: THREE.DoubleSide }); GL.userData.uvs = 0;
