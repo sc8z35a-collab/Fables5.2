@@ -1,0 +1,16 @@
+{
+ "id": "s24_ships",
+ "group": "user",
+ "source": "ユーザーが別に生成した画像 (1254x1254)。シート 23〜27 の案に沿って 45 マスすべてを使う。",
+ "cells": [
+  {"name": "hayate-hull", "kind": "tile", "prompt": "Hayate hull: white with orange", "mean": [190, 190, 190], "rough": 125, "sat": 1.0, "keep_hue": true, "normal": 3.0, "uvs": 0.25},
+  {"name": "raiden-hull", "kind": "tile", "prompt": "Raiden hull: grey with red", "mean": [150, 150, 150], "rough": 125, "sat": 1.0, "keep_hue": true, "normal": 3.0, "uvs": 0.25},
+  {"name": "amatsu-hull", "kind": "tile", "prompt": "Amatsu hull: white with gold", "mean": [190, 190, 190], "rough": 125, "sat": 1.0, "keep_hue": true, "normal": 3.0, "uvs": 0.25},
+  {"name": "enemy-engine", "kind": "tile", "prompt": "Enemy warship engine machinery", "mean": [160, 160, 160], "rough": 140, "sat": 0.6, "keep_hue": true, "normal": 3.5, "uvs": 0.4},
+  {"name": "nozzle-heat", "kind": "tile", "prompt": "Heat-tinted engine nozzle metal", "mean": [170, 170, 170], "rough": 110, "sat": 1.0, "keep_hue": true, "normal": 2.0, "uvs": 0.8},
+  {"name": "docking-collar", "kind": "tile", "prompt": "Docking port collar with lights and hazard stripes", "mean": [163, 164, 168], "rough": 125, "sat": 1.0, "keep_hue": true, "normal": 3.0, "uvs": 0.15},
+  {"name": "debris-metal", "kind": "tile", "prompt": "Torn metal debris plates", "mean": [200, 200, 200], "rough": 140, "sat": 0.6, "keep_hue": true, "normal": 3.0, "uvs": 1.0},
+  {"name": "crystal", "kind": "tile", "prompt": "Resource crystals", "mean": [200, 200, 200], "rough": 60, "sat": 0.0, "norm": "linear", "contrast": 0.18, "normal": 3.0},
+  {"name": "landing-pad", "kind": "tile", "prompt": "Landing pad with markings", "mean": [156, 155, 154], "rough": 127, "sat": 1.0, "keep_hue": true, "normal": 2.5, "seam": ""}
+ ]
+}

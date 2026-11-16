@@ -1,0 +1,16 @@
+{
+ "id": "s23_stations",
+ "group": "user",
+ "source": "ユーザーが別に生成した画像 (1254x1254)。シート 23〜27 の案に沿って 45 マスすべてを使う。",
+ "cells": [
+  {"name": "haven-hull", "kind": "tile", "prompt": "Haven: white civilian hull panels", "mean": [163, 164, 168], "rough": 125, "sat": 1.0, "keep_hue": true, "normal": 3.5, "uvs": 0.06},
+  {"name": "vulcan-hull", "kind": "tile", "prompt": "Vulcan: ochre industrial armor", "mean": [163, 164, 168], "rough": 125, "sat": 1.0, "keep_hue": true, "normal": 3.5, "uvs": 0.06},
+  {"name": "aurora-hull", "kind": "tile", "prompt": "Aurora: white research composite", "mean": [163, 164, 168], "rough": 125, "sat": 1.0, "keep_hue": true, "normal": 3.5, "uvs": 0.06},
+  {"name": "bastion-hull", "kind": "tile", "prompt": "Bastion: grey military armor", "mean": [163, 164, 168], "rough": 125, "sat": 1.0, "keep_hue": true, "normal": 3.5, "uvs": 0.06},
+  {"name": "rogue-hull", "kind": "tile", "prompt": "Rogue: patched rusty plating", "mean": [150, 140, 132], "rough": 125, "sat": 1.0, "keep_hue": true, "normal": 3.5, "uvs": 0.06},
+  {"name": "atlas-hull", "kind": "tile", "prompt": "Atlas: white and orange rescue hull", "mean": [163, 164, 168], "rough": 125, "sat": 1.0, "keep_hue": true, "normal": 3.5, "uvs": 0.06},
+  {"name": "megaton-hull", "kind": "tile", "prompt": "Megaton: city shell panels", "mean": [163, 164, 168], "rough": 125, "sat": 1.0, "keep_hue": true, "normal": 3.5, "uvs": 0.06},
+  {"name": "pfizer-hull", "kind": "tile", "prompt": "Pfizer: white medical hull with blue lines", "mean": [163, 164, 168], "rough": 125, "sat": 1.0, "keep_hue": true, "normal": 3.5, "uvs": 0.06},
+  {"name": "weapon-hull", "kind": "tile", "prompt": "Weapon: black gun-barrel armor", "mean": [163, 164, 168], "rough": 125, "sat": 1.0, "keep_hue": true, "normal": 3.5, "uvs": 0.06}
+ ]
+}

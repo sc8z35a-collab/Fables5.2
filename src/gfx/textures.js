@@ -37,6 +37,13 @@ export function mat(style, o = {}) {
 }
 /** 発光マップ付きの単色。画像があるときだけ withImg の設定と発光マップを使い、無ければ従来の単色 */
 export const emissiveImg = (path, o, withImg = {}) => (hasImage(path) ? mat('flat', { ...o, ...withImg, emap: path }) : mat('flat', o));
+/** 画像付きの発光 (天井の照明パネルなど)。画像が無いときは glow() と同じ */
+export function glowMap(path, color, intensity = 3) {
+  if (!hasImage(path)) return glow(color, intensity);
+  const key = 'glowmap' + path + color + '_' + intensity; let m = MATS.get(key);
+  if (!m) { m = new THREE.MeshBasicMaterial({ map: imageTex(path), color: new THREE.Color(color).multiplyScalar(intensity), toneMapped: false }); m.userData.uvs = 0; MATS.set(key, m); }
+  return m;
+}
 /** 自発光 (ブルーム対象)。HDR 強度 */
 export function glow(color, intensity = 3) {
   const key = 'glow' + color + '_' + intensity;

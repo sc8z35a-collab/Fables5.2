@@ -71,6 +71,7 @@ python3 $S/scripts/texgen.py process --preview /tmp/check          # 切り分�
 | `s11_space` | 惑星 (earth, desert, ice, lava, gas), 雲, 星雲, 環, 太陽 (`celestial/*`) |
 | `s12_obj_basic` 〜 `s17_obj_gear` | **物の質感 54 種** (新規)。白/黒の樹脂、塗装、金属、布、家具、機械、地球の乗り物・建物、ロボット、断熱材、テントなど。使っている場所は下の表 |
 | `s18_effects` 〜 `s22_ground` | ユーザーが別に生成した 1254×1254 の画像。使わないマスは `"skip": true` と理由 (`why`) を書いてある。`image` で `mean` を省くと明るさを変えない。発光マップは `emissiveImg(path, 単色の設定, 画像があるときの設定)` (`textures.js`) で付ける |
+| `s23_stations` 〜 `s27_farm` | ユーザーが別に生成した画像 (45 マスすべて使用)。扉・敷物・着陸パッドのように面に 1 枚の絵として貼るものは `"seam": ""` で継ぎ目処理をせず、コード側で元の UV (Builder の `uvs` = 0) のまま貼る |
 
 ### 物の質感 (シート 12〜17) を使っている場所
 

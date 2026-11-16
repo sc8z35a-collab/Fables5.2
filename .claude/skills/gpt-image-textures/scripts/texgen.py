@@ -327,10 +327,12 @@ def process(sheet):
         k, name = c['kind'], c['name']
         if c.get('skip'): continue  # ゲームで使わないマス (合う場所が無い・コードの作り直しが要るもの)
         if k in ('tile', 'emissive'):
-            src = cell(img, i, 0.025)
+            src = cell(img, i, 0.025 if c.get('seam', 'xy') else 0.006)
             if src.shape[0] != work: src = np.asarray(u8(src).resize((work, work), Image.LANCZOS), np.float32) / 255
             if k != 'emissive': src = flatten_light(src, c.get('flatten', 0.8), src.shape[0] / 7)
-            t = seamless(src)
+            if c.get('seam', 'xy'): t = seamless(src)
+            else:  # 1 枚の絵として面いっぱいに貼るもの (扉・敷物・着陸パッド): 継ぎ目処理をせず縮小だけ
+                t = np.asarray(u8(src).resize((OUT_TILE, OUT_TILE), Image.LANCZOS), np.float32) / 255
             if k == 'emissive':
                 L = lum(t); t = t * np.clip((L - c.get('black', 0.12)) / 0.25, 0, 1)[..., None]
                 t = np.clip(t * (np.mean(c['mean']) / 255 / max(t.mean(), 1e-4)), 0, 1)

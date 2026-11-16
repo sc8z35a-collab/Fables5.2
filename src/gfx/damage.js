@@ -1,5 +1,6 @@
 // 精密な船体破壊: 被弾・衝突した箇所だけを凹ませ、装甲を剥ぎ、焦がす。破片も飛ばす
 import * as THREE from 'three';
+import { texSet } from './materials.js';
 
 const DM = new Map();
 /** 損傷表現用のマテリアル (頂点カラーで焦げ、裏面=船体内部は暗く) */
@@ -90,7 +91,7 @@ const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Eule
 export class Debris {
   constructor(max = 220) {
     this.max = max; this.items = []; const g = new THREE.TetrahedronGeometry(1, 0); g.scale(1, 0.35, 0.7);
-    this.obj = new THREE.InstancedMesh(g, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5, metalness: 0.6 }), max);
+    this.obj = new THREE.InstancedMesh(g, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5, metalness: 0.6, ...(({ map, normalMap, roughnessMap }) => ({ map, normalMap, roughnessMap }))(texSet('debris-metal')) }), max);
     this.obj.instanceMatrix.setUsage(THREE.DynamicDrawUsage); this.obj.frustumCulled = false; this.obj.count = 0; this.obj.setColorAt(0, _c.set(1, 1, 1)); this.obj.castShadow = false;
   }
   /** pos から n 個の破片を飛ばす。base: 元の速度, dir: 主な飛散方向 */
