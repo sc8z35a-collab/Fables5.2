@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { Builder, mx, rockGeo } from '../gfx/builder.js';
 import { mat, glow, texSet, imageTex } from '../gfx/textures.js';
-import { rng, rr, clamp } from '../core/util.js';
+import { rng, rr, clamp, lerp } from '../core/util.js';
 import { celestialTex } from '../gfx/materials.js';
 import { fxTime, makeGlowSprite } from '../gfx/fx.js';
 
@@ -281,11 +281,12 @@ void main(){
 function ocean(H, o) {
   const size = o.size || 40000, seg = o.seg || 150, lvl = o.level ?? 0, half = size / 2, n = seg + 1, xs = new Float32Array(n), pos = new Float32Array(n * n * 3), dep = new Float32Array(n * n), idx = new Uint32Array(seg * seg * 6);
   for (let i = 0; i < n; i++) xs[i] = warp1(-half + i * size / seg, half);
-  for (let iz = 0; iz < n; iz++) for (let ix = 0; ix < n; ix++) { const k = iz * n + ix; pos[k * 3] = xs[ix]; pos[k * 3 + 1] = 0; pos[k * 3 + 2] = xs[iz]; dep[k] = lvl - H(xs[ix], xs[iz]); }
+  for (let iz = 0; iz < n; iz++) for (let ix = 0; ix < n; ix++) { const k = iz * n + ix, x = o.eastRange ? lerp(o.eastRange[0], o.eastRange[1], ix / seg) : xs[ix]; pos[k * 3] = x; pos[k * 3 + 1] = 0; pos[k * 3 + 2] = xs[iz]; dep[k] = lvl - H(x, xs[iz]); }
   let q = 0; for (let iz = 0; iz < seg; iz++) for (let ix = 0; ix < seg; ix++) { const a = iz * n + ix, b = a + 1, cc = a + n, d = cc + 1; idx[q++] = a; idx[q++] = cc; idx[q++] = b; idx[q++] = b; idx[q++] = cc; idx[q++] = d; }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aDepth', new THREE.BufferAttribute(dep, 1)); g.setIndex(new THREE.BufferAttribute(idx, 1));
   const u = { tWater: { value: imageTex('environment/water-ripples', { srgb: false, fill: [128, 128, 255, 255] }) }, uTime: fxTime, uSun: { value: o.sun }, uSunCol: { value: COL(o.sunCol) }, uZen: { value: COL(o.zen) }, uHor: { value: COL(o.hor) }, uFogCol: { value: o.fog[0] }, uFogDen: o.fogDen || { value: o.fog[1] }, uDeep: { value: COL(o.deep || '#03182c') }, uShallow: { value: COL(o.shallow || '#12464e') } };
-  const m = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: u, vertexShader: 'attribute float aDepth;varying vec3 vW;varying float vD;void main(){vD=aDepth;vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}', fragmentShader: OCEAN_FS, polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: 6 }));
+  const fragment = o.limitEast == null ? OCEAN_FS : OCEAN_FS.replace('vec2 p=vW.xz;', 'if(vW.x>=' + o.limitEast.toFixed(2) + ')discard;vec2 p=vW.xz;');
+  const m = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: u, vertexShader: 'attribute float aDepth;varying vec3 vW;varying float vD;void main(){vD=aDepth;vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}', fragmentShader: fragment, polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: 6 }));
   m.frustumCulled = false; m.position.y = lvl;
   return m;
 }

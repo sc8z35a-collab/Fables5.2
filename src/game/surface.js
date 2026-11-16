@@ -37,8 +37,8 @@ export class SurfaceMode {
   dropShip(id) { const m = this.models[id]; if (m && this.ship.m !== m) m.obj.parent?.remove(m.obj); delete this.models[id]; }
 
   async load(id) {
-    if (this.env) { for (const v of this.env.veg || []) v.clear(); this.scene.remove(this.env.group, this.env.sky); this.env.group.traverse((o) => { o.geometry?.dispose(); if (o.isInstancedMesh) o.dispose(); }); for (const s of this.sprites) this.scene.remove(s); this.sprites = []; }
-    const e = (this.env = buildSurface(id)); this.bodyId = id; this.scene.add(e.group, e.sky);
+    if (this.env) { this.env.dispose?.(); for (const v of this.env.veg || []) v.clear(); this.scene.remove(this.env.group, this.env.sky); this.env.group.traverse((o) => { o.geometry?.dispose(); if (o.isInstancedMesh) o.dispose(); }); for (const s of this.sprites) this.scene.remove(s); this.sprites = []; }
+    const e = (this.env = buildSurface(id)); this.bodyId = id; this.legacyVegActive = true; this.scene.add(e.group, e.sky);
     await readyTextures();
     this.sun.color.set(e.sunCol); this.sun.intensity = e.sunInt; this.hemi.color.set(e.hemi[0]); this.hemi.groundColor.set(e.hemi[1]); this.hemi.intensity = e.hemi[2];
     this.scene.fog = new THREE.FogExp2(e.fog[0], e.fog[1]);
@@ -175,7 +175,7 @@ export class SurfaceMode {
   terrain(x, z) { const e = this.env; return (e.heightAt || e.H)(x, z); }
   /** 地面の高さ: 地形・水面・パッド・桟橋に加え、足元 (y) より上にない屋上も含む */
   ground(x, z, y = 1e9) {
-    const e = this.env; let h = this.terrain(x, z); if (e.water != null) h = Math.max(h, e.water); if (Math.hypot(x, z) < PAD_R + 1.5) h = Math.max(h, e.padY);
+    const e = this.env, water = e.waterAt?.(x, z) ?? e.water; let h = this.terrain(x, z); if (water != null) h = Math.max(h, water); if (Math.hypot(x, z) < PAD_R + 1.5) h = Math.max(h, e.padY);
     if (e.decks) for (const d of e.decks) if (x > d[0] && x < d[2] && z > d[1] && z < d[3] && d[4] > h) h = d[4];
     const L = this.grid.get(gk(x, z)); if (L) for (const b of L) { if (b[6] <= h || b[6] > y + 1.6) continue; const dx = x - b[0], dz = z - b[1]; if (Math.abs(dx * b[4] + dz * b[5]) < b[2] && Math.abs(-dx * b[5] + dz * b[4]) < b[3]) h = b[6]; }
     return h;
@@ -183,13 +183,22 @@ export class SurfaceMode {
   /** (x,z) を含む箱型障害物のうち最も高いもの */
   _box(x, z, pad = 0) { const L = this.grid.get(gk(x, z)); let best = null; if (L) for (const b of L) { const dx = x - b[0], dz = z - b[1]; if (Math.abs(dx * b[4] + dz * b[5]) < b[2] + pad && Math.abs(-dx * b[5] + dz * b[4]) < b[3] + pad && (!best || b[6] > best[6])) best = b; } return best; }
   /** 水面か (桟橋・屋上・パッドの上は除く) */
-  wet(x, z) { const e = this.env; return e.water != null && this.ground(x, z) <= e.water + 0.01; }
+  wet(x, z) { const e = this.env, water = e.waterAt?.(x, z) ?? e.water; return water != null && this.ground(x, z) <= water + 0.01; }
   /** 地域名・BGM (地球は場所によって変わる) */
   _region() { const e = this.env, p = this.foot ? this.fp : this.ship.pos; this.reg = e.region ? e.region(p.x, p.z) : e.sub; this.place = e.place ? e.place(p.x, p.z) : e.name; const mk = !e.region || this.reg === '巨大都市' || this.reg === '郊外' ? e.music : 'surface'; if (mk !== this._mk) { this._mk = mk; G.audio?.music(mk); } }
   /** 遠方のタイルを非表示にし、カメラ周辺の植生を生成する */
   _cull(prime) {
     const e = this.env, cp = this.camera.position, k = G.drawDist;
+    if (e.lighting) { e.lighting(this.scene, this.sun, this.hemi, cp.x, cp.z); this._dist(); }
+    e.stream?.(cp.x, cp.z, k, prime);
     if (e.tiles) for (const t of e.tiles) { const dx = t.x - cp.x, dz = t.z - cp.z, R = t.r * k; t.o.visible = dx * dx + dz * dz < R * R; }
+    const useLegacyVeg = e.keepLegacyVeg?.(cp.x, cp.z) ?? true;
+    if (!useLegacyVeg) {
+      if (this.legacyVegActive) for (const v of e.veg || []) v.clear();
+      this.legacyVegActive = false;
+      return;
+    }
+    this.legacyVegActive = true;
     if (e.veg) for (const v of e.veg) { if (prime) { for (let i = 0; i < 40 && v.update(cp.x, cp.z, k, 6) > 6; i++); } else v.update(cp.x, cp.z, k, 2); }
   }
 
@@ -246,7 +255,8 @@ export class SurfaceMode {
       else if (s.speed < 55) this._landed();
     }
     // 離脱
-    if (s.pos.y > 5200 || Math.hypot(s.pos.x, s.pos.z) > (e.bounds || 7000)) { if (!this.leaving) { this.leaving = true; G.hud.banner('軌道へ上昇', body(e.id).name + ' を離脱', 2.5); G.audio?.sfx('warp'); G.go('space', { orbit: e.id }, { flash: true }).then(() => { this.leaving = false; }); } }
+    const inFlightArea = e.flightArea?.(s.pos.x, s.pos.z) ?? (Math.hypot(s.pos.x, s.pos.z) <= (e.bounds || 7000));
+    if (s.pos.y > 5200 || !inFlightArea) { if (!this.leaving) { this.leaving = true; G.hud.banner('軌道へ上昇', body(e.id).name + ' を離脱', 2.5); G.audio?.sfx('warp'); G.go('space', { orbit: e.id }, { flash: true }).then(() => { this.leaving = false; }); } }
     const pw = 0.15 + inp.thr * 0.85 + (boost ? 0.7 : 0); for (const p of s.m.plumes) { p.material.uniforms.uPow.value = damp(p.material.uniforms.uPow.value, pw, 6, dt); p.scale.z = 0.25 + p.material.uniforms.uPow.value * 0.9; }
     G.audio?.engine(inp.thr, boost ? 1 : 0, 0);
   }
@@ -301,7 +311,8 @@ export class SurfaceMode {
     const sr = Math.min(SHIPS[s.id].radius * 0.4, 8); if ((x - s.pos.x) ** 2 + (z - s.pos.z) ** 2 < sr * sr) return false;
     const L = this.grid.get(gk(x, z)); if (L) for (const b of L) { if (b[6] <= y + (b[7] ? 0.5 : 1.6)) continue; const dx = x - b[0], dz = z - b[1]; if (Math.abs(dx * b[4] + dz * b[5]) < b[2] + 0.4 && Math.abs(-dx * b[5] + dz * b[4]) < b[3] + 0.4) return false; }
     const g = this.ground(x, z, y); if (g < y - 3.2) return false; // 屋上や桟橋の縁からは落ちない
-    if (e.water != null && g <= e.water + 0.01 && this.terrain(x, z) < e.water - 0.35 && Math.hypot(x, z) > PAD_R) return false;
+    const water = e.waterAt?.(x, z) ?? e.water;
+    if (water != null && g <= water + 0.01 && this.terrain(x, z) < water - 0.35 && Math.hypot(x, z) > PAD_R) return false;
     if (e.veg) for (const v of e.veg) if (v.solid && v.hit(x, z)) return false; // 木の幹・岩
     return true;
   }
@@ -384,7 +395,12 @@ export class SurfaceMode {
     if (pl.hull < pl.st.hull * 0.3 && !this.dead) h.once('lowhull', LOW_HULL, 'warn', 45);
     h.setSpeed(fmtSpeed(s.speed), s.landed ? 'LANDED' : s.auto ? 'AUTO LAND' : `高度 ${Math.max(0, s.alt || 0).toFixed(0)} m`);
     const pd = Math.hypot(s.pos.x, s.pos.z, s.pos.y - e.padY); let [x, y, f] = h.project(_a.set(0, e.padY + 2, 0), c);
-    if (!s.landed && e.pois) for (const q of e.pois) { const [px, py, pf] = h.project(_b.set(q.x, q.y, q.z), c); if (pf) h.marker(px, py, pf, '#9fd0ff', q.name, fmtDist(Math.hypot(q.x - s.pos.x, q.z - s.pos.z)), 'circle', 1.0); }
+    if (!s.landed && e.pois) for (const q of e.pois) {
+      const distance = Math.hypot(q.x - s.pos.x, q.z - s.pos.z);
+      if (q.range != null && distance > q.range) continue;
+      const [px, py, pf] = h.project(_b.set(q.x, q.y, q.z), c);
+      if (pf) h.marker(px, py, pf, '#9fd0ff', q.name, fmtDist(distance), 'circle', 1.0);
+    }
     if (!s.landed && e.rs && e.rs.n > 0) for (let i = 0; i < e.rs.n; i++) { const q = e.rescueSites[i], d = Math.hypot(q.x - s.pos.x, q.z - s.pos.z); if (d > 3000) continue; const [px, py, pf] = h.project(_b.set(q.x, q.y + 12, q.z), c); if (pf) h.marker(px, py, pf, '#35ff8a', `ミケーネ ${String(i + 1).padStart(2, '0')}`, fmtDist(d), 'circle', 1.0); }
     if (!s.landed) { h.marker(x, y, f, '#ffd27a', '着陸パッド', fmtDist(pd), 'diamond', 1.8); if (s.view === 0) { [x, y, f] = h.project(_b.set(0, 0, -1).applyQuaternion(s.q).multiplyScalar(800).add(s.pos), c); if (f) h.reticle(x, y, '#6fe8ff', 0.8); } }
     if (s.pos.y > 3800 && !s.landed) h.text(`軌道離脱まで ${(5200 - s.pos.y).toFixed(0)} m`, G.W / 2, G.H * 0.26, '#8cf', 2.6, true);

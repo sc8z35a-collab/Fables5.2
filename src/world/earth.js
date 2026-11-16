@@ -4,6 +4,9 @@ import { Builder, mx, rockGeo, loft } from '../gfx/builder.js';
 import { mat, glow, imageTex, signMesh } from '../gfx/textures.js';
 import { rng, rr, fbm, ridge, smooth, clamp, lerp, pick } from '../core/util.js';
 import { fxTime, makeGlowSprite } from '../gfx/fx.js';
+import { COUNTRY_TERRAIN, countrysideTextures } from '../gfx/countryside-textures.js';
+import { buildCountrysidePlan, coastDistance, countrysideFlight, JOIN_X, LAND_EAST, SEA_LEVEL } from './countryside-plan.js';
+import { countryside } from './countryside.js';
 import { HP, V3, COL, N2, makeSky, gridTerrain, pad, node, beacon, forest, colorGeo, vcMat, ocean, VegField, propGeo, landmarks, hs2 } from './surfkit.js';
 
 // ── 地域マスク (CPU と GLSL で同じ式を使う) ──
@@ -14,7 +17,7 @@ const mSnow = (x, z) => smooth(-3300 + 500 * Math.sin(x * 0.0008), -4500 + 500 *
 const mJungle = (x, z) => smooth(-2500 + 400 * Math.sin(z * 0.0009), -3500 + 400 * Math.sin(z * 0.0009), x) * (1 - mSnow(x, z));
 const mFarm = (x, z) => smooth(2600 + 300 * Math.sin(z * 0.0012), 3600 + 300 * Math.sin(z * 0.0012), x) * (1 - mSnow(x, z));
 const mCity = (x, z) => smooth(2650, 2450, Math.hypot(x * 0.9, z + 500)) * (1 - smooth(coast(x) - 46, coast(x) - 18, z));
-const VILLAGE = [420, -5300], LAKE = [-360, -5450], TEMPLE = [-4400, 250], jr = (z) => -4150 + 300 * Math.sin(z * 0.0015), SEA = -1.2, EDGE = 12000;
+const VILLAGE = [420, -5300], LAKE = [-360, -5450], TEMPLE = [-4400, 250], jr = (z) => -4150 + 300 * Math.sin(z * 0.0015), SEA = SEA_LEVEL, EDGE = JOIN_X;
 /** 農地の区画座標 (シェーダと同じ式)。畦 (区画の縁) なら true */
 const fieldEdge = (x, z) => { const fx = (0.955 * x + 0.296 * z) / 190, fz = (-0.296 * x + 0.955 * z) / 130; return Math.abs(fx - Math.floor(fx) - 0.5) > 0.465 || Math.abs(fz - Math.floor(fz) - 0.5) > 0.465; };
 // 畑ごとの作物の種類。同じ表をシェーダにも渡すので、地面の色と立体の作物が必ず一致する
@@ -38,7 +41,7 @@ function H(x, z) {
   return lerp(h, -42, smooth(EDGE - 1900, EDGE - 250, Math.max(Math.abs(x), Math.abs(z)))); // 四方を海に囲まれた大地
 }
 // 地形の追加シェーダ: 農地の区画・雪線・砂浜・凍った湖
-const TERRA_HEAD = 'uniform float uCan;uniform sampler2D uField,tFoliage,tSnow,tIce,tSand,tMud;';
+const TERRA_HEAD = 'uniform float uCan;uniform sampler2D uField,tFoliage,tSnow,tIce,tSand,tMud;\n' + COUNTRY_TERRAIN;
 const colorMap = (material) => ({ value: imageTex('materials/' + material + '/color') });
 const TERRA_FRAG = /* glsl */`
 float slope=1.-vTn.y,cst=1650.+260.*sin(vTw.x*.0011)+140.*sin(vTw.x*.0027+1.);
@@ -64,7 +67,10 @@ if(sJu>.02){float cf=smoothstep(uCan*.72,uCan*1.02,td)*(1.-smoothstep(.45,.75,sl
   diffuseColor.rgb=mix(diffuseColor.rgb,mix(flo,can,cf),sJu*smoothstep(.4,1.6,vTw.y));}
 float bch=(1.-smoothstep(1.4,5.,vTw.y))*smoothstep(-4.,.5,vTw.y)*smoothstep(cst-760.,cst-160.,vTw.z);
 diffuseColor.rgb=mix(diffuseColor.rgb,mix(vec3(.62,.54,.38),texture2D(tSand,groundUV).rgb,.67)*(.8+.4*tn2),bch);
-diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.22,.2,.18)*(.7+.6*tn2),smoothstep(.45,.7,slope)*(1.-sSn));`;
+diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.22,.2,.18)*(.7+.6*tn2),smoothstep(.45,.7,slope)*(1.-sSn));
+if(vTw.x>10200.&&vTw.y>-.5){
+  diffuseColor.rgb=mix(diffuseColor.rgb,countryTerrain(vTw,vec3(0.,1150.,1100.),normalize(vTn)),smoothstep(10200.,12000.,vTw.x));
+}`;
 
 // ── 街区座標: 道路がゆるやかに曲がり、区画の大きさも不揃いになる写像 ──
 const BS = 96, _o = [0, 0], _o2 = [0, 0];
@@ -200,14 +206,22 @@ export function terra() {
   const r = rng(2077), grp = new THREE.Group(), B = new Builder(), anim = [], cols = [], rects = [], obbs = [], decks = [], items = [], beacons = [], tiles = [];
   const sunDir = V3(-0.78, 0.27, 0.6).normalize(), fog = [COL('#4a3046'), 0.00016], fogDen = { value: fog[1] }, canU = { value: 1250 }, SKY = { zen: '#0a1238', hor: '#c8603a', sunCol: '#ffb070' };
   const sky = makeSky({ sun: sunDir, zen: SKY.zen, hor: SKY.hor, ground: '#141018', sunCol: '#ff9a50', cloudCol: '#e08a6a', cloud: 0.5, stars: 0.5, haze: 0.9, sunSize: 0.9993 });
+  const textures = countrysideTextures();
+  const plan = buildCountrysidePlan(H), roadQuery = {};
+  const nearRoad = (x, z, range) => x > 2090 && plan.nearest(x, z, range, roadQuery);
+  const townHeight = (x, z) => {
+    const h = H(x, z);
+    if (x <= 8800) return h;
+    return lerp(h, plan.terrain(x, z), smooth(8800, JOIN_X, x));
+  };
   const field = new THREE.DataTexture(FIELD, FN, FN, THREE.RedFormat);
   field.wrapS = field.wrapT = THREE.RepeatWrapping;
   field.needsUpdate = true;
   const terrainUniforms = {
-    uCan: canU, uField: { value: field }, tFoliage: { value: imageTex('environment/foliage') },
+    uCountry: textures.uniform, uCan: canU, uField: { value: field }, tFoliage: { value: imageTex('environment/foliage') },
     tSnow: colorMap('snow-crust'), tIce: colorMap('glacial-ice'), tSand: colorMap('ripple-sand'), tMud: colorMap('wet-mud'),
   };
-  const tm = gridTerrain(H, (x, z, h, sl, c) => {
+  const tm = gridTerrain(townHeight, (x, z, h, sl, c) => {
     const n = fbm(x * 0.004, z * 0.004, 3, 5), ju = mJungle(x, z), fa = mFarm(x, z), sn = mSnow(x, z);
     let R = 0.09 + n * 0.05, G2 = 0.17 + n * 0.07, B2 = 0.05 + n * 0.02;
     R = lerp(R, 0.14 + n * 0.05, fa); G2 = lerp(G2, 0.2 + n * 0.05, fa); B2 = lerp(B2, 0.06, fa);
@@ -217,8 +231,20 @@ export function terra() {
     c[0] = R; c[1] = G2; c[2] = B2;
   }, { size: EDGE * 2, seg: 340, rough: 0.95, frag: TERRA_FRAG, head: TERRA_HEAD, uniforms: terrainUniforms, key: 'terra', uv: 0.05 });
   grp.add(tm);
-  const hAt = tm.heightAt, heightAt = (x, z) => { const h = hAt(x, z); return mCity(x, z) >= 0.5 && !cityBlocked(x, z) ? Math.max(h, 0.02) : h; };
-  grp.add(ocean((x, z) => (Math.abs(x) >= EDGE || Math.abs(z) >= EDGE ? -42 : hAt(x, z)), { sun: sunDir, sunCol: SKY.sunCol, zen: SKY.zen, hor: SKY.hor, fog, fogDen, size: 46000, seg: 170, level: SEA, shallow: '#0f3a44', deep: '#020f1e' }));
+  const hAt = tm.heightAt, townGround = (x, z) => {
+    const h = hAt(x, z);
+    return mCity(x, z) >= 0.5 && !cityBlocked(x, z) ? Math.max(h, 0.02) : h;
+  };
+  const country = countryside(plan, townGround, textures, obbs);
+  const seaStyle = { sun: sunDir, sunCol: SKY.sunCol, zen: SKY.zen, hor: SKY.hor, fog, fogDen, level: SEA, shallow: '#0f3a44', deep: '#020f1e' };
+  const westSea = ocean((x, z) => (x < -EDGE || Math.abs(z) >= EDGE ? -42 : hAt(Math.min(x, JOIN_X), z)),
+    { ...seaStyle, size: 46000, seg: 170, limitEast: JOIN_X });
+  const eastSea = ocean((x, z) => SEA + clamp(coastDistance(x, z) * 0.032, -45, 4),
+    { ...seaStyle, size: 172000, seg: 155, eastRange: [JOIN_X, LAND_EAST + 48000] });
+  eastSea.renderOrder = 1;
+  grp.add(westSea);
+  const root = new THREE.Group();
+  root.add(grp, country.group, eastSea);
   // ── 都市の地面 (濡れた路面・平面反射) ──
   const road = mat('wet-asphalt', { color: 0x3a3c44, rough: 0.6, metal: 0.25, uvs: 0.08, floor: 1 }); roadPatch(road); road.polygonOffset = true; road.polygonOffsetFactor = 0; road.polygonOffsetUnits = -6; // 遠景でも地形とちらつかない
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(6400, 6400).rotateX(-HP), road); ground.geometry.attributes.uv.array.forEach((v, i, a) => { a[i] = v * 790; }); ground.position.set(0, 0.02, -500); ground.receiveShadow = true; ground.frustumCulled = false; grp.add(ground);
@@ -365,7 +391,7 @@ export function terra() {
   const fence = colorGeo([[new THREE.BoxGeometry(0.14, 1.2, 0.14).translate(-2, 0.6, 0), 0x9a8468], [new THREE.BoxGeometry(0.14, 1.2, 0.14).translate(2, 0.6, 0), 0x9a8468], [new THREE.BoxGeometry(4, 0.1, 0.06).translate(0, 1.0, 0), 0x9a8468], [new THREE.BoxGeometry(4, 0.1, 0.06).translate(0, 0.55, 0), 0x9a8468]]);
   const bale = new THREE.CylinderGeometry(1.3, 1.3, 1.6, 12).rotateZ(HP), VC = (n, ro = 0.85, me = 0.05) => vcMat(n, { roughness: ro, metalness: me }), FM = VC('weathered-paint'), GM = new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false }), fh = [], fb = [], fs = [], hay = [], trac = [], fen = [], farmTrees = [];
   const obbR = (x, z, hw, hd, ry, h) => obbs.push([x, z, hw, hd, Math.cos(ry), -Math.sin(ry), h, 1]);
-  for (let i = 0; i < 60; i++) { const x = rr(r, 3500, 9800), z = rr(r, -3000, 1200), h = hAt(x, z); if (mFarm(x, z) < 0.9 || h < 3 || mSea(x, z) > 0.05 || fh.some((f) => Math.hypot(f[0] - x, f[2] - z) < 240)) continue; const a = r() * 6.28; fh.push([x, h, z, a]); obbR(x, z, 5.6, 4.1, a, h + 9);
+  for (let i = 0; i < 60; i++) { const x = rr(r, 3500, 9800), z = rr(r, -3000, 1200), h = hAt(x, z); if (nearRoad(x, z, 104) || mFarm(x, z) < 0.9 || h < 3 || mSea(x, z) > 0.05 || fh.some((f) => Math.hypot(f[0] - x, f[2] - z) < 240)) continue; const a = r() * 6.28; fh.push([x, h, z, a]); obbR(x, z, 5.6, 4.1, a, h + 9);
     const bx = x + Math.cos(a) * 32, bz = z + Math.sin(a) * 32; fb.push([bx, hAt(bx, bz), bz, a + HP]); obbR(bx, bz, 7.1, 11.1, a + HP, h + 12.5);
     if (r() < 0.75) { const sx2 = x + Math.cos(a + 1) * 30, sz2 = z + Math.sin(a + 1) * 30; fs.push([sx2, hAt(sx2, sz2), sz2, 0]); cols.push({ x: sx2, z: sz2, r: 3.4 }); }
     { const tx = x + Math.cos(a - 1.2) * 20, tz = z + Math.sin(a - 1.2) * 20; trac.push([tx, hAt(tx, tz), tz, r() * 6.28]); cols.push({ x: tx, z: tz, r: 1.8 }); }
@@ -375,7 +401,7 @@ export function terra() {
   const inst = (geo, material, arr, sc = 1) => { if (!arr.length) return; const im = new THREE.InstancedMesh(geo, material, arr.length), o = new THREE.Object3D(); arr.forEach(([x, y, z, a], i) => { o.position.set(x, y, z); o.rotation.set(0, a, 0); o.scale.setScalar(sc); o.updateMatrix(); im.setMatrixAt(i, o.matrix); }); im.computeBoundingSphere(); im.castShadow = true; im.receiveShadow = true; im.frustumCulled = false; grp.add(im); tiles.push({ o: im, x: im.boundingSphere.center.x, y: 0, z: im.boundingSphere.center.z, r: im.boundingSphere.radius + 4200 }); };
   inst(farmHouse, VC('farmhouse-wall'), fh); inst(farmWin, GM, fh); inst(barn, VC('barn-red'), fb); inst(silo, VC('silo-metal', 0.6, 0.5), fs); inst(tractor, VC('tractor-paint', 0.6, 0.3), trac); inst(fence, VC('fence-wood', 0.9, 0), fen); inst(bale, mat('hay-bale', { color: 0xffffff, rough: 1, metal: 0 }), hay);
   tiles.push(...forest(grp, farmTrees, 'oak', 1200, 4200));
-  const tw = [], TWM = mat('turbine-composite', { color: 0xf0f2f4, rough: 0.5, metal: 0.2 }); for (let i = 0; i < 14; i++) { const x = 4200 + (i % 7) * 620 + rr(r, -80, 80), z = -2600 + Math.floor(i / 7) * 1500 + rr(r, -200, 200), h = hAt(x, z); if (h < 3 || mFarm(x, z) < 0.5) continue; tw.push([x, h, z, 0]); const hub = new THREE.Group(); for (let k = 0; k < 3; k++) { const bl = new THREE.Mesh(new THREE.BoxGeometry(1.6, 34, 0.5).translate(0, 17, 0), TWM); bl.rotation.z = k * 2.094; hub.add(bl); } hub.position.set(x, h + 62, z + 2.6); grp.add(hub); anim.push((dt) => { hub.rotation.z += dt * (0.5 + (i % 3) * 0.12); }); beacon(beacons, x, h + 65, z, '#f33', 8, 0.5); cols.push({ x, z, r: 3 }); obbs.push([x, z, 3, 3, 1, 0, h + 96, 1]); }
+  const tw = [], TWM = mat('turbine-composite', { color: 0xf0f2f4, rough: 0.5, metal: 0.2 }); for (let i = 0; i < 14; i++) { const x = 4200 + (i % 7) * 620 + rr(r, -80, 80), z = -2600 + Math.floor(i / 7) * 1500 + rr(r, -200, 200), h = hAt(x, z); if (nearRoad(x, z, 31) || h < 3 || mFarm(x, z) < 0.5) continue; tw.push([x, h, z, 0]); const hub = new THREE.Group(); for (let k = 0; k < 3; k++) { const bl = new THREE.Mesh(new THREE.BoxGeometry(1.6, 34, 0.5).translate(0, 17, 0), TWM); bl.rotation.z = k * 2.094; hub.add(bl); } hub.position.set(x, h + 62, z + 2.6); grp.add(hub); anim.push((dt) => { hub.rotation.z += dt * (0.5 + (i % 3) * 0.12); }); beacon(beacons, x, h + 65, z, '#f33', 8, 0.5); cols.push({ x, z, r: 3 }); obbs.push([x, z, 3, 3, 1, 0, h + 96, 1]); }
   inst(new THREE.CylinderGeometry(1.1, 2.2, 62, 10).translate(0, 31, 0), TWM, tw);
   // ── 雪国: 丸太小屋の村・凍った湖 (針葉樹の森は植生フィールドが生成) ──
   const cabin = colorGeo([[new THREE.BoxGeometry(9, 4.2, 7).translate(0, 2.1, 0), 0x5a3a26], [new THREE.CylinderGeometry(0.01, 6.6, 3.6, 4, 1).rotateY(Math.PI / 4).scale(1, 1, 0.8).translate(0, 6, 0), 0xe8eef6], [new THREE.BoxGeometry(1, 3, 1).translate(2.6, 7, 0.6), 0x4a4038], [new THREE.BoxGeometry(9.6, 0.5, 7.6).translate(0, 0, 0), 0x8a8a8e], [new THREE.BoxGeometry(3, 0.3, 1.6).translate(0, 0.15, 4.3), 0x6a4a34]]);
@@ -396,7 +422,7 @@ export function terra() {
   // ── 植生: カメラの周囲だけに木々と下草を生成する (密林・針葉樹林・畦の並木・浜のヤシ・疎林) ──
   let hf = null;
   const vegAt = (x, z, u, v, o) => {
-    if (Math.abs(x) > EDGE - 300 || Math.abs(z) > EDGE - 300 || mSea(x, z) > 0.02 || mCity(x, z) > 0.25) return false;
+    if (Math.abs(x) > EDGE - 300 || Math.abs(z) > EDGE - 300 || mSea(x, z) > 0.02 || mCity(x, z) > 0.25 || nearRoad(x, z, 15)) return false;
     const h = hAt(x, z); if (h < 0.7) return false; const c = coast(x);
     if (h < 5 && z > c - 300 && z < c - 20) { if (u > 0.32) return false; o[0] = 1; o[1] = 9 + v * 6; o[2] = 7 + v * 3; o[3] = h - 0.3; return true; }
     const sn = mSnow(x, z), ju = mJungle(x, z);
@@ -406,7 +432,7 @@ export function terra() {
     if (u > (fbm(x * 0.0021, z * 0.0021, 2, 77) > 0.55 ? 0.62 : 0.06) || (hf && hf.hit(x, z))) return false; o[0] = 3; o[1] = 10 + v * 9; o[2] = 9 + v * 6; o[3] = h - 0.3; return true;
   };
   const underAt = (x, z, u, v, o) => {
-    if (mSea(x, z) > 0.02 || mCity(x, z) > 0.25 || mSnow(x, z) > 0.3) return false; const ju = mJungle(x, z);
+    if (x >= JOIN_X || nearRoad(x, z, 7) || mSea(x, z) > 0.02 || mCity(x, z) > 0.25 || mSnow(x, z) > 0.3) return false; const ju = mJungle(x, z);
     if (ju > 0.3) { if (u > 0.66 || Math.hypot(x - TEMPLE[0], z - TEMPLE[1]) < 62) return false; const h = hAt(x, z); if (h < 0.5) return false; o[0] = 4; o[1] = 1.5 + v * 2.8; o[2] = 2.6 + v * 3.2; o[3] = h - 0.12; return true; }
     if (mFarm(x, z) > 0.5 && !fieldEdge(x, z)) { if (fieldType(x, z) < 0.78 || u > 0.3) return false; } else if (u > 0.2) return false; const h = hAt(x, z); if (h < 1.2) return false; o[0] = 5; o[1] = 1.1 + v * 1.7; o[2] = 1.8 + v * 2.6; o[3] = h - 0.1; return true;
   };
@@ -425,12 +451,12 @@ export function terra() {
   // 雪山の岩峰・密林の奇岩 (カルストの塔)・丘の露岩
   landmarks(env2, propGeo('spire2'), RKS, sample(110, (x, z) => mSnow(x, z) > 0.6 && hAt(x, z) > 120 && Math.hypot(x - VILLAGE[0], z - VILLAGE[1]) > 320 && Math.hypot(x - LAKE[0], z - LAKE[1]) > 330).map(([x, z]) => { const hh = 14 + Math.pow(r(), 2) * 80; return [x, hAt(x, z) - hh * 0.08, z, hh * rr(r, 0.8, 1.5), hh, r() * 6.28, rr(r, -0.15, 0.15)]; }), { solid: 0.2 });
   landmarks(env2, propGeo('spire'), RKM, sample(90, (x, z) => mJungle(x, z) > 0.6 && hAt(x, z) > 2 && Math.hypot(x - TEMPLE[0], z - TEMPLE[1]) > 260).map(([x, z]) => { const hh = 40 + Math.pow(r(), 1.6) * 110; return [x, hAt(x, z) - hh * 0.06, z, hh * rr(r, 1.1, 1.9), hh, r() * 6.28, rr(r, -0.08, 0.08)]; }), { solid: 0.2 });
-  landmarks(env2, propGeo('butte'), RKT, sample(46, (x, z) => mSea(x, z) < 0.02 && mCity(x, z) < 0.05 && mSnow(x, z) < 0.3 && hAt(x, z) > 4 && !fh.some((f) => Math.hypot(f[0] - x, f[2] - z) < 160) && Math.hypot(x - TEMPLE[0], z - TEMPLE[1]) > 260).map(([x, z]) => { const w = rr(r, 14, 46), hh = rr(r, 6, 22); return [x, hAt(x, z) - hh * 0.3, z, w, hh, r() * 6.28, rr(r, -0.06, 0.06)]; }), { solid: 0.4, land: 1 });
+  landmarks(env2, propGeo('butte'), RKT, sample(46, (x, z) => mSea(x, z) < 0.02 && mCity(x, z) < 0.05 && mSnow(x, z) < 0.3 && hAt(x, z) > 4 && !nearRoad(x, z, 76) && !fh.some((f) => Math.hypot(f[0] - x, f[2] - z) < 160) && Math.hypot(x - TEMPLE[0], z - TEMPLE[1]) > 260).map(([x, z]) => { const w = rr(r, 14, 46), hh = rr(r, 6, 22); return [x, hAt(x, z) - hh * 0.3, z, w, hh, r() * 6.28, rr(r, -0.06, 0.06)]; }), { solid: 0.4, land: 1 });
   // 足元: 岩・雪をかぶった岩・苔むした岩・牛の群れ・干し草・遺跡の石柱 / 郊外の住宅地 (窓に明かり)
   const cow = colorGeo([[new THREE.BoxGeometry(0.78, 0.9, 2.0).translate(0, 1.12, 0), 0xe8e4dc], [new THREE.BoxGeometry(0.8, 0.5, 0.8).translate(0, 1.3, 0.3), 0x1c1a1a], [new THREE.BoxGeometry(0.8, 0.4, 0.5).translate(0.01, 1.0, -0.6), 0x1c1a1a], [new THREE.BoxGeometry(0.42, 0.44, 0.56).translate(0, 0.86, -1.32), 0xe8e4dc], [new THREE.BoxGeometry(0.3, 0.2, 0.22).translate(0, 0.72, -1.62), 0xd8a898], [new THREE.BoxGeometry(0.16, 0.7, 0.16).translate(-0.26, 0.35, -0.76), 0xd8d4cc], [new THREE.BoxGeometry(0.16, 0.7, 0.16).translate(0.26, 0.35, -0.76), 0xd8d4cc], [new THREE.BoxGeometry(0.16, 0.7, 0.16).translate(-0.26, 0.35, 0.8), 0xd8d4cc], [new THREE.BoxGeometry(0.16, 0.7, 0.16).translate(0.26, 0.35, 0.8), 0xd8d4cc], [new THREE.BoxGeometry(0.06, 0.6, 0.06).translate(0, 1.0, 1.06), 0x1c1a1a]]);
   const baleG = colorGeo([[new THREE.CylinderGeometry(1.3, 1.3, 1.6, 12).rotateZ(HP).translate(0, 1.25, 0), 0xc8a850]]), pillarG = colorGeo([[new THREE.CylinderGeometry(0.32, 0.38, 2.4, 8).translate(0, 1.2, 0), 0x8a8474], [new THREE.BoxGeometry(0.9, 0.3, 0.9).translate(0, 2.5, 0), 0x7a7468], [new THREE.BoxGeometry(1, 0.3, 1).translate(0, 0.15, 0), 0x7a7468]]);
   const propAt = (x, z, u, v, o) => {
-    if (Math.abs(x) > EDGE - 300 || Math.abs(z) > EDGE - 300 || mSea(x, z) > 0.02 || mCity(x, z) > 0.25) return false; const h = hAt(x, z); if (h < 0.6) return false;
+    if (Math.abs(x) > EDGE - 300 || Math.abs(z) > EDGE - 300 || mSea(x, z) > 0.02 || mCity(x, z) > 0.25 || nearRoad(x, z, 15)) return false; const h = hAt(x, z); if (h < 0.6) return false;
     const sn = mSnow(x, z), ju = mJungle(x, z); let k, d, s0 = 0.5, s1 = 4.5;
     if (sn > 0.4) { if (Math.hypot(x - VILLAGE[0], z - VILLAGE[1]) < 225 || Math.hypot(x - LAKE[0], z - LAKE[1]) < 245) return false; k = v < 0.7 ? 1 : 2; d = h > 520 ? 0.5 : 0.2; s1 = 7; }
     else if (ju > 0.4) { if (Math.hypot(x - TEMPLE[0], z - TEMPLE[1]) < 60) return false; k = v < 0.8 ? 3 : 6; d = 0.14; s0 = k === 6 ? 0.8 : 0.5; s1 = k === 6 ? 2.6 : 5; }
@@ -444,9 +470,9 @@ export function terra() {
   const WIN = new THREE.Color(4.4, 3, 1.3), WIN2 = new THREE.Color(1.6, 2.2, 3.2);
   const houseA = colorGeo([[new THREE.BoxGeometry(11, 5.5, 8).translate(0, 2.75, 0), 0xd8d2c4], [new THREE.CylinderGeometry(0.01, 7.2, 4.4, 4, 1).rotateY(Math.PI / 4).scale(1, 1, 0.74).translate(0, 7.7, 0), 0x5a4a4a], [new THREE.BoxGeometry(1.2, 3.4, 1.2).translate(3.4, 8.6, 1), 0x6a5a50], [new THREE.BoxGeometry(1.3, 2.3, 0.12).translate(0, 1.15, 4.02), 0x4a3020], [new THREE.BoxGeometry(1.5, 1.3, 0.1).translate(-3, 3, 4.03), WIN], [new THREE.BoxGeometry(1.5, 1.3, 0.1).translate(3, 3, 4.03), WIN], [new THREE.BoxGeometry(0.1, 1.3, 1.5).translate(5.53, 3, -1), WIN], [new THREE.BoxGeometry(1.5, 1.3, 0.1).translate(2, 3, -4.03), WIN2], [new THREE.BoxGeometry(12, 0.5, 9).translate(0, 0.05, 0), 0x8a8478]]);
   const houseB = colorGeo([[new THREE.BoxGeometry(9, 8, 9).translate(0, 4, 0), 0xb8b0a4], [new THREE.BoxGeometry(9.6, 0.5, 9.6).translate(0, 8.2, 0), 0x3a3a40], [new THREE.BoxGeometry(5, 3.2, 4).translate(6.4, 1.6, 1), 0xa89c8c], [new THREE.BoxGeometry(5.4, 0.3, 4.4).translate(6.4, 3.3, 1), 0x3a3a40], [new THREE.BoxGeometry(1.3, 2.3, 0.12).translate(-1.6, 1.15, 4.52), 0x3a2a20], [new THREE.BoxGeometry(1.6, 1.4, 0.1).translate(2, 2.6, 4.53), WIN], [new THREE.BoxGeometry(1.6, 1.4, 0.1).translate(-2, 6, 4.53), WIN], [new THREE.BoxGeometry(1.6, 1.4, 0.1).translate(2, 6, 4.53), WIN2], [new THREE.BoxGeometry(0.1, 1.4, 1.6).translate(-4.53, 6, 0), WIN], [new THREE.BoxGeometry(0.1, 1.4, 1.6).translate(4.53, 6, -2), WIN], [new THREE.BoxGeometry(10, 0.5, 10).translate(0, 0.05, 0), 0x8a8478]]);
-  const houseAt = (x, z, u, v, o) => { if (u > 0.55 || mSea(x, z) > 0.02 || mCity(x, z) > 0.3 || mSnow(x, z) > 0.2 || mJungle(x, z) > 0.2 || mFarm(x, z) > 0.3 || fbm(x * 0.0021, z * 0.0021, 2, 77) > 0.5) return false; const h = hAt(x, z); if (h < 1.6 || Math.abs(hAt(x + 7, z) - h) > 2.2 || Math.abs(hAt(x, z + 7) - h) > 2.2 || Math.abs(hAt(x - 7, z) - h) > 2.2) return false; o[0] = v < 0.55 ? 0 : 1; o[1] = 1; o[2] = 1; o[3] = h - 0.25; return true; };
+  const houseAt = (x, z, u, v, o) => { if (x >= JOIN_X || nearRoad(x, z, 19) || u > 0.55 || mSea(x, z) > 0.02 || mCity(x, z) > 0.3 || mSnow(x, z) > 0.2 || mJungle(x, z) > 0.2 || mFarm(x, z) > 0.3 || fbm(x * 0.0021, z * 0.0021, 2, 77) > 0.5) return false; const h = hAt(x, z); if (h < 1.6 || Math.abs(hAt(x + 7, z) - h) > 2.2 || Math.abs(hAt(x, z + 7) - h) > 2.2 || Math.abs(hAt(x - 7, z) - h) > 2.2) return false; o[0] = v < 0.55 ? 0 : 1; o[1] = 1; o[2] = 1; o[3] = h - 0.25; return true; };
   // 畑の作物: 麦ととうもろこしを足元に立体で生やす (種類は地面の色と同じ表から決まる)
-  const cropAt = (x, z, u, v, o) => { if (mFarm(x, z) < 0.6 || fieldEdge(x, z)) return false; const t = fieldType(x, z); if ((t >= 0.45 && t < 0.62) || t >= 0.78) return false; const h = hAt(x, z); if (h < 2) return false; for (const f of fh) if (Math.abs(f[0] - x) < 46 && Math.abs(f[2] - z) < 46) return false;
+  const cropAt = (x, z, u, v, o) => { if (x >= JOIN_X || nearRoad(x, z, 7) || mFarm(x, z) < 0.6 || fieldEdge(x, z)) return false; const t = fieldType(x, z); if ((t >= 0.45 && t < 0.62) || t >= 0.78) return false; const h = hAt(x, z); if (h < 2) return false; for (const f of fh) if (Math.abs(f[0] - x) < 46 && Math.abs(f[2] - z) < 46) return false;
     if (t < 0.22 || t >= 0.62) { o[0] = 6; o[1] = 1.0 + v * 0.35; o[2] = 3.1; } else { o[0] = 7; o[1] = 2.1 + v * 0.5; o[2] = 3.0; } o[3] = h - 0.05; return true; };
   const cf = new VegField(grp, cropAt, { tile: 78, step: 2.6, range: 120, sway: 0.03 });
   hf = new VegField(grp, houseAt, { sets: [{ g: houseA, m: CM(), key: 'v' }, { g: houseB, m: CM(), key: 'v' }], tile: 340, step: 34, range: 1700, solid: 7 });
@@ -464,11 +490,69 @@ export function terra() {
   extra(TEMPLE[0], TEMPLE[1] + 20, 5, 62, '#6dffb0', 'med', '薬効樹脂を採取する', 3); extra(VILLAGE[0], VILLAGE[1], 4, 34, '#a6f0ff', 'water', '氷河の純水を採取する', 5); if (fh[0]) extra(fh[0][0], fh[0][2], 4, 46, '#ffe14d', 'food', '収穫物を分けてもらう', 7);
   grp.add(B.build());
   /** 地域ごとの天候: 都市=雨 / ジャングル=強い雨 / 雪国=雪 / 農園・海=晴れ */
-  const RAIN = V3(6, -46, 2), SNOWV = V3(4, -7, 2), zone = (x, z) => { const sn = mSnow(x, z), ju = mJungle(x, z), ci = mCity(x, z); return sn > 0.4 ? [SNOWV, 0.75 * sn, '#ffffff'] : ju > 0.4 ? [RAIN, 0.7 * ju, '#9fb8c8'] : [RAIN, 0.45 * ci, '#9fb8ff']; };
-  const region = (x, z) => (mSnow(x, z) > 0.5 ? '雪国' : mJungle(x, z) > 0.5 ? 'ジャングル' : mFarm(x, z) > 0.5 ? '農園地帯' : mCity(x, z) > 0.5 ? '巨大都市' : mSea(x, z) > 0.5 || Math.max(Math.abs(x), Math.abs(z)) > EDGE - 1300 ? '大洋' : '郊外');
+  const RAIN = V3(6, -46, 2), SNOWV = V3(4, -7, 2), zone = (x, z) => { if (x >= JOIN_X) return [RAIN, 0, '#9fb8ff']; const sn = mSnow(x, z), ju = mJungle(x, z), ci = mCity(x, z); return sn > 0.4 ? [SNOWV, 0.75 * sn, '#ffffff'] : ju > 0.4 ? [RAIN, 0.7 * ju, '#9fb8c8'] : [RAIN, 0.45 * ci, '#9fb8ff']; };
+  const region = (x, z) => country.region(x, z) || (mSnow(x, z) > 0.5 ? '雪国' : mJungle(x, z) > 0.5 ? 'ジャングル' : mFarm(x, z) > 0.5 ? '農園地帯' : mCity(x, z) > 0.5 ? '巨大都市' : mSea(x, z) > 0.5 || Math.max(Math.abs(x), Math.abs(z)) > EDGE - 1300 ? '大洋' : '郊外');
   /** いまいる場所の呼び名 (HUD の見出し) */
-  const place = (x, z) => { if (Math.hypot(x, z) < 260) return 'ネオン・ベイ宇宙港'; for (const q of rescueSites) if (q && Math.abs(x - q.x) < 34 && Math.abs(z - q.z) < 34) return q.name; if (Math.hypot(x - VILLAGE[0], z - VILLAGE[1]) < 420) return '雪見の里'; if (Math.hypot(x - TEMPLE[0], z - TEMPLE[1]) < 320) return '古代遺跡'; if (mSnow(x, z) > 0.5) return '白嶺山地'; if (mJungle(x, z) > 0.5) return '翠の密林'; if (mFarm(x, z) > 0.5) return 'みのり平原';
+  const place = (x, z) => { if (x >= JOIN_X) return country.place(x, z); if (Math.hypot(x, z) < 260) return 'ネオン・ベイ宇宙港'; for (const q of rescueSites) if (q && Math.abs(x - q.x) < 34 && Math.abs(z - q.z) < 34) return q.name; if (Math.hypot(x - VILLAGE[0], z - VILLAGE[1]) < 420) return '雪見の里'; if (Math.hypot(x - TEMPLE[0], z - TEMPLE[1]) < 320) return '古代遺跡'; if (mSnow(x, z) > 0.5) return '白嶺山地'; if (mJungle(x, z) > 0.5) return '翠の密林'; if (mFarm(x, z) > 0.5) return 'みのり平原';
     if (mCity(x, z) > 0.5) return z > coast(x) - 260 && x > 300 && x < 1500 ? 'ネオン・ベイ港' : 'ネオン・ベイ市街'; return mSea(x, z) > 0.5 || Math.max(Math.abs(x), Math.abs(z)) > EDGE - 1300 ? '大洋' : 'ネオン・ベイ郊外'; };
-  const pois = [{ x: 880, y: 40, z: coast(880) + 80, name: '港' }, ...(fh[0] ? [{ x: fh[0][0], y: fh[0][1] + 30, z: fh[0][2], name: '農園地帯' }] : []), { x: VILLAGE[0], y: vy + 40, z: VILLAGE[1], name: '雪見の里' }, { x: TEMPLE[0], y: hAt(TEMPLE[0], TEMPLE[1]) + 70, z: TEMPLE[1], name: '古代遺跡' }];
-  return { id: 'terra', rescueSites: rescueSites.filter(Boolean), group: grp, sky, H, heightAt, sunDir, sunCol: '#ffb078', sunInt: 3.0, hemi: ['#6a6aa8', '#2a2030', 1.25], expo: (x, z) => lerp(1.2, 1.02, mCity(x, z)), fog, fogDen, cols, rects, obbs, decks, items, anim, beacons, nodes, tiles, veg: [vf, uf, pf, hf, cf], zone, region, place, pois, blocked: cityBlocked, padY: 1.1, mirror: [road, 1.6], mirrorOn: (x, y, z) => y < 700 && mCity(x, z) > 0.2, rain: [RAIN, 0.45, '#9fb8ff'], walkR: 1e9, bounds: EDGE - 800, far: 34000, safeAlt: 780, door: [50, 30, -HP], foot: [0, 42], look: [0.42, 1.15, 0.95], music: 'neon', water: SEA, start: [320, 1500, 4300] };
+  const pois = [{ x: 880, y: 40, z: coast(880) + 80, name: '港' }, ...(fh[0] ? [{ x: fh[0][0], y: fh[0][1] + 30, z: fh[0][2], name: '農園地帯' }] : []), { x: VILLAGE[0], y: vy + 40, z: VILLAGE[1], name: '雪見の里' }, { x: TEMPLE[0], y: hAt(TEMPLE[0], TEMPLE[1]) + 70, z: TEMPLE[1], name: '古代遺跡' }].map((p) => ({ ...p, range: 22000 })).concat(country.pois);
+  const dayColors = [
+    [sky.material.uniforms.uZen.value, '#567fa9'],
+    [sky.material.uniforms.uHor.value, '#a9c3d3'],
+    [sky.material.uniforms.uSunCol.value, '#ffe9c8'],
+    [sky.material.uniforms.uCloudCol.value, '#e3edf3'],
+    [sky.material.uniforms.uGround.value, '#536270'],
+    [fog[0], '#8da9ba'],
+  ].map(([value, day]) => [value, value.clone(), COL(day)]);
+  const sunNight = COL('#ffb078'), sunDay = COL('#ffedd1');
+  const hemiNight = COL('#6a6aa8'), hemiDay = COL('#b6d4ee');
+  const groundNight = COL('#2a2030'), groundDay = COL('#81725d');
+  let lastLight;
+  function lighting(scene, sun, hemi, x, z) {
+    const day = smooth(7900, 14400, x) * smooth(-4500, -1400, coastDistance(x, z));
+    if (lastLight === day) return;
+    lastLight = day;
+    for (const [value, night, daylight] of dayColors) value.copy(night).lerp(daylight, day);
+    const skyU = sky.material.uniforms;
+    skyU.uStars.value = (1 - day) * 0.5;
+    skyU.uHaze.value = lerp(0.9, 0.45, day);
+    for (const sea of [westSea, eastSea]) {
+      sea.material.uniforms.uZen.value.copy(skyU.uZen.value);
+      sea.material.uniforms.uHor.value.copy(skyU.uHor.value);
+      sea.material.uniforms.uSunCol.value.copy(skyU.uSunCol.value);
+    }
+    fog[1] = lerp(0.00016, 0.000139, day);
+    scene.fog.color.copy(fog[0]);
+    sun.color.copy(sunNight).lerp(sunDay, day);
+    sun.intensity = lerp(3.0, 2.65, day);
+    hemi.color.copy(hemiNight).lerp(hemiDay, day);
+    hemi.groundColor.copy(groundNight).lerp(groundDay, day);
+    hemi.intensity = lerp(1.25, 1.62, day);
+  }
+
+  return {
+    id: 'terra', rescueSites: rescueSites.filter(Boolean), group: root, sky, H: (x, z) => x < JOIN_X ? townHeight(x, z) : plan.terrain(x, z),
+    heightAt: country.heightAt, waterAt: country.waterAt, sunDir, sunCol: '#ffb078', sunInt: 3.0,
+    hemi: ['#6a6aa8', '#2a2030', 1.25], expo: (x, z) => lerp(1.2, 1.02, Math.max(mCity(x, z), smooth(8200, 14600, x))),
+    fog, fogDen, cols, rects, obbs, decks, items, anim, beacons, nodes, tiles, veg: [vf, uf, pf, hf, cf],
+    region, place, pois, zone, lighting, blocked: cityBlocked, padY: 1.1, mirror: [road, 1.6],
+    mirrorOn: (x, y, z) => y < 700 && mCity(x, z) > 0.2, rain: [RAIN, 0.45, '#9fb8ff'],
+    walkR: 1e9, flightArea: (x, z) => Math.hypot(x, z) <= EDGE - 800 || countrysideFlight(x, z),
+    stream(x, z, dist, prime) {
+      const view = dist < 1 ? 9400 : dist > 1 ? 17800 : 13000;
+      grp.visible = x < JOIN_X + view && Math.abs(z) < EDGE + view;
+      eastSea.visible = x > JOIN_X - view;
+      country.update(x, z, dist, prime);
+    },
+    keepLegacyVeg: country.keepLegacyVeg,
+    dispose() {
+      country.dispose();
+      tm.material.dispose();
+      field.dispose();
+      westSea.material.dispose();
+      eastSea.material.dispose();
+    },
+    far: 34000, safeAlt: 780, door: [50, 30, -HP], foot: [0, 42], look: [0.42, 1.15, 0.95],
+    music: 'neon', water: SEA, start: [320, 1500, 4300],
+  };
 }
