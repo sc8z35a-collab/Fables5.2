@@ -1,12 +1,17 @@
 // 惑星地表の環境: 地球 (earth.js) / 溶岩 / 砂漠 / 氷 / ガス巨星の雲海デッキ
 import * as THREE from 'three';
 import { Builder, mx, rockGeo } from '../gfx/builder.js';
-import { mat, glow, signMesh, imageTex } from '../gfx/textures.js';
+import { mat, glow, signMesh, imageTex, texSet } from '../gfx/textures.js';
+import { hasImage } from '../gfx/materials.js';
 import { rng, rr, fbm, ridge, smooth } from '../core/util.js';
 import { fxTime } from '../gfx/fx.js';
 import { BASES } from './defs.js';
 import { HP, V3, COL, N2, makeSky, gridTerrain, scatter, pad, node, beacon, forest, colorGeo, VegField, propGeo, craters, landmarks, scatterAt } from './surfkit.js';
 import { terra } from './earth.js';
+/** ドームのガラス: 画像があれば三角パネルの枠を入れる */
+const domeGlass = (GL) => { if (!hasImage('materials/dome-panel')) return GL; const m = GL.clone(), s = texSet('dome-panel'); m.map = s.map; m.normalMap = s.normalMap; m.opacity = Math.max(GL.opacity, 0.45); m.userData = { uvs: 0.1 }; return m; };
+/** 基地の入口 (-x 向きの面) にエアロックの扉の絵を貼る */
+const airlock = (B, x, y, z, w, h) => { if (hasImage('materials/airlock-door')) B.add(mat('airlock-door', { rough: 0.6, metal: 0.5 }), new THREE.PlaneGeometry(w, h), mx(x, y, z, 0, -HP, 0), 0); };
 
 // ───────────────────────── 殺風景な場所をなくすための共通部品 ─────────────────────────
 const pickPts = (r, n, r0, r1, ok) => { const L = []; for (let i = 0; i < n * 8 && L.length < n; i++) { const a = r() * 6.28, d = Math.sqrt(rr(r, (r0 / r1) ** 2, 1)) * r1, x = Math.cos(a) * d, z = Math.sin(a) * d; if (ok(x, z)) L.push([x, z]); } return L; };
@@ -53,7 +58,7 @@ function ignis() {
   const RK = mat('basalt', { color: 0x3a3230, rough: 0.8, metal: 0.2, uvs: 0, ns: 1.5 });
   grp.add(scatter(rockGeo(1, 2, 5, 0.45), RK, 420, (o) => { const a = r() * 6.28, d = rr(r, 90, 2600), x = Math.cos(a) * d, z = Math.sin(a) * d, h = TM.heightAt(x, z); if (h < 0) return false; const s = Math.pow(r(), 3) * 16 + 1.2; o.position.set(x, h - s * 0.3, z); o.rotation.set(r() * 6, r() * 6, r() * 6); o.scale.set(s, s * rr(r, 0.7, 1.6), s); if (s > 3 && d < 700) cols.push({ x, z, r: s * 0.8 }); }));
   // 精錬基地
-  const D = mat('hull', { color: 0x3a3430, rough: 0.8, metal: 0.6 }), RB = mat('rib', { color: 0x7a5a48, metal: 0.5 }), W = mat('wall', { color: 0x6a5648, rough: 0.7, metal: 0.5 }), G = glow('#ff6a1e', 4);
+  const D = mat('hull', { color: 0x3a3430, rough: 0.8, metal: 0.6 }), RB = mat('rib', { color: 0x7a5a48, metal: 0.5 }), W = mat('lava-wall', { color: 0xd0c8c0, rough: 0.7, metal: 0.5 }), G = glow('#ff6a1e', 4);
   pad(B, 8.6, 32, '#ff8a2a'); // 地形 (パッドの範囲で 8.3〜8.5m) より上に置く。以前は 8.1 でパッド全体が地面に埋もれていた
   B.box(W, 34, 12, 22, 70, 14, -10); B.box(D, 36, 1.4, 24, 70, 20.6, -10); B.box(glow('#ffc890', 2), 0.3, 4, 14, 52.9, 13, -10); B.box(D, 2, 4.4, 5, 52.5, 10.2, -10); B.box(G, 34.2, 0.4, 22.2, 70, 19, -10);
   for (const [x, z, h] of [[82, -34, 46], [92, -30, 60], [74, -40, 34]]) { B.cyl(RB, 3, 4.5, h, x, 8 + h / 2, z, 'y', 14); B.cyl(G, 3.1, 3.1, 0.8, x, 8 + h - 1, z, 'y', 14, true); beacon(beacons, x, 8 + h + 2, z, '#ff8a2a', 16); }
@@ -88,13 +93,14 @@ function sahar() {
   const RK = mat('sandstone', { color: 0xb07048, rough: 1, metal: 0, uvs: 0 });
   grp.add(scatter(rockGeo(1, 2, 9, 0.4), RK, 360, (o) => { const a = r() * 6.28, d = rr(r, 80, 2400), x = Math.cos(a) * d, z = Math.sin(a) * d, s = Math.pow(r(), 3) * 12 + 0.8; o.position.set(x, TM.heightAt(x, z) - s * 0.3, z); o.rotation.set(r() * 6, r() * 6, r() * 6); o.scale.set(s, s * rr(r, 0.6, 1.8), s); if (s > 3 && d < 700) cols.push({ x, z, r: s * 0.8 }); }));
   // オアシス・コロニー (ドーム群)
-  const Wt = mat('prefab-panel', { color: 0xeee4d0, rough: 0.6, metal: 0.05 }), D = mat('hull', { color: 0x6a5a48, rough: 0.8, metal: 0.4 }), S = mat('solar', { metal: 0.9, env: 1.6 }), GL = new THREE.MeshStandardMaterial({ color: 0x9fe0d0, transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0.2, emissive: 0x3a8a6a, emissiveIntensity: 0.6, side: THREE.DoubleSide }); GL.userData.uvs = 0;
+  const Wt = mat('adobe', { color: 0xeee4d0, rough: 0.6, metal: 0.05 }), D = mat('hull', { color: 0x6a5a48, rough: 0.8, metal: 0.4 }), S = mat('solar', { metal: 0.9, env: 1.6 }), GL = new THREE.MeshStandardMaterial({ color: 0x9fe0d0, transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0.2, emissive: 0x3a8a6a, emissiveIntensity: 0.6, side: THREE.DoubleSide }); GL.userData.uvs = 0;
+  const DG = domeGlass(GL);
   pad(B, 0.1, 32, '#ffcf6a');
-  B.add(GL, new THREE.SphereGeometry(22, 32, 16, 0, 6.2832, 0, HP), mx(80, 0, 0), 0); B.cyl(Wt, 22.6, 23.4, 3, 80, 1.5, 0, 'y', 32);
+  B.add(DG, new THREE.SphereGeometry(22, 32, 16, 0, 6.2832, 0, HP), mx(80, 0, 0)); B.cyl(Wt, 22.6, 23.4, 3, 80, 1.5, 0, 'y', 32);
   for (let i = 0; i < 8; i++) B.add(Wt, new THREE.TorusGeometry(22.1, 0.25, 6, 24, Math.PI), mx(80, 0, 0, 0, i * Math.PI / 8, 0), 0);
   for (let i = 0; i < 9; i++) { const a = i * 0.7; B.add(mat('leaves', { color: 0x2c7a31, rough: 0.9, metal: 0 }), rockGeo(rr(r, 2.4, 4.2), 1, i, 0.4), mx(80 + Math.cos(a) * rr(r, 3, 14), rr(r, 3, 8), Math.sin(a) * rr(r, 3, 14)), 0); }
-  B.add(GL, new THREE.SphereGeometry(11, 24, 12, 0, 6.2832, 0, HP), mx(108, 0, 26), 0); B.cyl(Wt, 11.4, 12, 2.4, 108, 1.2, 26, 'y', 24); B.add(GL, new THREE.SphereGeometry(9, 24, 12, 0, 6.2832, 0, HP), mx(104, 0, -26), 0); B.cyl(Wt, 9.4, 10, 2.4, 104, 1.2, -26, 'y', 24);
-  B.cyl(Wt, 3.4, 3.4, 4.6, 56, 2.3, 0, 'x', 16); B.box(D, 0.5, 4, 3, 54.2, 2, 0); B.box(glow('#ffcf6a', 3), 0.2, 0.3, 3.2, 54.1, 4.2, 0);
+  B.add(DG, new THREE.SphereGeometry(11, 24, 12, 0, 6.2832, 0, HP), mx(108, 0, 26)); B.cyl(Wt, 11.4, 12, 2.4, 108, 1.2, 26, 'y', 24); B.add(DG, new THREE.SphereGeometry(9, 24, 12, 0, 6.2832, 0, HP), mx(104, 0, -26)); B.cyl(Wt, 9.4, 10, 2.4, 104, 1.2, -26, 'y', 24);
+  B.cyl(Wt, 3.4, 3.4, 4.6, 56, 2.3, 0, 'x', 16); B.box(D, 0.5, 4, 3, 54.2, 2, 0); airlock(B, 53.94, 2, 0, 3, 4); B.box(glow('#ffcf6a', 3), 0.2, 0.3, 3.2, 54.1, 4.2, 0);
   for (let i = 0; i < 6; i++) { B.box(S, 9, 0.2, 5, 60 + (i % 3) * 11, 3.2, 44 + Math.floor(i / 3) * 8, 0, -0.5); B.cyl(D, 0.15, 0.15, 3, 60 + (i % 3) * 11, 1.5, 44 + Math.floor(i / 3) * 8, 'y', 6); }
   B.cyl(D, 0.3, 0.5, 34, 120, 17, -4, 'y', 8); beacon(beacons, 120, 35, -4, '#f33', 12, 0.6);
   cols.push({ x: 80, z: 0, r: 23.5 }, { x: 108, z: 26, r: 12 }, { x: 104, z: -26, r: 10 }); rects.push([56, 40, 90, 56]); items.push({ x: 53, z: 0, r: 5, label: 'コロニーのドームに入る', act: 'outpost' });
@@ -131,10 +137,10 @@ function glacies() {
   { const tm = gridTerrain(H, (x, z, h, sl, c) => { const n = fbm(x * 0.006, z * 0.006, 3, 4), deep = smooth(0.2, 0.9, sl); c[0] = 0.62 + n * 0.2 - deep * 0.42; c[1] = 0.74 + n * 0.16 - deep * 0.3; c[2] = 0.86 + n * 0.1 - deep * 0.08; }, { size: 15000, seg: 250, tex: 'snow-crust', rough: 0.48, metal: 0.1, ns: 0.9, env: 1.6, uv: 0.03 }); grp.add(tm); var TM = tm; }
   const ICE = mat('glacial-ice', { color: 0xbfe6ff, emissive: 0x16486a, ei: 0.35, rough: 0.22, metal: 0.05, env: 1.4, uvs: 0, ns: 0.6 });
   grp.add(scatter(rockGeo(1, 2, 14, 0.5), ICE, 260, (o) => { const a = r() * 6.28, d = rr(r, 70, 2400), x = Math.cos(a) * d, z = Math.sin(a) * d, s = Math.pow(r(), 2.4) * 11 + 1.2; o.position.set(x, TM.heightAt(x, z) - s * 0.35, z); o.rotation.set(rr(r, -0.3, 0.3), r() * 6, rr(r, -0.3, 0.3)); o.scale.set(s, s * rr(r, 1.2, 3.2), s * rr(r, 0.7, 1.2)); if (d < 700 && s > 2) cols.push({ x, z, r: s * 0.8 }); }));
-  const D = mat('hull', { color: 0x3a4048, rough: 0.7, metal: 0.6 }), Wd = mat('wood', { color: 0xc8a888, rough: 0.8, metal: 0 }), Wt = mat('prefab-panel', { color: 0xdfe8f0, rough: 0.5, metal: 0.1 }), WG = glow('#ffcf8a', 2.6);
+  const D = mat('hull', { color: 0x3a4048, rough: 0.7, metal: 0.6 }), Wd = mat('wood', { color: 0xc8a888, rough: 0.8, metal: 0 }), Wt = mat('ice-panel', { color: 0xdfe8f0, rough: 0.5, metal: 0.1 }), WG = glow('#ffcf8a', 2.6);
   pad(B, 0.1, 30, '#a6f0ff');
   B.box(Wd, 26, 7, 16, 66, 4.5, 0); B.add(Wt, new THREE.CylinderGeometry(9.2, 9.2, 26.4, 20, 1, false, 0, Math.PI).rotateZ(HP), mx(66, 8, 0), 0.1); for (let i = 0; i < 5; i++) { B.box(WG, 0.2, 2, 2.6, 52.9, 4.6, -6 + i * 3); if (i !== 2) B.box(WG, 2.6, 2, 0.2, 58 + i * 4, 4.6, 8.05); }
-  B.box(D, 1.6, 4.2, 3, 52.6, 3.1, 0); for (const [x, z] of [[55, -7], [77, -7], [55, 7], [77, 7]]) B.cyl(D, 0.4, 0.5, 2, x, 0.6, z, 'y', 8);
+  B.box(D, 1.6, 4.2, 3, 52.6, 3.1, 0); airlock(B, 51.79, 3.1, 0, 3, 4.2); for (const [x, z] of [[55, -7], [77, -7], [55, 7], [77, 7]]) B.cyl(D, 0.4, 0.5, 2, x, 0.6, z, 'y', 8);
   B.cyl(D, 0.3, 0.4, 16, 84, 8, -10, 'y', 8); B.add(Wt, new THREE.SphereGeometry(5, 20, 12, 0, 6.2832, 0, 1.2), mx(84, 17, -10, -2.3, 0.4, 0), 0); B.cyl(D, 0.2, 0.3, 26, 88, 13, 12, 'y', 6); beacon(beacons, 88, 26.5, 12, '#f33', 10, 0.6); beacon(beacons, 52.6, 6.4, 0, '#ffcf8a', 7);
   rects.push([52, -9, 80, 9]); cols.push({ x: 84, z: -10, r: 1.2 }); items.push({ x: 51, z: 0, r: 5, label: '研究所に入る', act: 'outpost' });
   const s1 = signMesh('氷床研究所', '#a6f0ff', 2.2, { double: true, intensity: 2.6 }); s1.position.set(52.7, 9, 0); s1.rotation.y = -HP; grp.add(s1);
@@ -179,7 +185,7 @@ function zephyr() {
   B.box(D, 1.2, 4.4, 3.4, 59.4, 2.2, 0); B.box(glow('#ffd27a', 3), 0.2, 0.3, 3.6, 59.3, 4.6, 0); cols.push({ x: 86, z: 0, r: 28.5 }); items.push({ x: 57.5, z: 0, r: 5, label: 'スカイラウンジに入る', act: 'outpost' });
   // 採取マスト & 気球
   for (let i = 0; i < 6; i++) { const a = i * 1.047 + 0.52, x = Math.cos(a) * 118, z = Math.sin(a) * 118; if (x > 60) continue; B.cyl(D, 1.2, 2, 70, x, 35, z, 'y', 10); B.sph(GD, 7, x, 74, z, 1, 1.25, 1, 20); B.tor(glow('#ffd27a', 3), 7.2, 0.15, x, 74, z, HP, 0, 0, 32, 5); B.cyl(D, 2.6, 2.6, 6, x, 3, z, 'y', 12); cols.push({ x, z, r: 3 }); beacon(beacons, x, 84, z, '#f33', 12, 0.6); }
-  const bal = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshStandardMaterial({ color: 0xe8c890, roughness: 0.4, metalness: 0.5 }), 96), o3 = new THREE.Object3D(), bp = [];
+  const bal = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshStandardMaterial(hasImage('materials/balloon-fabric') ? { color: 0xffffff, map: texSet('balloon-fabric').map, normalMap: texSet('balloon-fabric').normalMap, roughness: 0.8, metalness: 0.05 } : { color: 0xe8c890, roughness: 0.4, metalness: 0.5 }), 96), o3 = new THREE.Object3D(), bp = [];
   for (let i = 0; i < 96; i++) { const sp = i < 26 ? 1800 : 6600; bp.push([rr(r, -1, 1) * sp, rr(r, -120, i < 26 ? 380 : 900), rr(r, -1, 1) * sp, rr(r, 14, 46), r() * 6]); }
   bal.frustumCulled = false; grp.add(bal);
   anim.push((dt, t) => { bp.forEach(([x, y, z, s, ph], i) => { if (Math.hypot(x, z) < 320) x += 500; o3.position.set(x + Math.sin(t * 0.05 + ph) * 40, y + Math.sin(t * 0.2 + ph) * 8, z); o3.scale.set(s, s * 1.2, s); o3.updateMatrix(); bal.setMatrixAt(i, o3.matrix); }); bal.instanceMatrix.needsUpdate = true; });

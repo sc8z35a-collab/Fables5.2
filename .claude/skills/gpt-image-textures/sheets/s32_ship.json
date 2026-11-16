@@ -1,0 +1,16 @@
+{
+ "id": "s32_ship",
+ "group": "user",
+ "source": "ユーザーが別に生成した画像 (1254x1254)。合う場所があるマスだけ使い、使わないマスは skip と理由を書いてある。",
+ "cells": [
+  {"name": "pilot-seat", "prompt": "Pilot seat back", "kind": "tile", "seam": "", "rough": 170, "normal": 1.5},
+  {"name": "ship-floor", "kind": "tile", "prompt": "Anti-slip ship floor", "mean": [156, 155, 154], "rough": 127, "sat": 1.0, "keep_hue": true, "normal": 3.0, "uvs": 0.5},
+  {"name": "padded-wall", "kind": "tile", "prompt": "Padded cabin wall", "mean": [200, 200, 200], "rough": 200, "sat": 1.0, "keep_hue": true, "normal": 3.0, "uvs": 0.4},
+  {"name": "engine-pipes", "kind": "tile", "prompt": "Engine room pipe wall", "mean": [170, 170, 170], "rough": 140, "sat": 1.0, "keep_hue": true, "normal": 4.0, "uvs": 0.4},
+  {"name": "cargo-net", "kind": "tile", "prompt": "Cargo net on a wall", "mean": [170, 170, 170], "rough": 200, "sat": 1.0, "keep_hue": true, "normal": 3.0, "uvs": 0.4},
+  {"name": "enemy-floor", "kind": "tile", "prompt": "Enemy ship floor", "mean": [156, 155, 154], "rough": 127, "sat": 1.0, "keep_hue": true, "normal": 3.0, "uvs": 0.5},
+  {"name": "enemy-wall", "kind": "tile", "prompt": "Enemy ship wall", "mean": [191, 191, 194], "rough": 120, "sat": 1.0, "keep_hue": true, "normal": 3.5, "uvs": 0.3},
+  {"name": "brig-bars", "kind": "tile", "prompt": "Brig cell bars", "mean": [170, 170, 170], "rough": 150, "sat": 1.0, "keep_hue": true, "normal": 3.5, "uvs": 0.4},
+  {"name": "ammo-box", "prompt": "Military ammo box", "kind": "tile", "seam": "", "rough": 170, "normal": 1.5}
+ ]
+}

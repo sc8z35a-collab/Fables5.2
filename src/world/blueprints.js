@@ -144,11 +144,11 @@ const rogue = () => ({
 // ───────────────────────── 主人公機の船内 (3 隻とも構造が異なる) ─────────────────────────
 const hayate = () => ({
   name: 'ハヤテ 船内', sub: '高機動迎撃機', seed: 61, spawn: [1.75, 3.5, 0], view: [0, -1], music: 'interior',
-  theme: { wall: ['smooth', 0xc4cad2, 0.6, 0.3], floor: ['plate', 0x7a8088, 0.5, 0.7], ceil: ['rib', 0x6a7078], trim: '#ff8a2a', lamp: '#fff0e0', amb: [0xffe0c0, 0x34383c, 0.8], gloss: 0.5, door3: 'hatch', trims: 'low', lamps: 'tube', deco: ['cables'] },
+  theme: { wall: ['smooth', 0xc4cad2, 0.6, 0.3], floor: ['ship-floor', 0x9aa0a8, 0.5, 0.7], ceil: ['rib', 0x6a7078], trim: '#ff8a2a', lamp: '#fff0e0', amb: [0xffe0c0, 0x34383c, 0.8], gloss: 0.5, door3: 'hatch', trims: 'low', lamps: 'tube', deco: ['cables'] },
   rooms: [
     { id: 'cockpit', name: 'コックピット', x: 0, z: 0, w: 5, d: 5, h: 2.5, deco: [], win: [['n', 0.5, 4.5, 1.0, 2.2], ['w', 0.5, 3.6, 1.1, 2.15], ['e', 0.5, 3.6, 1.1, 2.15]],
       props: [['seat', 2.5, 2.2, 2, { use: 'pilot', label: '操縦席に座る', c: 0x3a2418 }], ['console', 2.5, 0.75, 0, { kind: 'radar' }], ['console', 0.75, 4.1, 1, { kind: 'graph' }], ['console', 4.25, 4.1, 3, { kind: 'bars' }]] },
-    { id: 'cabin', name: 'キャビン', x: 0, z: 5, w: 5, d: 6.5, h: 2.5, rug: [[1.6, 1.6, 1.8, 3.4, 'carpet', 0xc05a1a]],
+    { id: 'cabin', name: 'キャビン', x: 0, z: 5, w: 5, d: 6.5, h: 2.5, wall: ['padded-wall', 0xe8e8e8, 0.8, 0.1], rug: [[1.6, 1.6, 1.8, 3.4, 'carpet', 0xc05a1a]],
       props: [['bed', 0.9, 2.2, 0, { c: 0xc05a1a }], ['locker', 4.45, 1.5, 3, { n: 2 }], ['kitchen', 4.35, 4.3, 3, { w: 1.8 }], T('船体状況', 'status', 1.0, 5.4, 1, { kind: 'graph' }), ['poster', 0.25, 4.3, 1, { text: '疾風', c: '#ff8a2a', h: 0.7, y: 1.7 }]] },
     { id: 'bay', name: '機材ベイ', x: 0, z: 11.5, w: 5, d: 4.5, h: 2.5, floor: ['grate', 0x8a8f96, 0.6, 0.7],
       props: [['rack', 0.6, 1.4, 1, { n: 1 }], ['pipes', 4.7, 1.6, 3], ['crate', 1.2, 3.4, 0, { n: 2 }], ['exit', 2.5, 4.3, 2, { label: 'エアロックから出る' }]] },
@@ -160,16 +160,16 @@ const raiden = () => ({
   name: 'ライデン 船内', sub: '重装ガンシップ', seed: 62, spawn: [4.5, 6.6, 0], view: [0, -1], music: 'interior',
   theme: { wall: ['bulk', 0x565c64, 0.75, 0.6], floor: ['grate', 0x8a8f96, 0.6, 0.7], ceil: ['rib', 0x34383e], trim: '#ff3b2a', lamp: '#ffc8b0', frame: 0x16181c, door: 0x4a2a2a, amb: [0xff8060, 0x18181c, 0.5], gloss: 0.35, door3: 'hatch', trims: 'low', lamps: 'tube' },
   rooms: [
-    { id: 'bridge', name: '艦橋', x: 0, z: 0, w: 9, d: 8, h: 3.2, floor: ['plate', 0x5a5e66, 0.45, 0.7], win: [['n', 1, 8, 1.1, 2.75], ['w', 1, 5, 1.3, 2.6], ['e', 1, 5, 1.3, 2.6]], plat: [[3, 3.4, 3, 2.4, 0.35, 's', 0.6]],
+    { id: 'bridge', name: '艦橋', x: 0, z: 0, w: 9, d: 8, h: 3.2, floor: ['ship-floor', 0x8a8e96, 0.45, 0.7], win: [['n', 1, 8, 1.1, 2.75], ['w', 1, 5, 1.3, 2.6], ['e', 1, 5, 1.3, 2.6]], plat: [[3, 3.4, 3, 2.4, 0.35, 's', 0.6]],
       props: [['seat', 4.5, 4.4, 2, { use: 'pilot', label: '操縦席に座る', c: 0x3a1414, y0: 0.35 }], ['console', 4.5, 1.0, 0, { kind: 'radar' }], ['console', 1.3, 3.2, 1, { tall: 1, kind: 'graph' }], ['console', 7.7, 3.2, 3, { tall: 1, kind: 'bars' }], ['seat', 2.4, 3.2, 3], ['seat', 6.6, 3.2, 1], T('星図', 'map', 7.9, 7, 3, { kind: 'orbit' })] },
     { id: 'hall', name: '中央通路', x: 3, z: 8, w: 3, d: 10, h: 3.1, ceil3: 'vault', deco: ['cables'], props: [['pipes', 2.7, 7.8, 3]] },
     { id: 'arm', name: '兵装庫', x: -4, z: 9, w: 7, d: 7, h: 2.9,
       props: [['weaponrack', 3.5, 0.25, 0], ['weaponrack', 0.25, 3.5, 1], ['locker', 3.5, 6.5, 2, { n: 4 }], ['crate', 1.6, 5.2, 0, { n: 2 }], T('弾薬補給', 'ammo', 5.6, 1.4, 3)] },
-    { id: 'crew', name: '兵員室', x: 6, z: 9, w: 7, d: 7, h: 2.9, lamp: '#ffe0c8', floor: ['plate', 0x5a5e66, 0.5, 0.6],
+    { id: 'crew', name: '兵員室', x: 6, z: 9, w: 7, d: 7, h: 2.9, lamp: '#ffe0c8', floor: ['ship-floor', 0x8a8e96, 0.5, 0.6], wall: ['padded-wall', 0xc8c8c8, 0.8, 0.1],
       props: [['bunk', 5.9, 1.6, 0], ['bunk', 5.9, 5.2, 0, { use: false }], ['locker', 2.5, 0.5, 0, { n: 3 }], ['table', 2.6, 4.6, 0, { n: 3 }], ['poster', 3, 6.75, 2, { text: '雷電', c: '#ff3b2a', h: 0.7, y: 1.8 }]] },
     { id: 'eng', name: '機関室', x: -2, z: 18, w: 13, d: 10, h: 6.5, deco: ['ibeam', 'cables'], plat: [[8.6, 0.4, 4, 2.6, 0.9, 's', 0.5]],
       props: [['reactor', 6.5, 5.6, 0, { c: '#ff9a3a' }], ['console', 10.6, 1.3, 0, { kind: 'graph', y0: 0.9 }], ['console', 2.4, 1.2, 0, { tall: 1, kind: 'bars' }], ['rack', 1, 6, 1, { n: 2 }], ['rack', 12, 6, 3, { n: 2 }], ['pipes', 0.4, 8.6, 1], ['pipes', 12.6, 8.6, 3], T('船体状況', 'status', 2.4, 9, 1, { kind: 'graph' })] },
-    { id: 'cargo', name: '貨物室', x: -2, z: 28, w: 13, d: 9, h: 4.5, floor: ['plate', 0x6a6e76, 0.5, 0.7],
+    { id: 'cargo', name: '貨物室', x: -2, z: 28, w: 13, d: 9, h: 4.5, floor: ['plate', 0x6a6e76, 0.5, 0.7], wall: ['cargo-net', 0xc8c8c8, 0.8, 0.4],
       props: [['cargo', 2, 4, 0, { c: 0x4a5a3a }], ['crate', 10.5, 2.4, 0, { n: 5 }], ['barrel', 10, 6.5, 0], ['toolcart', 6, 2, 0.2], ['exit', 6.5, 8.8, 2, { label: 'エアロックから出る', w: 2.6 }]] },
   ],
   doors: [['bridge', 'hall', 4.5, 1.8, 2.3], ['hall', 'arm', 12.5, 1.6, 2.2], ['hall', 'crew', 12.5, 1.6, 2.2], ['hall', 'eng', 4.5, 1.8, 2.3], ['eng', 'cargo', 4.5, 2.6, 2.5, 'blast']],
@@ -189,7 +189,7 @@ const amatsu = () => ({
       props: [['tank', 1.6, 1.5, 0, { c: '#6fe' }], ['tank', 3.6, 1.5, 0, { c: '#fd4' }], ['console', 7, 1.2, 0, { tall: 1, kind: 'graph' }], ['desk', 6.5, 6.5, 2], T('標本分析', 'lab', 1.5, 6.5, 1, { kind: 'graph' }), ['rack', 9.3, 7.6, 3, { n: 2 }]] },
     { id: 'cabin', name: '船長室', x: -10, z: 19, w: 10, d: 7, h: 3.2, floor: ['carpet', 0x2a4a5a, 1, 0], wall: ['wood', 0xd8c0a0, 0.7, 0], deco: ['wains'], lamp: '#ffe2b8',
       props: [['bed', 1.2, 3.6, 0, { c: 0x2a7a6a }], ['desk', 6.5, 1.3, 0, { wood: 1 }], ['bookshelf', 3.6, 0.45, 0, { w: 2 }], ['plant', 9, 6, 0, { s: 1.2 }], ['cabinet', 9.4, 3.6, 3], ['wallscreen', 4.5, 6.75, 2, { w: 2.6, h: 1.3, y: 1.9, kind: 'orbit', title: '航海日誌' }], T('船体状況', 'status', 0.9, 0.9, 0.5, { kind: 'graph' }), ['floorlamp', 2.6, 6.2, 0]] },
-    { id: 'cargo', name: '貨物室', x: 0, z: 22, w: 12, d: 9, h: 4.5, floor: ['plate', 0x9aa2ad, 0.5, 0.6], wall: ['wall', 0xc8ccd0, 0.7, 0.3], lamps: 'tube',
+    { id: 'cargo', name: '貨物室', x: 0, z: 22, w: 12, d: 9, h: 4.5, floor: ['plate', 0x9aa2ad, 0.5, 0.6], wall: ['cargo-net', 0xc8ccd0, 0.7, 0.3], lamps: 'tube',
       props: [['cargo', 2.2, 4, 0, { c: 0x2e7ab8 }], ['crate', 9.5, 2.5, 0, { n: 5 }], ['crate', 9.5, 6.5, 0, { n: 3 }], ['exit', 6, 8.8, 2, { label: 'エアロックから出る', w: 2.6, c: '#35e0c8' }]] },
   ],
   doors: [['bridge', 'lounge', 6, 2, 2.5, 'glass'], ['lounge', 'garden', 15, 2, 2.5, 'glass'], ['lounge', 'lab', 14, 1.8, 2.3, 'glass'], ['lab', 'cabin', -5, 1.6, 2.2, 'wood'], ['lounge', 'cargo', 6, 2.6, 2.5, 'slide']],
@@ -264,7 +264,8 @@ const OUT = {
 // ───────────────────────── 敵艦内 (シードから生成: 20 隻すべて異なる様式・3 種の間取り) ─────────────────────────
 function enemyBP(def) {
   const r = rng(def.seed * 7 + 3), gc = new THREE.Color(def.glow), dark = (k, base) => new THREE.Color(base).lerp(gc, k).getHex();
-  const ws = pick(r, ['bulk', 'rib', 'rock', 'wall', 'bulk']), fs = pick(r, ['grate', 'plate', 'hex', 'concrete']), cave = ws === 'rock';
+  const KW = (k) => (k === 'reactor' ? { wall: ['engine-pipes', 0xb0b4ba, 0.8, 0.5] } : k === 'brig' ? { wall: ['brig-bars', 0xb0b0b0, 0.8, 0.5] } : {}); // 機関室は配管の壁、営倉は鉄格子
+  const ws = pick(r, ['bulk', 'rib', 'rock', 'enemy-wall', 'bulk']), fs = pick(r, ['grate', 'plate', 'hex', 'enemy-floor']), cave = ws === 'rock';
   const theme = { wall: [ws, dark(0.14, cave ? 0x5a4a50 : 0x50545e), 0.8, 0.5], floor: [fs, dark(0.08, 0x6a6e76), 0.45, 0.7], ceil: [cave ? 'rock' : pick(r, ['ceil', 'rib']), dark(0.1, 0x2a2c32)], trim: def.glow, lamp: '#' + new THREE.Color(def.glow).lerp(new THREE.Color('#fff'), 0.55).getHexString(),
     frame: 0x121316, door: dark(0.3, 0x3a3a40), amb: [dark(0.6, 0x404050), 0x0c0c10, 0.42], gloss: 0.5, door3: pick(r, ['hatch', 'blast', 'slide']), trims: pick(r, ['low', 'neon', 'both']), lamps: cave ? 'bare' : pick(r, ['tube', 'panel', 'pendant']), cstyle: cave ? 'rock' : 'flat', ribs: !cave, deco: cave ? ['stal'] : pick(r, [['cables'], ['ducts'], ['cables', 'ducts'], []]) };
   const topo = def.idx % 3, n = 2 + def.tier + (r() < 0.5 ? 1 : 0), kinds = ['barracks', 'armory', 'cargo', 'medbay', 'reactor', 'brig', 'lab'].sort(() => r() - 0.5).slice(0, Math.min(n, topo === 1 ? 4 : 6));
@@ -272,7 +273,7 @@ function enemyBP(def) {
   /** 部屋の中身。flip=true で東西を鏡写し */
   const fill = (k, w, d, flip, id, ns) => { const X = (v) => (flip ? w - v : v), rot = (q) => (flip ? (4 - q) % 4 : q), P = [], C = ns ? w / 2 + 2.3 : w / 2;
     if (k === 'barracks') P.push(['bunk', X(w - 1), 1.6, 0, { use: false }], ['bunk', X(w - 1), d - 2, 0, { use: false }], ['locker', C, 0.5, 0, { n: 3 }], ['table', X(w / 2 - 0.5), d / 2 + (ns ? 0 : 0.6), 0, { n: 3 }]);
-    else if (k === 'armory') P.push(['weaponrack', C, 0.25, 0, { c: def.glow }], ['weaponrack', X(w - 0.25), d / 2, rot(3), { c: def.glow }], ['crate', X(w - 1.8), d - 1.6, 0, { n: 4 }], ['locker', C, d - 0.5, 2, { n: 3 }]);
+    else if (k === 'armory') P.push(['weaponrack', C, 0.25, 0, { c: def.glow }], ['weaponrack', X(w - 0.25), d / 2, rot(3), { c: def.glow }], ['crate', X(w - 1.8), d - 1.6, 0, { n: 4, ammo: 1 }], ['locker', C, d - 0.5, 2, { n: 3 }]);
     else if (k === 'cargo') P.push(['crate', X(w - 1.8), 1.8, 0, { n: 5 }], ['crate', X(w - 1.8), d - 1.8, 0, { n: 4 }], ['barrel', X(2.4), d - 1.4, 0], ['terminal', ns ? C : X(w / 2), 0.8, 0, { label: '貨物を略奪', use: 'loot', kind: 'bars', id: def.id + id }]);
     else if (k === 'medbay') P.push(['medpod', X(w - 1.2), 2, 0], ['tank', X(w - 1.2), d - 1.6, 0, { c: def.glow }], ['rack', C, 0.6, 0, { n: 2 }]);
     else if (k === 'reactor') P.push(['reactor', X(w / 2 + 0.6), d / 2, 0, { c: def.glow }], ['pipes', X(w - 0.4), 1.2, rot(3)], ['rack', w / 2 - 1.6, d - 0.5, 2, { n: 1 }]);
@@ -287,7 +288,7 @@ function enemyBP(def) {
   if (topo === 0) { // 背骨型: 直線通路の両側に部屋、突き当たりが艦橋
     const cw = 3 + (r() < 0.4 ? 1 : 0), hw = cw / 2, len = 4 + Math.ceil(kinds.length / 2) * 8;
     rooms.push({ id: 'hall', name: '通路', x: -hw, z: -len, w: cw, d: len, h: rr(r, 2.9, 3.5), ceil3: cave ? 'rock' : 'vault', props: [] }); doors.push(['hall', 'lock', 0, 1.8, 2.3]); drones.push([0, -len * 0.5]);
-    kinds.forEach((k, i) => { const west = i % 2 === 0, w = rr(r, 6.5, 9), d = 7, z = -(3 + Math.floor(i / 2) * 8) - d, x = west ? -hw - w : hw, id = 'r' + i; rooms.push({ id, name: NAME[k], x, z, w, d, h: H(k), props: fill(k, w, d, west, id) }); doors.push(['hall', id, z + d / 2, 1.8, 2.3]); if (r() < 0.75 || k === 'reactor') drones.push([x + w / 2, z + d / 2]); });
+    kinds.forEach((k, i) => { const west = i % 2 === 0, w = rr(r, 6.5, 9), d = 7, z = -(3 + Math.floor(i / 2) * 8) - d, x = west ? -hw - w : hw, id = 'r' + i; rooms.push({ id, name: NAME[k], x, z, w, d, h: H(k), props: fill(k, w, d, west, id), ...KW(k) }); doors.push(['hall', id, z + d / 2, 1.8, 2.3]); if (r() < 0.75 || k === 'reactor') drones.push([x + w / 2, z + d / 2]); });
     rooms.push(bridge(-bw / 2, -len - bd, ['n', 1.2, bw - 1.2, 1.1, bh - 0.6])); doors.push(['bridge', 'hall', 0, 2, 2.4]);
     for (let i = 0; i < 1 + def.tier; i++) drones.push([(i - def.tier / 2) * 2.4, -len - bd * 0.72]);
   } else if (topo === 1) { // ハブ型: 円形ホールから放射状に部屋、北に艦橋
@@ -295,14 +296,14 @@ function enemyBP(def) {
     doors.push(['hall', 'lock', 0, 1.8, 2.3], ['hall', 'hub', 0, 2, 2.4]); drones.push([2.5, -13], [-2.5, -15]);
     kinds.forEach((k, i) => { const west = i % 2 === 0, w = rr(r, 6.5, 8.5), id = 'r' + i; let x, z, d;
       if (i < 2) { d = 7; z = -16.5; x = west ? -7 - w : 7; doors.push(['hub', id, -13, 1.8, 2.3]); } else { d = 6; z = -6; x = west ? -1.5 - w : 1.5; doors.push(['hall', id, -3, 1.6, 2.2]); }
-      rooms.push({ id, name: NAME[k], x, z, w, d, h: k === 'reactor' ? 5.5 : rr(r, 2.9, 3.8), props: fill(k, w, d, west, id) }); if (r() < 0.7 || k === 'reactor') drones.push([x + w / 2, z + d / 2]); });
+      rooms.push({ id, name: NAME[k], x, z, w, d, h: k === 'reactor' ? 5.5 : rr(r, 2.9, 3.8), props: fill(k, w, d, west, id), ...KW(k) }); if (r() < 0.7 || k === 'reactor') drones.push([x + w / 2, z + d / 2]); });
     rooms.push(bridge(-bw / 2, -20 - bd, ['n', 1.2, bw - 1.2, 1.1, bh - 0.6])); doors.push(['bridge', 'hub', 0, 2, 2.4]);
     for (let i = 0; i < 1 + def.tier; i++) drones.push([(i - def.tier / 2) * 2.4, -20 - bd * 0.72]);
   } else { // L 字型: 通路が直角に折れ、東端が艦橋
     const L2 = 2 + Math.ceil(kinds.length / 2) * 8.5;
     rooms.push({ id: 'hall', name: '通路 A', x: -1.5, z: -12, w: 3, d: 12, h: 3.1, ceil3: cave ? 'rock' : 'vault', props: [['pipes', 0.3, 5, 1]] }, { id: 'hall2', name: '通路 B', x: 1.5, z: -12, w: L2, d: 3, h: 3.1, ceil3: cave ? 'rock' : 'vault', props: [] });
     doors.push(['hall', 'lock', 0, 1.8, 2.3], ['hall', 'hall2', -10.5, 2.2, 2.5, 'open']); drones.push([0, -6], [1.5 + L2 * 0.5, -10.5]);
-    kinds.forEach((k, i) => { const north = i % 2 === 0, w = 7.5, d = 7, x = 2.5 + Math.floor(i / 2) * 8.5, z = north ? -19 : -9, id = 'r' + i; rooms.push({ id, name: NAME[k], x, z, w, d, h: H(k), props: fill(k, w, d, i % 4 < 2, id, true) }); doors.push(['hall2', id, x + w / 2, 1.8, 2.3]); if (r() < 0.75 || k === 'reactor') drones.push([x + w / 2, z + d / 2]); });
+    kinds.forEach((k, i) => { const north = i % 2 === 0, w = 7.5, d = 7, x = 2.5 + Math.floor(i / 2) * 8.5, z = north ? -19 : -9, id = 'r' + i; rooms.push({ id, name: NAME[k], x, z, w, d, h: H(k), props: fill(k, w, d, i % 4 < 2, id, true), ...KW(k) }); doors.push(['hall2', id, x + w / 2, 1.8, 2.3]); if (r() < 0.75 || k === 'reactor') drones.push([x + w / 2, z + d / 2]); });
     const b = bridge(1.5 + L2, -10.5 - bd / 2, ['e', 1.2, bd - 1.2, 1.1, bh - 0.6]); rooms.push(b); doors.push(['hall2', 'bridge', -10.5, 2, 2.4]);
     for (let i = 0; i < 1 + def.tier; i++) drones.push([1.5 + L2 + bw * 0.72, -10.5 + (i - def.tier / 2) * 2.2]);
   }

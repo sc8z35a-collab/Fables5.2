@@ -1,0 +1,16 @@
+{
+ "id": "s29_machines",
+ "group": "user",
+ "source": "ユーザーが別に生成した画像 (1254x1254)。合う場所があるマスだけ使い、使わないマスは skip と理由を書いてある。",
+ "cells": [
+  {"name": "medpod-panel", "prompt": "Medical pod control panel", "kind": "tile", "seam": "", "rough": 150, "normal": 1.5},
+  {"name": "freezer-door", "prompt": "Cold storage door", "kind": "tile", "seam": "", "rough": 150, "normal": 1.5},
+  {"name": "tank-base", "kind": "tile", "prompt": "Culture tank base", "skip": true, "why": "低い円柱の帯に巻くと横に大きく伸びる"},
+  {"name": "lab-bench", "prompt": "Chemical-resistant lab bench", "kind": "tile", "seam": "", "rough": 150, "normal": 1.5},
+  {"name": "centrifuge-top", "prompt": "Centrifuge from above", "kind": "tile", "seam": "", "rough": 150, "normal": 1.5},
+  {"name": "reactor-panel", "prompt": "Reactor control panel", "kind": "tile", "seam": "", "rough": 150, "normal": 1.5},
+  {"name": "tool-wall", "prompt": "Pegboard tool wall", "kind": "tile", "seam": "", "rough": 150, "normal": 1.5},
+  {"name": "generator", "kind": "tile", "prompt": "Generator side", "skip": true, "why": "発電機の小道具が無い"},
+  {"name": "conveyor-belt", "kind": "tile", "prompt": "Conveyor belt", "rough": 200, "sat": 1.0, "normal": 3.0, "uvs": 1.1}
+ ]
+}

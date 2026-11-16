@@ -343,7 +343,8 @@ def process(sheet):
             if c.get('also'): (out / c['also']).parent.mkdir(parents=True, exist_ok=True); save_normal(nm, out / f"{c['also']}.webp", MAT_SIZE)
             save(rough_map(gblur(h, 2.5), c.get('rough', 150), c.get('rvar', 0.25)), d / 'roughness.webp', q=85, size=MAT_SIZE // 2)
             t = desat(t, c.get('sat', 1.0))
-            t = match_linear(t, c['mean'], c.get('contrast', 0.1)) if c.get('norm') == 'linear' else match_mean(t, c['mean'], c.get('keep_hue', False))
+            if 'mean' in c:  # mean が無ければ元の明るさのまま (正面に貼る絵など)
+                t = match_linear(t, c['mean'], c.get('contrast', 0.1)) if c.get('norm') == 'linear' else match_mean(t, c['mean'], c.get('keep_hue', False))
             save(t, d / 'color.webp', q=86, size=MAT_SIZE)
         elif k == 'image':  # 1 枚の画像 (惑星の地図・雲・星雲・環・太陽・森の樹冠)。法線・粗さは作らない
             src = cell(img, i, 0.02); ov = c.get('ov', 192); seam = c.get('seam', 'xy')

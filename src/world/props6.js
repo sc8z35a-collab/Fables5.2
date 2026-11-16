@@ -7,7 +7,7 @@ import { mat, glow, screenMat, cv, ctex, JP } from '../gfx/textures.js';
 import { makeGlowSprite } from '../gfx/fx.js';
 import { G, rng } from '../core/util.js';
 import { glassMat } from './interior.js';
-import { MM, fab, flat, scr } from './props.js';
+import { MM, fab, flat, scr, face } from './props.js';
 import { basic, toPlayer, item } from './props2.js';
 import { rod } from './stationparts.js';
 
@@ -79,7 +79,7 @@ export const PROPS6 = {
   /** 遠心分離機: 透明な蓋の下でローターが回っては止まる */
   centrifuge(P, o, e) {
     const m = MM(), c = o.c || '#6fe8ff', WD = mat('technical-canvas', { color: 0xe6eaef, rough: 0.3, metal: 0.1, side: THREE.DoubleSide });
-    P.box(m.wh, 1.0, 0.9, 0.9, 0, 0.45, 0); P.box(m.dk, 1.02, 0.06, 0.92, 0, 0.03, 0); P.add(WD, new THREE.CylinderGeometry(0.46, 0.5, 0.42, 24, 1, true), mx(0, 1.11, 0)); P.cyl(m.dk, 0.45, 0.45, 0.02, 0, 0.99, 0, 'y', 24);
+    P.box(m.wh, 1.0, 0.9, 0.9, 0, 0.45, 0); P.box(m.dk, 1.02, 0.06, 0.92, 0, 0.03, 0); P.add(WD, new THREE.CylinderGeometry(0.46, 0.5, 0.42, 24, 1, true), mx(0, 1.11, 0)); P.cyl(m.dk, 0.45, 0.45, 0.02, 0, 0.99, 0, 'y', 24); face(P, 'centrifuge-top', 0.92, 0.88, 0, 1.002, 0, { rx: -HP, metal: 0.4 });
     P.add(glassMat(), new THREE.SphereGeometry(0.44, 20, 8, 0, TAU, 0, 1.1), mx(0, 1.14, 0, 0, 0, 0, 1, 0.6, 1), 0);
     P.tor(glow(c, 2.4), 0.47, 0.012, 0, 1.32, 0, HP, 0, 0, 32, 5); scr(P, 'bars', c, '', 0.34, 0.16, 0.2, 0.7, 0.455, 0, 1.4); P.box(glow('#35ff8a', 2.6), 0.04, 0.04, 0.01, -0.3, 0.74, 0.455);
     const rot = new THREE.Group(), rb = new Builder(); rb.cyl(m.ch, 0.3, 0.34, 0.1, 0, 0, 0, 'y', 16); rb.cyl(m.dk, 0.06, 0.06, 0.16, 0, 0.06, 0, 'y', 10);

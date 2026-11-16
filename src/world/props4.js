@@ -5,7 +5,7 @@ import { mat, glow, cv, ctex, JP } from '../gfx/textures.js';
 import { makeGlowSprite } from '../gfx/fx.js';
 import { G } from '../core/util.js';
 import { glassMat } from './interior.js';
-import { MM, fab, crateM, flat, scr } from './props.js';
+import { MM, fab, crateM, flat, scr, face } from './props.js';
 import { basic } from './props2.js';
 import { rescueN } from './rescue.js';
 import { RESCUE } from './defs.js';
@@ -177,7 +177,7 @@ export const PROPS4 = {
   },
   /** 超低温フリーザー (霜のついた扉と温度表示) */
   freezer(P, o, e) {
-    const m = MM(), n = o.n || 2; for (let i = 0; i < n; i++) { const x = (i - (n - 1) / 2) * 0.92; P.box(m.wh, 0.88, 2.05, 0.8, x, 1.03, 0); P.box(flat(0xdfeaf2, 0.35, 0.3), 0.8, 1.7, 0.04, x, 1.1, 0.41); P.box(m.ch, 0.05, 0.9, 0.06, x + 0.32, 1.1, 0.45); P.box(m.bk, 0.3, 0.14, 0.02, x - 0.2, 1.86, 0.435); P.box(glow('#6fe8ff', 2.6), 0.24, 0.08, 0.012, x - 0.2, 1.86, 0.447);
+    const m = MM(), n = o.n || 2; for (let i = 0; i < n; i++) { const x = (i - (n - 1) / 2) * 0.92; P.box(m.wh, 0.88, 2.05, 0.8, x, 1.03, 0); P.box(flat(0xdfeaf2, 0.35, 0.3), 0.8, 1.7, 0.04, x, 1.1, 0.41); face(P, 'freezer-door', 0.8, 1.7, x, 1.1, 0.431, { uv: [0.15, 0, 0.85, 1], metal: 0.3 }); P.box(m.ch, 0.05, 0.9, 0.06, x + 0.32, 1.1, 0.45); P.box(m.bk, 0.3, 0.14, 0.02, x - 0.2, 1.86, 0.435); P.box(glow('#6fe8ff', 2.6), 0.24, 0.08, 0.012, x - 0.2, 1.86, 0.447);
       P.add(basic('#dff6ff', 0.5, { ...ADD }), new THREE.PlaneGeometry(0.76, 0.5), mx(x, 0.5, 0.434), 0); P.box(m.dk, 0.88, 0.1, 0.8, x, 0.05, 0); P.box(glow('#35ff8a', 2.4), 0.04, 0.04, 0.012, x + 0.05, 1.86, 0.447); }
     const mist = e.dyn(makeGlowSprite('#dff6ff', 1.4, 0.2), 0, 0.2, 0.6), p0 = mist.position.clone(); e.anim((dt, t) => { const k = (t * 0.2 + e.x) % 1; mist.position.y = p0.y + k * 0.5; mist.scale.setScalar(1 + k * 1.6); mist.material.opacity = 0.3 * Math.sin(k * Math.PI); }); e.rect(n * 0.92, 0.82);
   },
