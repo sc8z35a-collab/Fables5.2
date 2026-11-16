@@ -1,0 +1,16 @@
+{
+ "id": "s27_farm",
+ "group": "user",
+ "source": "ユーザーが別に生成した画像 (1254x1254)。シート 23〜27 の案に沿って 45 マスすべてを使う。",
+ "cells": [
+  {"name": "farmhouse-wall", "kind": "tile", "prompt": "Farmhouse wall: peeling plaster over brick", "mean": [215, 215, 215], "rough": 235, "sat": 0.35, "norm": "linear", "contrast": 0.12, "normal": 2.5, "uvs": 0.4},
+  {"name": "barn-red", "kind": "tile", "prompt": "Red barn planks", "mean": [215, 215, 215], "rough": 235, "sat": 0.35, "norm": "linear", "contrast": 0.12, "normal": 2.5, "uvs": 0.4},
+  {"name": "silo-metal", "kind": "tile", "prompt": "Galvanised silo metal", "mean": [215, 215, 215], "rough": 235, "sat": 0.35, "norm": "linear", "contrast": 0.12, "normal": 2.5, "uvs": 0.4},
+  {"name": "tractor-paint", "kind": "tile", "prompt": "Worn red tractor paint", "mean": [215, 215, 215], "rough": 235, "sat": 0.35, "norm": "linear", "contrast": 0.12, "normal": 2.5, "uvs": 0.4},
+  {"name": "fence-wood", "kind": "tile", "prompt": "Weathered fence boards", "mean": [215, 215, 215], "rough": 235, "sat": 0.35, "norm": "linear", "contrast": 0.12, "normal": 2.5, "uvs": 0.4},
+  {"name": "hay-bale", "kind": "tile", "prompt": "Round hay bale", "mean": [190, 160, 90], "rough": 250, "sat": 1.0, "keep_hue": true, "normal": 3.0, "seam": ""},
+  {"name": "log-cabin", "kind": "tile", "prompt": "Log cabin wall with snow", "mean": [215, 215, 215], "rough": 235, "sat": 0.35, "norm": "linear", "contrast": 0.12, "normal": 2.5, "uvs": 0.4},
+  {"name": "quay-concrete", "kind": "tile", "prompt": "Harbour quay concrete", "mean": [184, 180, 178], "rough": 213, "sat": 0.5, "normal": 3.5, "uvs": 0.3},
+  {"name": "offshore-deck", "kind": "tile", "prompt": "Offshore platform deck plate with yellow paint", "mean": [150, 148, 140], "rough": 127, "sat": 1.0, "keep_hue": true, "normal": 3.0, "uvs": 0.2}
+ ]
+}

@@ -1,0 +1,32 @@
+{
+ "id": "s12_obj_basic",
+ "model": "gpt-image-2.5-sunburst",
+ "size": "2880x2880",
+ "quality": "medium",
+ "seconds": 27.2,
+ "usage": {
+  "input_tokens": 447,
+  "input_tokens_details": {
+   "image_tokens": 0,
+   "text_tokens": 447
+  },
+  "output_tokens": 1483,
+  "output_tokens_details": {
+   "image_tokens": 1483,
+   "text_tokens": 0
+  },
+  "total_tokens": 1930
+ },
+ "created": 1794749139,
+ "cells": [
+  "white-plastic",
+  "black-plastic",
+  "matte-plastic",
+  "gloss-paint",
+  "painted-metal",
+  "brushed-metal",
+  "cotton-cloth",
+  "plastic-crate",
+  "gold-leaf"
+ ]
+}

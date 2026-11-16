@@ -1,0 +1,16 @@
+{
+ "id": "s10_mixed",
+ "group": "replace-rest",
+ "style": "Interior finishes, an aerial forest canopy, glowing city lights and aerial views of small plants.",
+ "cells": [
+  {"name": "cork", "kind": "tile", "prompt": "Natural cork board with granulated light brown cork particles.", "mean": [204, 160, 119], "rough": 188, "sat": 1.0, "normal": 2.0},
+  {"name": "porcelain", "kind": "tile", "prompt": "Matte light-grey porcelain stoneware with a very fine speckle.", "mean": [201, 198, 193], "rough": 52, "sat": 0.3, "normal": 1.0},
+  {"name": "laminate", "kind": "tile", "prompt": "Warm light laminate countertop with subtle beige speckles.", "mean": [223, 216, 204], "rough": 49, "sat": 0.5, "normal": 0.8},
+  {"name": "foliage", "kind": "image", "path": "environment/foliage", "size": 512, "prompt": "Dense green forest canopy seen from directly above (aerial), many small tree crowns packed together.", "mean": [94, 113, 44], "sat": 1.0},
+  {"name": "city-lights", "kind": "emissive", "path": "effects/city-lights", "prompt": "Night city seen from high above through glass: thousands of small warm-white and some cyan and magenta lights clustered into neighbourhoods and streets, on pure black.", "mean": [40, 32, 22], "black": 0.08},
+  {"name": "bush_top", "kind": "cutout", "role": "top", "plant": "bush", "prompt": "A dense round green shrub seen from directly above (orthographic aerial top view).", "bg": "magenta", "mean": [105, 131, 70]},
+  {"name": "corn_top", "kind": "cutout", "role": "top", "plant": "corn", "prompt": "A cluster of green corn (maize) plants seen from directly above: long arching leaves radiating out and tassels in the middle.", "bg": "magenta", "mean": [103, 136, 52]},
+  {"name": "fern_top", "kind": "cutout", "role": "top", "plant": "fern", "prompt": "A lush fern seen from directly above: fronds radiating from the center like a rosette.", "bg": "magenta", "mean": [124, 117, 70]},
+  {"name": "wheat_top", "kind": "cutout", "role": "top", "plant": "wheat", "prompt": "A dense patch of ripe golden wheat seen from directly above: many ears and stalk tips, roughly square patch.", "bg": "magenta", "mean": [164, 144, 77]}
+ ]
+}

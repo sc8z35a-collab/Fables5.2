@@ -101,14 +101,14 @@ function scatter(geo, material, n, place, shadow = true) {
 /** 着陸パッド */
 function pad(B, y = 0, r = 34, col = '#fc4') {
   const D = mat('hull', { color: 0x3a3f48, rough: 0.7, metal: 0.6 }), P = mat('plate', { color: 0x8a9099, rough: 0.72, metal: 0.35, uvs: 0.25 }); // 低い太陽の照り返しが白い帯にならない程度の粗さ
-  B.cyl(D, r + 1.5, r + 3, 1.2, 0, y - 0.6, 0, 'y', 48); B.cyl(P, r, r, 0.12, 0, y + 0.02, 0, 'y', 48);
+  B.cyl(D, r + 1.5, r + 3, 1.2, 0, y - 0.6, 0, 'y', 48); B.add(mat('landing-pad', { color: 0x8a9099, rough: 0.72, metal: 0.35 }), new THREE.CylinderGeometry(r, r, 0.12, 48), mx(0, y + 0.02, 0), 0); // 着陸パッドの絵を 1 枚貼る
   B.add(glow(col, 1.15), new THREE.RingGeometry(r - 2.2, r - 1.6, 64).rotateX(-HP), mx(0, y + 0.1, 0), 0); B.add(glow(col, 1.15), new THREE.RingGeometry(r * 0.45, r * 0.45 + 0.5, 48).rotateX(-HP), mx(0, y + 0.1, 0), 0); // 発光が強すぎると色が飛んで白い光の帯に見える
   for (const a of [0, HP, Math.PI, -HP]) B.add(glow(col, 1.05), new THREE.PlaneGeometry(0.7, r * 0.42).rotateX(-HP), mx(Math.cos(a) * r * 0.72, y + 0.1, Math.sin(a) * r * 0.72, 0, -a + HP, 0), 0);
   for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8; B.cyl(D, 0.2, 0.26, 0.42, Math.cos(a) * (r + 0.6), y + 0.21, Math.sin(a) * (r + 0.6), 'y', 10); B.sph(glow(i % 2 ? '#4f8' : '#ffe6c8', 2), 0.13, Math.cos(a) * (r + 0.6), y + 0.6, Math.sin(a) * (r + 0.6), 1, 1, 1, 8); }
 }
 /** 採取できる資源結晶 */
 function node(color, s = 1, seed = 1) {
-  const g = new THREE.Group(), r = rng(seed), b = new Builder(), m = new THREE.MeshStandardMaterial({ color: COL(color).multiplyScalar(0.5), emissive: COL(color), emissiveIntensity: 1.6, roughness: 0.15, metalness: 0.2 }); m.userData.uvs = 0;
+  const g = new THREE.Group(), r = rng(seed), b = new Builder(), CR = texSet('crystal'), m = new THREE.MeshStandardMaterial({ color: COL(color).multiplyScalar(0.5), emissive: COL(color), emissiveIntensity: 1.6, roughness: 0.15, metalness: 0.2, map: CR.map, emissiveMap: CR.map, normalMap: CR.normalMap }); m.userData.uvs = 0;
   for (let i = 0; i < 6; i++) { const h = rr(r, 0.8, 2.6) * s, a = r() * 6.28, d = i ? rr(r, 0.3, 0.9) * s : 0; b.add(m, new THREE.CylinderGeometry(0.02, rr(r, 0.18, 0.34) * s, h, 5), mx(Math.cos(a) * d, h * 0.42, Math.sin(a) * d, rr(r, -0.4, 0.4), a, rr(r, -0.4, 0.4)), 0); }
   g.add(b.build({ shadow: false })); const sp = makeGlowSprite(color, 5 * s, 0.9); sp.position.y = 1.2 * s; g.add(sp);
   return g;
@@ -242,11 +242,15 @@ function landmarks(env, geo, material, list, o = {}) {
 /** 岩や小物を地形に撒く at 関数。dens(x,z,h) → [密度 0..1, 種類番号]。大きさは小さいものほど多い */
 const scatterAt = (hAt, dens, s0, s1) => { const d2 = [0, 0]; return (x, z, u, v, o) => { const h = hAt(x, z); dens(x, z, h, v, d2); if (u >= d2[0]) return false; const q = u / d2[0], sz = s0 + q * q * (s1 - s0); o[0] = d2[1]; o[1] = sz * (0.75 + v * 0.5); o[2] = sz; o[3] = h; return true; }; };
 /** 部品ごとに色を持つ結合ジオメトリ (頂点カラー)。InstancedMesh で大量配置する小物用 */
-function colorGeo(parts) {
+function colorGeo(parts, uvs = 0.5) {
   const P = [], Nn = [], Cc = []; for (const [geo, col, matrix] of parts) { const q = geo.index ? geo.toNonIndexed() : geo; if (matrix) q.applyMatrix4(matrix); if (!q.attributes.normal) q.computeVertexNormals(); const c = new THREE.Color(col); P.push(...q.attributes.position.array); Nn.push(...q.attributes.normal.array); for (let i = 0; i < q.attributes.position.count; i++) Cc.push(c.r, c.g, c.b); }
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(Nn, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(Cc, 3));
+  const U = new Float32Array(P.length / 3 * 2); // 1m あたり uvs 回くり返す箱投影の UV (質感を貼る材質用)
+  for (let i = 0, j = 0; i < P.length; i += 3, j += 2) { const ax = Math.abs(Nn[i]), ay = Math.abs(Nn[i + 1]), az = Math.abs(Nn[i + 2]); if (ay >= ax && ay >= az) { U[j] = P[i] * uvs; U[j + 1] = P[i + 2] * uvs; } else if (ax >= az) { U[j] = P[i + 2] * uvs; U[j + 1] = P[i + 1] * uvs; } else { U[j] = P[i] * uvs; U[j + 1] = P[i + 1] * uvs; } }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(Nn, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(Cc, 3)); g.setAttribute('uv', new THREE.BufferAttribute(U, 2));
   return g;
 }
+/** 頂点色 × AI 生成の質感 (色・法線・粗さ) */
+function vcMat(name, o = {}) { const s = texSet(name); return new THREE.MeshStandardMaterial({ vertexColors: true, map: s.map, normalMap: s.normalMap, roughnessMap: s.roughnessMap, roughness: 0.85, metalness: 0.02, ...o }); }
 
 // ───────────────────────── 海 (波・空の映り込み・太陽のきらめき・波打ち際の泡) ─────────────────────────
 const OCEAN_FS = /* glsl */`
@@ -286,4 +290,4 @@ function ocean(H, o) {
   return m;
 }
 
-export { HP, V3, COL, N2, makeSky, gridTerrain, terrainPatch, scatter, pad, node, beacon, forest, colorGeo, ocean, treeTex, VegField, roughen, propGeo, craters, landmarks, scatterAt, hs2 };
+export { HP, V3, COL, N2, makeSky, gridTerrain, terrainPatch, scatter, pad, node, beacon, forest, colorGeo, vcMat, ocean, treeTex, VegField, roughen, propGeo, craters, landmarks, scatterAt, hs2 };

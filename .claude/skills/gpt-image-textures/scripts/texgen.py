@@ -51,12 +51,12 @@ EMI = ('EMISSIVE cells: glowing elements on a pure black background (#000000); n
 def build_prompt(sheet):
     kinds = {c['kind'] for c in sheet['cells']}
     p = HEAD + (sheet.get('style', '') + ' ' if sheet.get('style') else '')
-    if kinds & {'tile', 'water'}: p += TILE
+    if kinds & {'tile', 'image'}: p += TILE
     if 'cutout' in kinds: p += CUT
     if 'emissive' in kinds: p += EMI
     p += 'Cells in reading order (left to right, top to bottom):\n'
     for i, c in enumerate(sheet['cells']):
-        tag = {'tile': 'TILE', 'water': 'TILE', 'cutout': 'CUTOUT', 'emissive': 'EMISSIVE'}[c['kind']]
+        tag = {'tile': 'TILE', 'image': 'TILE', 'cutout': 'CUTOUT', 'emissive': 'EMISSIVE'}[c['kind']]
         p += f"{i + 1}. (row {i // 3 + 1}, column {i % 3 + 1}) [{tag}] {c['prompt']}\n"
     return p
 
@@ -160,9 +160,10 @@ def wrap_x(img, ov):
     return out
 
 
-def seamless(img, size=OUT_TILE):
+def seamless(img, size=OUT_TILE, axes='xy'):
     ov = img.shape[1] - size
     img = wrap_x(img, ov)
+    if axes == 'x': return img
     img = wrap_x(img.transpose(1, 0, 2), img.shape[0] - size).transpose(1, 0, 2)
     return np.ascontiguousarray(img)
 
@@ -174,7 +175,14 @@ def flatten_light(img, amount, sigma):
     return np.clip(img * g[..., None], 0, 1)
 
 
-def match_mean(img, target):
+def match_linear(img, target, contrast=0.1):
+    """平均色を target にし、明るさのばらつき (標準偏差) を contrast にそろえる。
+    明るい色で塗り分ける物の質感用: ガンマで合わせると暗い元画像のコントラストが潰れるため"""
+    t = np.array(target, np.float32) / 255; k = contrast / max(float(lum(img).std()), 1e-4)
+    return np.clip(t + (img - img.reshape(-1, 3).mean(0)) * k, 0, 1)
+
+
+def match_mean(img, target, keep_hue=False):
     """平均色を target (0-255 の RGB) に合わせる。明るさはガンマで合わせて白飛びを防ぐ"""
     t = np.array(target, np.float32) / 255; tl = float(lum(t[None, None])[0, 0]); L = lum(img)
     lo, hi = 0.15, 6.0
@@ -183,7 +191,8 @@ def match_mean(img, target):
         if (L ** g).mean() > tl: lo = g
         else: hi = g
     out = img ** g
-    gain = t / np.maximum(out.reshape(-1, 3).mean(0), 1e-4)
+    if keep_hue: return np.clip(out, 0, 1)  # 明るさだけ合わせ、色味は AI 画像のまま
+    gain = np.clip(t / np.maximum(out.reshape(-1, 3).mean(0), 1e-4), 0.8, 1.25)
     return np.clip(out * gain, 0, 1)
 
 
@@ -316,11 +325,14 @@ def process(sheet):
     work = OUT_TILE + 192  # 継ぎ目処理の重なり幅 192px を足した作業サイズ (1 セル 960px - 余白 → 1216 に拡大)
     for i, c in enumerate(sheet['cells']):
         k, name = c['kind'], c['name']
+        if c.get('skip'): continue  # ゲームで使わないマス (合う場所が無い・コードの作り直しが要るもの)
         if k in ('tile', 'emissive'):
-            src = cell(img, i, 0.025)
+            src = cell(img, i, 0.025 if c.get('seam', 'xy') else 0.006)
             if src.shape[0] != work: src = np.asarray(u8(src).resize((work, work), Image.LANCZOS), np.float32) / 255
             if k != 'emissive': src = flatten_light(src, c.get('flatten', 0.8), src.shape[0] / 7)
-            t = seamless(src)
+            if c.get('seam', 'xy'): t = seamless(src)
+            else:  # 1 枚の絵として面いっぱいに貼るもの (扉・敷物・着陸パッド): 継ぎ目処理をせず縮小だけ
+                t = np.asarray(u8(src).resize((OUT_TILE, OUT_TILE), Image.LANCZOS), np.float32) / 255
             if k == 'emissive':
                 L = lum(t); t = t * np.clip((L - c.get('black', 0.12)) / 0.25, 0, 1)[..., None]
                 t = np.clip(t * (np.mean(c['mean']) / 255 / max(t.mean(), 1e-4)), 0, 1)
@@ -330,8 +342,17 @@ def process(sheet):
             save_normal(nm, d / 'normal.webp', MAT_SIZE)
             if c.get('also'): (out / c['also']).parent.mkdir(parents=True, exist_ok=True); save_normal(nm, out / f"{c['also']}.webp", MAT_SIZE)
             save(rough_map(gblur(h, 2.5), c.get('rough', 150), c.get('rvar', 0.25)), d / 'roughness.webp', q=85, size=MAT_SIZE // 2)
-            t = desat(t, c.get('sat', 1.0)); t = match_mean(t, c['mean'])
+            t = desat(t, c.get('sat', 1.0))
+            t = match_linear(t, c['mean'], c.get('contrast', 0.1)) if c.get('norm') == 'linear' else match_mean(t, c['mean'], c.get('keep_hue', False))
             save(t, d / 'color.webp', q=86, size=MAT_SIZE)
+        elif k == 'image':  # 1 枚の画像 (惑星の地図・雲・星雲・環・太陽・森の樹冠)。法線・粗さは作らない
+            src = cell(img, i, 0.02); ov = c.get('ov', 192); seam = c.get('seam', 'xy')
+            src = np.asarray(u8(src).resize((OUT_TILE + ov, OUT_TILE + ov), Image.LANCZOS), np.float32) / 255
+            if seam: src = seamless(src, OUT_TILE, seam)
+            t = desat(src, c.get('sat', 1.0))
+            if 'mean' in c: t = match_mean(t, c['mean'], c.get('keep_hue', False))  # mean が無ければ元の明るさのまま
+            (out / c['path']).parent.mkdir(parents=True, exist_ok=True)
+            im = u8(t).resize((c.get('size', MAT_SIZE),) * 2, Image.LANCZOS); im.save(out / f"{c['path']}.webp", 'WEBP', quality=88, method=6)
         elif k == 'cutout' and c.get('role') == 'leaf':
             rgb, a = key_magenta(cell(img, i, 0.012)); r2, a2 = fit(rgb, a, 512, 'top')
             save_rgba(match_cut(r2, a2, c.get('mean')), a2, out / f"{c['path']}.webp")
@@ -394,7 +415,7 @@ def make_preview(sheet, out):
 # ───────────────────────── マニフェスト ─────────────────────────
 def manifest():
     """assets/textures/packs/ai-*.zip の中身から src/gfx/texture-packs-ai.js を作る"""
-    packs = {}
+    packs = {}; uvs = {c['name']: c['uvs'] for sh in load_sheets([]) for c in sh['cells'] if 'uvs' in c}
     for z in sorted(PACKS.glob('ai-*.zip')):
         keys = []
         with zipfile.ZipFile(z) as zf:
@@ -406,13 +427,15 @@ def manifest():
     js = ('// 自動生成: .claude/skills/gpt-image-textures/scripts/texgen.py manifest (手で編集しない)\n'
           f'// {MODEL} ({SIZE}x{SIZE}, quality={QUALITY}) の 3x3 シートから切り出した画像のパック。\n'
           '// materials.js が TEXTURE_PACKS の後に登録するので、同じ名前の既存画像を置き換える。\n'
-          'export const AI_TEXTURE_PACKS = {\n' + body + '};\n')
+          'export const AI_TEXTURE_PACKS = {\n' + body + '};\n'
+          '// AI で追加した素材の 1m あたりの繰り返し数 (materials.js の MATERIAL_UVS に足される)\n'
+          'export const AI_MATERIAL_UVS = {\n' + ''.join(f'  {json.dumps(k)}: {v},\n' for k, v in uvs.items()) + '};\n')
     MANIFEST.write_text(js)
     print(f'{MANIFEST.relative_to(ROOT)}: {len(packs)} packs, {sum(len(v) for v in packs.values())} textures')
 
 
 def load_sheets(paths):
-    if not paths: paths = sorted(SHEETS.glob('*.json'))
+    if not paths: paths = sorted(SHEETS.glob('*.json'), key=lambda p: (int(''.join(ch for ch in p.stem.split('_')[0] if ch.isdigit()) or 0), p.stem))
     return [json.loads(Path(p).read_text()) for p in paths]
 
 

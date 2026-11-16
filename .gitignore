@@ -1,2 +1,3 @@
 dev.html
 .claude/skills/gpt-image-textures/.cache/
+__pycache__/

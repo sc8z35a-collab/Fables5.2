@@ -1,0 +1,32 @@
+{
+ "id": "s15_obj_machines",
+ "model": "gpt-image-2.5-sunburst",
+ "size": "2880x2880",
+ "quality": "medium",
+ "seconds": 33.1,
+ "usage": {
+  "input_tokens": 460,
+  "input_tokens_details": {
+   "image_tokens": 0,
+   "text_tokens": 460
+  },
+  "output_tokens": 1483,
+  "output_tokens_details": {
+   "image_tokens": 1483,
+   "text_tokens": 0
+  },
+  "total_tokens": 1943
+ },
+ "created": 1794749177,
+ "cells": [
+  "locker-steel",
+  "server-rack",
+  "vent-grille",
+  "pipe-insulation",
+  "control-panel",
+  "reactor-shell",
+  "column-cladding",
+  "arcade-cabinet",
+  "polished-granite"
+ ]
+}

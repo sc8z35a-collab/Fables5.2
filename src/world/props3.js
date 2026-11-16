@@ -13,12 +13,12 @@ const HP = Math.PI / 2, TAU = Math.PI * 2;
 const ADD = { transparent: true, blending: THREE.AdditiveBlending, depthWrite: false };
 let _B;
 const BM = () => _B || (_B = {
-  br: mat('flat', { color: 0xc8a04a, rough: 0.3, metal: 1 }),   // 真鍮
+  br: mat('brass', { color: 0xc8a04a, rough: 0.3, metal: 1 }),   // 真鍮
   cu: mat('verdigris', { color: 0xc8743a, rough: 0.32, metal: 1 }),  // 銅
   rl: mat('stainless', { color: 0x8a929e, rough: 0.3, metal: 1 }),   // 研磨鋼
-  gm: mat('flat', { color: 0x4a505a, rough: 0.5, metal: 0.65 }), // 砲金
-  yl: mat('flat', { color: 0xf2b90a, rough: 0.55, metal: 0.3 }), // 警戒色
-  iv: mat('flat', { color: 0xf0e8d4, rough: 0.35, metal: 0.15 }), // 象牙色
+  gm: mat('gunmetal', { color: 0x4a505a, rough: 0.5, metal: 0.65 }), // 砲金
+  yl: mat('safety-yellow', { color: 0xf2b90a, rough: 0.55, metal: 0.3 }), // 警戒色
+  iv: mat('ivory-enamel', { color: 0xf0e8d4, rough: 0.35, metal: 0.15 }), // 象牙色
   gn: mat('marble', { color: 0x2c5a4e, rough: 0.2, metal: 0.05 }), // 濃緑の大理石
   st: mat('marble', { color: 0xe8e0cc, rough: 0.3, metal: 0.05 }),
 });

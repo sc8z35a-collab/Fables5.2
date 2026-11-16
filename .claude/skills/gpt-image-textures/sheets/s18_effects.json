@@ -1,0 +1,16 @@
+{
+ "id": "s18_effects",
+ "group": "user",
+ "source": "ユーザーが別に生成した画像 (1254x1254)。合う場所があるマスだけ使い、使わないマスは skip にしてある。",
+ "cells": [
+  {"name": "glow", "kind": "tile", "prompt": "Soft glowing light orb", "skip": true, "why": "1 個の光ではなく並んだ模様になっている"},
+  {"name": "ao-blob", "kind": "tile", "prompt": "Soft round contact shadow", "skip": true, "why": "影の模様が並んだ床の画像で、影のマスクとして使えない"},
+  {"name": "ao-edge", "kind": "tile", "prompt": "Soft wall-edge shadow", "skip": true, "why": "斜めの縞模様で、壁際の影のマスクとして使えない"},
+  {"name": "plume", "kind": "tile", "prompt": "Engine exhaust flame", "skip": true, "why": "噴射炎はシェーダーで描いていて、画像に置き換えるには作り直しが要る"},
+  {"name": "explosion", "kind": "tile", "prompt": "Explosion fire and smoke", "skip": true, "why": "爆発は粒子で描いていて、作り直しが要る"},
+  {"name": "laser", "kind": "tile", "prompt": "Laser bolt glow", "skip": true, "why": "弾はシェーダーで描いている"},
+  {"name": "shield", "kind": "tile", "prompt": "Hexagonal shield pattern", "skip": true, "why": "シールドはシェーダーで描いている"},
+  {"name": "scorch", "kind": "tile", "prompt": "Burn scorch marks", "skip": true, "why": "被弾の焦げは頂点色で描いている"},
+  {"name": "sparks", "kind": "tile", "prompt": "Sparks and debris", "skip": true, "why": "火花は粒子で描いている"}
+ ]
+}

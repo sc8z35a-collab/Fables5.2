@@ -1,7 +1,7 @@
 // ステーション外装の艤装キット: 局所座標フレーム・トラス・アンテナ・タンク・貨物・投光器・進入ゲート・小型船・灯火群・交通
 import * as THREE from 'three';
 import { Builder, Placer, mx, loft } from '../gfx/builder.js';
-import { mat, glow } from '../gfx/textures.js';
+import { mat, glow, emissiveImg } from '../gfx/textures.js';
 import { makeGlowSprite, fxTime } from '../gfx/fx.js';
 import { G } from '../core/util.js';
 import { V, sign } from './stationkit.js';
@@ -131,7 +131,7 @@ export function ringLights(F, M, R, n, o = {}) { for (let i = 0; i < n; i++) { c
 
 // ───────────────────────── 小型船 (機首 = -Z。B は Builder でも Placer でもよい) ─────────────────────────
 /** 室内灯のともる窓 */
-export const warmWin = () => mat('flat', { color: 0x1a1410, rough: 0.2, metal: 0.3, emissive: '#ffd9a0', ei: 1.6 });
+export const warmWin = () => emissiveImg('effects/lit-windows', { color: 0x1a1410, rough: 0.2, metal: 0.3, emissive: '#ffd9a0', ei: 1.6 }, { emissive: '#fff0e0', ei: 2.6 });
 /** 貨物船 (全長 86m)。コンテナを竜骨の両舷に抱える */
 export function freighter(B, r, m) {
   const W = warmWin();

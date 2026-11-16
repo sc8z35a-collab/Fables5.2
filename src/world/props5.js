@@ -9,8 +9,8 @@ import { basic } from './props2.js';
 
 const HP = Math.PI / 2, TAU = Math.PI * 2;
 let _B;
-const BM = () => _B || (_B = { br: mat('flat', { color: 0xc8a04a, rough: 0.3, metal: 1 }), cu: mat('flat', { color: 0xc8743a, rough: 0.32, metal: 1 }), rl: mat('flat', { color: 0x8a929e, rough: 0.3, metal: 1 }), gm: mat('flat', { color: 0x4a505a, rough: 0.5, metal: 0.65 }), yl: mat('flat', { color: 0xf2b90a, rough: 0.55, metal: 0.3 }),
-  rd: mat('flat', { color: 0xc8201e, rough: 0.45, metal: 0.3 }), gn: mat('marble', { color: 0x2c5a4e, rough: 0.2, metal: 0.05 }), iv: mat('laminate', { color: 0xf0e8d4, rough: 0.35, metal: 0.15 }), st: mat('marble', { color: 0xe8e0cc, rough: 0.3, metal: 0.05 }), al: mat('flat', { color: 0xfff0d0, rough: 0.5, metal: 0, emissive: '#ffd9a0', ei: 1.5 }) });
+const BM = () => _B || (_B = { br: mat('brass', { color: 0xc8a04a, rough: 0.3, metal: 1 }), cu: mat('copper', { color: 0xc8743a, rough: 0.32, metal: 1 }), rl: mat('chrome', { color: 0x8a929e, rough: 0.3, metal: 1 }), gm: mat('gunmetal', { color: 0x4a505a, rough: 0.5, metal: 0.65 }), yl: mat('safety-yellow', { color: 0xf2b90a, rough: 0.55, metal: 0.3 }),
+  rd: mat('red-paint', { color: 0xc8201e, rough: 0.45, metal: 0.3 }), gn: mat('marble', { color: 0x2c5a4e, rough: 0.2, metal: 0.05 }), iv: mat('laminate', { color: 0xf0e8d4, rough: 0.35, metal: 0.15 }), st: mat('marble', { color: 0xe8e0cc, rough: 0.3, metal: 0.05 }), al: mat('flat', { color: 0xfff0d0, rough: 0.5, metal: 0, emissive: '#ffd9a0', ei: 1.5 }) });
 /** 絵や貼り紙などの印刷物 (発光しない)。fn(ctx, w, h) で描く */
 const PR = new Map();
 function printed(key, w, h, fn) { let m = PR.get(key); if (m) return m; const c = cv(w, h), x = c.getContext('2d'); fn(x, w, h); m = new THREE.MeshStandardMaterial({ map: ctex(c, true, false), roughness: 0.7, metalness: 0.05 }); m.userData.uvs = 0; PR.set(key, m); return m; }

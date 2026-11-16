@@ -1,0 +1,32 @@
+{
+ "id": "s16_obj_world",
+ "model": "gpt-image-2.5-sunburst",
+ "size": "2880x2880",
+ "quality": "medium",
+ "seconds": 33.3,
+ "usage": {
+  "input_tokens": 464,
+  "input_tokens_details": {
+   "image_tokens": 0,
+   "text_tokens": 464
+  },
+  "output_tokens": 1483,
+  "output_tokens_details": {
+   "image_tokens": 1483,
+   "text_tokens": 0
+  },
+  "total_tokens": 1947
+ },
+ "created": 1794749202,
+ "cells": [
+  "leaves",
+  "tree-bark",
+  "train-livery",
+  "clothing-fabric",
+  "weathered-paint",
+  "house-siding",
+  "boat-gelcoat",
+  "shipping-container",
+  "turbine-composite"
+ ]
+}

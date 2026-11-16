@@ -1,0 +1,16 @@
+{
+ "id": "s25_doors",
+ "group": "user",
+ "source": "ユーザーが別に生成した画像 (1254x1254)。シート 23〜27 の案に沿って 45 マスすべてを使う。",
+ "cells": [
+  {"name": "door-blast", "kind": "tile", "prompt": "Blast door", "mean": [191, 191, 194], "rough": 120, "sat": 1.0, "keep_hue": true, "normal": 3.0, "seam": ""},
+  {"name": "door-slide", "kind": "tile", "prompt": "Sliding (elevator) door", "mean": [191, 191, 194], "rough": 120, "sat": 1.0, "keep_hue": true, "normal": 3.0, "seam": ""},
+  {"name": "door-wood", "kind": "tile", "prompt": "Wooden panel door", "mean": [156, 139, 124], "rough": 137, "sat": 1.0, "keep_hue": true, "normal": 3.0, "seam": ""},
+  {"name": "door-hatch", "kind": "tile", "prompt": "Round vault hatch", "mean": [191, 191, 194], "rough": 120, "sat": 1.0, "keep_hue": true, "normal": 3.0, "seam": ""},
+  {"name": "door-glass", "kind": "tile", "prompt": "Glass door with frosted panes", "mean": [210, 214, 218], "rough": 120, "sat": 1.0, "keep_hue": true, "normal": 1.5, "seam": ""},
+  {"name": "light-panel", "kind": "image", "path": "effects/light-panel", "size": 512, "seam": "", "prompt": "Ceiling light panel"},
+  {"name": "lampshade", "kind": "tile", "prompt": "Lampshade linen fabric", "mean": [225, 225, 225], "rough": 245, "sat": 0.2, "norm": "linear", "contrast": 0.06, "normal": 1.0, "uvs": 2.0},
+  {"name": "truss", "kind": "tile", "prompt": "Steel truss framework", "mean": [139, 139, 141], "rough": 140, "sat": 0.2, "normal": 3.5, "uvs": 0.5},
+  {"name": "glass-smudge", "kind": "tile", "prompt": "Faint glass smudges", "mean": [235, 235, 235], "rough": 40, "sat": 0.0, "norm": "linear", "contrast": 0.04, "normal": 0.5, "seam": ""}
+ ]
+}

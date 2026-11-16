@@ -1,7 +1,7 @@
 // 画像ベースの PBR マテリアルと、文字・端末表示用のキャンバス
 import * as THREE from 'three';
 import { rng } from '../core/util.js';
-import { MATERIAL_UVS, imageTex, setImageAniso, texSet } from './materials.js';
+import { MATERIAL_UVS, imageTex, setImageAniso, texSet, hasImage } from './materials.js';
 export { imageTex, readyTextures, texSet } from './materials.js';
 
 export const JP = '"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Noto Sans CJK JP","Yu Gothic","Meiryo","IPAGothic",sans-serif';
@@ -29,9 +29,19 @@ export function mat(style, o = {}) {
   if (o.emissive != null) { m.emissive.set(o.emissive); m.emissiveIntensity = o.ei ?? 1; }
   if (o.transparent) { m.transparent = true; m.opacity = o.opacity ?? 0.5; m.depthWrite = false; }
   if (o.side) m.side = o.side;
+  if (o.emap) m.emissiveMap = imageTex(o.emap); // 発光マップ (窓の明かりなど)
   m.envMapIntensity = o.env ?? 1;
   m.userData.uvs = o.uvs ?? MATERIAL_UVS[style] ?? 0.25;
   MATS.set(key, m);
+  return m;
+}
+/** 発光マップ付きの単色。画像があるときだけ withImg の設定と発光マップを使い、無ければ従来の単色 */
+export const emissiveImg = (path, o, withImg = {}) => (hasImage(path) ? mat('flat', { ...o, ...withImg, emap: path }) : mat('flat', o));
+/** 画像付きの発光 (天井の照明パネルなど)。画像が無いときは glow() と同じ */
+export function glowMap(path, color, intensity = 3) {
+  if (!hasImage(path)) return glow(color, intensity);
+  const key = 'glowmap' + path + color + '_' + intensity; let m = MATS.get(key);
+  if (!m) { m = new THREE.MeshBasicMaterial({ map: imageTex(path), color: new THREE.Color(color).multiplyScalar(intensity), toneMapped: false }); m.userData.uvs = 0; MATS.set(key, m); }
   return m;
 }
 /** 自発光 (ブルーム対象)。HDR 強度 */

@@ -1,0 +1,32 @@
+{
+ "id": "s17_obj_gear",
+ "model": "gpt-image-2.5-sunburst",
+ "size": "2880x2880",
+ "quality": "medium",
+ "seconds": 30.3,
+ "usage": {
+  "input_tokens": 452,
+  "input_tokens_details": {
+   "image_tokens": 0,
+   "text_tokens": 452
+  },
+  "output_tokens": 1483,
+  "output_tokens_details": {
+   "image_tokens": 1483,
+   "text_tokens": 0
+  },
+  "total_tokens": 1935
+ },
+ "created": 1794749200,
+ "cells": [
+  "robot-shell",
+  "mli-blanket",
+  "ripstop-tent",
+  "marine-paint",
+  "prefab-panel",
+  "gun-finish",
+  "terminal-casing",
+  "olive-drab",
+  "quartz-countertop"
+ ]
+}

@@ -1,0 +1,16 @@
+{
+ "id": "s8_materials",
+ "group": "replace-rest",
+ "style": "Architectural and industrial finishes for space stations, lounges and labs.",
+ "cells": [
+  {"name": "deco", "kind": "tile", "prompt": "Art-deco brushed silver metal wall panel with a stepped fan / sunburst relief and fine vertical fluting.", "mean": [169, 165, 160], "rough": 58, "sat": 0.1, "normal": 3.5},
+  {"name": "terrazzo", "kind": "tile", "prompt": "Polished light terrazzo floor with small grey, beige and black stone chips.", "mean": [215, 207, 198], "rough": 50, "sat": 0.6, "normal": 1.2},
+  {"name": "tread", "kind": "tile", "prompt": "Dark rubber stair-tread floor with raised horizontal ribs.", "mean": [111, 111, 111], "rough": 199, "sat": 0.1, "normal": 3.5},
+  {"name": "brassdeco", "kind": "tile", "prompt": "Brushed brass plates joined by angled seams and small screws, art-deco style.", "mean": [186, 156, 99], "rough": 126, "sat": 1.0, "normal": 2.5},
+  {"name": "quilt", "kind": "tile", "prompt": "Grey diamond-quilted padded fabric with stitched seams.", "mean": [142, 142, 142], "rough": 193, "sat": 0.1, "normal": 3.5},
+  {"name": "titanium", "kind": "tile", "prompt": "Brushed titanium sheet with fine directional grain and faint heat tint.", "mean": [154, 153, 153], "rough": 76, "sat": 0.2, "normal": 1.5},
+  {"name": "verdigris", "kind": "tile", "prompt": "Aged copper with green-blue verdigris patina patches over warm copper.", "mean": [163, 151, 136], "rough": 127, "sat": 1.0, "normal": 2.5},
+  {"name": "stainless", "kind": "tile", "prompt": "Brushed stainless steel with fine horizontal brushing.", "mean": [183, 183, 185], "rough": 70, "sat": 0.1, "normal": 1.2},
+  {"name": "epoxy", "kind": "tile", "prompt": "Grey epoxy floor coating with fine white and black flecks.", "mean": [136, 136, 136], "rough": 138, "sat": 0.2, "normal": 1.2}
+ ]
+}

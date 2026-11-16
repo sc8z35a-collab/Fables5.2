@@ -26,6 +26,7 @@ python3 $S/scripts/texgen.py generate $S/sheets/s2_interior.json   # 1 枚生成
 python3 $S/scripts/texgen.py process --preview /tmp/check          # 切り分け → パック → texture-packs-ai.js
 ```
 
+- 自分で作った 3×3 の画像を使うときは `assets/textures/sheets/<id>.webp` に置いてシート JSON を書けば、`generate` は飛ばされて `process` で切り分けられる (大きさは自由)
 - `generate` は、そのシートの画像 (`.cache/<id>.png` か `assets/textures/sheets/<id>.webp`) があれば API を呼ばない。作り直すときは `--force`
 - `process` は画像のあるシートを毎回すべて作り直す (植物はシート 3 と 4 にまたがるため)
 - 生成後は `.cache/<id>.png` かプレビュー `<id>_check.jpg` (タイルは 2×2 に並べて継ぎ目を確認できる) を目で見て、マスがずれていないか・背景が指定どおりかを確かめてからコミットする
@@ -41,6 +42,7 @@ python3 $S/scripts/texgen.py process --preview /tmp/check          # 切り分�
 | `emissive` | 黒背景の発光パターン | `path` (ステーションの窓 = `effects/windows`) |
 | `cutout` + `role: side/top` | マゼンタ (#FF00FF) 背景を抜いてアルファ化し、植物アトラス (左=側面・右=真上, 1024×512) にする。`top` のマスが無い植物は、側面を回転配置 (`rosette`) か散布 (`scatter`) して真上の姿を作る | `vegetation/<plant>.webp` |
 | `cutout` + `role: leaf` | 葉の房 (室内の植木) | `path` (`vegetation/interior`) |
+| `image` | 1 枚の画像 (惑星の地図・雲・星雲・環・太陽・森の樹冠)。`seam` で継ぎ目処理の向き (`xy` / 経度方向だけの `x` / なし)、`ov` で重なり幅、`size` で解像度 | `path` (`celestial/earth` など) |
 
 ## シート定義 (`sheets/*.json`)
 
@@ -63,12 +65,32 @@ python3 $S/scripts/texgen.py process --preview /tmp/check          # 切り分�
 | `s5_terrain` | basalt, snow-crust, glacial-ice, sandstone, ripple-sand, regolith, moss-granite, wet-mud, gravel |
 | `s6_urban` | wet-asphalt, cracked-asphalt, board-concrete, granite-pavers, glazed-brick, zinc-roof, technical-canvas, walnut, medical-vinyl |
 | `s7_space` | lab, hazard, blasted-steel, welded-steel, armor, carbon-fiber, oxidized-hull, ablative, anodized-aluminum |
+| `s8_materials` | deco, terrazzo, tread, brassdeco, quilt, titanium, verdigris, stainless, epoxy |
+| `s9_materials` | rubber-chips, perforated, felt, polycarbonate, stucco, facade, corten, leather, ceramic-cloth |
+| `s10_mixed` | cork, porcelain, laminate, 地球の森の樹冠 (`environment/foliage`), メガトンの街明かり (`effects/city-lights`), 低木・とうもろこし・シダ・麦の真上の姿 |
+| `s11_space` | 惑星 (earth, desert, ice, lava, gas), 雲, 星雲, 環, 太陽 (`celestial/*`) |
+| `s12_obj_basic` 〜 `s17_obj_gear` | **物の質感 54 種** (新規)。白/黒の樹脂、塗装、金属、布、家具、機械、地球の乗り物・建物、ロボット、断熱材、テントなど。使っている場所は下の表 |
+| `s18_effects` 〜 `s22_ground` | ユーザーが別に生成した 1254×1254 の画像。使わないマスは `"skip": true` と理由 (`why`) を書いてある。`image` で `mean` を省くと明るさを変えない。発光マップは `emissiveImg(path, 単色の設定, 画像があるときの設定)` (`textures.js`) で付ける |
+| `s23_stations` 〜 `s27_farm` | ユーザーが別に生成した画像 (45 マスすべて使用)。扉・敷物・着陸パッドのように面に 1 枚の絵として貼るものは `"seam": ""` で継ぎ目処理をせず、コード側で元の UV (Builder の `uvs` = 0) のまま貼る |
+
+### 物の質感 (シート 12〜17) を使っている場所
+
+| 場所 | 素材 |
+|---|---|
+| `props.js` の共通材質 `MM()` | white-plastic (wh), black-plastic (bk), gold-leaf (gd), leaves (lf, lf2), tree-bark (tr) |
+| `props.js` の `flat(色, 粗さ, 金属度)` | 金属度 ≥ 0.8 → brushed-metal、粗さ ≤ 0.3 → gloss-paint、金属度 ≥ 0.3 → painted-metal、粗い布 → cotton-cloth、それ以外 → matte-plastic |
+| `props.js` の `crateM()` | plastic-crate |
+| `props.js` の家具・機械 | pool-felt, piano-lacquer, bed-linen, velvet (sofa), seat-fabric (seat), mahogany (barcounter), book-spines, terracotta (plant), stage-boards, locker-steel, server-rack (rack), vent-grille (vending), pipe-insulation (pipes), control-panel (console), reactor-shell, column-cladding (pillar), arcade-cabinet, polished-granite (monolith), machined-steel (workbench, toolcart), shipping-container (cargo), terminal-casing, olive-drab (weaponrack), quartz-countertop (kitchen) |
+| `props3/4/5.js` の `BM()` | brass, copper, chrome, gunmetal, safety-yellow, ivory-enamel, orange-paint, red-paint |
+| 地球 (`earth.js`、頂点色 × 質感の `vcMat`) | train-livery (モノレール), clothing-fabric (歩行者), weathered-paint (農場), house-siding (住宅), boat-gelcoat (船), marine-paint (灯台), turbine-composite (風車) |
+| その他 | robot-shell (救助ボット), mli-blanket・black-plastic (ステーションの艤装), ripstop-tent (救護テント), prefab-panel (地表基地の壁), leaves (オアシスの茂み), gold-leaf (ガス巨星の装飾), gun-finish (船内の銃) |
 
 ## 新しい素材を足すとき
 
-1. シート JSON に新しい `name` のマスを書いて `generate` → `process`
-2. `src/gfx/materials.js` の `MATERIAL_UVS` に 1m あたりの繰り返し数を足す
-3. 使う場所で `mat('<name>', { color, rough, metal })`
+1. シート JSON に新しい `name` のマスを書く。`uvs` (1m あたりの繰り返し数) も書くと `texture-packs-ai.js` の `AI_MATERIAL_UVS` 経由で `MATERIAL_UVS` に入る
+2. `generate` → `process`
+3. 使う場所で `mat('<name>', { color, rough, metal })`。頂点色のメッシュには `vcMat('<name>')` (`surfkit.js`)。色で塗り分ける素材は `mean` を明るい灰色 (228 前後)、粗さの平均 `rough` を高め (235 前後) にしておくと、`color` と `rough` の指定がほぼそのまま効く
+4. 画像がまだ無い素材は 1×1 の白で代用されるだけなので (単色の見た目)、先にコードを書いてもゲームは壊れない
 
 ## 確認
 

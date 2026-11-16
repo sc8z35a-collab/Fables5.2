@@ -1,6 +1,6 @@
 // ステーション外観の共通部品: 窓明かり付き外壁・ドッキングポート・航行灯・看板
 import * as THREE from 'three';
-import { glow, texSet, windowsTex, signMesh } from '../gfx/textures.js';
+import { mat, glow, texSet, windowsTex, signMesh } from '../gfx/textures.js';
 import { makeGlowSprite } from '../gfx/fx.js';
 
 export const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -16,7 +16,8 @@ export function winMat(color = 0xd4dae2, glowCol = 0xffffff, k = 2.4, uvs = 0.09
 /** ドッキングポート (襟 + 誘導灯)。dir は外向き単位ベクトル */
 export function port(b, D, p, dir, col = '#6ff') {
   const q = new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), dir), M = (g, off) => b.add(g[0], g[1], new THREE.Matrix4().compose(p.clone().addScaledVector(dir, off), q, V(1, 1, 1)), g[2]);
-  M([D, new THREE.CylinderGeometry(7, 9, 6, 24, 1, true)], -3); M([D, new THREE.CylinderGeometry(9.6, 9.6, 1.2, 24)], -5.5);
+  const C = mat('docking-collar', { color: 0xc8ccd2, rough: 0.6, metal: 0.6 }); // ドッキングポートの縁
+  M([C, new THREE.CylinderGeometry(7, 9, 6, 24, 1, true)], -3); M([C, new THREE.CylinderGeometry(9.6, 9.6, 1.2, 24)], -5.5);
   M([glow(col, 4), new THREE.TorusGeometry(7.4, 0.25, 6, 40).rotateX(Math.PI / 2), 0], 0.1);
   M([glow(col, 2), new THREE.TorusGeometry(5.2, 0.12, 6, 32).rotateX(Math.PI / 2), 0], -1.5);
   M([D, new THREE.CylinderGeometry(5, 5, 0.4, 24)], -4);

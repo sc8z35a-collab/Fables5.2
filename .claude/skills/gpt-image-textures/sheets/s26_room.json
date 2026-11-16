@@ -1,0 +1,16 @@
+{
+ "id": "s26_room",
+ "group": "user",
+ "source": "ユーザーが別に生成した画像 (1254x1254)。シート 23〜27 の案に沿って 45 マスすべてを使う。",
+ "cells": [
+  {"name": "rug-persian", "kind": "tile", "prompt": "Persian rug", "mean": [130, 110, 100], "rough": 230, "sat": 1.0, "keep_hue": true, "normal": 1.5, "seam": ""},
+  {"name": "rug-round", "kind": "tile", "prompt": "Round rug pattern", "mean": [130, 110, 100], "rough": 230, "sat": 1.0, "keep_hue": true, "normal": 1.5, "seam": ""},
+  {"name": "rug-runner", "kind": "tile", "prompt": "Hallway runner rug", "mean": [130, 110, 100], "rough": 230, "sat": 1.0, "keep_hue": true, "normal": 1.5, "seam": ""},
+  {"name": "casino-floor", "kind": "tile", "prompt": "Casino floor carpet pattern", "mean": [110, 70, 80], "rough": 230, "sat": 1.0, "keep_hue": true, "normal": 1.5, "uvs": 0.3},
+  {"name": "parquet", "kind": "tile", "prompt": "Parquet floor", "mean": [156, 139, 124], "rough": 137, "sat": 1.0, "keep_hue": true, "normal": 2.0, "uvs": 0.5},
+  {"name": "tatami", "kind": "tile", "prompt": "Tatami mats", "mean": [190, 180, 130], "rough": 200, "sat": 1.0, "keep_hue": true, "normal": 2.0, "uvs": 0.5},
+  {"name": "blanket", "kind": "tile", "prompt": "Knitted quilted blanket", "mean": [215, 215, 215], "rough": 245, "sat": 0.2, "norm": "linear", "contrast": 0.1, "normal": 2.5, "uvs": 1.5},
+  {"name": "cushion-damask", "kind": "tile", "prompt": "Damask cushion fabric", "mean": [200, 200, 200], "rough": 240, "sat": 0.6, "norm": "linear", "contrast": 0.14, "normal": 1.5, "uvs": 1.5},
+  {"name": "tablecloth", "kind": "tile", "prompt": "Gingham tablecloth", "mean": [200, 160, 160], "rough": 245, "sat": 1.0, "keep_hue": true, "normal": 1.0, "uvs": 1.0}
+ ]
+}

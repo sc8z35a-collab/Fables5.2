@@ -1,0 +1,32 @@
+{
+ "id": "s13_obj_metal",
+ "model": "gpt-image-2.5-sunburst",
+ "size": "2880x2880",
+ "quality": "medium",
+ "seconds": 29.4,
+ "usage": {
+  "input_tokens": 443,
+  "input_tokens_details": {
+   "image_tokens": 0,
+   "text_tokens": 443
+  },
+  "output_tokens": 1483,
+  "output_tokens_details": {
+   "image_tokens": 1483,
+   "text_tokens": 0
+  },
+  "total_tokens": 1926
+ },
+ "created": 1794749168,
+ "cells": [
+  "brass",
+  "copper",
+  "chrome",
+  "gunmetal",
+  "safety-yellow",
+  "ivory-enamel",
+  "orange-paint",
+  "red-paint",
+  "machined-steel"
+ ]
+}

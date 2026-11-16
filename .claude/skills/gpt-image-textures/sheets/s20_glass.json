@@ -1,0 +1,16 @@
+{
+ "id": "s20_glass",
+ "group": "user",
+ "source": "ユーザーが別に生成した画像 (1254x1254)。合う場所があるマスだけ使い、使わないマスは skip にしてある。",
+ "cells": [
+  {"name": "glass-grime", "kind": "tile", "prompt": "Dirty window glass with reflections", "skip": true, "why": "景色の写り込みが入っていて、繰り返すと不自然"},
+  {"name": "canopy", "kind": "tile", "prompt": "Spaceship canopy", "skip": true, "why": "景色の写り込みが入っている"},
+  {"name": "building-glass", "kind": "tile", "prompt": "Building glass", "skip": true, "why": "空の写り込みが入っている"},
+  {"name": "lit-windows", "kind": "image", "path": "effects/lit-windows", "size": 512, "prompt": "Lit office windows at night"},
+  {"name": "greenhouse", "kind": "image", "path": "effects/greenhouse", "size": 512, "prompt": "Greenhouse glass with jungle inside"},
+  {"name": "skylight", "kind": "tile", "prompt": "Skylight", "skip": true, "why": "内側から空を見た絵で、外から見る天窓に合わない"},
+  {"name": "light-panel", "kind": "tile", "prompt": "LED light panel", "skip": true, "why": "照明は光るだけの材質で描いている"},
+  {"name": "neon-wall", "kind": "tile", "prompt": "Neon-lit painted metal wall with pipes", "mean": [96, 60, 110], "rough": 150, "sat": 1.0, "normal": 2.0, "keep_hue": true, "uvs": 0.25},
+  {"name": "screen-frame", "kind": "tile", "prompt": "Screen frame and scanlines", "skip": true, "why": "画面は動く絵をプログラムで描いている"}
+ ]
+}

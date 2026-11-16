@@ -1,0 +1,16 @@
+{
+ "id": "s14_obj_furniture",
+ "group": "objects",
+ "style": "Close-up materials of furniture and home objects.",
+ "cells": [
+  {"name": "pool-felt", "kind": "tile", "prompt": "Billiard table baize felt, very fine woven wool, light neutral tone.", "mean": [228, 228, 228], "rough": 245, "sat": 0.1, "normal": 1.5, "uvs": 1.0, "norm": "linear", "contrast": 0.1},
+  {"name": "piano-lacquer", "kind": "tile", "prompt": "High-gloss piano lacquer with faint polish swirls and reflections of a softbox, neutral grey.", "mean": [228, 228, 228], "rough": 220, "sat": 0.1, "normal": 0.3, "uvs": 0.5, "norm": "linear", "contrast": 0.02},
+  {"name": "bed-linen", "kind": "tile", "prompt": "Crisp white bed linen with soft wrinkles and fine weave.", "mean": [228, 228, 228], "rough": 245, "sat": 0.1, "normal": 2.5, "uvs": 0.8, "norm": "linear", "contrast": 0.1},
+  {"name": "velvet", "kind": "tile", "prompt": "Crushed velvet upholstery with soft sheen variations, light neutral grey.", "mean": [228, 228, 228], "rough": 240, "sat": 0.1, "normal": 2.0, "uvs": 0.8, "norm": "linear", "contrast": 0.1},
+  {"name": "seat-fabric", "kind": "tile", "prompt": "Woven upholstery fabric for seats with a small herringbone pattern, light grey.", "mean": [228, 228, 228], "rough": 245, "sat": 0.1, "normal": 2.0, "uvs": 1.0, "norm": "linear", "contrast": 0.1},
+  {"name": "mahogany", "kind": "tile", "prompt": "Polished mahogany wood with deep reddish-brown flowing grain.", "mean": [150, 92, 66], "rough": 150, "sat": 1.0, "normal": 1.5, "uvs": 0.5, "norm": "linear", "contrast": 0.12},
+  {"name": "book-spines", "kind": "tile", "prompt": "Rows of book spines on a shelf seen straight-on: many books of different widths and heights, embossed bands, no readable text, light neutral tones.", "mean": [228, 228, 228], "rough": 235, "sat": 0.1, "normal": 2.5, "uvs": 0.8, "norm": "linear", "contrast": 0.1},
+  {"name": "terracotta", "kind": "tile", "prompt": "Unglazed terracotta clay pot surface with fine pores and slight mineral bloom.", "mean": [186, 112, 78], "rough": 235, "sat": 1.0, "normal": 2.0, "uvs": 1.0, "norm": "linear", "contrast": 0.12},
+  {"name": "stage-boards", "kind": "tile", "prompt": "Black painted stage floor boards with scuffs and tape marks, shown lit.", "mean": [228, 228, 228], "rough": 230, "sat": 0.1, "normal": 2.0, "uvs": 0.5, "norm": "linear", "contrast": 0.1}
+ ]
+}

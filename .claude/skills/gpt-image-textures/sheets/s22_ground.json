@@ -1,0 +1,16 @@
+{
+ "id": "s22_ground",
+ "group": "user",
+ "source": "ユーザーが別に生成した画像 (1254x1254)。合う場所があるマスだけ使い、使わないマスは skip にしてある。",
+ "cells": [
+  {"name": "crosswalk", "kind": "tile", "prompt": "Road markings and crosswalk", "skip": true, "why": "道路はシェーダーで描いている"},
+  {"name": "sidewalk", "kind": "tile", "prompt": "Sidewalk tiles", "skip": true, "why": "歩道はシェーダーで描いている"},
+  {"name": "park-path", "kind": "tile", "prompt": "Park lawn with path", "skip": true, "why": "小道が 1 本だけの絵で繰り返すと不自然"},
+  {"name": "cobble-fan", "kind": "tile", "prompt": "Fan-pattern cobblestone plaza", "mean": [140, 135, 128], "rough": 200, "sat": 0.8, "normal": 4.0, "uvs": 0.4},
+  {"name": "farmland", "kind": "tile", "prompt": "Farmland furrows", "skip": true, "why": "畑は地形のシェーダーで描いている"},
+  {"name": "meadow", "kind": "tile", "prompt": "Meadow grass", "skip": true, "why": "草地の質感はすでにある (grass)"},
+  {"name": "forest-floor", "kind": "tile", "prompt": "Jungle forest floor", "skip": true, "why": "地面は地形のシェーダーで描いている"},
+  {"name": "snow-roof", "kind": "tile", "prompt": "Snowy roof tiles", "skip": true, "why": "雪国の家は屋根だけ別の材質にできない作り"},
+  {"name": "ruin-carving", "kind": "tile", "prompt": "Ancient carved temple stone", "mean": [126, 122, 114], "rough": 225, "sat": 1.0, "normal": 4.0, "uvs": 0.12}
+ ]
+}

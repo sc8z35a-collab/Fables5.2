@@ -5,7 +5,8 @@
 //   ウェポン  : ステーションそのものが電磁投射砲 (小規模)。定期的に標的へ試射する
 import * as THREE from 'three';
 import { Builder, mx, rockGeo } from '../gfx/builder.js';
-import { mat, glow, cv, ctex } from '../gfx/textures.js';
+import { mat, glow, cv, ctex, imageTex } from '../gfx/textures.js';
+import { hasImage } from '../gfx/materials.js';
 import { makeGlowSprite, fxTime } from '../gfx/fx.js';
 import { G, rng, rr } from '../core/util.js';
 import { V, winMat, port, done, sign, sdBox } from './stationkit.js';
@@ -57,7 +58,7 @@ const beamMat = (c, k = 1) => new THREE.ShaderMaterial({ uniforms: { uCol: { val
   fragmentShader: 'uniform vec3 uCol;uniform float uTime;varying vec3 vN,vV;varying vec2 vUv;void main(){float a=pow(abs(dot(vN,vV)),1.5)*(1.-vUv.y)*(.75+.25*sin(vUv.y*40.-uTime*4.));gl_FragColor=vec4(uCol*a,1.);}' });
 
 function atlas() {
-  const U = 0.03, b = new Builder(), H = mat('hull', { color: 0xf2f3ef, rough: 0.55, metal: 0.25, uvs: U }), W = winMat(0xe6e8e4, 0xfff0d0, 2.6, U), A = mat('hull', { color: 0xff5412, rough: 0.55, metal: 0.2, uvs: U }), D = mat('hull', { color: 0x363b44, rough: 0.82, metal: 0.6, uvs: U });
+  const U = 0.03, b = new Builder(), H = mat('atlas-hull', { color: 0xf2f3ef, rough: 0.55, metal: 0.25, uvs: U }), W = winMat(0xe6e8e4, 0xfff0d0, 2.6, U), A = mat('hull', { color: 0xff5412, rough: 0.55, metal: 0.2, uvs: U }), D = mat('hull', { color: 0x363b44, rough: 0.82, metal: 0.6, uvs: U });
   const PL = mat('plate', { color: 0x6c727c, rough: 0.6, metal: 0.6, uvs: 0.05 }), GD = metal(0xd9b25a, 0.26), GX = glow('#35ff8a', 2.2), GO = glow('#ffb060', 3), GC = glow('#8fe8ff', 3), GWh = glow('#fff2d8', 3), lights = [], signs = [];
   // ── 発進甲板 (アトラスの「肩」): 縁に 15 基の係留クレードル ──
   b.cyl(W, 236, 236, 26, 0, 0, 0, 'y', 90); b.cyl(PL, 241, 241, 4, 0, 15, 0, 'y', 90); b.cyl(D, 241, 238, 4, 0, -15, 0, 'y', 90); b.cyl(A, 239.5, 239.5, 7, 0, 0, 0, 'y', 90, true);
@@ -143,6 +144,7 @@ function atlas() {
 // ───────────────────────── 7. メガトン (巨大軌道都市) ─────────────────────────
 /** 居住筒の窓の奥に見える街明かり */
 function cityGlass() {
+  if (hasImage('effects/city-lights')) { const t = imageTex('effects/city-lights', { fill: [0, 0, 0, 255] }); t.repeat.set(1, 8); return glassLit(t); }
   const s = 1024, c = cv(s), x = c.getContext('2d'), r = rng(909); x.fillStyle = '#000'; x.fillRect(0, 0, s, s);
   const den = (i, j) => 0.5 + 0.5 * Math.sin(i * 0.41 + 1.3) * Math.cos(j * 0.33 + 0.7) + 0.35 * Math.sin(i * 0.13 - j * 0.19);
   for (let i = 0; i < 64; i++) for (let j = 0; j < 64; j++) {
@@ -151,10 +153,14 @@ function cityGlass() {
   }
   x.globalAlpha = 0.55; for (let i = 0; i < 8; i++) { x.fillStyle = '#ffd9a0'; for (let k = 0; k < 128; k++) { x.fillRect(i * 128 + 62, k * 8 + 2, 3, 3); x.fillRect(k * 8 + 2, i * 128 + 62, 3, 3); } } x.globalAlpha = 1;
   const t = ctex(c, true); t.repeat.set(1, 8);
+  return glassLit(t);
+}
+function glassLit(t) {
   const m = new THREE.MeshStandardMaterial({ color: 0x0a1626, roughness: 0.07, metalness: 1, envMapIntensity: 2.2, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 2.6 }); m.userData.uvs = 0;
   return m;
 }
 function radiatorMat() {
+  if (hasImage('effects/radiator')) { const m = new THREE.MeshStandardMaterial({ color: 0x1a1210, roughness: 0.7, metalness: 0.5, emissiveMap: imageTex('effects/radiator'), emissive: 0xffffff, emissiveIntensity: 2.4 }); m.userData.uvs = 0; return m; }
   const c = cv(512, 64), x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 512, 0); g.addColorStop(0, '#ffb060'); g.addColorStop(0.25, '#ff5a1a'); g.addColorStop(0.65, '#8a1c08'); g.addColorStop(1, '#200604'); x.fillStyle = g; x.fillRect(0, 0, 512, 64);
   x.fillStyle = 'rgba(0,0,0,.75)'; for (let i = 0; i < 26; i++) x.fillRect(i * 20, 0, 3, 64); for (let j = 0; j < 4; j++) x.fillRect(0, j * 16, 512, 2);
   const m = new THREE.MeshStandardMaterial({ color: 0x1a1210, roughness: 0.7, metalness: 0.5, emissiveMap: ctex(c, true, false), emissive: 0xffffff, emissiveIntensity: 2.4 }); m.userData.uvs = 0; return m;
@@ -165,7 +171,7 @@ void main(){vec3 d=normalize(vP);float t=uTime*.1;float a=fbm3(d*3.+vec3(0.,t,t*
   vec3 col=mix(vec3(1.,.24,.03),vec3(1.,.85,.45),v)*(1.1+v*3.4)+vec3(1.,.55,.2)*fr*2.6;gl_FragColor=vec4(col,1.);}` });
 
 function megaton() {
-  const U = 0.014, b = new Builder(), r = rng(4242), H = mat('hull', { color: 0x9aa0a8, rough: 0.62, metal: 0.45, uvs: U }), D = mat('oxidized-hull', { color: 0x454a55, rough: 0.85, metal: 0.65, uvs: U }), W = winMat(0x7d838c, 0xffd9a0, 2.8, U), W2 = winMat(0xb4b8be, 0xcfe8ff, 2.4, U), WT = winMat(0x8a9098, 0xffd9a0, 2.8, 0.035), WT2 = winMat(0xaab0b8, 0xcfe8ff, 2.6, 0.035);
+  const U = 0.014, b = new Builder(), r = rng(4242), H = mat('megaton-hull', { color: 0xc0c6ce, rough: 0.62, metal: 0.45, uvs: U }), D = mat('oxidized-hull', { color: 0x454a55, rough: 0.85, metal: 0.65, uvs: U }), W = winMat(0x7d838c, 0xffd9a0, 2.8, U), W2 = winMat(0xb4b8be, 0xcfe8ff, 2.4, U), WT = winMat(0x8a9098, 0xffd9a0, 2.8, 0.035), WT2 = winMat(0xaab0b8, 0xcfe8ff, 2.6, 0.035);
   const BR = metal(0xc8a04a, 0.3), MIR = Object.assign(new THREE.MeshStandardMaterial({ color: 0xd6dfee, roughness: 0.05, metalness: 1, envMapIntensity: 2.4 }), { userData: { uvs: 0 } }), CG = cityGlass(), RDM = radiatorMat(), Y = glow('#ffd27a', 4), O = glow('#ff9a3a', 4);
   const L = 2200, R = 250, WIN = [0, 120, 240].map((d) => d * RAD), LAND = [60, 180, 300].map((d) => d * RAD), lights = [], signs = [];
   const er = (a) => V(Math.cos(a), Math.sin(a), 0), et = (a) => V(-Math.sin(a), Math.cos(a), 0), ez = V(0, 0, 1);
@@ -250,7 +256,7 @@ function megaton() {
 
 // ───────────────────────── 8. ファイザー (二重らせんの創薬研究ステーション) ─────────────────────────
 function fizer() {
-  const U = 0.04, b = new Builder(), H = mat('hull', { color: 0xf4f6f8, rough: 0.5, metal: 0.25, uvs: U }), W = winMat(0xeef1f4, 0xd8f0ff, 2.4, U), D = mat('hull', { color: 0x3c4250, rough: 0.8, metal: 0.6, uvs: U }), VI = mat('hull', { color: 0x9a6cf4, rough: 0.4, metal: 0.4, uvs: U }), S = mat('solar', { metal: 0.9, env: 1.6 });
+  const U = 0.04, b = new Builder(), H = mat('pfizer-hull', { color: 0xf4f6f8, rough: 0.5, metal: 0.25, uvs: U }), W = winMat(0xeef1f4, 0xd8f0ff, 2.4, U), D = mat('hull', { color: 0x3c4250, rough: 0.8, metal: 0.6, uvs: U }), VI = mat('hull', { color: 0x9a6cf4, rough: 0.4, metal: 0.4, uvs: U }), S = mat('solar', { metal: 0.9, env: 1.6 });
   const GDm = metal(0xd9b25a, 0.26), GV = glow('#b48cff', 3.4), GT = glow('#4dffd8', 2.6), lights = [], signs = [];
   const GLS = Object.assign(new THREE.MeshStandardMaterial({ color: 0x9fe0ff, roughness: 0.04, metalness: 0.2, transparent: true, opacity: 0.22, depthWrite: false, envMapIntensity: 2.2 }), { userData: { uvs: 0 } });
   const RH = 58, PITCH = 150, Y0 = -170, Y1 = 170, TURN = (Y1 - Y0) / PITCH * TAU, hp = (t, ph, rad = RH) => V(Math.cos(t * TURN + ph) * rad, Y0 + (Y1 - Y0) * t, Math.sin(t * TURN + ph) * rad);
@@ -306,7 +312,7 @@ function fizer() {
 
 // ───────────────────────── 9. ウェポン (電磁投射砲) ─────────────────────────
 function weapon() {
-  const U = 0.05, b = new Builder(), r = rng(1337), H = mat('welded-steel', { color: 0x4a505a, rough: 0.6, metal: 0.6, uvs: U }), D = mat('hull', { color: 0x1e2127, rough: 0.82, metal: 0.7, uvs: U }), Y = mat('hull', { color: 0xf2b90a, rough: 0.55, metal: 0.3, uvs: U }), W = winMat(0x40454e, 0xffd0a0, 2.2, U), RL = metal(0x8a929e, 0.34), CU = metal(0xc8743a, 0.32);
+  const U = 0.05, b = new Builder(), r = rng(1337), H = mat('weapon-hull', { color: 0x6a707a, rough: 0.6, metal: 0.6, uvs: U }), D = mat('hull', { color: 0x1e2127, rough: 0.82, metal: 0.7, uvs: U }), Y = mat('hull', { color: 0xf2b90a, rough: 0.55, metal: 0.3, uvs: U }), W = winMat(0x40454e, 0xffd0a0, 2.2, U), RL = metal(0x8a929e, 0.34), CU = metal(0xc8743a, 0.32);
   const GR = glow('#ff3a2a', 4), lights = [], signs = [];
   // ── 砲身: 2 本のレールと 9 基の加速環 ──
   const ZM = -300, ZB = -30, NRING = 9, PERIOD = 22, ringM = [];

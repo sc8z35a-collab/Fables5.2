@@ -105,7 +105,7 @@ export class SurfaceMode {
     const ship = cloneShared(this.myc); ship.position.set(s.x, y + 3.7, s.z); ship.rotation.y = s.yaw; near.add(ship);
     const sh = new THREE.Mesh(new THREE.PlaneGeometry(27, 37).rotateX(-Math.PI / 2), aoMat('blob')); sh.position.set(s.x, y + 0.04, s.z); sh.rotation.y = s.yaw; sh.renderOrder = 2; near.add(sh);
     // 救護テント・救援物資・投光器・規制線 (静的。材質ごとに 1 メッシュ)
-    const B = new Builder(), OR = mat('flat', { color: 0xff6a1e, rough: 0.8, metal: 0 }), WH = mat('flat', { color: 0xf0f2f0, rough: 0.8, metal: 0 }), DK = mat('hull', { color: 0x30353d, rough: 0.8, metal: 0.6 }), BL = mat('rib', { color: 0x2a6ab8, metal: 0.35, rough: 0.8 }), CR = mat('rib', { color: 0xf0f2f0, metal: 0.3, rough: 0.7 }), GX = glow('#35ff8a', 2), LW = glow('#fff2d8', 3.2);
+    const B = new Builder(), OR = mat('ripstop-tent', { color: 0xff6a1e, rough: 0.8, metal: 0 }), WH = mat('ripstop-tent', { color: 0xf0f2f0, rough: 0.8, metal: 0 }), DK = mat('hull', { color: 0x30353d, rough: 0.8, metal: 0.6 }), BL = mat('rib', { color: 0x2a6ab8, metal: 0.35, rough: 0.8 }), CR = mat('rib', { color: 0xf0f2f0, metal: 0.3, rough: 0.7 }), GX = glow('#35ff8a', 2), LW = glow('#fff2d8', 3.2);
     const P = (m, geo, lx, ly, lz, ry = 0, rx = 0) => { const [x, z] = W(lx, lz); B.add(m, geo, mx(x, y + ly, z, rx, s.yaw + ry, 0)); return [x, z]; };
     for (const sx of [-1, 1]) { // テント (両脇)
       const [tx, tz] = P(OR, new THREE.BoxGeometry(4.8, 2.5, 4.8), sx * 9.4, 1.25, 19); P(WH, new THREE.ConeGeometry(3.8, 1.6, 4), sx * 9.4, 3.3, 19, 0.785); P(DK, new THREE.BoxGeometry(1.7, 1.9, 0.06), sx * 9.4, 0.95, 16.585); P(LW, new THREE.BoxGeometry(1.5, 1.7, 0.04), sx * 9.4, 0.93, 16.555); // 明かりの漏れる入口

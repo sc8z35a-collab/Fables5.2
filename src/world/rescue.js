@@ -1,18 +1,18 @@
 // 救助船「ミケーネ」(アトラス救難基地所属・最大 15 機) と、それを操縦・運用する救難ボット
 import * as THREE from 'three';
 import { Builder, loft, slab, mirrorX, mx } from '../gfx/builder.js';
-import { mat, glow, cv, ctex, JP } from '../gfx/textures.js';
+import { mat, glow, cv, ctex, JP, emissiveImg } from '../gfx/textures.js';
 import { G } from '../core/util.js';
 
 const HP = Math.PI / 2, TAU = Math.PI * 2;
 let _M;
 const MM = () => _M || (_M = {
-  H: mat('hull', { color: 0xf4f5f1, rough: 0.5, metal: 0.25 }),      // 白い外板
+  H: mat('rescue-hull', { color: 0xf4f5f1, rough: 0.5, metal: 0.25 }),      // 白い外板
   A: mat('ablative', { color: 0xff5412, rough: 0.5, metal: 0.2 }),       // インターナショナル・オレンジ
   D: mat('hull', { color: 0x30353d, rough: 0.8, metal: 0.6 }),       // 機械部
   K: mat('rubber-chips', { color: 0x14171b, rough: 0.5, metal: 0.55 }),      // 黒い樹脂・ゴム
   C: mat('anodized-aluminum', { color: 0xd4d9df, rough: 0.14, metal: 1 }),        // 磨いた金属
-  W: mat('flat', { color: 0x241a10, rough: 0.2, metal: 0.3, emissive: '#ffcf90', ei: 1.5 }), // 室内灯のともる窓
+  W: emissiveImg('effects/lit-windows', { color: 0x241a10, rough: 0.2, metal: 0.3, emissive: '#ffcf90', ei: 1.5 }, { emissive: '#ffe8d0', ei: 2.4 }), // 室内灯のともる窓
   GL: Object.assign(new THREE.MeshStandardMaterial({ color: 0x06121f, roughness: 0.04, metalness: 1, envMapIntensity: 2.6 }), { userData: { uvs: 0 } }),
 });
 /** 機体に描かれた文字 (塗装)。発光しない */
@@ -140,7 +140,7 @@ export function cloneShared(group) { const g = new THREE.Group(); group.traverse
  * 戻り値の userData.tick(dt, t, yawToPlayer, dist) で頭・腕・目が動く
  */
 export function makeBot(o = {}) {
-  const m = MM(), sit = o.pose === 'sit', acc = o.accent || 0xff5412, eyeC = o.eye || '#6fe8ff', A = mat('flat', { color: acc, rough: 0.45, metal: 0.25 }), Wm = mat('flat', { color: o.body || 0xf2f3f0, rough: 0.4, metal: 0.2 });
+  const m = MM(), sit = o.pose === 'sit', acc = o.accent || 0xff5412, eyeC = o.eye || '#6fe8ff', A = mat('flat', { color: acc, rough: 0.45, metal: 0.25 }), Wm = mat('robot-shell', { color: o.body || 0xf2f3f0, rough: 0.4, metal: 0.2 });
   const g = new THREE.Group(), b = new Builder(), cap = (B, mt, r, l, x, y, z, rx = 0, rz = 0) => B.add(mt, new THREE.CapsuleGeometry(r, l, 4, 12), mx(x, y, z, rx, 0, rz), 0);
   const y0 = sit ? -0.4 : 0; // 上半身の高さ
   // 胴体

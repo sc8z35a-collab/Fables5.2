@@ -2,7 +2,7 @@
 //   本体の形は stations2.js。ここでは艤装・灯火群・行き交う小型船、それに試射に連動する演出を足す
 import * as THREE from 'three';
 import { Builder, mx, rockGeo } from '../gfx/builder.js';
-import { mat, glow } from '../gfx/textures.js';
+import { mat, glow, emissiveImg } from '../gfx/textures.js';
 import { makeGlowSprite, fxTime } from '../gfx/fx.js';
 import { G, rng, rr } from '../core/util.js';
 import { V, sign } from './stationkit.js';
@@ -32,7 +32,7 @@ export function detailFizerHelix(hb, c) {
 /** c: { H, D, VI, GDm, GV, GT, signs, NOISE, VS } */
 export function detailFizer(b, c) {
   const { H, D, VI, GDm, GV, GT } = c, m = kit({ H, D, uvs: 0.04 }), F = [], up = V(0, 1, 0), dn = V(0, -1, 0), CY = 262, CR = 42, CL = 76, BY = -222, BRR = 96, Y0 = -170, Y1 = 170;
-  const GRN = mat('flat', { color: 0x0c2a18, rough: 0.08, metal: 0.85, emissive: '#3aff8a', ei: 0.6 }), GWm = glow('#fff2d8', 2.6);
+  const GRN = emissiveImg('effects/greenhouse', { color: 0x0c2a18, rough: 0.08, metal: 0.85, emissive: '#3aff8a', ei: 0.6 }, { emissive: '#d8ffe0', ei: 0.95 }), GWm = glow('#fff2d8', 2.6);
   // ── 中心の培養管: 案内レール ──
   for (let k = 0; k < 3; k++) { const a = k * TAU / 3 + 0.5; b.cyl(D, 0.5, 0.5, Y1 - Y0 + 22, Math.cos(a) * 13.3, 0, Math.sin(a) * 13.3, 'y', 5); }
   // ── カプセル居住棟: 観測ドーム・連絡艇の桟橋・姿勢制御・継ぎ目・窓の灯 ──
@@ -87,7 +87,7 @@ export function detailFizer(b, c) {
 /** c: { H, D, Y, RL, CU, GR, RK, ZM, ZB, TZ, PERIOD, signs } */
 export function detailWeapon(b, c) {
   const { H, D, Y, RL, CU, GR, RK, ZM, TZ, PERIOD } = c, m = kit({ H, D, Y, uvs: 0.05 }), r = rng(3141), F = [], up = V(0, 1, 0);
-  const K = mat('flat', { color: 0x14171b, rough: 0.6, metal: 0.3 }), INS = mat('flat', { color: 0xe8e6e0, rough: 0.35, metal: 0.05 }), AR = mat('armor', { color: 0x596069, rough: 0.6, metal: 0.7, uvs: 0.07 }), GA = glow('#ffb060', 2);
+  const K = mat('black-plastic', { color: 0x14171b, rough: 0.6, metal: 0.3 }), INS = mat('mli-blanket', { color: 0xe8e6e0, rough: 0.35, metal: 0.05 }), AR = mat('armor', { color: 0x596069, rough: 0.6, metal: 0.7, uvs: 0.07 }), GA = glow('#ffb060', 2);
   // ── 砲身: 給電ケーブル・冷却管・ボルト列・加速環の機器・安定翼・支持トラス ──
   for (const sx of [-1, 1]) for (const sy of [-1, 1]) {
     const pts = []; for (let j = -2; j <= 16; j++) { const sag = j % 2 ? 1.5 : 0; pts.push(V(sx * (24.3 + sag * 0.6), sy * (23.3 + sag * 0.6), -48 - j * 15)); }
