@@ -34,7 +34,7 @@ export const remaining = () => { let n = 0; for (const e of ENEMIES) if (!G.p.do
 /** HUD 左上の目標表示 (宇宙・艦内・地表で共通)。ms = 優先して見せる任務 */
 export function objective(ms = G.p.missions[0]) {
   const n = G.p.missions.length;
-  return `<b>ヴォイド艦隊</b> 残存 ${remaining()}/20${ms ? `<br>任務：${ms.title} (${ms.prog}/${ms.need})${n > 1 ? `<small>　ほか ${n - 1} 件</small>` : ''}` : ''}${G.tip ? `<br>${G.tip}` : ''}`;
+  return `<b>ヴォイド艦隊</b> 残存 ${remaining()}/${ENEMIES.length}${ms ? `<br>任務：${ms.title} (${ms.prog}/${ms.need})${n > 1 ? `<small>　ほか ${n - 1} 件</small>` : ''}` : ''}${G.tip ? `<br>${G.tip}` : ''}`;
 }
 
 // ── 任務 ──

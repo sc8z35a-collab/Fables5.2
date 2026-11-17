@@ -1,0 +1,117 @@
+{
+ "id": "s86_en_engine",
+ "group": "enemy",
+ "source": "敵の小型戦艦 20 種類の追加用 90 枚 (シート 84〜93、ユーザーが別に生成した画像)。機関と推進",
+ "style": "Small hostile warships of the \"Void fleet\" in a stylised sci-fi space game: dark gunmetal, angular, worn, with glowing accent lights. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or real-world logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object or emblem, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "en-nozzle-inner",
+   "kind": "tile",
+   "prompt": "Looking into a rocket nozzle: glowing blue-white core with dark ribbed rings.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ],
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "en-reactor-vent",
+   "kind": "tile",
+   "prompt": "A round reactor vent with glowing orange slats behind a cage, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ],
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "en-ion-core",
+   "kind": "tile",
+   "prompt": "A glowing violet ion engine core in a circular housing, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ],
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "en-afterburner",
+   "kind": "tile",
+   "prompt": "An afterburner ring with glowing orange petals around a dark nozzle, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ],
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "en-scorched-metal",
+   "kind": "tile",
+   "prompt": "Heat-scorched engine metal with blue and purple temper colours and soot.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.5
+  },
+  {
+   "name": "en-thruster-grille",
+   "kind": "tile",
+   "prompt": "Dark steel thruster vent grille with angled slats.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.6
+  },
+  {
+   "name": "en-fuel-tank",
+   "kind": "tile",
+   "prompt": "Fuel tank surface: white painted curved steel with weld seams and warning stripe band.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.4
+  },
+  {
+   "name": "en-coolant-pipes",
+   "kind": "tile",
+   "prompt": "Bundle of blue coolant pipes with frost on steel clamps, side by side.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.5
+  },
+  {
+   "name": "en-radiator-fins",
+   "kind": "tile",
+   "prompt": "Dark heat radiator fins in parallel rows with faint red glow.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.5
+  }
+ ]
+}

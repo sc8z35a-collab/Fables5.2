@@ -1,0 +1,122 @@
+{
+ "id": "s88_en_bridge",
+ "group": "enemy",
+ "source": "敵の小型戦艦 20 種類の追加用 90 枚 (シート 84〜93、ユーザーが別に生成した画像)。敵艦橋。一覧画像 (3 列 x 9 段、1 マス約 413x140 の横長) から、横長のマスを正方形に引き伸ばして並べたシート。ゲームでは横長 (約 3:1) の面に貼ると元の比率に戻る。タイルのマスは一覧画像 b の正方形のマスを使った",
+ "style": "Small hostile warships of the \"Void fleet\" in a stylised sci-fi space game: dark gunmetal, angular, worn, with glowing accent lights. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or real-world logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object or emblem, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "en-tactical-display",
+   "kind": "tile",
+   "prompt": "A large tactical display screen: red enemy blips, violet range rings and a grid, no text.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "name": "en-captain-chair",
+   "kind": "tile",
+   "prompt": "A high-backed black and violet captain chair with armrest controls. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0,
+   "skip": true,
+   "why": "艦橋の風景ごとの絵で、物の面に貼れない"
+  },
+  {
+   "name": "en-helm-console",
+   "kind": "tile",
+   "prompt": "A helm console seen from the operator side: two control sticks, glowing buttons and small screens.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "name": "en-radar-scope",
+   "kind": "tile",
+   "prompt": "A round green radar scope with a sweeping line and dots, in a steel bezel.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "name": "en-weapon-panel",
+   "kind": "tile",
+   "prompt": "A weapon control panel: rows of red guarded switches, warning lights and a targeting screen.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "name": "en-star-chart",
+   "kind": "tile",
+   "prompt": "A star chart screen with routes between planets and glowing dots, no text.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "name": "en-bridge-window",
+   "kind": "tile",
+   "prompt": "View out of a warship bridge window: a battle in space with distant explosions and a blue planet.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ]
+  },
+  {
+   "name": "en-bridge-floor",
+   "kind": "tile",
+   "prompt": "Warship bridge floor: dark polished metal plates with thin violet light strips.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.4
+  },
+  {
+   "name": "en-bridge-wall",
+   "kind": "tile",
+   "prompt": "Warship bridge wall: dark padded panels with recessed screens and violet trim.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.4
+  }
+ ]
+}

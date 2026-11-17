@@ -1,0 +1,129 @@
+{
+ "id": "s83_mg_town_life2",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 36 枚 (シート 80〜83、ユーザーが別に生成した画像)。街の暮らし 2",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-street-mural",
+   "kind": "tile",
+   "prompt": "A big colourful wall mural of a space city, rockets and planets, painted by locals.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    0.93
+   ]
+  },
+  {
+   "name": "mg-flyer-board",
+   "kind": "tile",
+   "prompt": "A neighbourhood notice board covered with colourful flyers and photos, no readable text.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.02,
+    0.02,
+    0.98,
+    0.92
+   ]
+  },
+  {
+   "name": "mg-flower-pots",
+   "kind": "tile",
+   "prompt": "A row of flower pots on a doorstep: geraniums, morning glories and herbs, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "skip": true,
+   "why": "玄関の扉ごとの風景で、物の面に貼れない"
+  },
+  {
+   "name": "mg-ice-vending",
+   "kind": "tile",
+   "prompt": "An ice cream vending machine front with pictures of ice lollies and cones, no text.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.13,
+    0.03,
+    0.88,
+    0.98
+   ]
+  },
+  {
+   "name": "mg-news-rack",
+   "kind": "tile",
+   "prompt": "A newspaper and magazine rack front at a kiosk, no readable text.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.05,
+    0.0,
+    0.95,
+    0.99
+   ]
+  },
+  {
+   "name": "mg-umbrella-stand",
+   "kind": "tile",
+   "prompt": "An umbrella stand with three colourful umbrellas. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0,
+   "crop": [
+    0.18,
+    0.0,
+    0.85,
+    1.0
+   ]
+  },
+  {
+   "name": "mg-delivery-lockers",
+   "kind": "tile",
+   "prompt": "A wall of parcel delivery lockers with a small touch screen, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.01,
+    0.03,
+    0.99,
+    0.98
+   ]
+  },
+  {
+   "name": "mg-bonsai",
+   "kind": "tile",
+   "prompt": "A small pine bonsai in a shallow pot. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0,
+   "crop": [
+    0.04,
+    0.04,
+    0.98,
+    0.98
+   ]
+  },
+  {
+   "name": "mg-awning-blue",
+   "kind": "tile",
+   "prompt": "A blue and white striped canvas shop awning, close-up.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.8
+  }
+ ]
+}

@@ -66,7 +66,7 @@ export class UI {
     // 描画距離もタイトルで選べるようにする (README の「タイトル画面と MENU → 設定から変更できます」の通りに)
     const ds = el('button', 'cb alt', '描画距離：' + DIST[G.distName][0], menu);
     ds.onclick = () => { const k = Object.keys(DIST), nx = k[(k.indexOf(G.distName) + 1) % k.length]; G.setDist(nx); ds.textContent = '描画距離：' + DIST[nx][0]; SFX('ui'); };
-    el('div', 'hint', '機体を選んで出撃。9 つの宇宙ステーション、着陸できる 5 つの星、乗り込める敵艦 20 隻が待っている。<br>スマホは横向き全画面推奨（ホーム画面に追加すると完全な全画面で遊べます）', t);
+    el('div', 'hint', `機体を選んで出撃。9 つの宇宙ステーション、着陸できる 5 つの星、乗り込める敵艦 ${ENEMIES.length} 隻が待っている。<br>スマホは横向き全画面推奨（ホーム画面に追加すると完全な全画面で遊べます）`, t);
   }
 
   // ───────────────────────── ポーズ / 設定 ─────────────────────────
@@ -89,7 +89,7 @@ export class UI {
   }
   help() {
     this.open('遊び方', 'HOW TO PLAY', (b) => {
-      this.note(b, '<b>目的</b>：星系を荒らす <em>ヴォイド艦隊 20 隻</em> を撃沈または拿捕し、9 つのステーションと 5 つの星を巡って交易・任務・探索を楽しもう。アトラス救難基地では、救助船ミケーネを地球の都市へ出動させられる。');
+      this.note(b, `<b>目的</b>：星系を荒らす <em>ヴォイド艦隊 ${ENEMIES.length} 隻</em> を撃沈または拿捕し、9 つのステーションと 5 つの星を巡って交易・任務・探索を楽しもう。アトラス救難基地では、救助船ミケーネを地球の都市へ出動させられる。`);
       this.note(b, '<b>操縦</b>：左スティックで旋回、右端のスライダーで推力。<em>発射</em>・<em>ミサイル</em>（要ロック）・<em>ブースト</em>。⟲⟳ でロール。<br><b>超巡航</b>：惑星間の高速移動。<b>星図</b>で目的地を選び <em>自動航行</em> を押すと、到着まで自動で飛ぶ。');
       this.note(b, '<b>ドッキング</b>：ステーションに 3.5km まで近づき <em>ドッキング要請</em>。自動誘導で接続後、ステーション内を歩いて各施設を利用できる。<br><b>着陸</b>：惑星へ降下すると大気圏に突入。地表では <em>▲▼</em> で昇降し、平らな場所へゆっくり降りると接地する。パッドの近くでは <em>オートランド</em> で自動着陸できる。降りて歩ける。');
       this.note(b, '<b>敵艦への乗り込み</b>：船体を削ると <em>航行不能</em> になる。<em>接舷する</em> → <em>敵艦に突入</em> で艦内へ。警備ドローンを倒し、艦橋の制御コアを掌握すれば拿捕成功。');
@@ -226,7 +226,7 @@ export class UI {
   /** 賞金首リスト (バスティオン司令部) */
   bounty() {
     this.open('戦術司令部', 'ヴォイド艦隊 追跡リスト', (b) => {
-      this.note(b, `残存 <b>${remaining()} / 20</b> 隻。行を選ぶと航路を設定できる。全艦を無力化すれば星系は解放される。`);
+      this.note(b, `残存 <b>${remaining()} / ${ENEMIES.length}</b> 隻。行を選ぶと航路を設定できる。全艦を無力化すれば星系は解放される。`);
       for (const e of ENEMIES) { const d = G.p.done[e.id];
         const on = G.space.nav?.type === 'enemy' && G.space.nav.id === e.id; // いま航路を引いている敵は分かるように
         this.row(b, `<span class="${d ? 'dim' : ''}">${e.name}</span>`, `${body(e.body).name}宙域／脅威度 ${'★'.repeat(e.tier)}`, d ? (d === 'captured' ? '<span class="up">拿捕済</span>' : '<span class="dim">撃沈済</span>') : fmtCr(e.bounty), d ? [] : [{ label: on ? '航路設定中' : '航路設定', cls: on ? 'gold off' : '', fn: () => { G.space.setNav('enemy', e.id); this.close(); } }]); }
@@ -301,9 +301,9 @@ export class UI {
   }
   victory() {
     this.open('星系解放', 'MISSION COMPLETE', (b) => {
-      this.note(b, `ヴォイド艦隊 20 隻すべてを無力化した。星系に平和が戻った。<br>撃沈 <b>${G.p.stats.kills}</b>　拿捕 <b>${G.p.stats.captures}</b>　総収入 <b>${fmtCr(G.p.stats.earned)}</b>`);
+      this.note(b, `ヴォイド艦隊 ${ENEMIES.length} 隻すべてを無力化した。星系に平和が戻った。<br>撃沈 <b>${G.p.stats.kills}</b>　拿捕 <b>${G.p.stats.captures}</b>　総収入 <b>${fmtCr(G.p.stats.earned)}</b>`);
       this.note(b, '星海はまだ広い。交易も探索も、気の済むまで続けられる。防衛軍から特別報奨金 <em>50,000 Cr</em> が贈られた。');
-      this.row(b, '敵艦隊を再出現させて戦い続ける', '増援として 20 隻が再配置されます', null, [{ label: '再配置', cls: 'red', fn: () => { G.p.done = {}; for (const k of Object.keys(G.p.flags)) if (/^le\d/.test(k)) delete G.p.flags[k]; save(); location.reload(); } }]); // 増援の艦は新しい積荷を積んでいる (略奪済みの印も消す)
+      this.row(b, '敵艦隊を再出現させて戦い続ける', `増援として ${ENEMIES.length} 隻が再配置されます`, null, [{ label: '再配置', cls: 'red', fn: () => { G.p.done = {}; for (const k of Object.keys(G.p.flags)) if (/^le\d/.test(k)) delete G.p.flags[k]; save(); location.reload(); } }]); // 増援の艦は新しい積荷を積んでいる (略奪済みの印も消す)
     }, { small: true });
   }
 }

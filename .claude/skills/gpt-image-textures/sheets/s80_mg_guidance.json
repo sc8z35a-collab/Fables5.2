@@ -1,0 +1,121 @@
+{
+ "id": "s80_mg_guidance",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 36 枚 (シート 80〜83、ユーザーが別に生成した画像)。案内と安全",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-guide-lines",
+   "kind": "tile",
+   "prompt": "Grey floor with painted colour guide lines (red, blue, green) running side by side, from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "seam": "",
+   "flatten": 0
+  },
+  {
+   "name": "mg-tactile-tiles",
+   "kind": "tile",
+   "prompt": "Yellow tactile paving tiles with raised dots and bars, from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.8
+  },
+  {
+   "name": "mg-route-map",
+   "kind": "tile",
+   "prompt": "A transit route map: coloured lines with circles for stops on white, no text.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.01,
+    0.01,
+    0.99,
+    0.99
+   ]
+  },
+  {
+   "name": "mg-fire-door",
+   "kind": "tile",
+   "prompt": "A green steel fire door with a push bar and a small window, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.24,
+    0.12,
+    0.77,
+    0.985
+   ]
+  },
+  {
+   "name": "mg-fire-alarm",
+   "kind": "tile",
+   "prompt": "A red fire alarm panel with a round button and a bell, on a wall, front-on, no text.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.16,
+    0.12,
+    0.85,
+    0.88
+   ]
+  },
+  {
+   "name": "mg-post-box",
+   "kind": "tile",
+   "prompt": "A red Japanese street post box, front-on. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0,
+   "crop": [
+    0.28,
+    0.0,
+    0.73,
+    1.0
+   ]
+  },
+  {
+   "name": "mg-tree-grate",
+   "kind": "tile",
+   "prompt": "A cast iron tree grate around a small tree trunk, seen from directly above.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "skip": true,
+   "why": "幹が斜めに描かれていて、床に貼ると幹が寝て見える"
+  },
+  {
+   "name": "mg-drinking-fountain",
+   "kind": "tile",
+   "prompt": "A stainless public drinking fountain on a post. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0,
+   "crop": [
+    0.22,
+    0.04,
+    0.86,
+    0.98
+   ]
+  },
+  {
+   "name": "mg-elevator-hall",
+   "kind": "tile",
+   "prompt": "An elevator hall: two steel elevator doors with call buttons between them, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "skip": true,
+   "why": "床と天井ごとの風景で、物の面に貼れない (エレベーターは既存の mg-elevator がある)"
+  }
+ ]
+}

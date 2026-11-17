@@ -1,0 +1,134 @@
+{
+ "id": "s91_en_rooms",
+ "group": "enemy",
+ "source": "敵の小型戦艦 20 種類の追加用 90 枚 (シート 84〜93、ユーザーが別に生成した画像)。特殊な部屋。部屋を真上から見た絵。ゲームでは監視モニターの画面 (艦内の様子) と、作戦卓の天板に使う",
+ "style": "Small hostile warships of the \"Void fleet\" in a stylised sci-fi space game: dark gunmetal, angular, worn, with glowing accent lights. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or real-world logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object or emblem, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "en-ew-servers",
+   "kind": "tile",
+   "prompt": "An electronic warfare server room wall: racks with blinking violet lights and cables.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.01,
+    0.01,
+    0.99,
+    0.99
+   ]
+  },
+  {
+   "name": "en-sensor-room",
+   "kind": "tile",
+   "prompt": "A sensor operator station: curved screens with waveforms and a headset on the desk.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.01,
+    0.01,
+    0.99,
+    0.99
+   ]
+  },
+  {
+   "name": "en-drone-control",
+   "kind": "tile",
+   "prompt": "A drone control station: many small camera feed screens and a joystick desk.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.01,
+    0.01,
+    0.99,
+    0.99
+   ]
+  },
+  {
+   "name": "en-repair-shop",
+   "kind": "tile",
+   "prompt": "A repair workshop wall: hanging tools, spare engine parts and a welding robot arm.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.01,
+    0.01,
+    0.99,
+    0.99
+   ]
+  },
+  {
+   "name": "en-fuel-pumps",
+   "kind": "tile",
+   "prompt": "A fuel pump room: big valves, gauges and hoses on yellow pipes, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.01,
+    0.01,
+    0.99,
+    0.99
+   ]
+  },
+  {
+   "name": "en-shield-generator",
+   "kind": "tile",
+   "prompt": "A shield generator: a glowing violet sphere inside a ring frame with cables, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.01,
+    0.01,
+    0.99,
+    0.99
+   ]
+  },
+  {
+   "name": "en-holding-pods",
+   "kind": "tile",
+   "prompt": "A row of glass prisoner holding pods with blue light, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.01,
+    0.01,
+    0.99,
+    0.99
+   ]
+  },
+  {
+   "name": "en-boarding-pod",
+   "kind": "tile",
+   "prompt": "Inside a boarding pod: two rows of harness seats facing a round hatch, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.01,
+    0.01,
+    0.99,
+    0.99
+   ]
+  },
+  {
+   "name": "en-war-table",
+   "kind": "tile",
+   "prompt": "A command war table seen from directly above: a glowing holographic map of a planet and fleet markers.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.2,
+    0.24,
+    0.8,
+    0.78
+   ]
+  }
+ ]
+}
