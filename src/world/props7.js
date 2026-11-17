@@ -160,7 +160,7 @@ export const PROPS7 = {
   /** 屋台 (壁際に置く木の屋台の正面の絵 + 台) */
   yatai(P, o, e) { const w = o.w || 2.2; P.box(wood(0x8a6a40), w, 0.9, 0.7, 0, 0.45, 0.1); if (!face(P, 'mg-stall-front', w, 2.4, 0, 1.2, -0.25, { rough: 0.7 })) P.box(fab(o.c || 0xb8452e), w, 0.05, 0.9, 0, 2.3, 0.1, 0, 0.2); e.rect(w, 0.9, 0, 0.05); if (o.use) e.use(o.label || '屋台', o.use, 2.4, o); },
   /** 上面に 1 枚の絵を貼った台 (本の平台・氷の上の魚・焼き鳥の網)。o.glow で炭火を光らせる */
-  pictop(P, o, e) { const w = o.w || 1.4, d = o.d || 0.9, H = o.h || 0.8; P.box(o.metal ? MM().st : wood(o.c || 0x8a6a48), w, H, d, 0, H / 2, 0); if (!face(P, o.img, w - 0.08, d - 0.08, 0, H + 0.004, 0, { rx: -HP, glow: o.glow, rough: o.rough ?? 0.6, metal: o.metal ? 0.3 : 0.05 })) P.box(MM().wh, w - 0.08, 0.02, d - 0.08, 0, H + 0.01, 0); e.rect(w, d); if (o.use) e.use(o.label || '台', o.use, 2.2, o); },
+  pictop(P, o, e) { const w = o.w || 1.4, d = o.d || 0.9, H = o.h || 0.8; if (o.only) { face(P, o.img, w, d, 0, H + 0.004, 0, { rx: -HP, glow: o.glow, rough: o.rough ?? 0.6, metal: 0.3 }); return; } P.box(o.metal ? MM().st : wood(o.c || 0x8a6a48), w, H, d, 0, H / 2, 0); if (!face(P, o.img, w - 0.08, d - 0.08, 0, H + 0.004, 0, { rx: -HP, glow: o.glow, rough: o.rough ?? 0.6, metal: o.metal ? 0.3 : 0.05 })) P.box(MM().wh, w - 0.08, 0.02, d - 0.08, 0, H + 0.01, 0); e.rect(w, d); if (o.use) e.use(o.label || '台', o.use, 2.2, o); }, // o.only = 台は作らず絵だけ (ほかの台の上に重ねる)
   /** 壁の帯: 継ぎ目なしの絵 (太い配管・ケーブル・竹垣) を横に繰り返して壁に貼る。o.rep = 1m あたりの繰り返し */
   band(P, o, e) { const w = o.w || 3, h = o.h || 1, y = o.y ?? h / 2; face(P, o.img, w, h, 0, y, 0.012, { uv: [0, 0, Math.max(1, Math.round(w * (o.rep || 0.5))), o.vr || 1], glow: o.glow, rough: o.rough ?? 0.7, metal: o.metal ?? 0.2 }); },
   /** 背景を抜いた絵を立てる (買い物袋・リュック)。両面 */

@@ -1,0 +1,82 @@
+{
+ "id": "s96_rd_weapons",
+ "group": "raiden",
+ "source": "ライデン (重装ガンシップ) の船内改修用 54 枚 (シート 94〜99、画像はまだ無い)。名前はすべて rd-。設計図は docs/raiden-interior.md。兵装",
+ "style": "Interior of a heavy gunship spacecraft in a grounded, worn military style: dark gunmetal, red accent lights, scuffs and stencils. PICTURE cells: ONE item or wall section seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or logos. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "rd-armory-wall",
+   "kind": "tile",
+   "prompt": "Armory wall: dark reinforced plates with a cage mesh section and red warning stencils, front-on.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.2,
+   "uvs": 0.4
+  },
+  {
+   "name": "rd-rifle-rack",
+   "kind": "tile",
+   "prompt": "A wall rack of dark rifles locked with a red bar, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-ammo-crates",
+   "kind": "tile",
+   "prompt": "A stack of olive and grey ammunition crates with handles and stencilled marks (no text), front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-gun-sight",
+   "kind": "tile",
+   "prompt": "A gun turret targeting screen: red crosshair over a dark starfield with a target box and range bars, glowing.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-turret-controls",
+   "kind": "tile",
+   "prompt": "Turret control grips and a small panel with toggle switches, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-shell-feed",
+   "kind": "tile",
+   "prompt": "A cannon shell feed mechanism: a chain of large brass shells in a steel guide, side view.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-armor-locker",
+   "kind": "tile",
+   "prompt": "An open locker with body armor, a helmet with red visor and boots, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-target-screen",
+   "kind": "tile",
+   "prompt": "A dark screen with red radar sweep and enemy ship silhouettes in boxes, glowing.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-gunnery-floor",
+   "kind": "tile",
+   "prompt": "Gunnery room floor: dark steel with spent brass casings scattered and scratches, from above.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.2,
+   "uvs": 0.4
+  }
+ ]
+}

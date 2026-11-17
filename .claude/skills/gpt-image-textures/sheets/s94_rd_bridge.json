@@ -1,0 +1,84 @@
+{
+ "id": "s94_rd_bridge",
+ "group": "raiden",
+ "source": "ライデン (重装ガンシップ) の船内改修用 54 枚 (シート 94〜99、画像はまだ無い)。名前はすべて rd-。設計図は docs/raiden-interior.md。艦橋とキャノピー",
+ "style": "Interior of a heavy gunship spacecraft in a grounded, worn military style: dark gunmetal, red accent lights, scuffs and stencils. PICTURE cells: ONE item or wall section seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or logos. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "rd-bridge-floor",
+   "kind": "tile",
+   "prompt": "Warship bridge floor: dark gunmetal deck plates with fine anti-slip dots and thin red inlaid light lines, from above.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.2,
+   "uvs": 0.4
+  },
+  {
+   "name": "rd-bridge-wall",
+   "kind": "tile",
+   "prompt": "Warship bridge wall: dark padded acoustic panels between gunmetal ribs, a thin red light strip at waist height.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.2,
+   "uvs": 0.4
+  },
+  {
+   "name": "rd-ceiling-bridge",
+   "kind": "tile",
+   "prompt": "Warship bridge ceiling seen from below: dark panels with recessed spot lights and cable conduits.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.2,
+   "uvs": 0.4
+  },
+  {
+   "name": "rd-canopy-frame",
+   "kind": "tile",
+   "prompt": "Cockpit canopy frame surround: thick dark metal struts with rubber seals and small bolts, front-on.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.2,
+   "uvs": 0.6
+  },
+  {
+   "name": "rd-pilot-console",
+   "kind": "tile",
+   "prompt": "A wide pilot flight console seen front-on: two throttles, a yoke, glowing red and amber gauges, small screens with abstract lines.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-gunner-console",
+   "kind": "tile",
+   "prompt": "A weapons officer console: a targeting screen with a red reticle, rows of guarded red switches, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-tactical-table",
+   "kind": "tile",
+   "prompt": "A tactical table top seen from directly above: glowing red hologram of a planet, ships as triangles and range rings.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-warning-panel",
+   "kind": "tile",
+   "prompt": "A small wall warning panel with a red flashing light, a yellow-black striped frame and a big push button, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-hud-glass",
+   "kind": "tile",
+   "prompt": "A transparent head-up display glass panel with red reticle lines and abstract symbols, on dark background, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  }
+ ]
+}

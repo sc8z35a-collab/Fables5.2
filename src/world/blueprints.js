@@ -128,23 +128,78 @@ const hayate = () => ({
   doors: [['cockpit', 'cabin', 2.5, 1.5, 2.15], ['cabin', 'bay', 2.5, 1.5, 2.15]],
 });
 
+// ライデン (重装ガンシップ) の船内。広さは以前と同じ範囲 (x -4〜13, z 0〜37、北 = 機首)。設計図は docs/raiden-interior.md
+// 部屋は 1 つずつ手で置いた: 機首のキャノピーと一段下がった艦橋、右舷の通信室は艦橋の横扉から、左舷の砲塔は梯子のある前室から入る。
+// 中央通路は途中で東へ広がり、狭い洗面所や物置は角に押し込んだ。炉は機関室の右舷に別の区画として張り出す
+const RM = (n, fb, c, r = 0.7, me = 0.4) => (hasImage('materials/' + n) ? [n, 0xffffff, r, me] : [fb, c, r, me]); // rd- の画像が無いあいだは代わりの素材
 const raiden = () => ({
-  name: 'ライデン 船内', sub: '重装ガンシップ', seed: 62, spawn: [4.5, 6.6, 0], view: [0, -1], music: 'interior',
-  theme: { wall: ['bulk', 0x565c64, 0.75, 0.6], floor: ['grate', 0x8a8f96, 0.6, 0.7], ceil: ['rib', 0x34383e], trim: '#ff3b2a', lamp: '#ffc8b0', frame: 0x16181c, door: 0x4a2a2a, amb: [0xff8060, 0x18181c, 0.5], gloss: 0.35, door3: 'hatch', trims: 'low', lamps: 'tube' },
+  name: 'ライデン 船内', sub: '重装ガンシップ', seed: 62, spawn: [4.6, 6.4, 0], view: [0, -1], music: 'interior',
+  theme: { wall: RM('rd-corridor-wall', 'bulk', 0x565c64, 0.75, 0.6), floor: RM('rd-corridor-floor', 'grate', 0x8a8f96, 0.6, 0.7), ceil: RM('rd-corridor-ceil', 'rib', 0x34383e), trim: '#ff3b2a', lamp: '#ffc8b0', frame: 0x16181c, door: 0x4a2a2a, amb: [0xff8060, 0x18181c, 0.5], gloss: 0.35, door3: 'hatch', trims: 'low', lamps: 'tube' },
   rooms: [
-    { id: 'bridge', name: '艦橋', x: 0, z: 0, w: 9, d: 8, h: 3.2, floor: ['ship-floor', 0x8a8e96, 0.45, 0.7], win: [['n', 1, 8, 1.1, 2.75], ['w', 1, 5, 1.3, 2.6], ['e', 1, 5, 1.3, 2.6]], plat: [[3, 3.4, 3, 2.4, 0.35, 's', 0.6]],
-      props: [['seat', 4.5, 4.4, 2, { use: 'pilot', label: '操縦席に座る', c: 0x3a1414, y0: 0.35 }], ['console', 4.5, 1.0, 0, { kind: 'radar' }], ['console', 1.3, 3.2, 1, { tall: 1, kind: 'graph' }], ['console', 7.7, 3.2, 3, { tall: 1, kind: 'bars' }], ['seat', 2.4, 3.2, 3], ['seat', 6.6, 3.2, 1], T('星図', 'map', 7.9, 7, 3, { kind: 'orbit' })] },
-    { id: 'hall', name: '中央通路', x: 3, z: 8, w: 3, d: 10, h: 3.1, ceil3: 'vault', deco: ['cables'], props: [['pipes', 2.7, 7.8, 3]] },
-    { id: 'arm', name: '兵装庫', x: -4, z: 9, w: 7, d: 7, h: 2.9,
-      props: [['weaponrack', 3.5, 0.25, 0], ['weaponrack', 0.25, 3.5, 1], ['locker', 3.5, 6.5, 2, { n: 4 }], ['crate', 1.6, 5.2, 0, { n: 2 }], T('弾薬補給', 'ammo', 5.6, 1.4, 3)] },
-    { id: 'crew', name: '兵員室', x: 6, z: 9, w: 7, d: 7, h: 2.9, lamp: '#ffe0c8', floor: ['ship-floor', 0x8a8e96, 0.5, 0.6], wall: ['padded-wall', 0xc8c8c8, 0.8, 0.1],
-      props: [['bunk', 5.9, 1.6, 0], ['bunk', 5.9, 5.2, 0, { use: false }], ['locker', 2.5, 0.5, 0, { n: 3 }], ['table', 2.6, 4.6, 0, { n: 3 }], ['poster', 3, 6.75, 2, { text: '雷電', c: '#ff3b2a', h: 0.7, y: 1.8 }]] },
-    { id: 'eng', name: '機関室', x: -2, z: 18, w: 13, d: 10, h: 6.5, deco: ['ibeam', 'cables'], plat: [[8.6, 0.4, 4, 2.6, 0.9, 's', 0.5]],
-      props: [['reactor', 6.5, 5.6, 0, { c: '#ff9a3a' }], ['console', 10.6, 1.3, 0, { kind: 'graph', y0: 0.9 }], ['console', 2.4, 1.2, 0, { tall: 1, kind: 'bars' }], ['rack', 1, 6, 1, { n: 2 }], ['rack', 12, 6, 3, { n: 2 }], ['pipes', 0.4, 8.6, 1], ['pipes', 12.6, 8.6, 3], T('船体状況', 'status', 2.4, 9, 1, { kind: 'graph' })] },
-    { id: 'cargo', name: '貨物室', x: -2, z: 28, w: 13, d: 9, h: 4.5, floor: ['plate', 0x6a6e76, 0.5, 0.7], wall: ['cargo-net', 0xc8c8c8, 0.8, 0.4],
-      props: [['cargo', 2, 4, 0, { c: 0x4a5a3a }], ['crate', 10.5, 2.4, 0, { n: 5 }], ['barrel', 10, 6.5, 0], ['toolcart', 6, 2, 0.2], ['exit', 6.5, 8.8, 2, { label: 'エアロックから出る', w: 2.6 }]] },
+    // 機首のキャノピー: 操縦席は中心線より左、右に副操縦の小卓。三方が窓
+    { id: 'canopy', name: 'キャノピー', x: 2.2, z: 0, w: 4, d: 2.2, h: 2.7, floor: RM('rd-bridge-floor', 'ship-floor', 0x8a8e96, 0.45, 0.7), wall: RM('rd-canopy-frame', 'bulk', 0x3a3e46, 0.5, 0.7), ceil: RM('rd-ceiling-bridge', 'rib', 0x2c3036), lamps: 'spot', trims: 'low',
+      win: [['n', 0.3, 3.7, 0.85, 2.4], ['w', 0.3, 1.9, 1.0, 2.3], ['e', 0.3, 1.9, 1.0, 2.3]],
+      props: [['console', 1.5, 0.45, 0, { kind: 'radar' }], ['seat', 1.5, 1.35, 2, { use: 'pilot', label: '操縦席に座る', c: 0x3a1414 }], ['console', 3.25, 0.5, 0, { kind: 'bars', c: '#ff3b2a' }], ['picwall', 1.5, 0.08, 0, { img: 'rd-pilot-console', w: 1.6, h: 0.36, y: 0.5, glow: 0.6 }], ['picwall', 1.5, 0.3, 0, { img: 'rd-hud-glass', w: 0.8, h: 0.45, y: 1.5, glow: 0.9 }]] }, // 操縦席の前にヘッドアップディスプレイ
+    // 艦橋: 右舷に兵装士官の壇、左舷に航法席、後ろ寄りに戦術台。南西の扉から前室へ、東の扉から通信室へ
+    { id: 'bridge', name: '艦橋', x: 0, z: 2.2, w: 9, d: 5.2, h: 3.4, floor: RM('rd-bridge-floor', 'ship-floor', 0x8a8e96, 0.45, 0.7), wall: RM('rd-bridge-wall', 'bulk', 0x4a4f58, 0.6, 0.6), ceil: RM('rd-ceiling-bridge', 'rib', 0x2c3036), lamps: 'spot', trims: 'both',
+      win: [['w', 0.4, 2.4, 1.2, 2.7]], plat: [[5.7, 0.35, 3.0, 2.2, 0.4, 'w', 0.8]],
+      props: [['seat', 7.2, 1.55, 2, { c: 0x3a1414, y0: 0.4 }], ['console', 7.2, 0.7, 0, { kind: 'bars', c: '#ff3b2a', y0: 0.4 }], ['picwall', 8.8, 1.4, 3, { img: 'rd-gunner-console', w: 1.3, h: 0.85, y: 2.15, glow: 0.6 }],
+        ['console', 0.75, 2.4, 1, { tall: 1, kind: 'radar' }], ['seat', 1.75, 2.4, 3, { c: 0x22262c }], T('星図', 'map', 0.3, 4.3, 1, { kind: 'orbit' }),
+        ['holotable', 6.3, 3.7, 0, { r: 0.8, c: '#ff3b2a' }], ['pictop', 6.3, 3.7, 0, { img: 'rd-tactical-table', w: 1.1, d: 1.1, h: 1.0, glow: 0.7, only: 1 }],
+        ['picwall', 4.6, 5.0, 2, { img: 'rd-warning-panel', w: 0.8, h: 0.6, y: 1.8, glow: 0.5 }], ['locker', 7.9, 4.95, 2, { n: 2 }]] },
+    // 通信・電子戦室: 艦橋の東の扉から。細長く、東の壁に機器と小さな丸窓
+    { id: 'ecm', name: '通信・電子戦室', x: 9, z: 3, w: 3.4, d: 6.2, h: 2.7, lamp: '#ffd0b8', lamps: 'spot', win: [['e', 0.7, 1.7, 1.3, 2.0]],
+      props: [['rack', 3.05, 4.9, 3, { n: 1 }], ['console', 2.95, 3.0, 3, { kind: 'data', c: '#ff3b2a' }], ['seat', 2.05, 3.0, 1, { c: 0x22262c }], ['picwall', 3.2, 0.6, 3, { img: 'rd-target-screen', w: 0.9, h: 0.6, y: 1.9, glow: 0.8 }], ['picwall', 1.7, 6.0, 2, { img: 'rd-warning-panel', w: 0.7, h: 0.5, y: 1.8, glow: 0.5 }]] },
+    // 前室: 艦橋の南西。背面上部の砲塔へ上る梯子、宇宙服のロッカー
+    { id: 'vest', name: '前室', x: -1, z: 7.4, w: 4.6, d: 2.8, h: 3.6, ceil3: 'flat',
+      props: [['ladder', 4.4, 1.0, 3], ['picwall', 4.4, 2.2, 3, { img: 'rd-ready-board', w: 0.9, h: 0.8, y: 1.6 }], ['locker', 0.7, 0.3, 0, { n: 1 }], ['floorpic', 1.0, 2.0, 0, { img: 'rd-hatch-floor', w: 0.9, d: 0.9, metal: 0.5 }]] },
+    // 砲塔管制室: 前室の西。細長い部屋の奥に照準器、壁際に弾の送り込み装置
+    { id: 'gun', name: '砲塔管制室', x: -3.6, z: 6, w: 2.6, d: 5.5, h: 2.6, wall: RM('rd-armory-wall', 'bulk', 0x50545c, 0.7, 0.6), floor: RM('rd-gunnery-floor', 'grate', 0x7a7e86, 0.6, 0.7), lamp: '#ff9a80', lamps: 'spot',
+      props: [['console', 1.3, 0.5, 0, { kind: 'radar', c: '#ff3b2a' }], ['seat', 1.3, 1.45, 2, { c: 0x3a1414 }], ['picwall', 1.3, 0.2, 0, { img: 'rd-gun-sight', w: 1.4, h: 0.8, y: 1.9, glow: 1.0 }],
+        ['picfurn', 0.4, 4.3, 1, { img: 'rd-shell-feed', w: 1.2, h: 1.8, d: 0.6, metal: 1 }], ['picwall', 1.3, 5.3, 2, { img: 'rd-turret-controls', w: 0.9, h: 0.9, y: 1.5, glow: 0.5 }], ['picwall', 0.2, 2.6, 1, { img: 'rd-target-screen', w: 1.0, h: 0.6, y: 1.8, glow: 0.7 }]] },
+    // 中央通路 (前): 幅 2.4m の細い通路
+    { id: 'spineA', name: '中央通路', x: 1.2, z: 10.2, w: 2.4, d: 5.8, h: 2.8, ceil3: 'vault', deco: ['cables'],
+      props: [['band', 2.2, 4.2, 3, { img: 'rd-pipe-wall', w: 2.4, h: 0.9, y: 2.1, rep: 0.5 }], ['firstaid', 0.2, 5.0, 1]] },
+    // 兵装庫: 通路の西。北と西の壁に銃架、南の壁際に弾薬箱と防弾服のロッカー
+    { id: 'arm', name: '兵装庫', x: -3, z: 11.5, w: 4.2, d: 5.5, h: 2.7, wall: RM('rd-armory-wall', 'bulk', 0x50545c, 0.7, 0.6),
+      props: [['weaponrack', 1.9, 0.25, 0], ['weaponrack', 0.25, 3.2, 1], ['picwall', 3.75, 0.2, 0, { img: 'rd-rifle-rack', w: 0.8, h: 1.1, y: 1.5 }], ['picfurn', 1.3, 5.05, 2, { img: 'rd-ammo-crates', w: 1.4, h: 0.9, d: 0.8, metal: 1 }],
+        ['picfurn', 2.8, 5.2, 2, { img: 'rd-armor-locker', w: 0.9, h: 1.9, d: 0.5, metal: 1 }], T('弾薬補給', 'ammo', 3.9, 4.4, 3)] },
+    // 兵員室: 天井の低い寝室。二段ベッドは南の壁に沿って横向き
+    { id: 'crew', name: '兵員室', x: 3.6, z: 10.2, w: 5.8, d: 4.4, h: 2.5, lamp: '#ffe0c8', lamps: 'pendant', floor: ['ship-floor', 0x8a8e96, 0.5, 0.6], wall: RM('rd-crew-wall', 'padded-wall', 0xc8c8c8, 0.8, 0.1),
+      props: [['bunk', 2.4, 3.6, 1, { fab: 'rd-bunk-blanket' }], ['bunk', 4.5, 3.6, 1, { use: false, fab: 'rd-bunk-blanket' }], ['picfurn', 3.0, 0.3, 0, { img: 'rd-crew-locker', w: 1.8, h: 1.9, d: 0.5, metal: 1 }], ['picwall', 1.1, 0.2, 0, { img: 'rd-patch-board', w: 0.8, h: 0.8, y: 1.6 }],
+        ['poster', 4.9, 0.2, 0, { text: '雷電', c: '#ff3b2a', h: 0.5, y: 1.8 }], ['picwall', 0.2, 3.3, 1, { img: 'rd-crew-photo', w: 0.7, h: 0.5, y: 1.5, frame: 1 }]] },
+    // 洗面所: 兵員室の奥 (東)
+    { id: 'head', name: '洗面所', x: 9.4, z: 10.2, w: 3, d: 3.2, h: 2.4, wall: RM('mg-wall-bath', 'porcelain', 0xd8e8f0, 0.3, 0.1), floor: RM('mg-floor-bath', 'porcelain', 0xe0e6ea, 0.3, 0.1), lamps: 'spot', lamp: '#f4f8ff',
+      props: [['washbasin', 1.3, 0.25, 0], ['shower', 2.45, 0.55, 0, { curtain: 1 }], ['toilet', 2.65, 2.6, 3]] },
+    // 医務室: 広がった通路の西
+    { id: 'med', name: '医務室', x: -2.2, z: 17, w: 3.4, d: 4.4, h: 3.0, wall: RM('rd-medbay-wall', 'padded-wall', 0xd8dde2, 0.6, 0.1), floor: ['ship-floor', 0xa8acb2, 0.4, 0.5], lamp: '#f0fff8',
+      props: [['medpod', 1.5, 3.1, 0], ['firstaid', 1.7, 0.2, 0], ['tank', 0.55, 0.9, 0, { c: '#6dffb0' }], ['picfurn', 0.4, 2.0, 1, { img: 'rd-med-scanner', w: 1.0, h: 1.8, d: 0.6, metal: 1, glow: 0.4 }]] },
+    // 中央通路 (後): 東へ 1.4m 広がり、壁際にベンチ。医務室・物置・食堂・機関室へ
+    { id: 'spineB', name: '中央通路 (後部)', x: 1.2, z: 16, w: 3.8, d: 7.4, h: 3.2, ceil3: 'vault', deco: ['cables'],
+      props: [['bench', 3.45, 1.4, 3, { c: 0x4a2a2a }], ['band', 0.2, 4.6, 1, { img: 'rd-power-conduit', w: 2.2, h: 0.8, y: 2.3, rep: 0.5 }], ['floorpic', 2.2, 6.6, 0, { img: 'rd-deck-marking', w: 1.4, d: 1.0, metal: 0.4 }], ['exitsign', 3.6, 7.2, 2]] },
+    // 食堂: 通路から大きく開いた部屋。北の壁に厨房、真ん中に長机
+    { id: 'mess', name: '食堂', x: 5, z: 15, w: 6.8, d: 6, h: 2.9, lamp: '#ffe0c8', lamps: 'pendant', wall: RM('rd-crew-wall', 'padded-wall', 0xc8c8c8, 0.8, 0.1),
+      props: [['kitchen', 4.6, 0.4, 0, { w: 3.0 }], ['picwall', 4.6, 0.2, 0, { img: 'rd-galley', w: 3.0, h: 0.9, y: 2.0 }], ['tablelong', 3.6, 3.4, 0, { w: 3.0, bare: 1, topImg: 'rd-mess-table' }], ['vending', 6.45, 1.9, 3]] },
+    // 物置: 通路の南西の角。予備の箱と非常用ロッカー
+    { id: 'store', name: '物置', x: -1.4, z: 21.4, w: 2.6, d: 2, h: 2.3,
+      props: [['boxes', 0.45, 0.95, 1, { n: 2 }], ['picfurn', 1.6, 0.25, 0, { img: 'rd-emergency-locker', w: 0.8, h: 1.6, d: 0.4, metal: 1 }]] },
+    // 機関室: 左舷に 2 基のタービン、北東の角に計器の壇。東は炉の区画へ大きく開く
+    { id: 'eng', name: '機関室', x: -3.6, z: 23.4, w: 12, d: 7.2, h: 6.6, deco: ['ibeam', 'cables'], floor: RM('rd-engine-floor', 'plate', 0x6a6e76, 0.5, 0.7), wall: RM('rd-engine-wall', 'engine-pipes', 0xb0b4ba, 0.8, 0.5), plat: [[8.6, 0.3, 3.2, 2.0, 0.9, 'w', 0.6]],
+      props: [['picfurn', 0.8, 2.3, 1, { img: 'rd-turbine', w: 2.6, h: 2.8, d: 1.4, metal: 1 }], ['picfurn', 0.7, 5.4, 1, { img: 'rd-turbine', w: 2.0, h: 2.2, d: 1.2, metal: 1 }], ['console', 10.2, 0.75, 0, { kind: 'graph', y0: 0.9 }],
+        ['band', 3.6, 0.2, 0, { img: 'rd-power-conduit', w: 3.6, h: 0.8, y: 3.4, rep: 0.5 }], ['picwall', 5.0, 0.2, 0, { img: 'rd-heat-vent', w: 1.4, h: 1.0, y: 5.2, glow: 1.0 }], ['picwall', 9.4, 7.0, 2, { img: 'rd-coolant-panel', w: 1.1, h: 0.9, y: 1.6, glow: 0.4 }],
+        ['picwall', 10.9, 7.0, 2, { img: 'rd-engine-gauges', w: 1.2, h: 0.9, y: 1.7, glow: 0.5 }], T('船体状況', 'status', 2.4, 6.95, 2, { kind: 'graph' }), ['steam', 4.4, 4.0, 0], ['rack', 11.6, 3.0, 3, { n: 1 }]] },
+    // 炉の区画: 機関室の東。高い天井の下に炉。南の壁に炉心の覗き窓
+    { id: 'core', name: '炉区画', x: 8.4, z: 22.6, w: 4.6, d: 8, h: 7.2, deco: ['ibeam'], floor: RM('rd-catwalk-grate', 'grate', 0x6a6e76, 0.5, 0.7), wall: RM('rd-engine-wall', 'engine-pipes', 0xb0b4ba, 0.8, 0.5), lamp: '#ffb070',
+      props: [['reactor', 2.3, 2.5, 0, { c: '#ff9a3a' }], ['picwall', 2.3, 7.8, 2, { img: 'rd-reactor-core', w: 2.0, h: 2.0, y: 3.2, glow: 0.9 }], ['picwall', 4.4, 6.2, 3, { img: 'rd-warning-panel', w: 0.7, h: 0.5, y: 1.7, glow: 0.5 }]] },
+    // 格納庫: 機関室の南。入口は左寄り、出口のランプは右寄り。南の壁沿いにコンテナ
+    { id: 'cargo', name: '格納庫', x: -2.4, z: 30.6, w: 13.6, d: 6.4, h: 4.6, floor: RM('rd-cargo-floor', 'plate', 0x6a6e76, 0.5, 0.7), wall: RM('rd-cargo-wall', 'cargo-net', 0xc8c8c8, 0.8, 0.4),
+      props: [['cargo', 3.0, 5.1, 1, { c: 0x4a5a3a }], ['picfurn', 13.0, 1.4, 3, { img: 'rd-strap-crates', w: 2.0, h: 1.4, d: 1.2, metal: 0.6 }], ['crate', 12.6, 3.9, 0, { n: 4 }], ['barrel', 7.6, 0.9, 0], ['toolcart', 1.1, 1.0, 0.3],
+        ['picfurn', 10.6, 0.5, 0, { img: 'rd-fuel-cells', w: 1.8, h: 1.6, d: 0.7, metal: 1, glow: 0.3 }], ['floorpic', 9.2, 3.6, 0, { img: 'rd-tie-down', w: 3.0, d: 2.0, metal: 0.5 }], ['picwall', 11.2, 6.2, 2, { img: 'rd-airlock-panel', w: 0.7, h: 0.9, y: 1.4, glow: 0.6 }], ['picwall', 0.2, 2.0, 1, { img: 'rd-cargo-net', w: 2.6, h: 2.2, y: 1.8 }], ['picwall', 7.6, 0.2, 0, { img: 'rd-loader-arm', w: 1.8, h: 1.6, y: 2.9 }],
+        ['exit', 9.2, 6.2, 2, { label: 'エアロックから出る', w: 2.6, img: 'rd-ramp-door' }]] },
   ],
-  doors: [['bridge', 'hall', 4.5, 1.8, 2.3], ['hall', 'arm', 12.5, 1.6, 2.2], ['hall', 'crew', 12.5, 1.6, 2.2], ['hall', 'eng', 4.5, 1.8, 2.3], ['eng', 'cargo', 4.5, 2.6, 2.5, 'blast']],
+  doors: [['canopy', 'bridge', 4.6, 3.0, 2.4, 'open'], ['bridge', 'ecm', 5.6, 1.4, 2.2, 'slide'], ['bridge', 'vest', 1.6, 1.6, 2.3], ['vest', 'gun', 8.6, 1.4, 2.2], ['vest', 'spineA', 2.4, 2.0, 2.4, 'open'],
+    ['spineA', 'arm', 13.0, 1.5, 2.2], ['spineA', 'crew', 11.6, 1.4, 2.2, 'slide'], ['crew', 'head', 12.4, 1.0, 2.1, 'slide'], ['spineA', 'spineB', 2.4, 2.2, 2.6, 'open'],
+    ['spineB', 'med', 18.6, 1.6, 2.2, 'slide'], ['spineB', 'mess', 19.4, 1.8, 2.4, 'open'], ['spineB', 'store', 22.4, 1.0, 2.0], ['spineB', 'eng', 3.4, 1.8, 2.3, 'blast', { mat: 'rd-bulkhead-door' }], ['eng', 'core', 27.6, 3.0, 3.2, 'open'], ['eng', 'cargo', 1.6, 2.6, 2.5, 'blast', { mat: 'rd-bulkhead-door' }]],
 });
 
 const amatsu = () => ({

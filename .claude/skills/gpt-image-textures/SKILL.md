@@ -79,6 +79,7 @@ python3 $S/scripts/texgen.py process --preview /tmp/check          # 切り分�
 | `s65_mg_hospital2` 〜 `s73_mg_home_food` | ユーザーが別に生成した画像 (使える 67 マスを使用、残りは `skip` と理由)。`s71`〜`s73` は 9 シートの一覧画像から切り出して 1254 px に拡大したもの (1 マス約 136 px)。立体の遊具や背景付きの小物のように 1 枚の板にすると不自然なものは使わない |
 | `s80_mg_guidance` 〜 `s83_mg_town_life2` | ユーザーが別に生成した画像 (使える 33 マスを使用、残り 3 マスは `skip` と理由)。継ぎ目なしにすると絵柄が切れるタイル (床の誘導線の矢印) は `seam: ""` で 1 枚の絵として扱う |
 | `s84_en_hull` 〜 `s93_en_effects` | **敵の小型戦艦 20 種類用** (ユーザーが別に生成した画像、使える 85 マスを使用、残り 5 マスは `skip` と理由)。名前はすべて `en-` で始まる。`s87`〜`s89` は 3 列 × 9 段の横長の一覧画像 (`sheets/raw/en_wide_grid.webp`) から横長のマスを正方形に引き伸ばして組み直したもので、ゲームでは横長 (約 3:1) の面に貼る。暗い板の上の紋章は `key` + `tol` で板の色を抜く。使っている場所は `src/world/defs.js` の `ENEMY_CLASSES`、`ships.js` の `classParts()`、`blueprints.js` の `enemyBP()` |
+| `s94_rd_bridge` 〜 `s99_rd_cargo` | 計画だけ (54 枚、**画像はまだ無い**)。ライデンの船内用、名前はすべて `rd-`。使う場所は `docs/raiden-interior.md`。壁・床・天井は `blueprints.js` の `RM()` で画像が無いあいだ既存の素材を使う |
 | `s74_mg_shops3` 〜 `s79_mg_animals` | 計画だけ (54 枚、**画像はまだ無い**)。`"key": "white"` のマスは白い背景の上に物だけを描いてもらい、切り抜きにする |
 | `s28_shop` 〜 `s32_ship` | ユーザーが別に生成した画像 (45 マス中 35 を使用)。機械や店の正面の絵は `props.js` の `face(P, 名前, 幅, 高さ, x, y, z, { uv, glow, rx, ry })` で面に 1 枚貼る (画像が無ければ false を返し、従来の作りになる) |
 
