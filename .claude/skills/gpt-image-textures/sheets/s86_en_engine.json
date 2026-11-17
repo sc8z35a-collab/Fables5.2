@@ -13,6 +13,30 @@
    "normal": 1.5
   },
   {
+   "name": "en-reactor-vent",
+   "kind": "tile",
+   "prompt": "A round reactor vent with glowing orange slats behind a cage, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "en-ion-core",
+   "kind": "tile",
+   "prompt": "A glowing violet ion engine core in a circular housing, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "en-afterburner",
+   "kind": "tile",
+   "prompt": "An afterburner ring with glowing orange petals around a dark nozzle, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
    "name": "en-scorched-metal",
    "kind": "tile",
    "prompt": "Heat-scorched engine metal with blue and purple temper colours and soot.",
@@ -29,14 +53,6 @@
    "sat": 1.0,
    "normal": 2.5,
    "uvs": 0.6
-  },
-  {
-   "name": "en-reactor-vent",
-   "kind": "tile",
-   "prompt": "A round reactor vent with glowing orange slats behind a cage, front-on.",
-   "seam": "",
-   "rough": 150,
-   "normal": 1.5
   },
   {
    "name": "en-fuel-tank",
@@ -64,22 +80,6 @@
    "sat": 1.0,
    "normal": 2.5,
    "uvs": 0.5
-  },
-  {
-   "name": "en-ion-core",
-   "kind": "tile",
-   "prompt": "A glowing violet ion engine core in a circular housing, front-on.",
-   "seam": "",
-   "rough": 150,
-   "normal": 1.5
-  },
-  {
-   "name": "en-afterburner",
-   "kind": "tile",
-   "prompt": "An afterburner ring with glowing orange petals around a dark nozzle, front-on.",
-   "seam": "",
-   "rough": 150,
-   "normal": 1.5
   }
  ]
 }

@@ -53,15 +53,6 @@
    "normal": 1.5
   },
   {
-   "name": "en-rail-coils",
-   "kind": "tile",
-   "prompt": "Railgun barrel close-up: copper coils wrapped around a dark steel barrel, side view.",
-   "rough": 160,
-   "sat": 1.0,
-   "normal": 2.5,
-   "uvs": 0.5
-  },
-  {
    "name": "en-bomb-bay",
    "kind": "tile",
    "prompt": "Open bomb bay doors seen from below with bombs hanging inside.",
@@ -76,6 +67,15 @@
    "seam": "",
    "rough": 150,
    "normal": 1.5
+  },
+  {
+   "name": "en-rail-coils",
+   "kind": "tile",
+   "prompt": "Railgun barrel close-up: copper coils wrapped around a dark steel barrel, side view.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.5
   }
  ]
 }
