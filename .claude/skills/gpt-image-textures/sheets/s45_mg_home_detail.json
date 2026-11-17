@@ -1,0 +1,86 @@
+{
+ "id": "s45_mg_home_detail",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 36 枚 (シート 44〜47、画像はまだ無い)。上の階の家並み・住戸の細部・店と公共施設の細部・広場と路地の名所",
+ "style": "Everyday details inside small apartments of a space-habitat city. Each cell is ONE item seen straight on (or from directly above), flat even light, no shadows, no readable text.",
+ "cells": [
+  {
+   "name": "mg-fusuma",
+   "kind": "tile",
+   "prompt": "Two Japanese fusuma sliding doors of a closet: cream paper with a soft wave pattern, small round recessed pulls.",
+   "seam": "",
+   "rough": 200,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-shoji",
+   "kind": "tile",
+   "prompt": "A Japanese shoji window: white paper in a wooden lattice, soft daylight glowing through.",
+   "seam": "",
+   "rough": 200,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-stove-top",
+   "kind": "tile",
+   "prompt": "A kitchen worktop seen from directly above: a sink with a faucet, a two-burner induction stove and a cutting board.",
+   "seam": "",
+   "rough": 60,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-upper-cabinet",
+   "kind": "tile",
+   "prompt": "Kitchen wall cabinets seen front-on: white doors with slim handles, a rice cooker and spice jars on an open shelf.",
+   "seam": "",
+   "rough": 110,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-desk-top",
+   "kind": "tile",
+   "prompt": "A study desk seen from directly above: open notebook, pencils, a small lamp base, a mug and sticky notes.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-toy-shelf",
+   "kind": "tile",
+   "prompt": "A children toy shelf front: colourful boxes, stuffed animals, a toy rocket and picture books.",
+   "seam": "",
+   "rough": 170,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-bed-linen",
+   "kind": "tile",
+   "prompt": "Bed sheet and pillow cotton fabric close-up: soft white with very faint stripes.",
+   "mean": [
+    228,
+    226,
+    220
+   ],
+   "rough": 230,
+   "sat": 0.1,
+   "normal": 1.2,
+   "uvs": 0.8
+  },
+  {
+   "name": "mg-photo-wall",
+   "kind": "tile",
+   "prompt": "A wall with several framed family photos and a child drawing, warm and homely, faces not detailed.",
+   "seam": "",
+   "rough": 120,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-unit-bath",
+   "kind": "tile",
+   "prompt": "The front of a white unit bathtub with a shower faucet on the wall above and a small shelf.",
+   "seam": "",
+   "rough": 60,
+   "normal": 1.5
+  }
+ ]
+}

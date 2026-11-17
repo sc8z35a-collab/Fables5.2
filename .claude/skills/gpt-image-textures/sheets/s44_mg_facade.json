@@ -1,0 +1,104 @@
+{
+ "id": "s44_mg_facade",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 36 枚 (シート 44〜47、画像はまだ無い)。上の階の家並み・住戸の細部・店と公共施設の細部・広場と路地の名所",
+ "style": "Upper floors and street details of a bright space-habitat city. Each cell is ONE item seen straight on (or a flat top-down surface), flat even light, no shadows, no readable text.",
+ "cells": [
+  {
+   "name": "mg-facade-window",
+   "kind": "tile",
+   "prompt": "An apartment window seen from the street outside: white frame, half-drawn curtains, warm room light inside, a small potted plant on the sill.",
+   "seam": "",
+   "rough": 60,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-balcony",
+   "kind": "tile",
+   "prompt": "The front of a small apartment balcony: frosted glass panel with a slim metal handrail on top.",
+   "seam": "",
+   "rough": 80,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-facade-wall",
+   "kind": "tile",
+   "prompt": "Outer wall of an apartment block: small light beige rectangular tiles with thin grout, front-on.",
+   "mean": [
+    214,
+    204,
+    186
+   ],
+   "rough": 160,
+   "sat": 0.25,
+   "normal": 2.0,
+   "uvs": 0.4
+  },
+  {
+   "name": "mg-signboard-wood",
+   "kind": "tile",
+   "prompt": "A blank wooden shop sign board with a simple frame, no letters.",
+   "seam": "",
+   "rough": 180,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-signboard-metal",
+   "kind": "tile",
+   "prompt": "A blank enamelled metal sign board bolted at the corners, cream colour with a thin coloured border, no letters.",
+   "seam": "",
+   "rough": 100,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-floor-arrow",
+   "kind": "tile",
+   "prompt": "Floor guide band seen from above: yellow painted arrows in a row on grey floor paint, slightly worn.",
+   "mean": [
+    150,
+    140,
+    100
+   ],
+   "rough": 150,
+   "sat": 0.5,
+   "normal": 1.5,
+   "uvs": 0.5
+  },
+  {
+   "name": "mg-genkan",
+   "kind": "tile",
+   "prompt": "Japanese entrance floor (genkan) from above: exposed-aggregate washed stone, small grey and brown pebbles set in mortar.",
+   "mean": [
+    140,
+    134,
+    126
+   ],
+   "rough": 170,
+   "sat": 0.2,
+   "normal": 3.0,
+   "uvs": 0.8
+  },
+  {
+   "name": "mg-shaft-door",
+   "kind": "tile",
+   "prompt": "A white steel access door of a pipe shaft in a corridor wall, flush handle and a small blank label plate.",
+   "seam": "",
+   "rough": 110,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-stair",
+   "kind": "tile",
+   "prompt": "Staircase tread from above: grey anti-slip stair nosing strips with grooves over light concrete.",
+   "mean": [
+    170,
+    168,
+    162
+   ],
+   "rough": 150,
+   "sat": 0.1,
+   "normal": 3.0,
+   "uvs": 0.8
+  }
+ ]
+}

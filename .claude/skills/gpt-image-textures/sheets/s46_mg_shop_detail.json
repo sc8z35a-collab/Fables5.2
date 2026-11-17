@@ -1,0 +1,92 @@
+{
+ "id": "s46_mg_shop_detail",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 36 枚 (シート 44〜47、画像はまだ無い)。上の階の家並み・住戸の細部・店と公共施設の細部・広場と路地の名所",
+ "style": "Interiors of small neighbourhood shops and public baths in a space-habitat city. Each cell is ONE item seen straight on (or a flat surface), flat even light, no shadows, no readable text.",
+ "cells": [
+  {
+   "name": "mg-bakery-case",
+   "kind": "tile",
+   "prompt": "A bakery glass showcase front: shelves of bread, croissants and melon buns on trays.",
+   "seam": "",
+   "rough": 70,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-pharmacy-shelf",
+   "kind": "tile",
+   "prompt": "A pharmacy shelf front: neat rows of small medicine boxes and bottles in white and pastel colours.",
+   "seam": "",
+   "rough": 120,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-ramen-kitchen",
+   "kind": "tile",
+   "prompt": "A ramen shop kitchen seen across the counter: stock pots steaming, noodle baskets, ladles and bowls.",
+   "seam": "",
+   "rough": 110,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-barber-mirror",
+   "kind": "tile",
+   "prompt": "A barber shop mirror station: large mirror, a shelf with scissors, combs and bottles.",
+   "seam": "",
+   "rough": 60,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-dryers",
+   "kind": "tile",
+   "prompt": "A wall of stacked coin laundry dryers: round glass doors in a grid, stainless fronts.",
+   "seam": "",
+   "rough": 70,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-bath-washplace",
+   "kind": "tile",
+   "prompt": "A public bathhouse wash place: a row of mirrors with taps and shower heads above a low tiled ledge.",
+   "seam": "",
+   "rough": 70,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-hinoki",
+   "kind": "tile",
+   "prompt": "Hinoki cypress wood of a bath tub rim: pale warm wood with fine straight grain, slightly damp.",
+   "mean": [
+    206,
+    178,
+    136
+   ],
+   "rough": 140,
+   "sat": 0.4,
+   "normal": 1.8,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-platform-edge",
+   "kind": "tile",
+   "prompt": "A station platform edge from above: yellow tactile paving tiles next to a white line on grey concrete.",
+   "mean": [
+    178,
+    170,
+    140
+   ],
+   "rough": 150,
+   "sat": 0.45,
+   "normal": 3.0,
+   "uvs": 0.5
+  },
+  {
+   "name": "mg-medicine-cabinet",
+   "kind": "tile",
+   "prompt": "A clinic medicine cabinet with glass doors: shelves of bottles, boxes and bandages.",
+   "seam": "",
+   "rough": 60,
+   "normal": 1.5
+  }
+ ]
+}
