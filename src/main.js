@@ -120,7 +120,8 @@ async function boot() {
   if (auto) {
     G.p = newGame(Q.get('ship') || 'hayate'); G.p.quality = G.gfx.qName; G.dev = true;
     const params = Object.fromEntries(Q.entries());
-    await G.mode.enter(auto === 'space' ? params : { near: 'haven' });
+    const spawn = auto === 'interior' && params.type === 'station' ? { docked: params.id } : { near: 'haven' };
+    await G.mode.enter(auto === 'space' ? params : spawn);
     if (auto !== 'space') { G.mode.exit(); G.mode = G.modes[auto]; G.modeName = auto; await G.mode.enter(params); }
   } else { G.titleOn = true; G.space.enter({ title: true }); G.ui.title(); }
   await readyTextures();
