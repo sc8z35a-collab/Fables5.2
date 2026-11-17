@@ -5,40 +5,11 @@ import * as THREE from 'three';
 import { rng, rr, pick } from '../core/util.js';
 import { mat, glow } from '../gfx/textures.js';
 
+import { haven } from './haven/interior.js';
+
 const T = (label, use, x, z, rot, o = {}) => ['terminal', x, z, rot, { label, use, ...o }];
 const N = (label, use, x, z, rot, suit, o = {}) => ['npc', x, z, rot, { label, use, suit, ...o }];
 const S = (text, x, z, rot, o = {}) => ['sign', x, z, rot, { text, ...o }];
-
-// ───────────────────────── 1. ヘイヴン・リング: 明るい公共空間 (大理石・列柱・円形バザール・居住区) ─────────────────────────
-const haven = () => ({
-  name: 'ヘイヴン・リング', sub: '交易ハブ', seed: 11, spawn: [33, 23], view: [-1, 0], music: 'interior',
-  theme: { wall: ['smooth', 0xe6ecf2, 0.55, 0.15], floor: ['marble', 0xf2f0ea, 0.2, 0.05], ceil: ['ceil', 0xb8c2cc], trim: '#4de1ff', lamp: '#eef6ff', frame: 0x4a5560, amb: [0xc8dcff, 0x4a525c, 0.95], gloss: 0.9, door3: 'glass', trims: 'low', ribs: false, lamps: 'panel', col: 0xf0ede6 },
-  rooms: [
-    { id: 'hangar', name: '第 1 格納庫', x: 0, z: 0, w: 44, d: 32, h: 16, floor: ['plate', 0xa4acb6, 0.5, 0.6], wall: ['wall', 0xb9c2cc, 0.75, 0.3], ceil: ['rib', 0x5a626c], ceil3: 'truss', ribs: true, trims: 'both', deco: ['ibeam', 'ducts'], win: [['n', 6, 38, 2, 12]], li: 1.5,
-      props: [['shipslot', 22, 15, 0, { r: 11 }], T('格納庫サービス', 'shipyard', 38, 27, 0), ['gantry', 22, 5, 0, { w: 40, at: -13 }], ['crate', 5, 5, 0, { n: 6 }], ['crate', 39, 6, 0, { n: 5 }], ['cargo', 5, 22, 0], ['barrel', 9, 28, 0], ['cargo', 40, 18, 1], ['toolcart', 31, 8, 0.3], ['toolcart', 12, 23, -0.4, { c: 0x2a5ab8 }], ['workbench', 9, 31.2, 2],
-        S('HAVEN RING', 22, 31.7, 2, { h: 1.6, y: 9 }), S('第 1 格納庫', 22, 31.7, 2, { h: 0.8, y: 7.2, c: '#ffd27a' }), N('整備士', 'talk:mech', 30, 26, -1, 0xd08a2a)] },
-    { id: 'prom', name: 'プロムナード', x: 15, z: 32, w: 14, d: 56, h: 9, sky: true, deco: ['columns'],
-      props: [['fountain', 7, 30, 0, { r: 1.9 }], ['tree', 7, 8, 0], ['tree', 7, 19, 0, { s: 1.15 }], ['tree', 7, 41, 0], ['tree', 7, 51, 0, { s: 1.1 }], ['bench', 7, 26.6, 0], ['bench', 7, 33.4, 2], ['bench', 5, 13.5, 1], ['bench', 9, 46, 3],
-        ['planter', 0.9, 6, 1, { w: 6, flowers: 1 }], ['planter', 13.1, 6, 1, { w: 6, flowers: 1 }], ['planter', 0.9, 28, 1, { w: 7, flowers: 1 }], ['planter', 13.1, 27, 1, { w: 5, flowers: 1 }],
-        T('任務端末', 'missions', 1.6, 12.5, 1), T('星図', 'map', 12.4, 12.5, 3, { kind: 'orbit' }), S('交易バザール →', 13.7, 13, 3, { h: 0.6, y: 3.9, c: '#ffd27a' }), S('← カフェ・テラ', 0.3, 17, 1, { h: 0.6, y: 3.9, c: '#ff9ad8' }), S('展望デッキ', 7, 55.7, 2, { h: 0.7, y: 4.2 }), S('居住区 →', 13.7, 39.5, 3, { h: 0.5, y: 3.4 }),
-        N('旅行者', 'talk:tourist', 4.4, 24, 0.6, 0x7a3a8a), N('商人', 'talk:trader', 9.6, 38, -1, 0x3a8a5a), ['vending', 13.3, 46.5, 3], ['hoload', 7, 14, 0, { text: 'HAVEN\nMARKET', c: '#ffd27a', y: 5.4, h: 1.6 }], ['lightcone', 7, 30, 0, { r: 3.2, k: 0.22 }]] },
-    { id: 'market', name: '交易バザール', x: 29, z: 36, w: 26, d: 26, h: 10, shape: 'round', sky: true, floor: ['tile', 0xe8dcc8, 0.35, 0.1], wall: ['plaster', 0xf0e6d2, 0.9, 0], ceil: ['plaster', 0xe8dcc8], lamps: 'pendant', rug: [[13, 13, 0, 5.2, 'carpet', 0x8a3a2a]],
-      props: [['stall', 13, 4.2, 0, { c: 0xb8452e, use: 'market', label: '交易市場' }], ['stall', 13, 21.8, 2, { c: 0x2e7ab8 }], ['stall', 21.8, 13, 3, { c: 0xc9a22e }], ['stall', 19.4, 6.6, 3.5, { c: 0x3aa86a }], ['stall', 19.4, 19.4, 2.5, { c: 0x8a4ab8 }],
-        T('交易市場', 'market', 10.2, 13, 3, { kind: 'bars' }), N('仲買人', 'market', 13, 15.4, 2, 0xb8452e), ['hoload', 13, 13, 0, { text: '相場 MARKET', c: '#4de1ff', y: 4.6, h: 1.0 }], ['crate', 5.6, 6.2, 0, { n: 4 }], ['crate', 5.8, 19.6, 0, { n: 5 }], ['plant', 8, 3.6, 0, { s: 1.3 }], ['plant', 8, 22.4, 0, { s: 1.3 }], ['barrel', 3.4, 9.6, 0]] },
-    { id: 'cafe', name: 'カフェ・テラ', x: -5, z: 44, w: 20, d: 18, h: 5.5, floor: ['wood', 0xffffff, 0.4, 0], wall: ['plaster', 0xf2e8d8, 0.9, 0], ceil: ['plaster', 0xe8dcc8], deco: ['beams', 'wains'], lamps: 'pendant', win: [['w', 2, 16, 0.6, 4.8]], lamp: '#ffe2b8', plat: [[0.4, 1.5, 5, 15, 0.36, 'e', 0.5]],
-      props: [['barcounter', 13, 2.4, 0, { w: 6, c: '#ffb347' }], N('バリスタ', 'cafe', 13, 1.3, 0, 0x6a4a2a), ['table', 9, 8, 0, { wood: 1 }], ['table', 13.5, 11, 0, { wood: 1 }], ['table', 9, 14, 0, { wood: 1 }], ['sofa', 1.5, 5, 1, { c: 0x2e6a6a, y0: 0.36 }], ['sofa', 1.5, 13, 1, { c: 0x2e6a6a, y0: 0.36 }], ['table', 3.9, 9, 0, { wood: 1, n: 0, y0: 0.36 }],
-        ['plant', 18.6, 16.6, 0, { s: 1.4 }], ['plant', 7, 16.8, 0, { s: 1.2 }], ['aquarium', 13, 17.2, 2, { w: 4 }], ['bookshelf', 19.55, 14, 3], ['floorlamp', 18.8, 5.4, 0], S('CAFÉ TERRA', 13, 0.3, 0, { h: 0.6, y: 3.9, c: '#ffb347' }), ['fan', 11, 9, 0, { wood: 1 }]] },
-    { id: 'deck', name: '展望デッキ', x: 9, z: 88, w: 26, d: 14, h: 8, ceil3: 'coffer', lamps: 'spot', win: [['s', 1.5, 24.5, 0.4, 7.2], ['w', 2, 12, 0.4, 7.2]], floor: ['carpet', 0x24486a, 1, 0], plat: [[8, 6, 10, 6, 0.45, 'n', 0.4]],
-      props: [['telescope', 13, 9.2, 2, { y0: 0.45 }], ['sofa', 4, 11.4, 2], ['sofa', 22, 11.4, 2], ['plant', 1.5, 1.5, 0, { s: 1.5 }], ['plant', 24.5, 1.5, 0, { s: 1.5 }], ['holo', 22, 4, 0, { kind: 'planet', s: 0.8, c: '#4aa3ff' }], ['floorlamp', 1.4, 12.6, 0], ['seatrow', 5, 4, 2, { n: 4 }]] },
-    { id: 'res', name: '居住区通路', x: 29, z: 66, w: 22, d: 5, h: 3.2, lamps: 'tube', rug: [[1, 1.4, 20, 2.2, 'carpet', 0x2a4a6a]],
-      props: [['plant', 1, 0.9, 0], ['plant', 21, 0.9, 0], ['bench', 11, 0.6, 0], ['poster', 16.5, 0.25, 0, { text: 'RING LIFE', c: '#4de1ff' }], S('A-01 居住ユニット', 5, 4.75, 2, { h: 0.3, y: 2.7 }), S('診療所 CLINIC', 16, 4.75, 2, { h: 0.3, y: 2.7, c: '#6dffb0' })] },
-    { id: 'apt', name: '居住ユニット', x: 29, z: 71, w: 10, d: 9, h: 3.2, floor: ['wood', 0xe8d0b0, 0.45, 0], wall: ['plaster', 0xf0e6d8, 0.9, 0], lamps: 'pendant', lamp: '#ffe2b8', rug: [[3, 3.6, 4.4, 3, 'carpet', 0x3a5a7a]],
-      props: [['bed', 8.7, 2.3, 0, { c: 0x2a6a8a }], ['sofa', 5, 7.9, 2, { c: 0x6a5a4a }], ['table', 5.2, 5.2, 0, { n: 0, wood: 1 }], ['kitchen', 0.6, 4.6, 1, { w: 2.6 }], ['bookshelf', 2.0, 0.45, 0], ['floorlamp', 0.8, 8.1, 0], ['poster', 9.75, 6.5, 3, { text: '地球', c: '#4aa3ff', h: 0.9 }], ['cabinet', 7.2, 0.5, 0, { w: 1.1 }], ['plant', 9.2, 8.2, 0]] },
-    { id: 'clinic', name: '診療所', x: 39, z: 71, w: 12, d: 9, h: 3.4, floor: ['tile', 0xf0f4f6, 0.25, 0.1], lamp: '#f0fff8',
-      props: [['medpod', 2, 2.4, 0], ['medpod', 5, 2.4, 0], ['desk', 9.5, 2, 0, { kind: 'graph', c: '#6dffb0' }], N('医師', 'talk:doc', 9.5, 3.6, 2, 0xf0f4f6, { visor: '#6dffb0' }), ['rack', 11.5, 6.5, 3, { n: 2 }], ['tank', 1.2, 7.6, 0, { c: '#6dffb0' }], ['cabinet', 4.5, 8.5, 2, { metal: 1, w: 2.2 }], ['seatrow', 8, 8.3, 2, { n: 3, c: 0x2a6a5a }]] },
-  ],
-  doors: [['hangar', 'prom', 22, 5, 4, 'blast'], ['prom', 'market', 49, 4, 3.4, 'open'], ['prom', 'cafe', 53, 3, 2.6, 'glass'], ['prom', 'deck', 22, 4, 3, 'glass'], ['prom', 'res', 68.5, 2.2, 2.5, 'slide'], ['res', 'apt', 34, 1.8, 2.3, 'slide'], ['res', 'clinic', 45, 1.8, 2.3, 'glass']],
-});
 
 // ───────────────────────── 2. ヴァルカン造船廠: 重工業 (鉄骨トラス・クレーン・倉庫・現場事務所) ─────────────────────────
 const vulcan = () => ({

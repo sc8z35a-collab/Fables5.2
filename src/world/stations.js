@@ -4,6 +4,8 @@ import { Builder, mx, rockGeo, loft } from '../gfx/builder.js';
 import { mat, glow, texSet, windowsTex, signMesh } from '../gfx/textures.js';
 import { makeGlowSprite } from '../gfx/fx.js';
 import { rng, rr } from '../core/util.js';
+import { buildHavenHull, havenDockZ, havenHullDistance, havenRadius } from './haven/exterior.js';
+import { havenMaterial } from './haven/materials.js';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const WM = new Map();
@@ -34,30 +36,27 @@ const sign = (text, color, h, x, y, z, ry = 0, rx = 0, o = {}) => { const m = si
 
 // ───────────────────────── 1. ヘイヴン・リング (交易ハブ) ─────────────────────────
 function haven() {
-  const b = new Builder(), H = mat('hull', { color: 0xdfe5ec, rough: 0.6, metal: 0.3 }), W = winMat(0xdfe5ec, 0xfff0d0), D = mat('hull', { color: 0x3a4049, rough: 0.8, metal: 0.6 }), S = mat('solar', { metal: 0.9, env: 1.6 });
-  const C = glow('#4de1ff', 4), R = 250;
-  b.tor(W, R, 24, 0, 0, 0, 0, 0, 0, 200, 8); // 居住リング
-  b.tor(D, R + 23.5, 5, 0, 0, 0, 0, 0, 0, 200, 6); b.tor(D, R - 23.5, 4, 0, 0, 0, 0, 0, 0, 200, 6);
-  for (const z of [-12, 12]) { b.tor(C, R + 27.6, 0.5, 0, 0, z, 0, 0, 0, 200, 5); b.tor(C, R - 26.6, 0.4, 0, 0, z, 0, 0, 0, 160, 5); }
-  b.tor(H, R, 26.5, 0, 0, 0, 0, 0, 0, 200, 4, Math.PI * 2);
-  for (let i = 0; i < 6; i++) {
-    const a = i * Math.PI / 3;
-    b.add(H, new THREE.CylinderGeometry(6, 8, R - 60, 14), mx(Math.cos(a) * (R / 2 + 16), Math.sin(a) * (R / 2 + 16), 0, 0, 0, a - Math.PI / 2));
-    b.add(D, new THREE.BoxGeometry(22, 34, 30), mx(Math.cos(a) * (R - 30), Math.sin(a) * (R - 30), 0, 0, 0, a));
-    b.add(W, new THREE.BoxGeometry(36, 16, 40), mx(Math.cos(a) * 105, Math.sin(a) * 105, 0, 0, 0, a));
-    for (const s of [-1, 1]) b.add(D, new THREE.CylinderGeometry(1.2, 1.2, R - 70, 6), mx(Math.cos(a) * (R / 2 + 16) - Math.sin(a) * 11 * s, Math.sin(a) * (R / 2 + 16) + Math.cos(a) * 11 * s, s * 6, 0, 0, a - Math.PI / 2));
-  }
-  b.cyl(W, 46, 46, 110, 0, 0, 0, 'z', 40); b.cyl(D, 50, 50, 14, 0, 0, 30, 'z', 40); b.cyl(D, 50, 50, 14, 0, 0, -30, 'z', 40);
-  b.cyl(H, 30, 46, 40, 0, 0, 75, 'z', 40); b.cyl(H, 46, 26, 50, 0, 0, -80, 'z', 40);
-  b.tor(C, 47, 0.7, 0, 0, 55, 0, 0, 0, 80, 5); b.tor(C, 47, 0.7, 0, 0, -55, 0, 0, 0, 80, 5);
-  const p = port(b, D, V(0, 0, 101), V(0, 0, 1));
-  b.cyl(D, 5, 8, 120, 0, 0, -160, 'z', 16); b.cyl(D, 1, 1, 90, 0, 0, -260, 'z', 8);
-  b.add(H, new THREE.CylinderGeometry(38, 4, 14, 32, 1, true), mx(0, 0, -224, Math.PI / 2, 0, 0)); // 通信ディッシュ
-  for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4, cx = Math.cos(a), cy = Math.sin(a); b.add(D, new THREE.CylinderGeometry(1.6, 1.6, 150, 8), mx(cx * 85, cy * 85, -150, 0, 0, a - Math.PI / 2)); b.add(S, new THREE.BoxGeometry(46, 1, 110), mx(cx * 105, cy * 105, -150, 0, 0, a)); }
-  const lights = []; for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; lights.push({ p: V(Math.cos(a) * (R + 30), Math.sin(a) * (R + 30), 0), c: i % 2 ? '#f44' : '#fff', s: 26, blink: 0.6, ph: i / 12 }); }
-  for (let i = 0; i < 6; i++) lights.push({ p: V(0, 0, 130 + i * 40), c: '#4f8', s: 14, blink: 1, ph: 1 - i / 6 });
-  const o = done(b, { ports: [p], radius: 300, lights, signs: [sign('HAVEN RING', '#4de1ff', 16, 0, 62, 20, 0, 0), sign('ヘイヴン・リング 交易港', '#ffd27a', 9, 0, -62, 20, 0, 0)] });
-  o.anim.push((t, dt) => { o.obj.rotation.z += dt * 0.035; });
+  const b = new Builder(), rb = new Builder();
+  buildHavenHull(b, rb);
+  const ring = rb.build();
+  const p = port(b, havenMaterial(6, 'hull'), V(0, 0, havenDockZ), V(0, 0, 1));
+  const lights = [
+    { p: V(928, 290, 30), c: '#fff0d2', s: 34 },
+    { p: V(98, 954, 35), c: '#ff7668', s: 30, blink: 0.75, ph: 0 },
+    { p: V(-901, 337, -27), c: '#ffc082', s: 25, blink: 0.66, ph: 0.43 },
+    { p: V(-566, -786, 35), c: '#ff7668', s: 30, blink: 0.65, ph: 0.2 },
+    { p: V(654, -710, 35), c: '#fff0d2', s: 26 },
+  ];
+  for (const light of lights) light.parent = ring;
+  for (const [i, z] of [205, 246, 295, 356, 428, 510].entries()) lights.push({ p: V(0, 0, z), c: '#76ffba', s: 11, blink: 1, ph: 1 - i / 6 });
+
+  // Keep the approach corridor aligned with the hub.
+  const o = done(b, { ports: [p], radius: havenRadius, ring, lights, signs: [
+    sign('HAVEN RING', '#e4fff6', 11, 0, 99, 83),
+    sign('地球軌道港  A01', '#ffe1a2', 5, 0, 77, 133),
+  ] });
+  o.obj.add(ring);
+  o.anim.push((_t, dt) => { ring.rotation.z = (ring.rotation.z + dt * 0.096) % (2 * Math.PI); });
   return o;
 }
 
@@ -187,10 +186,10 @@ export function buildStation(def) { const o = BUILD[def.id](); o.def = def; retu
 // ── 衝突判定用の近似距離関数 (ステーションのローカル座標) ──
 const sdBox = (x, y, z, cx, cy, cz, hx, hy, hz) => { const dx = Math.abs(x - cx) - hx, dy = Math.abs(y - cy) - hy, dz = Math.abs(z - cz) - hz; return Math.hypot(Math.max(dx, 0), Math.max(dy, 0), Math.max(dz, 0)) + Math.min(Math.max(dx, dy, dz), 0); };
 const SDF = {
-  haven: (x, y, z) => Math.min(Math.hypot(Math.hypot(x, y) - 250, z) - 28, Math.max(Math.hypot(x, y) - 50, Math.abs(z) - 100)),
+  haven: havenHullDistance,
   vulcan: (x, y, z) => Math.min(sdBox(x, y, z, 0, 0, 0, 362, 12, 14), sdBox(x, y, z, -215, -62, 0, 82, 64, 50), sdBox(x, y, z, 0, -62, 0, 82, 64, 50), sdBox(x, y, z, 215, -62, 0, 82, 64, 50), sdBox(x, y, z, 392, 40, 0, 32, 66, 26)),
   aurora: (x, y, z) => Math.min(Math.hypot(x, y, z) - 60, Math.hypot(Math.hypot(x, z) - 96, y) - 6, sdBox(x, y, z, 0, 0, 0, 345, 3, 44), Math.hypot(x, y - 26, Math.max(Math.abs(z + 110) - 65, 0)) - 17),
   bastion: (x, y, z) => Math.min(Math.max(Math.hypot(x, z) - 158, Math.abs(y) - 64), Math.max(Math.hypot(x, z) - 74, Math.abs(y - 106) - 44), sdBox(x, y, z, 0, 0, 190, 10, 10, 60)),
   rogue: (x, y, z) => Math.min((Math.hypot(x / 212, y / 145, z / 170) - 1) * 145, Math.hypot(x, y - 30, Math.max(Math.abs(z - 235) - 66, 0)) - 12),
 };
-export function stationSDF(id, x, y, z) { return SDF[id](x, y, z); }
+export function stationSDF(id, x, y, z, spin) { return SDF[id](x, y, z, spin); }

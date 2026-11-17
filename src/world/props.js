@@ -1,4 +1,5 @@
 // 内装の小道具ライブラリ。各関数は (P: Placer, o: オプション, e: 環境) を受け取る
+import { havenMaterial } from './haven/materials.js';
 import * as THREE from 'three';
 import { Builder, mx, rockGeo } from '../gfx/builder.js';
 import { mat, glow, screenMat, signMesh, leafMat, canopyGeo } from '../gfx/textures.js';
@@ -149,6 +150,18 @@ export const PROPS = {
   seat(P, o, e) { const m = MM(), f = fab(o.c || 0x22262c); P.cyl(m.ch, 0.12, 0.3, 0.4, 0, 0.2, 0, 'y', 12); P.box(f, 0.62, 0.14, 0.62, 0, 0.5, 0); P.box(f, 0.6, 0.95, 0.14, 0, 1.0, -0.3); P.box(f, 0.34, 0.2, 0.16, 0, 1.55, -0.3); for (const s of [-1, 1]) { P.box(m.dk, 0.09, 0.07, 0.5, s * 0.36, 0.72, 0); P.box(glow(e.th.trim, 2), 0.02, 0.8, 0.02, s * 0.3, 1.0, -0.225); } e.col(0.42); if (o.use) e.use(o.label, o.use, 2.2, o); },
   pillar(P, o, e) { const m = MM(), h = e.room.h, r = o.r || 0.38; P.cyl(m.dk, r, r, h, 0, h / 2, 0, 'y', 16); P.cyl(m.ch, r + 0.1, r + 0.14, 0.3, 0, 0.15, 0, 'y', 16); P.cyl(m.ch, r + 0.14, r + 0.1, 0.3, 0, h - 0.15, 0, 'y', 16); for (const y of [1.1, h / 2, h - 1.1]) P.tor(glow(o.c || e.th.trim, 3), r + 0.02, 0.025, 0, y, 0, HP, 0, 0, 24, 5); e.col(r + 0.1); },
   railing(P, o, e) { const m = MM(), w = o.w || 4; P.box(m.ch, w, 0.05, 0.05, 0, 1.05, 0); P.add(glassMat(), new THREE.BoxGeometry(w, 0.85, 0.02), mx(0, 0.55, 0), 0); for (let x = -w / 2; x <= w / 2 + 0.01; x += w / Math.max(1, Math.round(w / 1.6))) P.box(m.ch, 0.05, 1.05, 0.05, x, 0.52, 0); e.rect(w, 0.15); },
+  havenPanel(P, o) {
+    P.add(havenMaterial(o.tile, 'panel'), new THREE.PlaneGeometry(o.w, o.h ?? 0.32), mx(0, o.y ?? 1.3, 0.003), 0);
+  },
+  havenFitting(P, o, e) {
+    const finish = flat(o.c, o.roughness ?? 0.83, o.metal ?? 0.04);
+    const y = o.y ?? 0, h = o.h ?? 0.75;
+    P.box(finish, o.w, h, o.d, 0, y + h / 2, 0);
+    if (o.solid !== false && y < 1.38) e.rect(o.w, o.d);
+  },
+  havenPipe(P, o) {
+    P.cyl(flat(o.c, 0.75, 0.24), o.radius ?? 0.04, o.radius ?? 0.04, o.len, 0, o.y ?? 2.11, 0, 'x', 8);
+  },
   sign(P, o, e) { const s = signMesh(o.text, o.c || e.th.trim, o.h || 0.6, { double: !!o.double, frame: o.frame, intensity: o.k || 2.4 }); e.dyn(s, 0, o.y || 2.6, 0.03); if (o.flicker) e.anim((dt, t) => { s.material.color.setScalar((o.k || 2.4) * (Math.sin(t * 13 + e.x) > 0.93 ? 0.35 : 1)); }); },
   npc(P, o, e) {
     const g = e.dyn(makeNPC(o.suit, o.visor || e.th.trim)); const n = { g, x: e.x, z: e.z, yaw: e.ang, ph: e.x * 3 + e.z, walk: o.walk, t: 0 }; e.out.npcs.push(n);

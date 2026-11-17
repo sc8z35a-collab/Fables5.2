@@ -62,7 +62,7 @@ export class InteriorMode {
     if (!it) {
       const def = o.type === 'enemy' ? ENEMIES.find((e) => e.id === id) : null, bp = blueprint(o.type, id, def);
       it = buildInterior(bp); it.key = key; it.def = def;
-      for (const m of it.floorMats) if (!m.userData.mir) { m.userData.mir = 1; this.mirror.apply(m, bp.theme.gloss ?? 0.6); }
+      if (bp.reflect !== false) for (const m of it.floorMats) if (!m.userData.mir) { m.userData.mir = 1; this.mirror.apply(m, bp.theme.gloss ?? 0.6); }
       if (bp.drones) for (const [x, z] of bp.drones) { const g = makeDrone(def.glow); it.group.add(g); it.drones.push({ g, x, z, hx: x, hz: z, hp: 34 + def.tier * 16, alive: true, fireT: 1 + Math.random() * 2, ph: x * 3 + z, alert: false }); }
       if (o.type !== 'enemy') { this.cache.set(key, it); if (this.cache.size > 4) { const k = this.cache.keys().next().value, old = this.cache.get(k); this.cache.delete(k); old.group.traverse((n) => n.geometry?.dispose()); } }
     } else if (it.drones.length) for (const d of it.drones) { d.alive = true; d.g.visible = true; }
@@ -82,8 +82,8 @@ export class InteriorMode {
     this._slot();
     // 反射プローブ (初回のみ)
     this._lights(0, true);
-    if (!it.env) { const r = G.gfx.renderer, rt = new THREE.WebGLCubeRenderTarget(128, { type: THREE.HalfFloatType }), cc = new THREE.CubeCamera(0.1, 300, rt); cc.position.set(this.pos.x, 1.7, this.pos.z); this.scene.environment = null; this.mirror.u.uMirrorOn.value = 0; r.autoClear = true; cc.update(r, this.scene); r.autoClear = false; r.setRenderTarget(null); it.env = G.gfx.pmrem.fromCubemap(rt.texture).texture; rt.dispose(); }
-    this.scene.environment = it.env; this.scene.environmentIntensity = 0.5; G.gfx.look(0.4, 1.15, 0.92);
+    if (it.bp.reflect !== false && !it.env) { const r = G.gfx.renderer, rt = new THREE.WebGLCubeRenderTarget(128, { type: THREE.HalfFloatType }), cc = new THREE.CubeCamera(0.1, 300, rt); cc.position.set(this.pos.x, 1.7, this.pos.z); this.scene.environment = null; this.mirror.u.uMirrorOn.value = 0; r.autoClear = true; cc.update(r, this.scene); r.autoClear = false; r.setRenderTarget(null); it.env = G.gfx.pmrem.fromCubemap(rt.texture).texture; rt.dispose(); }
+    this.scene.environment = it.env || null; this.scene.environmentIntensity = 0.5; G.gfx.look(0.4, 1.15, 0.92);
     this.hostile = !!it.bp.hostile; this.gun.visible = this.hostile; this.suit = 60; for (const sh of this.shots) { sh.life = 0; sh.m.visible = false; }
     this.camera.aspect = G.W / G.H; this.camera.fov = 72; this.camera.updateProjectionMatrix();
     G.hud.setMode('fps'); G.hud.show(true); G.hud.setTarget(null); G.gfx.fx.uSun.value.z = 0; G.gfx.fx.uWarp.value = 0; G.gfx.fx.uHeat.value = 0;
@@ -101,13 +101,13 @@ export class InteriorMode {
   /** 格納庫に自機を置く */
   _slot() {
     const it = this.cur; if (this.shipObj) { this.shipObj.parent?.remove(this.shipObj); this.shipObj = null; }
-    it.cols = it.cols.filter((c) => !c.ship); it.items = it.items.filter((i) => i.act !== 'ramp');
+    it.cols = it.cols.filter((c) => !c.ship); it.items = it.items.filter((i) => !i.ship);
     if (!it.slot) return; const m = this.ship(G.p.ship), o = m.obj, r = SHIPS[G.p.ship].radius;
     const minY = new THREE.Box3().setFromObject(m.gear || m.body).min.y - o.position.y; o.position.set(it.slot.x, -minY, it.slot.z); o.rotation.set(0, Math.PI, 0); m.tilt.rotation.set(0, 0, 0);
     it.group.add(o); this.shipObj = o; it.cols.push({ x: it.slot.x, z: it.slot.z, r: Math.min(r * 0.42, 8), ship: 1 });
     if (!this.shipShadow) { this.shipShadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), aoMat('blob')); this.shipShadow.renderOrder = 2; }
     this.shipShadow.scale.set(r * 1.5, 1, SHIPS[G.p.ship].len * 1.25); this.shipShadow.position.set(it.slot.x, 0.02, it.slot.z); it.group.add(this.shipShadow);
-    it.items.push({ x: it.slot.x, z: it.slot.z, y: 1.5, r: Math.min(r * 0.42, 8) + 4.5, label: `${SHIPS[G.p.ship].name} に乗船する`, act: 'ramp', wide: 1 });
+    it.items.push({ x: it.slot.x, z: it.slot.z, y: 1.5, r: Math.min(r * 0.42, 8) + 4.5, label: `${SHIPS[G.p.ship].name} に乗船する`, act: 'ramp', wide: 1, ship: 1 });
   }
   refreshShip() { if (this.cur?.slot) this._slot(); }
 
@@ -118,9 +118,16 @@ export class InteriorMode {
     const sp = inp.down('run') ? 7.6 : 4.5, sn = Math.sin(this.yaw), cs = Math.cos(this.yaw);
     const dx = (-sn * ax.y + cs * ax.x) * sp * dt, dz = (-cs * ax.y - sn * ax.x) * sp * dt, p = this.pos;
     if (dx || dz) {
-      const fy = floorY(it, p.x, p.z);
-      if (walkable(it, p.x + dx, p.z + dz, fy)) { p.x += dx; p.z += dz; } else if (walkable(it, p.x + dx, p.z, fy)) p.x += dx; else if (walkable(it, p.x, p.z + dz, fy)) p.z += dz;
-      const pb = this.bob; this.bob += Math.hypot(dx, dz) * 1.9; if (Math.floor(pb / Math.PI) !== Math.floor(this.bob / Math.PI)) G.audio?.sfx('step');
+      const len = Math.hypot(dx, dz), steps = it.bp.tightPassages ? Math.ceil(len / 0.07) : 1;
+      const sx = dx / steps, sz = dz / steps;
+      const oldX = p.x, oldZ = p.z;
+      for (let i = 0; i < steps; i++) {
+        const fy = floorY(it, p.x, p.z);
+        if (walkable(it, p.x + sx, p.z + sz, fy)) { p.x += sx; p.z += sz; }
+        else if (walkable(it, p.x + sx, p.z, fy)) p.x += sx;
+        else if (walkable(it, p.x, p.z + sz, fy)) p.z += sz;
+      }
+      const pb = this.bob; this.bob += (it.bp.tightPassages ? Math.hypot(p.x - oldX, p.z - oldZ) : len) * 1.9; if (Math.floor(pb / Math.PI) !== Math.floor(this.bob / Math.PI)) G.audio?.sfx('step');
     }
     p.y = damp(p.y, floorY(it, p.x, p.z), 14, dt);
     // 扉
@@ -161,7 +168,9 @@ export class InteriorMode {
   }
   _interact() {
     const it = this.cur, p = this.pos, fx = -Math.sin(this.yaw), fz = -Math.cos(this.yaw); let best = null, bs = 1e9;
-    for (const i of it.items) { const dx = i.x - p.x, dz = i.z - p.z, d = Math.hypot(dx, dz); if (d > i.r) continue; const dot = d > 0.01 ? (dx * fx + dz * fz) / d : 1; if (dot < (i.wide ? -0.2 : 0.25) && d > 1.3) continue; const sc = d - dot * 1.5; if (sc < bs) { bs = sc; best = i; } }
+    for (const i of it.items) {
+      if (it.bp.tightPassages && i.room !== this.lastRoom?.id) continue;
+      const dx = i.x - p.x, dz = i.z - p.z, d = Math.hypot(dx, dz); if (d > i.r) continue; const dot = d > 0.01 ? (dx * fx + dz * fz) / d : 1; if (dot < (i.wide ? -0.2 : 0.25) && d > 1.3) continue; const sc = d - dot * 1.5; if (sc < bs) { bs = sc; best = i; } }
     this.item = best; G.hud.setCtx(best && !G.ui.isOpen ? [{ label: best.label, cls: best.act === 'core' || best.act === 'exit' || best.act === 'ramp' ? 'alt' : '', fn: () => this.act(best) }] : []);
     if (best && (G.input.key('KeyE') || G.input.key('Enter'))) this.act(best);
   }
@@ -173,6 +182,7 @@ export class InteriorMode {
     switch (a) {
       case 'shipyard': return ui.shipyard(sid);
       case 'yard': return ui.shipyard(sid, 0.75);
+      case 'haven-counter': return ui.talk(i.label, i.description);
       case 'market': return ui.market(sid, c.type === 'outpost' ? '現地取引所' : c.id === 'rogue' ? '闇市' : '交易市場');
       case 'missions': return ui.missions(sid);
       case 'map': return ui.map();
@@ -271,7 +281,7 @@ export class InteriorMode {
     }
   }
   render(dt) {
-    this.mirror.render(this.scene, this.camera);
+    if (this.cur.bp.reflect !== false) this.mirror.render(this.scene, this.camera);
     G.gfx.render(dt, this.scene, this.camera, this.far ? G.backdrop : null);
   }
 }
