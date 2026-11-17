@@ -1,0 +1,86 @@
+{
+ "id": "s80_mg_guidance",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 36 枚 (シート 80〜83、画像はまだ無い)。案内と安全",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-guide-lines",
+   "kind": "tile",
+   "prompt": "Grey floor with painted colour guide lines (red, blue, green) running side by side, from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.5
+  },
+  {
+   "name": "mg-tactile-tiles",
+   "kind": "tile",
+   "prompt": "Yellow tactile paving tiles with raised dots and bars, from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.8
+  },
+  {
+   "name": "mg-route-map",
+   "kind": "tile",
+   "prompt": "A transit route map: coloured lines with circles for stops on white, no text.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-fire-door",
+   "kind": "tile",
+   "prompt": "A green steel fire door with a push bar and a small window, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-fire-alarm",
+   "kind": "tile",
+   "prompt": "A red fire alarm panel with a round button and a bell, on a wall, front-on, no text.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-post-box",
+   "kind": "tile",
+   "prompt": "A red Japanese street post box, front-on. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-tree-grate",
+   "kind": "tile",
+   "prompt": "A cast iron tree grate around a small tree trunk, seen from directly above.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-drinking-fountain",
+   "kind": "tile",
+   "prompt": "A stainless public drinking fountain on a post. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-elevator-hall",
+   "kind": "tile",
+   "prompt": "An elevator hall: two steel elevator doors with call buttons between them, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  }
+ ]
+}

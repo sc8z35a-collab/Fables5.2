@@ -1,0 +1,82 @@
+{
+ "id": "s81_mg_home5",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 36 枚 (シート 80〜83、画像はまだ無い)。家の細部 5",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-dish-cabinet",
+   "kind": "tile",
+   "prompt": "A wooden kitchen dish cabinet front with glass doors: plates, bowls and cups.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-fridge-magnets",
+   "kind": "tile",
+   "prompt": "A white fridge door covered in colourful magnets, a childs drawing and paper notes (no text).",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-indoor-laundry",
+   "kind": "tile",
+   "prompt": "Laundry drying indoors on a hanger rack: shirts, towels and socks, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-towel-rack",
+   "kind": "tile",
+   "prompt": "A bathroom towel rack with folded and hanging towels in soft colours, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-blinds",
+   "kind": "tile",
+   "prompt": "White horizontal window blinds, close-up.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.8
+  },
+  {
+   "name": "mg-kamidana",
+   "kind": "tile",
+   "prompt": "A small Shinto household shrine shelf (kamidana) on a wall with sakaki branches, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-plant-shelf",
+   "kind": "tile",
+   "prompt": "A shelf of house plants in pots: pothos, cactus, fern, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-desk-pc",
+   "kind": "tile",
+   "prompt": "A home desk front: a monitor, keyboard, desk lamp and a mug.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-shower-curtain",
+   "kind": "tile",
+   "prompt": "A shower curtain with a blue and white fish pattern, close-up.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.0
+  }
+ ]
+}

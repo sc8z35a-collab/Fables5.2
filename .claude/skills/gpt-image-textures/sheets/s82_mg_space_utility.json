@@ -1,0 +1,82 @@
+{
+ "id": "s82_mg_space_utility",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 36 枚 (シート 80〜83、画像はまだ無い)。居住区の宇宙設備",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-porthole",
+   "kind": "tile",
+   "prompt": "A round porthole window with a thick steel frame and bolts showing stars outside.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-o2-rack",
+   "kind": "tile",
+   "prompt": "A rack of green oxygen cylinders with gauges, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-floor-hatch",
+   "kind": "tile",
+   "prompt": "A square floor maintenance hatch with a recessed handle, seen from directly above.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-air-filter",
+   "kind": "tile",
+   "prompt": "An air purification unit front with a large grille and a green status light.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-water-recycler",
+   "kind": "tile",
+   "prompt": "A water recycling machine front with glass tubes of clear water and pipes.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-gravity-sign",
+   "kind": "tile",
+   "prompt": "A warning sign of a figure floating near an arrow, yellow and black pictogram, no text.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-emergency-kit",
+   "kind": "tile",
+   "prompt": "A wall box with emergency oxygen masks and a folded pressure suit, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-hull-panel-white",
+   "kind": "tile",
+   "prompt": "White spaceship hull panels with fine seams and small bolts, front-on.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.4
+  },
+  {
+   "name": "mg-cable-cover",
+   "kind": "tile",
+   "prompt": "Grey rubber floor cable covers with ridges running in parallel, from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  }
+ ]
+}
