@@ -1,7 +1,7 @@
 {
  "id": "s82_mg_space_utility",
  "group": "megaton",
- "source": "メガトン第 7 居住甲板の追加 36 枚 (シート 80〜83、画像はまだ無い)。居住区の宇宙設備",
+ "source": "メガトン第 7 居住甲板の追加 36 枚 (シート 80〜83、ユーザーが別に生成した画像)。居住区の宇宙設備",
  "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
  "cells": [
   {
@@ -10,7 +10,13 @@
    "prompt": "A round porthole window with a thick steel frame and bolts showing stars outside.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.02,
+    0.02,
+    0.98,
+    0.98
+   ]
   },
   {
    "name": "mg-o2-rack",
@@ -18,7 +24,13 @@
    "prompt": "A rack of green oxygen cylinders with gauges, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ]
   },
   {
    "name": "mg-floor-hatch",
@@ -26,7 +38,13 @@
    "prompt": "A square floor maintenance hatch with a recessed handle, seen from directly above.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.08,
+    0.03,
+    0.93,
+    0.97
+   ]
   },
   {
    "name": "mg-air-filter",
@@ -34,7 +52,13 @@
    "prompt": "An air purification unit front with a large grille and a green status light.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.03,
+    0.05,
+    0.98,
+    0.97
+   ]
   },
   {
    "name": "mg-water-recycler",
@@ -42,7 +66,13 @@
    "prompt": "A water recycling machine front with glass tubes of clear water and pipes.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.03,
+    0.04,
+    0.98,
+    0.97
+   ]
   },
   {
    "name": "mg-gravity-sign",
@@ -50,7 +80,13 @@
    "prompt": "A warning sign of a figure floating near an arrow, yellow and black pictogram, no text.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.08,
+    0.05,
+    0.93,
+    0.93
+   ]
   },
   {
    "name": "mg-emergency-kit",
@@ -58,7 +94,13 @@
    "prompt": "A wall box with emergency oxygen masks and a folded pressure suit, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.03,
+    0.87,
+    0.98
+   ]
   },
   {
    "name": "mg-hull-panel-white",
