@@ -1,0 +1,94 @@
+{
+ "id": "s87_en_marks",
+ "group": "enemy",
+ "source": "敵の小型戦艦 20 種類の追加用 90 枚 (シート 84〜93、画像はまだ無い)。塗装とマーク",
+ "style": "Small hostile warships of the \"Void fleet\" in a stylised sci-fi space game: dark gunmetal, angular, worn, with glowing accent lights. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or real-world logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object or emblem, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "en-emblem-void",
+   "kind": "tile",
+   "prompt": "An emblem: a dark circle eclipse with a jagged violet ring and three claw marks. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "en-emblem-command",
+   "kind": "tile",
+   "prompt": "A gold winged star emblem with a dark centre, military insignia. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "en-emblem-pirate",
+   "kind": "tile",
+   "prompt": "A pirate emblem: a stylised skull with crossed wrenches. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "en-kill-marks",
+   "kind": "tile",
+   "prompt": "A row of painted kill tally marks: small ship silhouettes, five in a row, white paint. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "en-noseart-fang",
+   "kind": "tile",
+   "prompt": "Nose art: a big painted mouth with sharp white fangs and red gums. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "en-noseart-bolt",
+   "kind": "tile",
+   "prompt": "Nose art: a jagged yellow lightning bolt with black outline. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "en-paint-camo",
+   "kind": "tile",
+   "prompt": "Splinter camouflage paint on metal: angular dark grey, purple-grey and black shapes.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.4
+  },
+  {
+   "name": "en-paint-stripes",
+   "kind": "tile",
+   "prompt": "Red diagonal warning stripes painted on dark metal, chipped edges.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.5
+  },
+  {
+   "name": "en-id-lights",
+   "kind": "tile",
+   "prompt": "A strip of small identification lights on a dark hull panel: red, white and violet, glowing.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  }
+ ]
+}

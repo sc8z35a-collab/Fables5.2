@@ -1,0 +1,80 @@
+{
+ "id": "s89_en_weapons_bay",
+ "group": "enemy",
+ "source": "敵の小型戦艦 20 種類の追加用 90 枚 (シート 84〜93、画像はまだ無い)。兵器区画",
+ "style": "Small hostile warships of the \"Void fleet\" in a stylised sci-fi space game: dark gunmetal, angular, worn, with glowing accent lights. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or real-world logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object or emblem, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "en-torpedo-rack",
+   "kind": "tile",
+   "prompt": "A torpedo storage rack with long grey torpedoes stacked on cradles, side view.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "en-missile-magazine",
+   "kind": "tile",
+   "prompt": "A missile magazine wall: rows of missiles in vertical slots, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "en-mine-store",
+   "kind": "tile",
+   "prompt": "A storage room shelf of spiked mines in padded cradles, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "en-drone-rack",
+   "kind": "tile",
+   "prompt": "A hangar rack of folded attack drones hanging in rows, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "en-capacitor-bank",
+   "kind": "tile",
+   "prompt": "A railgun capacitor bank: tall cylinders with glowing blue rings and thick cables, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "en-ammo-conveyor",
+   "kind": "tile",
+   "prompt": "An ammunition feed conveyor carrying brass shells through a steel channel, side view.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "en-bomb-rack",
+   "kind": "tile",
+   "prompt": "A bomb rack with fat dark bombs hanging from hooks, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "en-weapon-locker",
+   "kind": "tile",
+   "prompt": "An open weapon locker with rifles, helmets and armour vests, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "en-turret-interior",
+   "kind": "tile",
+   "prompt": "Inside a gun turret: gunner seat, sights and breech of a big cannon, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  }
+ ]
+}

@@ -1,0 +1,89 @@
+{
+ "id": "s84_en_hull",
+ "group": "enemy",
+ "source": "敵の小型戦艦 20 種類の追加用 90 枚 (シート 84〜93、画像はまだ無い)。外装の装甲",
+ "style": "Small hostile warships of the \"Void fleet\" in a stylised sci-fi space game: dark gunmetal, angular, worn, with glowing accent lights. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or real-world logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object or emblem, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "en-hull-stealth",
+   "kind": "tile",
+   "prompt": "Stealth warship hull: matte black faceted radar-absorbing tiles with thin dark grey seams.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.3
+  },
+  {
+   "name": "en-hull-scrap",
+   "kind": "tile",
+   "prompt": "Pirate scrap hull: mismatched riveted steel patches in rust, grey and faded green, weld beads.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.3
+  },
+  {
+   "name": "en-hull-ceramic",
+   "kind": "tile",
+   "prompt": "Heat-resistant hull: dark charcoal ceramic tiles with orange glowing heat cracks at the seams.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.3
+  },
+  {
+   "name": "en-hull-frost",
+   "kind": "tile",
+   "prompt": "Ice-world hull: pale blue-grey armour plates covered in thin frost and frozen streaks.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.3
+  },
+  {
+   "name": "en-hull-command",
+   "kind": "tile",
+   "prompt": "Command ship hull: dark navy armour plates with thin gold trim lines and small rivets.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.3
+  },
+  {
+   "name": "en-hull-hex",
+   "kind": "tile",
+   "prompt": "Escort ship hull: dark hexagonal armour cells with faint teal edges.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.3
+  },
+  {
+   "name": "en-hull-camo",
+   "kind": "tile",
+   "prompt": "Recon ship hull: grey digital camouflage pattern in three tones on smooth plates.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.3
+  },
+  {
+   "name": "en-hull-ram",
+   "kind": "tile",
+   "prompt": "Ram ship hull: thick scuffed steel plates with bold red diagonal stripes, dented.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.3
+  },
+  {
+   "name": "en-hull-industrial",
+   "kind": "tile",
+   "prompt": "Utility ship hull: worn yellow industrial plates with black hazard edges and grime.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.3
+  }
+ ]
+}

@@ -1,0 +1,89 @@
+{
+ "id": "s92_en_surfaces",
+ "group": "enemy",
+ "source": "敵の小型戦艦 20 種類の追加用 90 枚 (シート 84〜93、画像はまだ無い)。艦内の床・壁・天井",
+ "style": "Small hostile warships of the \"Void fleet\" in a stylised sci-fi space game: dark gunmetal, angular, worn, with glowing accent lights. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or real-world logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object or emblem, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "en-wall-stealth",
+   "kind": "tile",
+   "prompt": "Interior wall of a stealth ship: matte black panels with thin grey seams and small red lights.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.4
+  },
+  {
+   "name": "en-wall-scrap",
+   "kind": "tile",
+   "prompt": "Interior wall of a pirate ship: patched mismatched metal sheets, graffiti shapes, rivets.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.4
+  },
+  {
+   "name": "en-floor-hot",
+   "kind": "tile",
+   "prompt": "Engine room floor grating glowing faint orange from below, dark steel.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.5
+  },
+  {
+   "name": "en-wall-frost",
+   "kind": "tile",
+   "prompt": "Interior wall covered in frost and ice crystals over pale steel panels.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.4
+  },
+  {
+   "name": "en-wall-command",
+   "kind": "tile",
+   "prompt": "Command ship interior wall: dark navy panels with gold trim and small insignia rivets.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.4
+  },
+  {
+   "name": "en-wall-padded",
+   "kind": "tile",
+   "prompt": "Padded hexagonal interior wall cushions in dark grey with violet stitching.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.5
+  },
+  {
+   "name": "en-ceil-lit",
+   "kind": "tile",
+   "prompt": "Corridor ceiling: dark panels with long orange light strips and vents, seen from below.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.4
+  },
+  {
+   "name": "en-ceil-grate",
+   "kind": "tile",
+   "prompt": "Dark open ceiling grating with cables and pipes visible behind, seen from below.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.4
+  },
+  {
+   "name": "en-floor-mat",
+   "kind": "tile",
+   "prompt": "Black ribbed rubber deck mat with yellow edge strip.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.6
+  }
+ ]
+}

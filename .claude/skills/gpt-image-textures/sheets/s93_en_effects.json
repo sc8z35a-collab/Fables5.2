@@ -1,0 +1,86 @@
+{
+ "id": "s93_en_effects",
+ "group": "enemy",
+ "source": "敵の小型戦艦 20 種類の追加用 90 枚 (シート 84〜93、画像はまだ無い)。効果と小物",
+ "style": "Small hostile warships of the \"Void fleet\" in a stylised sci-fi space game: dark gunmetal, angular, worn, with glowing accent lights. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or real-world logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object or emblem, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "en-shield-hex",
+   "kind": "tile",
+   "prompt": "An energy shield surface: glowing violet hexagon grid on black, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "en-engine-plume",
+   "kind": "tile",
+   "prompt": "A rocket engine exhaust plume seen from the side: blue-white core fading to violet, on black.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "en-muzzle-flash",
+   "kind": "tile",
+   "prompt": "A cannon muzzle flash: bright star-shaped burst of orange and white, on black.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "en-battle-damage",
+   "kind": "tile",
+   "prompt": "Battle-damaged hull: torn dark plates, scorch marks and exposed glowing wires.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.4
+  },
+  {
+   "name": "en-sparks",
+   "kind": "tile",
+   "prompt": "A shower of electric sparks, bright yellow-white, on black.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "en-holo-warning",
+   "kind": "tile",
+   "prompt": "A red holographic warning sign: a triangle with an exclamation mark and scan lines, on black.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "en-escape-pod",
+   "kind": "tile",
+   "prompt": "A small capsule-shaped escape pod with a round window and fins. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "en-cargo-crate",
+   "kind": "tile",
+   "prompt": "A dark grey military cargo crate with violet stripes and handles. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "en-hazard-floor",
+   "kind": "tile",
+   "prompt": "Yellow and black hazard floor markings on dark worn steel, diagonal.",
+   "rough": 160,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.5
+  }
+ ]
+}
