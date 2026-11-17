@@ -6,6 +6,7 @@ import { mat, glow, aoMat } from '../gfx/textures.js';
 import { rng, vnoise } from '../core/util.js';
 import { fxTime } from '../gfx/fx.js';
 import { PROPS } from './props.js';
+import { havenMaterial } from './haven/materials.js';
 
 export const T = 0.2;      // 壁厚
 export const PR = 0.35;    // プレイヤー半径
@@ -39,12 +40,17 @@ function vaultGeo(len, half, rise, seg = 16) {
 
 // ───────────────────────── 扉 ─────────────────────────
 function door(out, B, th, axis, line, pos, dw, dh, style = th.door3 || 'slide') {
+  const x = axis === 'z' ? line : pos, z = axis === 'z' ? pos : line;
+  if (style === 'seam') {
+    const connection = { x, z, dw, dh, open: true, k: 1, panels: [], mode: 'none' };
+    out.doors.push(connection);
+    return connection;
+  }
   const DK = mat('hull', { color: th.frame ?? 0x2c3038, rough: 0.8, metal: 0.6 }), tr = glow(th.trim, 3), D = 2 * T + 0.14, heavy = style === 'blast' || style === 'hatch', pw = heavy ? 0.36 : 0.18, hh = heavy ? 0.4 : 0.25;
   const bx = (m, a, y, d, w, h, t = D) => (axis === 'z' ? B.box(m, t, h, w, line + d, y, a) : B.box(m, w, h, t, a, y, line + d));
   bx(DK, pos - dw / 2 - pw / 2, (dh + hh) / 2, 0, pw, dh + hh); bx(DK, pos + dw / 2 + pw / 2, (dh + hh) / 2, 0, pw, dh + hh); bx(DK, pos, dh + hh / 2, 0, dw + pw * 2, hh); bx(DK, pos, 0.015, 0, dw, 0.03);
   bx(style === 'blast' ? glow('#fc4', 2.4) : tr, pos, dh + 0.06, 0, dw * 0.6, 0.05, D + 0.02);
   if (style === 'hatch') for (const s of [-1, 1]) { const g = new THREE.BoxGeometry(axis === 'z' ? D : 0.5, 0.12, axis === 'z' ? 0.5 : D); B.add(DK, g, axis === 'z' ? mx(line, dh - 0.16, pos + s * (dw / 2 - 0.14), s * 0.785, 0, 0) : mx(pos + s * (dw / 2 - 0.14), dh - 0.16, line, 0, 0, -s * 0.785)); }
-  const x = axis === 'z' ? line : pos, z = axis === 'z' ? pos : line;
   if (style === 'open') { out.doors.push({ x, z, dw, dh, k: 1, open: true, panels: [], mode: 'none' }); return out.doors[out.doors.length - 1]; }
   const g = new THREE.Group(), panels = []; let mode = 'x';
   if (style === 'blast') {
@@ -136,7 +142,7 @@ function ceiling(B, r, th, CM, DK, out, rnd) {
     if (h > 3.4 && !r.nobeam) for (let z = z0 + 2; z < z0 + r.d - 1; z += 4) B.box(DK, r.w - 2 * T, 0.3, 0.22, cx, h - 0.15, z);
   }
   if (lst === 'chandelier') { lamps(B, out, r, th, [[cx, cz, h - (st === 'coffer' ? 0.3 : 0.02)]], 'chandelier'); lamps(B, out, r, th, pts.filter(([x, z]) => Math.hypot(x - cx, z - cz) > 3), 'spot'); }
-  else lamps(B, out, r, th, pts, lst);
+  else lamps(B, out, r, th, r.lampPoints?.map(([x, z, rot]) => [r.x + x, r.z + z, h - 0.02, rot]) ?? pts, lst);
 }
 
 // ───────────────────────── 段差 (壇・階段) ─────────────────────────
@@ -159,7 +165,9 @@ function platforms(B, r, th, FM, out) {
 function room(B, r, th, op, out, rnd) {
   const x0 = r.x, z0 = r.z, x1 = r.x + r.w, z1 = r.z + r.d, h = r.h, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
   const ws = r.wall || th.wall, fs = r.floor || th.floor, cs = r.ceil || th.ceil;
-  const WM = mat(ws[0], { color: ws[1], rough: ws[2] ?? 0.85, metal: ws[3] ?? 0.3 }), FM = mat(fs[0], { color: fs[1], rough: fs[2] ?? 0.6, metal: fs[3] ?? 0.35, floor: 1 }), CM = mat(cs[0], { color: cs[1], rough: 0.9, metal: 0.4 });
+  const WM = r.tiles ? havenMaterial(r.tiles[0]) : mat(ws[0], { color: ws[1], rough: ws[2] ?? 0.85, metal: ws[3] ?? 0.3 });
+  const FM = r.tiles ? havenMaterial(r.tiles[1]) : mat(fs[0], { color: fs[1], rough: fs[2] ?? 0.6, metal: fs[3] ?? 0.35, floor: 1 });
+  const CM = r.tiles ? havenMaterial(r.tiles[2]) : mat(cs[0], { color: cs[1], rough: 0.9, metal: 0.4 });
   const DK = mat('hull', { color: th.frame ?? 0x2c3038, rough: 0.8, metal: 0.6 }), trim = glow(r.trim || th.trim, 2.6), GL = glassMat(), tst = r.trims ?? th.trims ?? 'both', ribs = r.ribs ?? th.ribs ?? true;
   out.floorMats.add(FM);
   if (r.shape === 'round') return round(B, r, th, op, out, rnd, WM, FM, CM, DK, trim);
@@ -169,7 +177,7 @@ function room(B, r, th, op, out, rnd) {
     const hz = side === 'n' || side === 's', lo = hz ? x0 : z0 + T, hi = hz ? x1 : z1 - T, dir = side === 'n' || side === 'w' ? 1 : -1;
     const fix = side === 'n' ? z0 + T / 2 : side === 's' ? z1 - T / 2 : side === 'w' ? x0 + T / 2 : x1 - T / 2, inner = fix + dir * T / 2;
     const box = (m, a, b, ya, yb, tk = T, off = 0, uvs) => { if (b - a < 0.02 || yb - ya < 0.02) return; const g = hz ? new THREE.BoxGeometry(b - a, yb - ya, tk) : new THREE.BoxGeometry(tk, yb - ya, b - a); B.add(m, g, hz ? mx((a + b) / 2, (ya + yb) / 2, fix + off) : mx(fix + off, (ya + yb) / 2, (a + b) / 2), uvs); };
-    const strips = (a, b) => { if (b - a < 0.6) return; if (tst === 'both' || tst === 'low') box(trim, a + 0.12, b - 0.12, 0.09, 0.14, 0.03, dir * (T / 2 + 0.012)); if (tst === 'both' || tst === 'high') box(trim, a + 0.12, b - 0.12, h - 0.2, h - 0.16, 0.03, dir * (T / 2 + 0.012)); if (tst === 'neon') { box(trim, a + 0.4, b - 0.4, 2.55, 2.6, 0.04, dir * (T / 2 + 0.03)); } box(DK, a, b, 0, 0.07, 0.06, dir * (T / 2 + 0.03)); };
+    const strips = (a, b) => { if (r.flush || b - a < 0.6) return; if (tst === 'both' || tst === 'low') box(trim, a + 0.12, b - 0.12, 0.09, 0.14, 0.03, dir * (T / 2 + 0.012)); if (tst === 'both' || tst === 'high') box(trim, a + 0.12, b - 0.12, h - 0.2, h - 0.16, 0.03, dir * (T / 2 + 0.012)); if (tst === 'neon') { box(trim, a + 0.4, b - 0.4, 2.55, 2.6, 0.04, dir * (T / 2 + 0.03)); } box(DK, a, b, 0, 0.07, 0.06, dir * (T / 2 + 0.03)); };
     const os = op[side].slice().sort((p, q) => p.a - q.a); let cur = lo;
     for (const o of os) {
       box(WM, cur, o.a, 0, h); strips(cur, o.a - (o.type === 'door' ? 0.2 : 0));
@@ -179,7 +187,7 @@ function room(B, r, th, op, out, rnd) {
         const n = Math.max(1, Math.round((o.b - o.a) / 2.8)); for (let i = 0; i <= n; i++) { const p = o.a + (o.b - o.a) * i / n; box(DK, p - 0.05, p + 0.05, o.y0, o.y1, T + 0.12); }
         if (tst !== 'none') box(trim, o.a, o.b, o.y0 - 0.14, o.y0 - 0.11, 0.03, dir * (T / 2 + 0.07));
       }
-      cur = o.b + (o.type === 'door' ? 0.2 : 0);
+      cur = o.b + (o.type === 'door' && !out.bp.tightPassages ? 0.2 : 0);
     }
     box(WM, Math.min(cur, hi), hi, 0, h); strips(cur, hi);
     if (ribs) for (let p = lo + 2; p < hi - 1; p += 4) { if (os.some((o) => p > o.a - 0.5 && p < o.b + 0.5)) continue; hz ? B.box(DK, 0.28, h, 0.14, p, h / 2, inner + dir * 0.07) : B.box(DK, 0.14, h, 0.28, inner + dir * 0.07, h / 2, p); }
@@ -235,7 +243,7 @@ function round(B, r, th, op, out, rnd, WM, FM, CM, DK, trim) {
 export function buildInterior(bp) {
   const th = bp.theme, B = new Builder(), rnd = rng(bp.seed || 7), BR = {}, groups = {};
   const out = { bp, group: new THREE.Group(), walk: [], cols: [], rects: [], items: [], doors: [], lights: [], anim: [], npcs: [], drones: [], heights: [], floorMats: new Set(), slot: null, spawn: bp.spawn, rooms: bp.rooms, adj: {}, roomGroups: groups };
-  const open = {}, R = (id) => bp.rooms.find((r) => r.id === id);
+  const open = {}, roomsById = new Map(bp.rooms.map((r) => [r.id, r])), R = (id) => roomsById.get(id);
   for (const r of bp.rooms) { open[r.id] = { n: [], s: [], w: [], e: [] }; BR[r.id] = new Builder(); groups[r.id] = new THREE.Group(); out.group.add(groups[r.id]); out.adj[r.id] = []; }
   for (const r of bp.rooms) for (const w of r.win || []) { if (typeof w[0] !== 'string') continue; const [side, a, b, y0 = 0.9, y1 = r.h - 0.5] = w, base = side === 'n' || side === 's' ? r.x : r.z; open[r.id][side].push({ a: base + a, b: base + b, y0, y1, type: 'win' }); }
   for (const [ia, ib, pos, dw = 2.2, dh = 2.5, style] of bp.doors || []) {
@@ -247,7 +255,16 @@ export function buildInterior(bp) {
     else { console.warn('door: 部屋が隣接していません', ia, ib); continue; }
     const o = { a: pos - dw / 2, b: pos + dw / 2, y0: 0, y1: dh, type: 'door' }; open[ia][sa].push(o); open[ib][sb].push({ ...o });
     const ext = T + PR + 0.75;
-    out.walk.push(axis === 'z' ? [line - ext, pos - dw / 2 + PR, line + ext, pos + dw / 2 - PR] : [pos - dw / 2 + PR, line - ext, pos + dw / 2 - PR, line + ext]);
+    let neg = ext, posExt = ext;
+    if (bp.tightPassages) {
+      const left = sa === 'e' || sa === 's' ? A : Bm;
+      const right = left === A ? Bm : A;
+      neg = Math.min(ext, (axis === 'z' ? left.w : left.d) - T - PR);
+      posExt = Math.min(ext, (axis === 'z' ? right.w : right.d) - T - PR);
+    }
+    out.walk.push(axis === 'z'
+      ? [line - neg, pos - dw / 2 + PR, line + posExt, pos + dw / 2 - PR]
+      : [pos - dw / 2 + PR, line - neg, pos + dw / 2 - PR, line + posExt]);
     const d = door(out, B, th, axis, line, pos, dw, dh, style); out.adj[ia].push({ to: ib, d }); out.adj[ib].push({ to: ia, d });
   }
   // 格納庫の位置は装飾 (岩など) より先に確定させる
