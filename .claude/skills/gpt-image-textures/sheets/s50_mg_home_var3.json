@@ -1,0 +1,80 @@
+{
+ "id": "s50_mg_home_var3",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 45 枚 (シート 48〜52、画像はまだ無い)。300 戸の住戸が同じ見た目の繰り返しにならないための色違い・柄違い、港・駅・大きな施設の床と壁、暮らしの小物と住人の服",
+ "style": "More apartment doors and furniture fronts so homes differ. Each cell is ONE item seen exactly straight on, flat even light, on a plain white background, no shadows, no readable text.",
+ "cells": [
+  {
+   "name": "mg-door-home-e",
+   "kind": "tile",
+   "prompt": "An apartment front door: deep red painted steel, peephole, mail slot, lever handle.",
+   "seam": "",
+   "rough": 120,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-door-home-f",
+   "kind": "tile",
+   "prompt": "An apartment front door: mustard yellow painted steel, peephole, mail slot, lever handle.",
+   "seam": "",
+   "rough": 120,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-door-home-g",
+   "kind": "tile",
+   "prompt": "An apartment front door: wooden lattice door with frosted glass panels, Japanese style.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-tv-on",
+   "kind": "tile",
+   "prompt": "A flat TV screen that is switched on, showing a bright nature documentary scene, thin black bezel.",
+   "seam": "",
+   "rough": 40,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-bookshelf-full",
+   "kind": "tile",
+   "prompt": "A home bookshelf front completely filled with colourful books, a few ornaments.",
+   "seam": "",
+   "rough": 180,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-kitchen-wood",
+   "kind": "tile",
+   "prompt": "The lower cabinets of a fitted kitchen front-on: warm wood doors and drawers with black handles.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-fridge-black",
+   "kind": "tile",
+   "prompt": "A black two-door refrigerator front with slim handles.",
+   "seam": "",
+   "rough": 60,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-tansu",
+   "kind": "tile",
+   "prompt": "A traditional Japanese chest of drawers (tansu) front: dark wood with iron handles.",
+   "seam": "",
+   "rough": 160,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-dresser",
+   "kind": "tile",
+   "prompt": "A dressing table front: oval mirror on top, small drawers below, a few cosmetics.",
+   "seam": "",
+   "rough": 100,
+   "normal": 1.5
+  }
+ ]
+}

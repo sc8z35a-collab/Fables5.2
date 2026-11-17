@@ -1,0 +1,86 @@
+{
+ "id": "s49_mg_home_var2",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 45 枚 (シート 48〜52、画像はまだ無い)。300 戸の住戸が同じ見た目の繰り返しにならないための色違い・柄違い、港・駅・大きな施設の床と壁、暮らしの小物と住人の服",
+ "style": "More home fabrics and rugs. Tiles are flat, evenly lit, seamless fabric close-ups; PICTURE cells are one rug or curtain seen from directly above or front-on, no shadows, no text.",
+ "cells": [
+  {
+   "name": "mg-curtain-blue",
+   "kind": "tile",
+   "prompt": "Curtain fabric: plain soft blue linen with gentle vertical folds.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.8
+  },
+  {
+   "name": "mg-curtain-check",
+   "kind": "tile",
+   "prompt": "Curtain fabric: cream with a small brown check pattern.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.8
+  },
+  {
+   "name": "mg-bedspread-stripe",
+   "kind": "tile",
+   "prompt": "Bedspread fabric: navy and white wide stripes, cotton.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-bedspread-grey",
+   "kind": "tile",
+   "prompt": "Bedspread fabric: plain warm grey waffle knit.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-sofa-green",
+   "kind": "tile",
+   "prompt": "Sofa upholstery: deep green velvet close-up.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.0
+  },
+  {
+   "name": "mg-sofa-leather",
+   "kind": "tile",
+   "prompt": "Sofa upholstery: brown leather close-up with slight wear.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.0
+  },
+  {
+   "name": "mg-rug-round",
+   "kind": "tile",
+   "prompt": "A round woven living-room rug seen from directly above, beige and blue concentric pattern, on a white background.",
+   "seam": "",
+   "rough": 230,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-rug-kids",
+   "kind": "tile",
+   "prompt": "A colourful children play mat with roads and houses seen from directly above, rectangular, filling the cell.",
+   "seam": "",
+   "rough": 230,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-noren-room",
+   "kind": "tile",
+   "prompt": "A room divider noren curtain seen front-on: two long linen panels with a simple indigo leaf pattern.",
+   "seam": "",
+   "rough": 230,
+   "normal": 1.5
+  }
+ ]
+}

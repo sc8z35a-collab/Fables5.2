@@ -1,0 +1,89 @@
+{
+ "id": "s48_mg_home_var1",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 45 枚 (シート 48〜52、画像はまだ無い)。300 戸の住戸が同じ見た目の繰り返しにならないための色違い・柄違い、港・駅・大きな施設の床と壁、暮らしの小物と住人の服",
+ "style": "More floors, wallpapers and ceilings for apartments, so neighbouring homes look different. Flat, evenly lit, top-down for floors, front-on for walls, from below for ceilings, seamless, no shadows.",
+ "cells": [
+  {
+   "name": "mg-floor-dark",
+   "kind": "tile",
+   "prompt": "Dark walnut floorboards, long planks with rich grain.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-floor-herringbone",
+   "kind": "tile",
+   "prompt": "Herringbone oak parquet floor.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.8
+  },
+  {
+   "name": "mg-floor-tile-white",
+   "kind": "tile",
+   "prompt": "Large white matte floor tiles with thin grey joints.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.4
+  },
+  {
+   "name": "mg-wallpaper-flower",
+   "kind": "tile",
+   "prompt": "Wallpaper with a small soft floral pattern on cream.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-wallpaper-stripe",
+   "kind": "tile",
+   "prompt": "Wallpaper with thin vertical pastel stripes.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-wallpaper-green",
+   "kind": "tile",
+   "prompt": "Plain pale sage green wallpaper with a fine linen texture.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.5
+  },
+  {
+   "name": "mg-wall-sand",
+   "kind": "tile",
+   "prompt": "Japanese sand-finished clay wall (juraku), warm beige, fine grain.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.5
+  },
+  {
+   "name": "mg-ceil-wood",
+   "kind": "tile",
+   "prompt": "Wooden plank ceiling seen from below, light cedar boards.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.5
+  },
+  {
+   "name": "mg-ceil-sao",
+   "kind": "tile",
+   "prompt": "Traditional Japanese ceiling seen from below: thin wooden battens over wide light wood boards.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.5
+  }
+ ]
+}
