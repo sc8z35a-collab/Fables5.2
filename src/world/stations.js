@@ -5,33 +5,31 @@ import { mat, glow } from '../gfx/textures.js';
 import { rng, rr } from '../core/util.js';
 import { V, winMat, port, done, sign, sdBox } from './stationkit.js';
 import { BUILD2, SDF2 } from './stations2.js';
+import { buildHavenHull, havenDockZ, havenHullDistance, havenRadius } from './haven/exterior.js';
+import { havenMaterial } from './haven/materials.js';
 
-// ───────────────────────── 1. ヘイヴン・リング (交易ハブ) ─────────────────────────
+// ───────────────────────── 1. ヘイヴン・リング (交易ハブ): 直径約 2 km の回転式居住港 (haven/exterior.js) ─────────────────────────
 function haven() {
-  const b = new Builder(), H = mat('haven-hull', { color: 0xdfe5ec, rough: 0.6, metal: 0.3 }), W = winMat(0xdfe5ec, 0xfff0d0), D = mat('hull', { color: 0x3a4049, rough: 0.8, metal: 0.6 }), S = mat('solar', { metal: 0.9, env: 1.6 });
-  const C = glow('#4de1ff', 4), R = 250;
-  b.tor(W, R, 24, 0, 0, 0, 0, 0, 0, 200, 8); // 居住リング
-  b.tor(D, R + 23.5, 5, 0, 0, 0, 0, 0, 0, 200, 6); b.tor(D, R - 23.5, 4, 0, 0, 0, 0, 0, 0, 200, 6);
-  for (const z of [-12, 12]) { b.tor(C, R + 27.6, 0.5, 0, 0, z, 0, 0, 0, 200, 5); b.tor(C, R - 26.6, 0.4, 0, 0, z, 0, 0, 0, 160, 5); }
-  b.tor(H, R, 26.5, 0, 0, 0, 0, 0, 0, 200, 4, Math.PI * 2);
-  for (let i = 0; i < 6; i++) {
-    const a = i * Math.PI / 3;
-    b.add(H, new THREE.CylinderGeometry(6, 8, R - 60, 14), mx(Math.cos(a) * (R / 2 + 16), Math.sin(a) * (R / 2 + 16), 0, 0, 0, a - Math.PI / 2));
-    b.add(D, new THREE.BoxGeometry(22, 34, 30), mx(Math.cos(a) * (R - 30), Math.sin(a) * (R - 30), 0, 0, 0, a));
-    b.add(W, new THREE.BoxGeometry(36, 16, 40), mx(Math.cos(a) * 105, Math.sin(a) * 105, 0, 0, 0, a));
-    for (const s of [-1, 1]) b.add(D, new THREE.CylinderGeometry(1.2, 1.2, R - 70, 6), mx(Math.cos(a) * (R / 2 + 16) - Math.sin(a) * 11 * s, Math.sin(a) * (R / 2 + 16) + Math.cos(a) * 11 * s, s * 6, 0, 0, a - Math.PI / 2));
-  }
-  b.cyl(W, 46, 46, 110, 0, 0, 0, 'z', 40); b.cyl(D, 50, 50, 14, 0, 0, 30, 'z', 40); b.cyl(D, 50, 50, 14, 0, 0, -30, 'z', 40);
-  b.cyl(H, 30, 46, 40, 0, 0, 75, 'z', 40); b.cyl(H, 46, 26, 50, 0, 0, -80, 'z', 40);
-  b.tor(C, 47, 0.7, 0, 0, 55, 0, 0, 0, 80, 5); b.tor(C, 47, 0.7, 0, 0, -55, 0, 0, 0, 80, 5);
-  const p = port(b, D, V(0, 0, 101), V(0, 0, 1));
-  b.cyl(D, 5, 8, 120, 0, 0, -160, 'z', 16); b.cyl(D, 1, 1, 90, 0, 0, -260, 'z', 8);
-  b.add(H, new THREE.CylinderGeometry(38, 4, 14, 32, 1, true), mx(0, 0, -224, Math.PI / 2, 0, 0)); // 通信ディッシュ
-  for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4, cx = Math.cos(a), cy = Math.sin(a); b.add(D, new THREE.CylinderGeometry(1.6, 1.6, 150, 8), mx(cx * 85, cy * 85, -150, 0, 0, a - Math.PI / 2)); b.add(S, new THREE.BoxGeometry(46, 1, 110), mx(cx * 105, cy * 105, -150, 0, 0, a)); }
-  const lights = []; for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; lights.push({ p: V(Math.cos(a) * (R + 30), Math.sin(a) * (R + 30), 0), c: i % 2 ? '#f44' : '#fff', s: 26, blink: 0.6, ph: i / 12 }); }
-  for (let i = 0; i < 6; i++) lights.push({ p: V(0, 0, 130 + i * 40), c: '#4f8', s: 14, blink: 1, ph: 1 - i / 6 });
-  const o = done(b, { ports: [p], radius: 300, lights, signs: [sign('HAVEN RING', '#4de1ff', 16, 0, 62, 20, 0, 0), sign('ヘイヴン・リング 交易港', '#ffd27a', 9, 0, -62, 20, 0, 0)] });
-  o.anim.push((t, dt) => { o.obj.rotation.z += dt * 0.035; });
+  const b = new Builder(), rb = new Builder();
+  buildHavenHull(b, rb);
+  const ring = rb.build();
+  const p = port(b, havenMaterial(6, 'hull'), V(0, 0, havenDockZ), V(0, 0, 1));
+  const lights = [
+    { p: V(928, 290, 30), c: '#fff0d2', s: 34 },
+    { p: V(98, 954, 35), c: '#ff7668', s: 30, blink: 0.75, ph: 0 },
+    { p: V(-901, 337, -27), c: '#ffc082', s: 25, blink: 0.66, ph: 0.43 },
+    { p: V(-566, -786, 35), c: '#ff7668', s: 30, blink: 0.65, ph: 0.2 },
+    { p: V(654, -710, 35), c: '#fff0d2', s: 26 },
+  ];
+  for (const light of lights) light.parent = ring;
+  for (const [i, z] of [205, 246, 295, 356, 428, 510].entries()) lights.push({ p: V(0, 0, z), c: '#76ffba', s: 11, blink: 1, ph: 1 - i / 6 });
+  // 接近の通り道はハブ (回転しない軸) にそろえる
+  const o = done(b, { ports: [p], radius: havenRadius, ring, lights, signs: [
+    sign('HAVEN RING', '#e4fff6', 11, 0, 99, 83),
+    sign('地球軌道港  A01', '#ffe1a2', 5, 0, 77, 133),
+  ] });
+  o.obj.add(ring);
+  o.anim.push((_t, dt) => { ring.rotation.z = (ring.rotation.z + dt * 0.096) % (2 * Math.PI); });
   return o;
 }
 
@@ -162,11 +160,7 @@ export function buildStation(def) { const o = BUILD[def.id](); o.def = def; retu
 const ROGUE_ROCKS = (() => { const r = rng(55), out = []; for (let i = 0; i < 7; i++) { const rad = rr(r, 12, 34), a = r() * 6.28, d = rr(r, 250, 400), y = rr(r, -90, 90); out.push([Math.cos(a) * d, y, Math.sin(a) * d, rad * 1.15]); } return out; })();
 // ── 衝突判定用の近似距離関数 (ステーションのローカル座標) ──
 const SDF = {
-  haven: (x, y, z) => { // リングとハブに加え、スポーク 6 本・居住モジュール 6 基・後部マスト・通信ディッシュ・太陽電池パネル (以前は判定なし)
-    const r = Math.hypot(x, y); let d = Math.min(Math.hypot(r - 250, z) - 28, Math.max(r - 50, Math.abs(z) - 100), Math.max(r - 8, Math.max(z + 100, -z - 305)), Math.max(r - 39, Math.abs(z + 224) - 7));
-    for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3, c = Math.cos(a), s = Math.sin(a), u = x * c + y * s, v = -x * s + y * c; d = Math.min(d, Math.hypot(Math.max(Math.abs(u - 141) - 95, 0), v, z) - 8.5, sdBox(u, v, z, 105, 0, 0, 18, 8, 20), sdBox(u, v, z, 220, 0, 0, 11, 17, 15)); }
-    for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4, c = Math.cos(a), s = Math.sin(a), u = x * c + y * s, v = -x * s + y * c; d = Math.min(d, sdBox(u, v, z, 105, 0, -150, 23, 1, 55), Math.hypot(Math.max(Math.abs(u - 85) - 75, 0), v, z + 150) - 2); }
-    return d; },
+  haven: havenHullDistance, // リングの回転角 (spin) も受け取る
   vulcan: (x, y, z) => Math.min(sdBox(x, y, z, 0, 0, 0, 362, 12, 14), sdBox(x, y, z, -215, -62, 0, 82, 64, 50), sdBox(x, y, z, 0, -62, 0, 82, 64, 50), sdBox(x, y, z, 215, -62, 0, 82, 64, 50), sdBox(x, y, z, 392, 40, 0, 32, 66, 26),
     Math.hypot(x + 330, Math.abs(y) - 34, z) - 23, Math.hypot(x + 378, Math.abs(y) - 34, z) - 23), // 球形燃料タンク 4 基 (以前は判定なし)
   aurora: (x, y, z) => { // 主球・リング・太陽電池翼・望遠鏡に加え、直径約 180m のパラボラアンテナと下部ハブ (以前は判定が無くすり抜けられた)
@@ -180,4 +174,4 @@ const SDF = {
     for (const q of ROGUE_ROCKS) d = Math.min(d, Math.hypot(x - q[0], y - q[1], z - q[2]) - q[3]); return d; }, // 周囲の小岩 7 個と岩の上の居住区 (以前は判定なし)
 };
 Object.assign(SDF, SDF2);
-export function stationSDF(id, x, y, z) { return SDF[id](x, y, z); }
+export function stationSDF(id, x, y, z, spin) { return SDF[id](x, y, z, spin); } // spin = 回転するリングの角度 (ヘイヴン)

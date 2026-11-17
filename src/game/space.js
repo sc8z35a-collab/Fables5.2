@@ -293,7 +293,7 @@ export class SpaceMode {
     const ax = G.input.axes(); if (ax.x ** 2 + ax.y ** 2 > 0.8) { p.auto = null; if (p.m.gear) p.m.gear.visible = false; G.hud.msg('自動誘導を中止 — 手動操縦'); }
   }
   /** シーン座標の点からステーション s の外板までの近似距離 (ステーションの回転も考慮する) */
-  _sdf(s, x, y, z) { const o = s.m.obj, c = o.position, q = o.quaternion; _w3.set(x - c.x, y - c.y, z - c.z); if (q.w < 0.999999) _w3.applyQuaternion(_q2.copy(q).invert()); return stationSDF(s.def.id, _w3.x, _w3.y, _w3.z); }
+  _sdf(s, x, y, z) { const o = s.m.obj, c = o.position, q = o.quaternion; _w3.set(x - c.x, y - c.y, z - c.z); if (q.w < 0.999999) _w3.applyQuaternion(_q2.copy(q).invert()); return stationSDF(s.def.id, _w3.x, _w3.y, _w3.z, s.m.ring?.rotation.z); }
   /** 線分 a→b がステーション s の本体 (衝突判定用の距離関数) に触れるか */
   _blocked(s, a, b) {
     const n = Math.min(120, Math.ceil(a.distanceTo(b) / 15)), cl = this.pl.st.radius * 0.5 + 8;
