@@ -1,3 +1,4 @@
+import { dressHaven } from './finishes.js';
 import { PR, T } from '../interior.js';
 import { homes } from './homes.js';
 import { shops } from './shops.js';
@@ -122,7 +123,7 @@ const services = [
 ];
 
 export function haven() {
-  const rooms = [airlock], doors = [];
+  const rooms = [{ ...airlock }], doors = [];
   const runs = streets.map(([start,end,z,name,tiles,h,lamp,lamps,props], i) => {
     const x = start + (i > 0 ? HALF : 0);
     return { id:'run-' + (i + 1), kind:'passage', name, x, z:z-HALF, w:end-(i < streets.length-1 ? HALF : 0)-x,
@@ -183,6 +184,7 @@ export function haven() {
     sideRoom('service-'+name,'service',name,street,side,setback,w,d,offset,h,tiles,lamp,props,win);
   }
 
+  dressHaven(rooms);
   return {
     name:'ヘイヴン・リング', sub:'地球軌道港・居住区', seed:317, spawn:[-3,-3,-Math.PI/2], view:[0,1], music:'interior',
     reflect:false, tightPassages:true,
