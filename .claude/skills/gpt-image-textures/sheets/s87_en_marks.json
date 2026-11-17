@@ -37,7 +37,7 @@
   {
    "name": "en-kill-marks",
    "kind": "tile",
-   "prompt": "A row of painted kill tally marks: small ship silhouettes, five in a row, white paint. On plain pure white background.",
+   "prompt": "A row of painted kill tally marks: small dark red ship silhouettes with black outlines, five in a row. On plain pure white background.",
    "seam": "",
    "rough": 150,
    "normal": 1.5,
