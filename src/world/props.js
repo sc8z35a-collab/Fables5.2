@@ -20,6 +20,10 @@ const flat = (c, r = 0.5, m = 0.2) => mat('flat', { color: c, rough: r, metal: m
 const CRATE = [0xb8452e, 0x2e7ab8, 0xc9a22e, 0x3aa86a, 0x7a808a, 0x8a4ab8];
 const scr = (P, kind, c, title, w, h, x, y, z, rx = 0, k = 1.5) => P.add(screenMat(kind, c, title, k), new THREE.PlaneGeometry(w, h), mx(x, y, z, rx, 0, 0));
 const blob = (P, m, r, x, y, z, seed, sy = 1) => P.add(m, rockGeo(r, 1, seed, 0.45), mx(x, y, z, 0, seed, 0, 1, sy, 1), 0);
+function mountHavenTexture(P, tile, w, h, x, y, z, rx = 0) {
+  if (tile === undefined) return;
+  P.add(havenMaterial(tile, 'panel'), new THREE.PlaneGeometry(w, h), mx(x, y, z, rx), 0);
+}
 const LEAF = [0xffffff, 0xd8f0c0, 0xb0d890];
 /** 葉カードの茂み (中に暗い芯を入れて透けを防ぐ) */
 const bush = (P, e, R, n, x, y, z, flat = 0.8) => { P.add(leafMat(LEAF[Math.floor(e.rnd() * 3)]), canopyGeo(R, n, e.rnd, flat), mx(x, y, z), 0); P.add(mat('flat', { color: 0x163a18, rough: 0.9, metal: 0 }), rockGeo(R * 0.5, 1, x * 7 + z, 0.3), mx(x, y, z, 0, 0, 0, 1, flat, 1), 0); };
@@ -104,12 +108,14 @@ export const PROPS = {
   barrel(P, o, e) { const m = MM(); for (const [x, z] of [[0, 0], [0.75, 0.1], [0.35, 0.68]]) { P.cyl(crateM(CRATE[Math.floor(e.rnd() * 4)]), 0.33, 0.33, 1.0, x, 0.5, z, 'y', 14); P.cyl(m.dk, 0.35, 0.35, 0.06, x, 0.3, z, 'y', 14); P.cyl(m.dk, 0.35, 0.35, 0.06, x, 0.75, z, 'y', 14); } e.col(0.85, 0.35, 0.25); },
   cargo(P, o, e) { const m = MM(), c = crateM(o.c || CRATE[Math.floor(e.rnd() * 5)]); P.box(c, 2.4, 2.6, 6, 0, 1.3, 0); P.box(m.dk, 2.5, 0.12, 6.1, 0, 0.06, 0); P.box(m.dk, 2.5, 0.12, 6.1, 0, 2.6, 0); for (const s of [-1, 1]) P.box(m.st, 0.06, 2.3, 0.06, s * 0.5, 1.3, 3.03); e.rect(2.4, 6); },
   bench(P, o, e) { const m = MM(); P.box(fab(o.c || 0x2e5a7a), 2.0, 0.12, 0.5, 0, 0.47, 0); P.box(fab(o.c || 0x2e5a7a), 2.0, 0.5, 0.1, 0, 0.8, -0.24); for (const s of [-0.85, 0.85]) P.box(m.ch, 0.06, 0.45, 0.45, s, 0.22, 0); e.rect(2, 0.55); },
-  sofa(P, o, e) { const m = MM(), f = fab(o.c || 0x8a4b3a), w = o.w || 2.4; P.box(m.dk, w, 0.2, 0.95, 0, 0.1, 0); P.box(f, w - 0.1, 0.3, 0.85, 0, 0.36, 0.02); P.box(f, w, 0.75, 0.22, 0, 0.6, -0.38); for (const s of [-1, 1]) P.box(f, 0.22, 0.55, 0.95, s * (w / 2 - 0.1), 0.48, 0); e.rect(w, 0.95); },
+  sofa(P, o, e) { const m = MM(), f = fab(o.c || 0x8a4b3a), w = o.w || 2.4; P.box(m.dk, w, 0.2, 0.95, 0, 0.1, 0); P.box(f, w - 0.1, 0.3, 0.85, 0, 0.36, 0.02); P.box(f, w, 0.75, 0.22, 0, 0.6, -0.38); for (const s of [-1, 1]) P.box(f, 0.22, 0.55, 0.95, s * (w / 2 - 0.1), 0.48, 0); mountHavenTexture(P, o.topTile, w - 0.45, 0.62, 0, 0.513, 0.13, -HP); e.rect(w, 0.95); },
   table(P, o, e) { const m = MM(); P.cyl(o.wood ? m.wd : m.wh, 0.72, 0.72, 0.06, 0, 0.76, 0, 'y', 28); P.cyl(m.ch, 0.06, 0.06, 0.72, 0, 0.38, 0, 'y', 10); P.cyl(m.ch, 0.36, 0.4, 0.04, 0, 0.02, 0, 'y', 20); P.cyl(glow(o.c || e.th.trim, 1.5), 0.1, 0.1, 0.02, 0, 0.8, 0, 'y', 12);
     for (let i = 0; i < (o.n ?? 4); i++) { const a = i * HP + 0.6; P.cyl(fab(o.fc || 0x30363e), 0.22, 0.2, 0.08, Math.cos(a) * 1.08, 0.46, Math.sin(a) * 1.08, 'y', 14); P.cyl(m.ch, 0.04, 0.04, 0.44, Math.cos(a) * 1.08, 0.22, Math.sin(a) * 1.08, 'y', 8); } e.col(1.05); },
   bed(P, o, e) { const m = MM(); P.box(m.dk, 1.05, 0.34, 2.15, 0, 0.17, 0); P.box(flat(0xe8e8e2, 0.9, 0), 0.95, 0.16, 2.0, 0, 0.42, 0); P.box(fab(o.c || 0x35507a), 0.97, 0.06, 1.3, 0, 0.52, 0.3); P.box(flat(0xffffff, 0.9, 0), 0.6, 0.1, 0.36, 0, 0.55, -0.74); P.box(m.dk, 1.05, 0.7, 0.08, 0, 0.6, -1.06); P.box(glow(e.th.trim, 2), 0.8, 0.03, 0.03, 0, 0.9, -1.01);
+    mountHavenTexture(P, o.topTile, 0.97, 1.3, 0, 0.553, 0.3, -HP);
+    mountHavenTexture(P, o.pillowTile, 0.58, 0.34, 0, 0.603, -0.74, -HP);
     e.rect(1.05, 2.15); e.use(o.label || '寝台で休む', 'rest', 2.2); },
-  bunk(P, o, e) { const m = MM(); for (const y of [0.3, 1.5]) { P.box(m.st, 0.95, 0.08, 2.0, 0, y, 0); P.box(flat(0xdcdcd6, 0.9, 0), 0.85, 0.12, 1.9, 0, y + 0.1, 0); P.box(fab(o.c || 0x5a2a2a), 0.87, 0.05, 1.1, 0, y + 0.18, 0.35); } for (const [x, z] of [[-0.46, -0.98], [0.46, -0.98], [-0.46, 0.98], [0.46, 0.98]]) P.box(m.dk, 0.06, 2.1, 0.06, x, 1.05, z); for (let i = 0; i < 4; i++) P.box(m.st, 0.04, 0.04, 0.4, 0.5, 0.5 + i * 0.3, 0.75); e.rect(1, 2.05); if (o.use !== false) e.use('寝台で休む', 'rest', 2.2); },
+  bunk(P, o, e) { const m = MM(); for (const y of [0.3, 1.5]) { P.box(m.st, 0.95, 0.08, 2.0, 0, y, 0); P.box(flat(0xdcdcd6, 0.9, 0), 0.85, 0.12, 1.9, 0, y + 0.1, 0); P.box(fab(o.c || 0x5a2a2a), 0.87, 0.05, 1.1, 0, y + 0.18, 0.35); } mountHavenTexture(P, o.topTile, 0.87, 1.1, 0, 0.508, 0.35, -HP); for (const [x, z] of [[-0.46, -0.98], [0.46, -0.98], [-0.46, 0.98], [0.46, 0.98]]) P.box(m.dk, 0.06, 2.1, 0.06, x, 1.05, z); for (let i = 0; i < 4; i++) P.box(m.st, 0.04, 0.04, 0.4, 0.5, 0.5 + i * 0.3, 0.75); e.rect(1, 2.05); if (o.use !== false) e.use('寝台で休む', 'rest', 2.2); },
   locker(P, o, e) { const m = MM(), n = o.n || 3; for (let i = 0; i < n; i++) { const x = (i - (n - 1) / 2) * 0.62; P.box(m.st, 0.6, 2.0, 0.5, x, 1.0, 0); P.box(m.dk, 0.5, 0.25, 0.02, x, 1.6, 0.255); P.box(glow(i % 2 ? '#6f6' : e.th.trim, 2), 0.06, 0.03, 0.02, x + 0.2, 1.1, 0.256); } e.rect(n * 0.62, 0.5); },
   plant(P, o, e) { const m = MM(), s = o.s || 1; P.cyl(o.dark ? m.dk : m.wh, 0.3 * s, 0.22 * s, 0.45 * s, 0, 0.225 * s, 0, 'y', 16); P.cyl(m.so, 0.27 * s, 0.27 * s, 0.03, 0, 0.44 * s, 0, 'y', 12);
     for (let i = 0; i < 3; i++) P.add(m.tr, new THREE.CylinderGeometry(0.015 * s, 0.03 * s, 0.75 * s, 5), mx((i - 1) * 0.06 * s, 0.8 * s, 0, (i - 1) * 0.25, i * 2, (i - 1) * 0.3));
@@ -151,12 +157,15 @@ export const PROPS = {
   pillar(P, o, e) { const m = MM(), h = e.room.h, r = o.r || 0.38; P.cyl(m.dk, r, r, h, 0, h / 2, 0, 'y', 16); P.cyl(m.ch, r + 0.1, r + 0.14, 0.3, 0, 0.15, 0, 'y', 16); P.cyl(m.ch, r + 0.14, r + 0.1, 0.3, 0, h - 0.15, 0, 'y', 16); for (const y of [1.1, h / 2, h - 1.1]) P.tor(glow(o.c || e.th.trim, 3), r + 0.02, 0.025, 0, y, 0, HP, 0, 0, 24, 5); e.col(r + 0.1); },
   railing(P, o, e) { const m = MM(), w = o.w || 4; P.box(m.ch, w, 0.05, 0.05, 0, 1.05, 0); P.add(glassMat(), new THREE.BoxGeometry(w, 0.85, 0.02), mx(0, 0.55, 0), 0); for (let x = -w / 2; x <= w / 2 + 0.01; x += w / Math.max(1, Math.round(w / 1.6))) P.box(m.ch, 0.05, 1.05, 0.05, x, 0.52, 0); e.rect(w, 0.15); },
   havenPanel(P, o) {
-    P.add(havenMaterial(o.tile, 'panel'), new THREE.PlaneGeometry(o.w, o.h ?? 0.32), mx(0, o.y ?? 1.3, 0.003), 0);
+    const rx = o.plane === 'up' ? -HP : o.plane === 'down' ? HP : 0;
+    mountHavenTexture(P, o.tile, o.w, o.h ?? 0.32, 0, o.y ?? 1.3, o.plane ? 0 : 0.003, rx);
   },
   havenFitting(P, o, e) {
     const finish = flat(o.c, o.roughness ?? 0.83, o.metal ?? 0.04);
     const y = o.y ?? 0, h = o.h ?? 0.75;
     P.box(finish, o.w, h, o.d, 0, y + h / 2, 0);
+    mountHavenTexture(P, o.frontTile, o.w, h, 0, y + h / 2, o.d / 2 + 0.003);
+    mountHavenTexture(P, o.topTile, o.w, o.d, 0, y + h + 0.003, 0, -HP);
     if (o.solid !== false && y < 1.38) e.rect(o.w, o.d);
   },
   havenPipe(P, o) {
@@ -196,8 +205,11 @@ export const PROPS = {
   hydro(P, o, e) { const m = MM(), w = o.w || 2.6; for (const y of [0.4, 1.1, 1.8]) { P.box(m.wh, w, 0.14, 0.7, 0, y, 0); P.box(m.so, w - 0.1, 0.03, 0.6, 0, y + 0.08, 0); P.box(glow('#c06aff', 3), w - 0.2, 0.03, 0.05, 0, y + 0.62, 0); for (let x = -w / 2 + 0.25; x < w / 2 - 0.1; x += 0.36) blob(P, e.rnd() < 0.5 ? m.lf : m.lf2, 0.14 + e.rnd() * 0.07, x, y + 0.24, (e.rnd() - 0.5) * 0.2, x * 5 + y, 1.1); }
     for (const s of [-1, 1]) P.box(m.ch, 0.05, 2.5, 0.7, s * w / 2, 1.25, 0); e.rect(w, 0.7); e.light('#c06aff', 9, 1.6, 6); if (o.use) e.use(o.label, o.use, 2.3, o); },
   desk(P, o, e) { const m = MM(); P.box(o.wood ? m.wd : m.wh, 1.8, 0.06, 0.85, 0, 0.75, 0); for (const [x, z] of [[-0.82, -0.36], [0.82, -0.36], [-0.82, 0.36], [0.82, 0.36]]) P.box(m.ch, 0.05, 0.74, 0.05, x, 0.37, z); P.box(m.bk, 0.7, 0.44, 0.04, 0.1, 1.08, -0.22); scr(P, o.kind || 'data', o.c || e.th.trim, '', 0.64, 0.38, 0.1, 1.08, -0.195); P.box(m.bk, 0.06, 0.12, 0.06, 0.1, 0.84, -0.24);
+    mountHavenTexture(P, o.topTile, 0.9, 0.53, -0.35, 0.783, 0.06, -HP);
     P.box(fab(0x2a2e36), 0.5, 0.1, 0.5, 0, 0.48, 0.85); P.box(fab(0x2a2e36), 0.5, 0.6, 0.08, 0, 0.84, 1.08); P.cyl(m.ch, 0.04, 0.04, 0.44, 0, 0.22, 0.85, 'y', 8); e.rect(1.8, 0.85); e.col(0.3, 0, 0.85); if (o.use) e.use(o.label, o.use, 2.3, o); },
   kitchen(P, o, e) { const m = MM(), w = o.w || 3; P.box(m.wh, w, 0.9, 0.65, 0, 0.45, 0); P.box(m.bk, w + 0.04, 0.05, 0.7, 0, 0.92, 0); P.box(m.wh, w, 0.7, 0.36, 0, 2.0, -0.14); P.box(glow('#ffe2b0', 2.5), w - 0.2, 0.02, 0.05, 0, 1.63, -0.1); P.box(m.ch, 0.5, 0.04, 0.4, -w / 4, 0.95, 0.02); P.cyl(m.ch, 0.015, 0.015, 0.3, -w / 4, 1.1, -0.2, 'y', 6); P.box(m.bk, 0.5, 0.3, 0.3, w / 4, 1.1, -0.1); P.box(glow('#fb4', 1.6), 0.3, 0.14, 0.01, w / 4, 1.1, 0.055);
+    mountHavenTexture(P, o.frontTile, Math.min(w, 1.08), 0.9, w * 0.16, 0.45, 0.328);
+    mountHavenTexture(P, o.topTile, Math.min(w, 0.9), 0.64, 0, 0.948, 0, -HP);
     e.rect(w, 0.65); if (o.use) e.use(o.label || '食事をとる', o.use, 2.3, o); },
   monolith(P, o, e) { const c = o.c || e.th.trim; P.box(flat(0x08090c, 0.15, 0.8), 1.0, 3.2, 0.35, 0, 1.6, 0); for (let i = 0; i < 6; i++) P.box(glow(c, 3), 0.5 - (i % 3) * 0.12, 0.03, 0.01, (i % 2 ? 0.1 : -0.1), 0.8 + i * 0.36, 0.18); P.cyl(MM().dk, 0.9, 1.0, 0.2, 0, 0.1, 0, 'y', 6); e.col(0.8); e.light(c, 12, 1.6, 7); if (o.use) e.use(o.label, o.use, 2.6, o); },
   stage(P, o, e) { const m = MM(), c = o.c || '#f4c'; P.cyl(m.bk, 1.6, 1.7, 0.4, 0, 0.2, 0, 'y', 28); P.tor(glow(c, 4), 1.62, 0.04, 0, 0.41, 0, HP, 0, 0, 48, 6); P.add(glow(c, 0.8), new THREE.CircleGeometry(1.3, 32).rotateX(-HP), mx(0, 0.405, 0), 0);
@@ -212,6 +224,7 @@ export const PROPS = {
   bookshelf(P, o, e) { const m = MM(), w = o.w || 2.2, hh = o.h || 2.3, cs = [0x8a2a20, 0x2a5a8a, 0xc9a22e, 0x3a7a4a, 0x6a4a8a, 0xd8d0c0, 0x30343c];
     P.box(m.wd, w, hh, 0.06, 0, hh / 2, -0.17); P.box(m.wd, 0.06, hh, 0.4, -w / 2, hh / 2, 0); P.box(m.wd, 0.06, hh, 0.4, w / 2, hh / 2, 0);
     for (let j = 0; j < 6; j++) { const y = 0.05 + j * (hh - 0.1) / 5; P.box(m.wd, w, 0.05, 0.4, 0, y, 0); if (j === 5) break; let x = -w / 2 + 0.1; while (x < w / 2 - 0.15) { const bw = 0.04 + e.rnd() * 0.06, bh = 0.24 + e.rnd() * 0.14; if (e.rnd() < 0.86) P.add(flat(cs[Math.floor(e.rnd() * cs.length)], 0.8, 0), new THREE.BoxGeometry(bw, bh, 0.26), mx(x + bw / 2, y + 0.03 + bh / 2, 0, 0, 0, e.rnd() < 0.1 ? 0.2 : 0)); x += bw + 0.008; } }
+    mountHavenTexture(P, o.frontTile, w, hh, 0, hh / 2, 0.204);
     e.rect(w, 0.42); },
   fountain(P, o, e) { const m = MM(), R = o.r || 1.7, st = mat('marble', { rough: 0.35, metal: 0.05 }), c = o.c || e.th.trim;
     P.cyl(st, R, R + 0.15, 0.55, 0, 0.275, 0, 'y', 40); P.cyl(st, 0.5, 0.7, 1.2, 0, 0.6, 0, 'y', 20); P.cyl(st, 0.95, 0.35, 0.22, 0, 1.3, 0, 'y', 28); P.tor(glow(c, 2.5), R - 0.1, 0.025, 0, 0.5, 0, HP, 0, 0, 56, 5);
@@ -231,16 +244,24 @@ export const PROPS = {
   hoload(P, o, e) { const c = o.c || e.th.trim, s = signMesh(o.text || 'SALE', c, o.h || 0.9, { double: true, intensity: 2.2, frame: true }); e.dyn(s, 0, o.y || 2.8, 0); const pl = new THREE.Mesh(new THREE.PlaneGeometry((s.userData.w || 2) + 0.4, (o.h || 0.9) + 0.4), holoMat(c, 0.25)); e.dyn(pl, 0, o.y || 2.8, -0.02); const y0 = s.position.y;
     P.cyl(MM().dk, 0.25, 0.32, 0.12, 0, 0.06, 0, 'y', 12); P.add(glow(c, 2), new THREE.CircleGeometry(0.2, 12).rotateX(-HP), mx(0, 0.125, 0), 0); e.anim((dt, t) => { s.position.y = pl.position.y = y0 + Math.sin(t * 1.3 + e.x) * 0.06; }); },
   workbench(P, o, e) { const m = MM(); P.box(m.st, 2.4, 0.08, 0.9, 0, 0.92, 0); for (const [x, z] of [[-1.1, -0.38], [1.1, -0.38], [-1.1, 0.38], [1.1, 0.38]]) P.box(m.dk, 0.08, 0.9, 0.08, x, 0.45, z); P.box(m.dk, 2.2, 0.05, 0.8, 0, 0.3, 0); P.box(m.dk, 2.4, 1.2, 0.05, 0, 1.6, -0.43);
+    mountHavenTexture(P, o.topTile, 0.9, 0.75, 0, 0.964, 0.05, -HP);
+    mountHavenTexture(P, o.frontTile, 1.26, 1.18, 0, 1.6, -0.351);
     for (let i = 0; i < 9; i++) P.add(i % 3 ? m.ch : flat(0xb8452e, 0.6, 0.3), new THREE.BoxGeometry(0.05, 0.3 + (i % 4) * 0.1, 0.03), mx(-1 + i * 0.25, 1.6 + (i % 2) * 0.12, -0.39, 0, 0, (i % 3 - 1) * 0.3));
     P.box(flat(0xb8452e, 0.5, 0.4), 0.3, 0.22, 0.26, 0.8, 1.07, 0.1); P.box(m.ch, 0.5, 0.06, 0.3, -0.5, 0.99, 0.05); P.add(glow('#ffe2b0', 3), new THREE.CylinderGeometry(0.03, 0.03, 1.6, 6).rotateZ(HP), mx(0, 2.15, -0.3), 0); P.box(crateM(0x2e7ab8), 0.5, 0.4, 0.4, -0.7, 0.53, 0); e.rect(2.4, 0.95); e.light('#ffe2b0', 8, 2, 5); if (o.use) e.use(o.label, o.use, 2.4, o); },
   gantry(P, o, e) { const Y = mat('hull', { color: 0xe8a020, rough: 0.6, metal: 0.4 }), m = MM(), w = o.w || 30, h = e.room.h - 2.2; P.box(Y, w, 0.9, 0.5, 0, h, -0.9); P.box(Y, w, 0.9, 0.5, 0, h, 0.9); P.box(m.dk, 2.2, 0.7, 2.6, o.at || 3, h + 0.1, 0); P.cyl(m.dk, 0.03, 0.03, 4, o.at || 3, h - 2.2, 0, 'y', 6); P.add(m.st, new THREE.TorusGeometry(0.28, 0.07, 6, 14, Math.PI * 1.4), mx(o.at || 3, h - 4.45, 0, 0, 0, -0.6));
     for (let i = 0; i < 8; i++) P.add(glow('#fc4', 1.2), new THREE.PlaneGeometry(0.3, 0.7), mx(-w / 2 + 2 + i * (w - 4) / 7, h, 1.155, 0, 0, 0.5), 0); for (const s of [-1, 1]) P.box(m.dk, 0.5, 0.5, 3, s * (w / 2 - 0.3), h + 0.5, 0); },
   seatrow(P, o, e) { const m = MM(), n = o.n || 4, f = fab(o.c || 0x2a3a5a); for (let i = 0; i < n; i++) { const x = (i - (n - 1) / 2) * 0.62; P.box(f, 0.54, 0.1, 0.5, x, 0.46, 0); P.box(f, 0.54, 0.6, 0.09, x, 0.82, -0.24); P.box(m.ch, 0.04, 0.1, 0.5, x - 0.29, 0.6, 0); } P.box(m.dk, n * 0.62, 0.06, 0.4, 0, 0.38, 0); for (const s of [-1, 1]) P.box(m.ch, 0.06, 0.38, 0.4, s * (n * 0.31 - 0.1), 0.19, 0); e.rect(n * 0.62, 0.55); },
   tablelong(P, o, e) { const m = MM(), w = o.w || 3.6, top = o.wood ? m.wd : m.st; P.box(top, w, 0.06, 0.85, 0, 0.76, 0); for (const s of [-1, 1]) { P.box(m.dk, 0.08, 0.74, 0.7, s * (w / 2 - 0.3), 0.37, 0); P.box(top, w - 0.2, 0.05, 0.32, 0, 0.45, s * 0.78); P.box(m.dk, 0.06, 0.44, 0.28, w / 2 - 0.4, 0.22, s * 0.78); P.box(m.dk, 0.06, 0.44, 0.28, -w / 2 + 0.4, 0.22, s * 0.78); }
+    mountHavenTexture(P, o.topTile, Math.min(w, 1.22), 0.81, 0, 0.793, 0, -HP);
     for (let i = 0; i < 5; i++) P.cyl(i % 2 ? m.wh : flat(0xb8452e, 0.5, 0.1), 0.05, 0.04, 0.1, -w / 2 + 0.5 + i * (w - 1) / 4, 0.84, (i % 2 - 0.5) * 0.3, 'y', 8); e.rect(w, 1.9); },
   toolcart(P, o, e) { const m = MM(), c = flat(o.c || 0xb8252a, 0.5, 0.4); P.box(c, 0.8, 0.75, 0.5, 0, 0.5, 0); for (let i = 0; i < 4; i++) { P.box(m.bk, 0.72, 0.01, 0.02, 0, 0.25 + i * 0.17, 0.255); P.box(m.ch, 0.3, 0.02, 0.03, 0, 0.3 + i * 0.17, 0.265); } P.box(m.st, 0.84, 0.03, 0.54, 0, 0.89, 0); for (const [x, z] of [[-0.3, -0.18], [0.3, -0.18], [-0.3, 0.18], [0.3, 0.18]]) P.cyl(m.bk, 0.06, 0.06, 0.05, x, 0.06, z, 'x', 8); e.col(0.5); },
   floorlamp(P, o, e) { const m = MM(), c = o.c || '#ffd9a0'; P.cyl(m.ch, 0.16, 0.2, 0.03, 0, 0.015, 0, 'y', 14); P.cyl(m.ch, 0.015, 0.015, 1.6, 0, 0.8, 0, 'y', 6); P.add(flat(0xe8dcc8, 0.9, 0), new THREE.CylinderGeometry(0.16, 0.24, 0.34, 16, 1, true), mx(0, 1.72, 0), 0); P.sph(glow(c, 3), 0.07, 0, 1.68, 0, 1, 1.3, 1, 8); e.col(0.22); e.light(c, 10, 1.6, 7); },
-  cabinet(P, o, e) { const m = MM(), w = o.w || 1.4, hh = o.h || 2.0; P.box(o.metal ? m.st : m.wd, w, hh, 0.5, 0, hh / 2, 0); P.box(m.bk, 0.012, hh - 0.1, 0.01, 0, hh / 2, 0.252); for (const s of [-1, 1]) P.box(m.ch, 0.02, 0.2, 0.03, s * 0.07, hh * 0.52, 0.265); e.rect(w, 0.5); },
+  cabinet(P, o, e) { const m = MM(), w = o.w || 1.4, hh = o.h || 2.0; P.box(o.metal ? m.st : m.wd, w, hh, 0.5, 0, hh / 2, 0);
+    if (o.frontTile === undefined) {
+      P.box(m.bk, 0.012, hh - 0.1, 0.01, 0, hh / 2, 0.252);
+      for (const s of [-1, 1]) P.box(m.ch, 0.02, 0.2, 0.03, s * 0.07, hh * 0.52, 0.265);
+    } else mountHavenTexture(P, o.frontTile, w, hh, 0, hh / 2, 0.253);
+    e.rect(w, 0.5); },
   piano(P, o, e) { const b = flat(0x08080a, 0.08, 0.6), m = MM(); P.box(b, 1.5, 0.3, 1.9, 0, 0.85, -0.2); P.box(b, 1.5, 0.12, 0.5, 0, 0.72, 0.95); P.box(flat(0xf2f2ee, 0.3, 0), 1.3, 0.03, 0.16, 0, 0.8, 1.0); for (let i = 0; i < 10; i++) P.box(b, 0.05, 0.02, 0.1, -0.56 + i * 0.125, 0.825, 0.97); P.add(b, new THREE.BoxGeometry(1.45, 0.03, 1.8), mx(0.1, 1.3, -0.25, 0, 0, 0.5)); P.box(m.gd, 0.02, 0.7, 0.02, 0.4, 1.2, 0.2); for (const [x, z] of [[-0.6, 0.9], [0.6, 0.9], [0, -1.0]]) P.cyl(b, 0.05, 0.04, 0.72, x, 0.36, z, 'y', 8);
     P.box(fab(0x2a2a2e), 0.7, 0.1, 0.36, 0, 0.5, 1.6); P.box(b, 0.6, 0.48, 0.3, 0, 0.24, 1.6); e.rect(1.6, 2.1, 0, -0.1); e.col(0.4, 0, 1.6); if (o.use !== false) e.use('ピアノを弾く', 'piano', 2.4); },
   pooltable(P, o, e) { const m = MM(); P.box(m.wd, 2.6, 0.25, 1.4, 0, 0.75, 0); P.box(flat(0x1a6a3a, 0.95, 0), 2.36, 0.02, 1.16, 0, 0.885, 0); for (const [x, z] of [[-1.1, -0.5], [1.1, -0.5], [-1.1, 0.5], [1.1, 0.5]]) P.box(m.wd, 0.16, 0.65, 0.16, x, 0.32, z); for (let i = 0; i < 7; i++) P.sph(glow(['#fd4', '#f43', '#4cf', '#fff', '#6f6', '#f6a', '#fa4'][i], 0.9), 0.035, -0.6 + (i % 4) * 0.42, 0.93, -0.3 + Math.floor(i / 4) * 0.5 + (i % 2) * 0.1, 1, 1, 1, 8);

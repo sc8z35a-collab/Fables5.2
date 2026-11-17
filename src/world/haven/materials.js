@@ -6,6 +6,9 @@ const loader = new THREE.ImageLoader();
 const sheets = new Map();
 const images = new Map();
 const materials = new Map();
+// Small details share the same grid as full-size tiles. The reduced image
+// occupies the upper-left corner of its cell.
+const halfSizeCells = new Set([322, 323, 388, 398, 402, 403, 416, 419, 433, 434, 437, 438, 446]);
 
 function loadTile(tile) {
   if (images.has(tile)) return images.get(tile);
@@ -17,8 +20,7 @@ function loadTile(tile) {
   }
   const ready = sheets.get(sheetIndex).then((image) => {
     const side = image.width / 3;
-    // Sheet 35 combines full-size shop surfaces and two small fitting labels.
-    const size = tile === 322 || tile === 323 ? Math.round(side / 2) : side;
+    const size = halfSizeCells.has(tile) ? Math.round(side / 2) : side;
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = size;
     canvas.getContext('2d').drawImage(image, cell % 3 * side, Math.floor(cell / 3) * side, size, size, 0, 0, size, size);
