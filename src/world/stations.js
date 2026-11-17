@@ -8,28 +8,31 @@ import { BUILD2, SDF2 } from './stations2.js';
 import { buildHavenHull, havenDockZ, havenHullDistance, havenRadius } from './haven/exterior.js';
 import { havenMaterial } from './haven/materials.js';
 
-// ───────────────────────── 1. ヘイヴン・リング (交易ハブ): 直径約 2 km の回転式居住港 (haven/exterior.js) ─────────────────────────
+// ───────────────────────── 1. ヘイヴン・リング (交易ハブ): 全幅約 500 m の回転式居住港 (haven/exterior.js) ─────────────────────────
 function haven() {
   const b = new Builder(), rb = new Builder();
   buildHavenHull(b, rb);
   const ring = rb.build();
   const p = port(b, havenMaterial(6, 'hull'), V(0, 0, havenDockZ), V(0, 0, 1));
+  // リングの航行灯: 居住区の外周 (白)、放熱区画と貨物区画の外縁 (赤・琥珀の点滅)、農業区画 (白)
   const lights = [
-    { p: V(928, 290, 30), c: '#fff0d2', s: 34 },
-    { p: V(98, 954, 35), c: '#ff7668', s: 30, blink: 0.75, ph: 0 },
-    { p: V(-901, 337, -27), c: '#ffc082', s: 25, blink: 0.66, ph: 0.43 },
-    { p: V(-566, -786, 35), c: '#ff7668', s: 30, blink: 0.65, ph: 0.2 },
-    { p: V(654, -710, 35), c: '#fff0d2', s: 26 },
+    { p: V(Math.cos(0.68) * 241, Math.sin(0.68) * 241, 0), c: '#fff0d2', s: 14 },
+    { p: V(Math.cos(1.9) * 235, Math.sin(1.9) * 235, 9), c: '#ff7668', s: 12, blink: 0.75, ph: 0 },
+    { p: V(Math.cos(3.0) * 237, Math.sin(3.0) * 237, -11), c: '#ffc082', s: 11, blink: 0.66, ph: 0.43 },
+    { p: V(Math.cos(4.0) * 236, Math.sin(4.0) * 236, 10), c: '#ff7668', s: 12, blink: 0.65, ph: 0.2 },
+    { p: V(Math.cos(5.2) * 238, Math.sin(5.2) * 238, 0), c: '#fff0d2', s: 11 },
   ];
   for (const light of lights) light.parent = ring;
-  for (const [i, z] of [205, 246, 295, 356, 428, 510].entries()) lights.push({ p: V(0, 0, z), c: '#76ffba', s: 11, blink: 1, ph: 1 - i / 6 });
+  lights.push({ p: V(0, 31, 0), c: '#ff7668', s: 6, blink: 0.9, ph: 0.5 }, { p: V(124 + 107, 0, -96), c: '#ff7668', s: 7, blink: 0.7, ph: 0.1 }, { p: V(-231, 0, -114), c: '#76ffba', s: 7, blink: 0.7, ph: 0.6 });
+  for (const [i, z] of [64, 82, 106, 136, 172, 214].entries()) lights.push({ p: V(0, 0, z), c: '#76ffba', s: 6, blink: 1, ph: 1 - i / 6 });
   // 接近の通り道はハブ (回転しない軸) にそろえる
   const o = done(b, { ports: [p], radius: havenRadius, ring, lights, signs: [
-    sign('HAVEN RING', '#e4fff6', 11, 0, 99, 83),
-    sign('地球軌道港  A01', '#ffe1a2', 5, 0, 77, 133),
+    sign('HAVEN RING', '#e4fff6', 4.5, 0, 24.5, 22.4),
+    sign('地球軌道港  A01', '#ffe1a2', 2.4, 0, -24.5, 22.4),
   ] });
   o.obj.add(ring);
-  o.anim.push((_t, dt) => { ring.rotation.z = (ring.rotation.z + dt * 0.096) % (2 * Math.PI); });
+  // 半径 222 m で外周に約 0.9 G (地球側の片窓の表示と同じ)
+  o.anim.push((_t, dt) => { ring.rotation.z = (ring.rotation.z + dt * 0.199) % (2 * Math.PI); });
   return o;
 }
 

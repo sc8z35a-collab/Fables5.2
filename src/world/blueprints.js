@@ -7,7 +7,7 @@ import { mat, glow } from '../gfx/textures.js';
 import { BP2, ALL2 } from './blueprints2.js';
 import { ENEMY_CLASSES } from './defs.js';
 import { hasImage } from '../gfx/materials.js';
-import { haven } from './haven/interior.js'; // ヘイヴン・リングの内装 (約 1.5 km の居住デッキ)
+import { haven } from './haven/interior.js'; // ヘイヴン・リングの内装 (約 190 m の居住デッキ)
 
 const T = (label, use, x, z, rot, o = {}) => ['terminal', x, z, rot, { label, use, ...o }];
 const N = (label, use, x, z, rot, suit, o = {}) => ['npc', x, z, rot, { label, use, suit, ...o }];
