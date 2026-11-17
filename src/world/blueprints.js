@@ -267,7 +267,7 @@ const OUT = {
 function enemyBP(def) {
   const r = rng(def.seed * 7 + 3), gc = new THREE.Color(def.glow), dark = (k, base) => new THREE.Color(base).lerp(gc, k).getHex();
   const KW = (k) => (k === 'reactor' ? { wall: ['engine-pipes', 0xb0b4ba, 0.8, 0.5] } : k === 'brig' ? { wall: ['brig-bars', 0xb0b0b0, 0.8, 0.5] } : {}); // 機関室は配管の壁、営倉は鉄格子
-  const ws = pick(r, ['bulk', 'rib', 'rock', 'enemy-wall', 'bulk']), fs = pick(r, ['grate', 'plate', 'hex', 'enemy-floor']), cave = ws === 'rock';
+  const ws0 = pick(r, ['bulk', 'rib', 'rock', 'enemy-wall', 'bulk']), ws = def.cls && ws0 === 'rock' ? 'enemy-wall' : ws0, fs = pick(r, ['grate', 'plate', 'hex', 'enemy-floor']), cave = ws === 'rock';
   const theme = { wall: [ws, dark(0.14, cave ? 0x5a4a50 : 0x50545e), 0.8, 0.5], floor: [fs, dark(0.08, 0x6a6e76), 0.45, 0.7], ceil: [cave ? 'rock' : pick(r, ['ceil', 'rib']), dark(0.1, 0x2a2c32)], trim: def.glow, lamp: '#' + new THREE.Color(def.glow).lerp(new THREE.Color('#fff'), 0.55).getHexString(),
     frame: 0x121316, door: dark(0.3, 0x3a3a40), amb: [dark(0.6, 0x404050), 0x0c0c10, 0.42], gloss: 0.5, door3: pick(r, ['hatch', 'blast', 'slide']), trims: pick(r, ['low', 'neon', 'both']), lamps: cave ? 'bare' : pick(r, ['tube', 'panel', 'pendant']), cstyle: cave ? 'rock' : 'flat', ribs: !cave, deco: cave ? ['stal'] : pick(r, [['cables'], ['ducts'], ['cables', 'ducts'], []]) };
   const CL = def.cls ? ENEMY_CLASSES[def.cls] : null, has = (n) => hasImage('materials/' + n), sm = (n, k = 0.7, me = 0.4) => [n, 0xffffff, k, me]; // 艦種つきの艦は艦内の素材と特別な部屋を艦種で変える
