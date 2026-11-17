@@ -60,13 +60,8 @@
    "name": "mg-awning",
    "kind": "tile",
    "prompt": "Shop awning canvas: wide stripes in red and cream, slightly weathered fabric, front-on.",
-   "mean": [
-    180,
-    120,
-    110
-   ],
    "rough": 230,
-   "sat": 0.5,
+   "sat": 1.0,
    "normal": 1.5,
    "uvs": 0.5
   },
@@ -102,13 +97,8 @@
    "name": "mg-play-floor",
    "kind": "tile",
    "prompt": "Playground safety flooring from above: colourful rubber crumb (red, blue, yellow) with seams.",
-   "mean": [
-    170,
-    110,
-    100
-   ],
    "rough": 230,
-   "sat": 0.6,
+   "sat": 1.0,
    "normal": 2.0,
    "uvs": 0.5
   }

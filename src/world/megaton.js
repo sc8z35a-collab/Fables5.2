@@ -141,7 +141,7 @@ export function megatonPlan(has = () => false) {
   // ── 2. 通路 ──
   for (const [id, name, dist, x0, z0, x1, z1, h, o = {}] of CORR) {
     const pal = PAL[dist] || PAL.civic;
-    add({ ...rect(x0, z0, x1, z1), id, name, h, dist, corr: 1, o, floor: pal.floor, wall: pal.wall, ceil: pal.ceil, trims: 'low', ribs: false, lamps: o.lamps || ({ old: 'bare', main: 'panel', market: 'tube', view: 'spot', green: 'panel', ninth: 'panel', dorm: 'tube', port: 'pendant', svc: 'tube', civic: 'panel', crew: 'bare', hikari: 'panel' })[dist], li: dist === 'old' || dist === 'crew' ? 0.95 : 0.85, ld: q(Math.max(8, h * 3.2)) });
+    add({ ...rect(x0, z0, x1, z1), id, name, h, dist, corr: 1, o, floor: pal.floor, wall: pal.wall, ceil: pal.ceil, trims: 'low', ribs: false, lamps: o.lamps || ({ old: 'bare', main: 'panel', market: 'tube', view: 'spot', green: 'panel', ninth: 'panel', dorm: 'tube', port: 'pendant', svc: 'tube', civic: 'panel', crew: 'bare', hikari: 'panel' })[dist], li: (dist === 'old' || dist === 'crew' ? 0.95 : 0.85) * (Math.min(x1 - x0, z1 - z0) < 3.2 && dist !== 'old' && dist !== 'crew' ? 0.8 : 1), ld: q(Math.max(8, h * 3.2)) }); // 白い壁の狭い廊下は少し控えめに
     stats.corridors.add(name.replace(/の溜まり$/, '').replace(/ [一二三]丁目$/, ''));
   }
   // ── 3. 通路どうしの継ぎ目 (触れ合う通路・広場を開口でつなぐ) ──
@@ -288,7 +288,7 @@ export function megatonPlan(has = () => false) {
 
   return {
     name: 'メガトン', sub: '第 7 居住甲板', seed: 77, spawn: [45, 47], view: [0, -1], music: 'interior', visDepth: 6, stats,
-    theme: { wall: PAL.civic.wall, floor: PAL.civic.floor, ceil: PAL.civic.ceil, trim: '#ffd9a8', lamp: '#fff3e0', frame: 0x8a8478, frameC: 0xd0ccc4, door: 0xd8d4cc, amb: [0xfff6ea, 0xb4ac9c, 1.22], gloss: 0.4, door3: 'slide', trims: 'low', ribs: false, lamps: 'panel', col: 0xe8e4dc, gilt: 0xc8a04a, shade: 0xf0ece4 },
+    theme: { wall: PAL.civic.wall, floor: PAL.civic.floor, ceil: PAL.civic.ceil, trim: '#ffd9a8', lamp: '#fff3e0', frame: 0x8a8478, frameC: 0xd0ccc4, door: 0xd8d4cc, amb: [0xfff6ea, 0xb4ac9c, 1.12], gloss: 0.4, door3: 'slide', trims: 'low', ribs: false, lamps: 'panel', col: 0xe8e4dc, gilt: 0xc8a04a, shade: 0xf0ece4 },
     rooms: rooms.map(clean), doors,
   };
 
@@ -595,7 +595,7 @@ function facilities(PAL, rnd) {
   P(R('bath1', '錨湯 脱衣所', 80, -11.8, 95, -6, 3, { floor: PAL.home.tatami, wall: PAL.home.panel, ceil: PAL.home.ceil, lamps: 'pendant', trims: 'none', ribs: false,
     props: [['locker', 3.2, 5.35, 2, { n: 4 }], ['reception', 2.2, 1.2, 0, { w: 2.2 }], N('番台', 'talk:mgbath', 2.2, 0.6, 0, 0x8a6a2a), ['bench', 11.5, 4.9, 2, { c: 0x6a5040 }], ['fridge', 14.2, 2.4, 3, { w: 0.7 }], ['fan', 12.5, 1.0, 0], ['washbasin', 14.4, 4.2, 3], ['posters', 0.2, 3.4, 1, { w: 1.2, h: 0.8, seed: 1 }]] }));
   P(R('bath2', '錨湯 浴場', 80, -6, 95, 4, 3.4, { floor: [PAL.home.bathf[0], PAL.home.bathf[1], 0.25, 0], wall: PAL.home.batht, ceil: PAL.home.ceil, lamps: 'panel', li: 1.3, trims: 'none', ribs: false,
-    props: [['bathmural', 7.5, 9.8, 2, { w: 14, h: 2.6, y: 1.95 }], ['bathpool', 7.5, 7.6, 0, { w: 9, d: 3, use: 'rest', label: '湯船につかる (休む)' }], ['washrow', 0.25, 3.6, 1, { n: 4 }], ['washrow', 14.75, 3.6, 3, { n: 4 }], N('常連さん', 'talk:mgbath2', 12, 3.6, -1.5, 0xe8d0b8)] }));
+    props: [['bathmural', 7.5, 9.8, 2, { w: 7, h: 2.6, y: 1.95 }], ['bathpool', 7.5, 7.6, 0, { w: 9, d: 3, use: 'rest', label: '湯船につかる (休む)' }], ['washrow', 0.25, 3.6, 1, { n: 4 }], ['washrow', 14.75, 3.6, 3, { n: 4 }], N('常連さん', 'talk:mgbath2', 12, 3.6, -1.5, 0xe8d0b8)] }));
   D('o2', 'bath1', 87.5, 2.2, 2.4, 'open', { frame: 0x6a5040 }); D('bath1', 'bath2', 87.5, 2.0, 2.3, 'inner', { mat: 'mg-door-bath', r: 1.6, hand: 1 });
   R('o7end', '錨町の見晴らし窓', 94, -64, 100, -60, 2.8, { join: 1, floor: PAL.old.floor, wall: PAL.old.wall, ceil: PAL.old.ceil, lamps: 'bare', win: [['n', 0.6, 5.4, 0.7, 2.4]], props: [['bench', 4.3, 0.75, 0, { c: 0x6a5040 }], N('老人', 'talk:mglook', 1.2, 1.4, 0, 0x5a5a62)] });
   // 中央区: 区役所・図書館・保育園・郵便局・交番・取引所・診療所・駅

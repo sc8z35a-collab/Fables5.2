@@ -14,7 +14,7 @@
     150
    ],
    "rough": 130,
-   "sat": 0.3,
+   "sat": 0.8,
    "normal": 3.5,
    "uvs": 0.35
   },
@@ -50,13 +50,8 @@
    "name": "mg-wall-port",
    "kind": "tile",
    "prompt": "Port street wall: light grey painted corrugated steel sheets, vertical ribs, a few dents and rust-free scratches.",
-   "mean": [
-    192,
-    196,
-    194
-   ],
    "rough": 140,
-   "sat": 0.15,
+   "sat": 1.0,
    "normal": 4.0,
    "uvs": 0.4
   },

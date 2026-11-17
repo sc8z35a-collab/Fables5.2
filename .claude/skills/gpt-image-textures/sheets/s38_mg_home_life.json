@@ -36,13 +36,8 @@
    "name": "mg-bedspread",
    "kind": "tile",
    "prompt": "Bedspread fabric from above: quilted cotton with a simple geometric pattern in navy and cream.",
-   "mean": [
-    120,
-    132,
-    160
-   ],
    "rough": 230,
-   "sat": 0.45,
+   "sat": 1.0,
    "normal": 2.0,
    "uvs": 0.6
   },
@@ -50,13 +45,8 @@
    "name": "mg-futon",
    "kind": "tile",
    "prompt": "Japanese futon cover from above: cotton with a traditional small floral pattern in red and cream.",
-   "mean": [
-    176,
-    110,
-    100
-   ],
    "rough": 230,
-   "sat": 0.5,
+   "sat": 1.0,
    "normal": 1.5,
    "uvs": 0.6
   },
@@ -64,13 +54,8 @@
    "name": "mg-cushion",
    "kind": "tile",
    "prompt": "Zabuton floor cushion fabric from above: thick woven cotton in deep indigo with fine stitching.",
-   "mean": [
-    80,
-    92,
-    130
-   ],
    "rough": 230,
-   "sat": 0.5,
+   "sat": 1.0,
    "normal": 1.5,
    "uvs": 1.2
   },
