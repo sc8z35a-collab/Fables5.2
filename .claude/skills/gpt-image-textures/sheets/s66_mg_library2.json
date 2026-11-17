@@ -1,7 +1,7 @@
 {
  "id": "s66_mg_library2",
  "group": "megaton",
- "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、画像はまだ無い)。図書館と文化",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、ユーザーが別に生成した画像)。図書館と文化",
  "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
  "cells": [
   {
@@ -10,7 +10,13 @@
    "prompt": "A magazine rack front with colourful covers (no readable text).",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.02,
+    0.06,
+    0.97,
+    0.98
+   ]
   },
   {
    "name": "mg-picture-books",
@@ -18,7 +24,13 @@
    "prompt": "A low shelf of picture books displayed face-out, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.04,
+    0.03,
+    0.97,
+    0.98
+   ]
   },
   {
    "name": "mg-study-carrel",
@@ -26,7 +38,9 @@
    "prompt": "A row of library study carrels with desk lamps, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "skip": true,
+   "why": "閲覧室の風景ごとの絵で、物の面に貼れない"
   },
   {
    "name": "mg-globe",
@@ -36,7 +50,13 @@
    "rough": 150,
    "normal": 1.5,
    "key": "white",
-   "flatten": 0
+   "flatten": 0,
+   "crop": [
+    0.15,
+    0.0,
+    0.85,
+    0.99
+   ]
   },
   {
    "name": "mg-card-catalog",
@@ -44,7 +64,13 @@
    "prompt": "A wooden library card catalogue with many small drawers, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.03,
+    0.08,
+    0.98,
+    0.98
+   ]
   },
   {
    "name": "mg-reading-lamp",
@@ -54,7 +80,13 @@
    "rough": 150,
    "normal": 1.5,
    "key": "white",
-   "flatten": 0
+   "flatten": 0,
+   "crop": [
+    0.18,
+    0.04,
+    0.94,
+    0.97
+   ]
   },
   {
    "name": "mg-museum-case",
@@ -70,7 +102,13 @@
    "prompt": "A framed oil painting of an ocean and green hills on Earth.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.02,
+    0.06,
+    0.98,
+    0.95
+   ]
   },
   {
    "name": "mg-library-carpet",

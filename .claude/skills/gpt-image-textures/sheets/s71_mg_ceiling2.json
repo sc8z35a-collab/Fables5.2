@@ -1,7 +1,7 @@
 {
  "id": "s71_mg_ceiling2",
  "group": "megaton",
- "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、画像はまだ無い)。天井と照明 2",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、ユーザーが送った 9 シートの一覧画像から切り出した小さな画像 (1 マス約 136 px を拡大))。天井と照明 2",
  "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
  "cells": [
   {
@@ -19,7 +19,13 @@
    "prompt": "A square skylight seen from below showing stars and a passing ring structure.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.05,
+    0.05,
+    0.95,
+    0.95
+   ]
   },
   {
    "name": "mg-ceiling-fan",
@@ -28,8 +34,8 @@
    "seam": "",
    "rough": 150,
    "normal": 1.5,
-   "key": "white",
-   "flatten": 0
+   "skip": true,
+   "why": "背景付きで切り抜けない"
   },
   {
    "name": "mg-paper-lamp",
@@ -38,8 +44,8 @@
    "seam": "",
    "rough": 150,
    "normal": 1.5,
-   "key": "white",
-   "flatten": 0
+   "skip": true,
+   "why": "背景付きで切り抜けない"
   },
   {
    "name": "mg-small-chandelier",
@@ -48,8 +54,8 @@
    "seam": "",
    "rough": 150,
    "normal": 1.5,
-   "key": "white",
-   "flatten": 0
+   "skip": true,
+   "why": "背景付きで切り抜けない"
   },
   {
    "name": "mg-cove-light",
@@ -57,7 +63,9 @@
    "prompt": "A ceiling cove with a long warm glowing light strip, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "skip": true,
+   "why": "壁と天井の風景で、面に貼れない"
   },
   {
    "name": "mg-ceil-ducts",
@@ -84,8 +92,8 @@
    "seam": "",
    "rough": 150,
    "normal": 1.5,
-   "key": "white",
-   "flatten": 0
+   "skip": true,
+   "why": "背景付きで切り抜けない"
   }
  ]
 }

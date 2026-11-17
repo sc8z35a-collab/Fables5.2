@@ -46,14 +46,14 @@ export const PROPS7 = {
     P.box(wood(o.wc || 0x8a6a4a), w + 0.04, 0.9, 0.08, 0, 0.45, -1.06); e.rect(w, 2.15); if (o.use) e.use('ベッドで休む', 'rest', 2.2); },
   futon(P, o, e) { P.box(mat('bed-linen', { color: 0xf2efe6, rough: 0.95, metal: 0 }), 1.0, 0.1, 2.0, 0, 0.05, 0); P.box(tm('mg-futon', 'blanket', { color: o.c || 0x8a3a3a, rough: 0.9, metal: 0 }), 1.02, 0.08, 1.3, 0, 0.13, 0.32); P.box(flat(0xffffff, 0.9, 0), 0.55, 0.09, 0.32, 0, 0.14, -0.78); e.rect(1.0, 2.0); },
   dining(P, o, e) { const w = o.w || 1.4, d = o.d || 0.8, n = o.n ?? 4; P.box(wood(o.c || 0xa07850), w, 0.04, d, 0, 0.74, 0); for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) P.box(wood(o.c || 0xa07850), 0.05, 0.72, 0.05, x * (w / 2 - 0.06), 0.36, z * (d / 2 - 0.06));
-    face(P, 'mg-table-food', w * 0.8, d * 0.8, 0, 0.762, 0, { rx: -HP, rough: 0.5 });
+    if (!(o.food && face(P, o.food, d * 0.8, d * 0.8, 0, 0.762, 0, { rx: -HP, rough: 0.5 }))) face(P, 'mg-table-food', w * 0.8, d * 0.8, 0, 0.762, 0, { rx: -HP, rough: 0.5 }); // o.food = 食卓の料理の絵 (鍋・弁当・ケーキなど)
     const sp = [[-w / 4, -d / 2 - 0.25, 0], [w / 4, -d / 2 - 0.25, 0], [-w / 4, d / 2 + 0.25, Math.PI], [w / 4, d / 2 + 0.25, Math.PI]]; for (let i = 0; i < n; i++) { const [x, z, r] = sp[i]; P.box(wood(o.cc || 0x7a5a3a), 0.42, 0.04, 0.42, x, 0.45, z); P.box(wood(o.cc || 0x7a5a3a), 0.4, 0.45, 0.04, x, 0.68, z + (r ? 0.2 : -0.2)); for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) P.box(wood(o.cc || 0x7a5a3a), 0.03, 0.44, 0.03, x + a * 0.18, 0.22, z + b * 0.18); }
     e.rect(w, d + (n > 2 ? 0.9 : n ? 0.45 : 0)); },
   chair(P, o, e) { const c = o.c || 0x7a5a3a; P.box(wood(c), 0.44, 0.04, 0.44, 0, 0.45, 0); P.box(wood(c), 0.42, 0.45, 0.04, 0, 0.68, -0.2); for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) P.box(wood(c), 0.03, 0.44, 0.03, a * 0.19, 0.22, b * 0.19); e.col(0.26); },
   lowtable(P, o, e) { const w = o.w || 1.0, d = o.d || 0.7; P.box(wood(o.c || 0x9a7048), w, 0.04, d, 0, 0.36, 0); for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) P.box(wood(o.c || 0x9a7048), 0.05, 0.34, 0.05, x * (w / 2 - 0.06), 0.17, z * (d / 2 - 0.06));
     if (o.kotatsu) P.box(tm('mg-futon', 'blanket', { color: o.kc || 0xb8452e, rough: 0.95, metal: 0 }), w + 0.4, 0.3, d + 0.4, 0, 0.18, 0);
     const cu = tm('mg-cushion', 'velvet', { color: o.cc || 0x8a3a3a, rough: 0.9, metal: 0 }); for (const [x, z] of [[0, d / 2 + 0.45], [0, -d / 2 - 0.45], [w / 2 + 0.45, 0], [-w / 2 - 0.45, 0]].slice(0, o.n ?? 3)) P.box(cu, 0.5, 0.07, 0.5, x, 0.035, z);
-    face(P, 'mg-table-food', w * 0.7, d * 0.7, 0, 0.382, 0, { rx: -HP, rough: 0.5 }); e.rect(w, d); },
+    if (!(o.food && face(P, o.food, d * 0.75, d * 0.75, 0, 0.382, 0, { rx: -HP, rough: 0.5 }))) face(P, 'mg-table-food', w * 0.7, d * 0.7, 0, 0.382, 0, { rx: -HP, rough: 0.5 }); e.rect(w, d); },
   homesofa(P, o, e) { const f = tm(o.fab || 'mg-sofa', 'velvet', { color: o.c || 0x6a7a8a, rough: 0.85, metal: 0.02 }), w = o.w || 2.0; P.box(MM().dk, w, 0.12, 0.85, 0, 0.06, 0); P.box(f, w - 0.1, 0.28, 0.78, 0, 0.3, 0.02); P.box(f, w, 0.55, 0.2, 0, 0.6, -0.33); for (const s of [-1, 1]) P.box(f, 0.18, 0.4, 0.85, s * (w / 2 - 0.09), 0.38, 0);
     P.box(tm('mg-cushion', 'velvet', { color: o.cc || 0xd8b878, rough: 0.9, metal: 0 }), 0.4, 0.36, 0.12, -w / 2 + 0.45, 0.62, -0.18, 0.15); e.rect(w, 0.85); },
   homekit(P, o, e) { const w = o.w || 2.2; P.box(white(), w, 0.86, 0.62, 0, 0.43, 0); P.box(mat('quartz-countertop', { color: 0xd8d4cc, rough: 0.35, metal: 0.1 }), w + 0.02, 0.04, 0.64, 0, 0.88, 0); front(P, o.img || 'mg-kitchen', w, 0.82, 0, 0.43, 0.312, { uv: [0, 0, Math.max(1, Math.round(w / (o.img ? 1.6 : 0.95))), 1] }, () => { for (let x = -w / 2 + 0.3; x < w / 2 - 0.1; x += 0.6) P.box(MM().ch, 0.18, 0.02, 0.02, x, 0.78, 0.315); });
@@ -163,7 +163,9 @@ export const PROPS7 = {
   /** 壁の帯: 継ぎ目なしの絵 (太い配管・ケーブル・竹垣) を横に繰り返して壁に貼る。o.rep = 1m あたりの繰り返し */
   band(P, o, e) { const w = o.w || 3, h = o.h || 1, y = o.y ?? h / 2; face(P, o.img, w, h, 0, y, 0.012, { uv: [0, 0, Math.max(1, Math.round(w * (o.rep || 0.5))), o.vr || 1], glow: o.glow, rough: o.rough ?? 0.7, metal: o.metal ?? 0.2 }); },
   /** 背景を抜いた絵を立てる (買い物袋・リュック)。両面 */
-  cutpic(P, o, e) { const w = o.w || 0.5, h = o.h || 0.5; face(P, o.img, w, h, 0, (o.y || 0) + h / 2, o.z || 0, { cut: 1, rough: 0.8, metal: 0, ry: o.ry || 0 }); },
+  cutpic(P, o, e) { const w = o.w || 0.5, h = o.h || 0.5; face(P, o.img, w, h, 0, (o.y || 0) + h / 2, o.z || 0, { cut: 1, rough: 0.8, metal: 0, ry: o.ry || 0 }); if (o.x) face(P, o.img, w, h, 0, (o.y || 0) + h / 2, 0, { cut: 1, rough: 0.8, metal: 0, ry: HP }); if (o.col) e.col(o.col); }, // o.x = 十字に 2 枚立てる (木や笹)、o.col = 当たり判定の半径
+  /** 天井に貼る絵 (天窓など)。下を向く */
+  ceilpic(P, o, e) { face(P, o.img, o.w || 1.6, o.d || 1.6, 0, e.room.h - 0.03, 0, { rx: HP, glow: o.glow, rough: 0.6, metal: 0.1 }); },
   /** 開いたまま壁に立てかけて干す傘 (真上から見た絵を、上を壁に預けて傾けた円に貼る) */
   kasa(P, o, e) { if (!has('mg-umbrella')) return; const r = o.r || 0.48, t = 0.55; P.add(mat('mg-umbrella', { rough: 0.6, metal: 0, cut: 1 }), new THREE.CircleGeometry(r, 24), mx(0, r * Math.cos(t) + 0.02, 0.05 + r * Math.sin(t), -t, 0, 0), 0); },
   /** 白い鋼板の貯水タンク (鋲の並んだ溶接の板)。ポンプ室・機械室 */
