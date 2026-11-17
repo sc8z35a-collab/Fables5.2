@@ -27,7 +27,13 @@
    "prompt": "A square ceiling light panel glowing soft white, seen from below.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.07,
+    0.04,
+    0.93,
+    0.84
+   ]
   },
   {
    "name": "mg-emergency-light",
@@ -35,7 +41,13 @@
    "prompt": "A small emergency light fixture on a wall, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.09,
+    0.26,
+    0.91,
+    0.77
+   ]
   },
   {
    "name": "mg-pump",

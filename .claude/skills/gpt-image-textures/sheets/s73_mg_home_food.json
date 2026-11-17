@@ -1,0 +1,84 @@
+{
+ "id": "s73_mg_home_food",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、画像はまだ無い)。家の食卓",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-dinner-set",
+   "kind": "tile",
+   "prompt": "A Japanese home dinner seen from directly above: rice, miso soup, grilled fish and pickles on a tray.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-nabe",
+   "kind": "tile",
+   "prompt": "A hot pot (nabe) with vegetables and tofu seen from directly above.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-oden",
+   "kind": "tile",
+   "prompt": "An oden pot seen from directly above.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-fruit-bowl",
+   "kind": "tile",
+   "prompt": "A basket of fruit seen from directly above: apples, mandarins, bananas, grapes.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-bento",
+   "kind": "tile",
+   "prompt": "An open bento box seen from directly above.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-breakfast",
+   "kind": "tile",
+   "prompt": "A western breakfast seen from directly above: toast, fried egg, salad and coffee.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-birthday-cake",
+   "kind": "tile",
+   "prompt": "A birthday cake with candles seen from directly above, no writing.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-rice-cooker",
+   "kind": "tile",
+   "prompt": "A white rice cooker, front-on. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-kettle",
+   "kind": "tile",
+   "prompt": "A stainless kettle and a flowered thermos pot side by side. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  }
+ ]
+}

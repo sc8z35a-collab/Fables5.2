@@ -1,0 +1,91 @@
+{
+ "id": "s71_mg_ceiling2",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、画像はまだ無い)。天井と照明 2",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-ceil-coffer",
+   "kind": "tile",
+   "prompt": "Japanese coffered wooden ceiling (gotenjo) seen from below.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.4
+  },
+  {
+   "name": "mg-skylight",
+   "kind": "tile",
+   "prompt": "A square skylight seen from below showing stars and a passing ring structure.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-ceiling-fan",
+   "kind": "tile",
+   "prompt": "A wooden ceiling fan seen from directly below. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-paper-lamp",
+   "kind": "tile",
+   "prompt": "A round white Japanese paper lamp shade, glowing softly. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-small-chandelier",
+   "kind": "tile",
+   "prompt": "A small brass chandelier with five glowing bulbs. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-cove-light",
+   "kind": "tile",
+   "prompt": "A ceiling cove with a long warm glowing light strip, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-ceil-ducts",
+   "kind": "tile",
+   "prompt": "Exposed silver air ducts and cable trays on a dark ceiling seen from below.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.4
+  },
+  {
+   "name": "mg-ceil-tin",
+   "kind": "tile",
+   "prompt": "Pressed tin ceiling tiles with a retro floral pattern, cream.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-street-lamp",
+   "kind": "tile",
+   "prompt": "A slim modern street lamp post with a glowing head. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  }
+ ]
+}

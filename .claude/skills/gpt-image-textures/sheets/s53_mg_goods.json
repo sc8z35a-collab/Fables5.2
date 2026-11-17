@@ -1,7 +1,7 @@
 {
  "id": "s53_mg_goods",
  "group": "megaton",
- "source": "メガトン第 7 居住甲板の追加 54 枚 (シート 53〜58、画像はまだ無い)。店の品物、飲食店、学校・役所・病院、機械と設備、公園と自然、住人の服と持ち物",
+ "source": "メガトン第 7 居住甲板の追加 54 枚 (シート 53〜58、ユーザーが別に生成した画像、すべて使用)。店の品物、飲食店、学校・役所・病院、機械と設備、公園と自然、住人の服と持ち物",
  "style": "Goods in small neighbourhood shops of a space-habitat city. Each PICTURE cell is ONE item seen exactly straight on (or from directly above), filling the cell, flat even light, no shadows, no readable text. Tiles are flat, evenly lit and seamless.",
  "cells": [
   {

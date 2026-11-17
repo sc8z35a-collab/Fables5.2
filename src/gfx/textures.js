@@ -29,6 +29,7 @@ export function mat(style, o = {}) {
   if (o.emissive != null) { m.emissive.set(o.emissive); m.emissiveIntensity = o.ei ?? 1; }
   if (o.transparent) { m.transparent = true; m.opacity = o.opacity ?? 0.5; m.depthWrite = false; }
   if (o.side) m.side = o.side;
+  if (o.cut) { m.alphaTest = 0.5; m.side = THREE.DoubleSide; } // 切り抜きの絵 (背景が透明)
   if (o.emap) m.emissiveMap = imageTex(o.emap); // 発光マップ (窓の明かりなど)
   m.envMapIntensity = o.env ?? 1;
   m.userData.uvs = o.uvs ?? MATERIAL_UVS[style] ?? 0.25;

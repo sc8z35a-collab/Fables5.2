@@ -19,7 +19,13 @@
    "prompt": "The back wall notice board of a classroom: children drawings and calligraphy sheets (no readable text).",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.04,
+    1.0,
+    0.95
+   ]
   },
   {
    "name": "mg-wall-bars",
@@ -27,7 +33,13 @@
    "prompt": "Gym wall bars (wooden climbing ladder) seen front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    0.955
+   ]
   },
   {
    "name": "mg-nursery-mural",
@@ -35,7 +47,13 @@
    "prompt": "A nursery wall painting: friendly animals under a rainbow, soft colours.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    0.935
+   ]
   },
   {
    "name": "mg-file-shelf",
@@ -43,7 +61,13 @@
    "prompt": "An office shelf front packed with binders and document boxes (labels blank).",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.005,
+    0.015,
+    0.995,
+    0.995
+   ]
   },
   {
    "name": "mg-wanted-board",
@@ -51,7 +75,13 @@
    "prompt": "A police box notice board with wanted posters (faces blurred, no readable text).",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.01,
+    0.03,
+    0.99,
+    0.965
+   ]
   },
   {
    "name": "mg-parcel-shelf",

@@ -1,0 +1,81 @@
+{
+ "id": "s64_mg_port2",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 54 枚 (シート 59〜64、画像はまだ無い)。玄関と家の細部、銭湯、学校、通りの細部、飲み屋と娯楽、港と工場。Port and factory details 2",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. Each PICTURE cell is ONE item seen exactly straight on (or from directly above), filling the cell, flat even light, no shadows, no readable text or logos. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-container-doors",
+   "kind": "tile",
+   "prompt": "The end doors of a shipping container, ribbed steel with locking bars, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-forklift",
+   "kind": "tile",
+   "prompt": "A yellow forklift seen from the side.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-pallets",
+   "kind": "tile",
+   "prompt": "A stack of wooden pallets, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-rope-coil",
+   "kind": "tile",
+   "prompt": "A coiled thick mooring rope seen from directly above.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-gauge-panel",
+   "kind": "tile",
+   "prompt": "A control panel front with many round pressure gauges, valves and labels (blank).",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-drums",
+   "kind": "tile",
+   "prompt": "A row of steel oil drums in blue, red and yellow, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-worker-lockers",
+   "kind": "tile",
+   "prompt": "A row of grey steel worker lockers with vents, front-on, no names.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-crane-hook",
+   "kind": "tile",
+   "prompt": "A big yellow crane hook block hanging on cables, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-oil-floor",
+   "kind": "tile",
+   "prompt": "Factory concrete floor with oil stains and painted yellow lines, from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.4
+  }
+ ]
+}

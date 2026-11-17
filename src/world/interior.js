@@ -108,6 +108,7 @@ function lamps(B, out, r, th, pts, style) {
       for (let k = 0; k < 10; k++) { const a = k * TAU / 10; B.sph(glow(c, 5), 0.06, x + Math.cos(a) * R, ly + 0.1, z + Math.sin(a) * R, 1, 1.4, 1, 8); if (k % 2) B.sph(glow(c, 5), 0.05, x + Math.cos(a) * R * 0.55, ly + 0.38, z + Math.sin(a) * R * 0.55, 1, 1.4, 1, 8); } light(x, ly - 0.3, z, 1.5); }
     else if (style === 'bare') { B.cyl(DK, 0.01, 0.01, 0.5, x, y - 0.25, z, 'y', 4); B.sph(glow(c, 5), 0.06, x, y - 0.54, z, 1, 1.3, 1, 8); light(x, y - 0.8, z, 0.8); }
     else if (style === 'strip') light(x, y - 0.5, z);
+    else if (style === 'square') { B.box(DK, 1.3, 0.08, 1.3, x, y - 0.03, z, rot); B.box(glowMap('materials/mg-ceiling-light/color', c, 2.4), 1.16, 0.04, 1.16, x, y - 0.08, z, rot); light(x, y - 0.6, z); } // 四角い天井灯 (事務所・教室・診療所)
     else { B.box(DK, 2.0, 0.1, 0.6, x, y - 0.03, z, rot); B.box(glowMap('effects/light-panel', c, 3.2), 1.8, 0.04, 0.42, x, y - 0.1, z, rot); light(x, y - 0.6, z); }
   });
 }

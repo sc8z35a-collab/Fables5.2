@@ -1,0 +1,88 @@
+{
+ "id": "s68_mg_festival",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、画像はまだ無い)。季節と行事",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-tanabata",
+   "kind": "tile",
+   "prompt": "A bamboo branch decorated with colourful paper strips and ornaments (Tanabata), no writing. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-koinobori",
+   "kind": "tile",
+   "prompt": "Carp streamers (koinobori) on a pole, side view. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-kadomatsu",
+   "kind": "tile",
+   "prompt": "A New Year kadomatsu: three cut bamboo stalks with pine. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-hina-dolls",
+   "kind": "tile",
+   "prompt": "A tiered display of hina dolls on red cloth, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-xmas-tree",
+   "kind": "tile",
+   "prompt": "A decorated Christmas tree with lights and a star. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-goldfish-scoop",
+   "kind": "tile",
+   "prompt": "A goldfish scooping pool at a festival seen from directly above: red and black goldfish in blue water.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-festival-lanterns",
+   "kind": "tile",
+   "prompt": "A row of white and red festival paper lanterns on a string, glowing, no letters.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-fireworks",
+   "kind": "tile",
+   "prompt": "Colourful fireworks bursting in a night sky.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-tsukimi",
+   "kind": "tile",
+   "prompt": "A moon-viewing offering: rice dumplings on a stand and pampas grass, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  }
+ ]
+}

@@ -1,0 +1,82 @@
+{
+ "id": "s62_mg_street3",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 54 枚 (シート 59〜64、画像はまだ無い)。玄関と家の細部、銭湯、学校、通りの細部、飲み屋と娯楽、港と工場。Street details 3",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. Each PICTURE cell is ONE item seen exactly straight on (or from directly above), filling the cell, flat even light, no shadows, no readable text or logos. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-vending-red",
+   "kind": "tile",
+   "prompt": "A red drinks vending machine front with rows of cans and bottles, lit display.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-vending-blue",
+   "kind": "tile",
+   "prompt": "A blue drinks vending machine front with rows of cans and bottles, lit display.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-bike-rack",
+   "kind": "tile",
+   "prompt": "A row of parked bicycles in a metal rack, side view.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-tram-stop",
+   "kind": "tile",
+   "prompt": "A small covered tram stop shelter front: bench, glass side panel and a blank route board.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-phone-booth",
+   "kind": "tile",
+   "prompt": "A green public phone booth front with a glass door and a green phone inside.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-curve-mirror",
+   "kind": "tile",
+   "prompt": "A round orange-framed traffic convex mirror on a pole, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-garbage-net",
+   "kind": "tile",
+   "prompt": "A garbage collection point: bags under a blue net, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-mosaic-floor",
+   "kind": "tile",
+   "prompt": "An old alley floor of small cream and terracotta mosaic tiles, worn, from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-blue-tarp",
+   "kind": "tile",
+   "prompt": "A crumpled blue plastic tarp from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  }
+ ]
+}

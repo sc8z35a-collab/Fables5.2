@@ -1,0 +1,80 @@
+{
+ "id": "s74_mg_shops3",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、画像はまだ無い)。店 3",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-watch-case",
+   "kind": "tile",
+   "prompt": "A watch shop glass display case with wristwatches and clocks.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-glasses-shelf",
+   "kind": "tile",
+   "prompt": "An optician shelf with rows of eyeglasses.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-stationery",
+   "kind": "tile",
+   "prompt": "A stationery shop shelf: pens, notebooks, paper and tape.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-toyshop",
+   "kind": "tile",
+   "prompt": "A toy shop shelf: robots, cars, dolls and board game boxes (no text).",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-guitar-wall",
+   "kind": "tile",
+   "prompt": "A music shop wall of hanging guitars and a ukulele.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-shoe-shelf",
+   "kind": "tile",
+   "prompt": "A shoe shop shelf with sneakers and shoes in rows.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-hat-shelf",
+   "kind": "tile",
+   "prompt": "A shop shelf of hats and bags.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-cosmetics",
+   "kind": "tile",
+   "prompt": "A cosmetics counter display with bottles and lipsticks, glossy.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-photo-studio",
+   "kind": "tile",
+   "prompt": "A photo studio backdrop: grey cloth with two soft box lights and a stool.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  }
+ ]
+}

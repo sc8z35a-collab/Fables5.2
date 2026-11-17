@@ -1,0 +1,85 @@
+{
+ "id": "s76_mg_tech",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、画像はまだ無い)。技術と研究",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-robot-arm",
+   "kind": "tile",
+   "prompt": "An orange industrial robot arm. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-3d-printer",
+   "kind": "tile",
+   "prompt": "A large 3D printer front printing a part, glass door.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-server-wall",
+   "kind": "tile",
+   "prompt": "A wall of server racks with blue and green status lights.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-solar-cells",
+   "kind": "tile",
+   "prompt": "Blue solar cells with silver grid lines, close-up.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-circuit",
+   "kind": "tile",
+   "prompt": "A green circuit board with chips and traces, close-up.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.8
+  },
+  {
+   "name": "mg-drone-dock",
+   "kind": "tile",
+   "prompt": "A delivery drone docking shelf with small drones and parcels, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-holo-table",
+   "kind": "tile",
+   "prompt": "A holographic map table seen from above, glowing blue.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-microscope-bench",
+   "kind": "tile",
+   "prompt": "A lab bench front with microscopes and sample racks.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-cleanroom-wall",
+   "kind": "tile",
+   "prompt": "White clean-room wall panels with rounded joints and small vents.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.4
+  }
+ ]
+}

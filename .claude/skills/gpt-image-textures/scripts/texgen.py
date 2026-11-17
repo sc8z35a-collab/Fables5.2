@@ -313,6 +313,25 @@ def save_rgba(rgb, a, path, size=None):
     im.save(path, 'WEBP', quality=90, method=6)
 
 
+def key_bg(t, tol=0.09, holes=0.0):
+    """外周から続く背景 (白など、マスの縁の色に近い画素) を透明にする。物の中の白は外周とつながらなければ残る"""
+    from PIL import ImageDraw, ImageFilter
+    H, W = t.shape[:2]; ring = np.concatenate([t[:4].reshape(-1, 3), t[-4:].reshape(-1, 3), t[:, :4].reshape(-1, 3), t[:, -4:].reshape(-1, 3)])
+    bg = np.median(ring, 0); near = (np.abs(t - bg).max(2) < tol)
+    m = Image.fromarray((near * 255).astype(np.uint8), 'L').copy()  # copy: numpy と共有した画像は塗りつぶしが効かない
+    for x, y in [(x, 0) for x in range(0, W, 7)] + [(x, H - 1) for x in range(0, W, 7)] + [(0, y) for y in range(0, H, 7)] + [(W - 1, y) for y in range(0, H, 7)]:
+        if m.getpixel((x, y)) == 255: ImageDraw.floodfill(m, (x, y), 128)
+    if holes > 0:  # 物に囲まれた背景 (持ち手の内側など) も、面積が holes (割合) 以上なら抜く。水玉のような小さな白は残す
+        for y in range(0, H, 6):
+            for x in range(0, W, 6):
+                if m.getpixel((x, y)) != 255: continue
+                ImageDraw.floodfill(m, (x, y), 64); arr = np.asarray(m).copy(); reg = arr == 64
+                arr[reg] = 128 if reg.mean() >= holes else 0; m = Image.fromarray(arr, 'L').copy()
+    a = (np.asarray(m) != 128).astype(np.uint8) * 255
+    a = Image.fromarray(a, 'L').filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(1.2))  # 縁を 1px 太らせてなめらかに
+    return np.asarray(a, np.float32) / 255
+
+
 def save_normal(n, path, size):
     """法線マップを縮小してから長さ 1 に戻して保存"""
     im = np.asarray(u8(n).resize((size, size), Image.LANCZOS), np.float32) / 255 * 2 - 1
@@ -351,6 +370,7 @@ def process(sheet):
             t = desat(t, c.get('sat', 1.0))
             if 'mean' in c:  # mean が無ければ元の明るさのまま (正面に貼る絵など)
                 t = match_linear(t, c['mean'], c.get('contrast', 0.1)) if c.get('norm') == 'linear' else match_mean(t, c['mean'], c.get('keep_hue', False))
+            if c.get('key'): save_rgba(t, key_bg(t, c.get('tol', 0.09), c.get('holes', 0.0)), d / 'color.webp', (MAT_SIZE, MAT_SIZE)); continue  # 白い背景を抜いた切り抜きの絵 (アルファ付き)
             save(t, d / 'color.webp', q=86, size=MAT_SIZE)
         elif k == 'image':  # 1 枚の画像 (惑星の地図・雲・星雲・環・太陽・森の樹冠)。法線・粗さは作らない
             src = cell(img, i, 0.02); ov = c.get('ov', 192); seam = c.get('seam', 'xy')

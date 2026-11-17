@@ -64,7 +64,16 @@
    "prompt": "A colourful backpack seen front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.06,
+    0.0,
+    0.94,
+    1.0
+   ],
+   "key": "white",
+   "flatten": 0,
+   "holes": 0.002
   },
   {
    "name": "mg-umbrella",
@@ -72,7 +81,15 @@
    "prompt": "An open umbrella seen from directly above, colourful panels.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.015,
+    0.0,
+    0.985,
+    0.975
+   ],
+   "key": "white",
+   "flatten": 0
   },
   {
    "name": "mg-shopping-bag",
@@ -80,7 +97,17 @@
    "prompt": "A cloth shopping bag with vegetables and a baguette sticking out, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.01,
+    0.0,
+    0.99,
+    1.0
+   ],
+   "key": "white",
+   "tol": 0.05,
+   "flatten": 0,
+   "holes": 0.002
   }
  ]
 }

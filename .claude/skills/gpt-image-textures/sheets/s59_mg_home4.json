@@ -1,0 +1,81 @@
+{
+ "id": "s59_mg_home4",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 54 枚 (シート 59〜64、画像はまだ無い)。玄関と家の細部、銭湯、学校、通りの細部、飲み屋と娯楽、港と工場。Home details 4",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. Each PICTURE cell is ONE item seen exactly straight on (or from directly above), filling the cell, flat even light, no shadows, no readable text or logos. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-kitchen-rack",
+   "kind": "tile",
+   "prompt": "A kitchen wall rack front: dish drainer with plates and cups, spice jars and hanging utensils.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-shoes",
+   "kind": "tile",
+   "prompt": "Shoes neatly lined up on an entrance stone floor, seen from directly above: sneakers, loafers and small kids shoes.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-kotatsu",
+   "kind": "tile",
+   "prompt": "A kotatsu table seen from directly above: patterned quilt spread out under a square wooden top with a bowl of mandarins.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-oshiire",
+   "kind": "tile",
+   "prompt": "An open Japanese closet (oshiire) front: folded futons on the upper shelf, boxes and cases below.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-piano",
+   "kind": "tile",
+   "prompt": "An upright piano front, polished dark wood, lid open showing keys.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-home-aquarium",
+   "kind": "tile",
+   "prompt": "A small home aquarium front on a cabinet: goldfish, green plants and pebbles.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-laundry-corner",
+   "kind": "tile",
+   "prompt": "A washing machine corner front: white washer on a drain pan, detergent shelf above.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-toilet-tile",
+   "kind": "tile",
+   "prompt": "Toilet room wall: small pale blue square mosaic tiles with white grout.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.8
+  },
+  {
+   "name": "mg-mirror-cabinet",
+   "kind": "tile",
+   "prompt": "A bathroom vanity mirror cabinet front: three mirror doors with a light bar on top.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  }
+ ]
+}

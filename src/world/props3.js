@@ -414,5 +414,5 @@ void main(){float a=vUv.x*6.2832+uTime*.9,b=vUv.y*6.2832;vec3 p=vec3(cos(a)*2.4,
     e.col(n > 2 ? 1.15 : 0.7);
   },
   /** 床の警戒帯 (黄と黒の斜線) */
-  hazard(P, o, e) { const w = o.w || 4, d = o.d || 0.5; P.add(mat('hazard', { rough: 0.7, metal: 0.2 }), new THREE.BoxGeometry(w, 0.012, d), mx(0, 0.011, 0)); },
+  hazard(P, o, e) { const w = o.w || 4, d = o.d || 0.5; P.add(mat(o.img && hasImage('materials/' + o.img) ? o.img : 'hazard', { rough: 0.7, metal: 0.2 }), new THREE.BoxGeometry(w, 0.012, d), mx(0, 0.011, 0)); },
 };

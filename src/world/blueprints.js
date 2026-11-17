@@ -2,7 +2,7 @@
 // 部屋: {id,x,z,w,d,h, shape:'round', ceil3:'vault|truss|coffer|rock|dome', lamps, deco[], plat[], rug[], win[]}
 // 小道具: [種類, x, z, 向き(90°単位), オプション] (部屋の左上隅からの相対座標)  扉: [部屋A, 部屋B, 位置, 幅, 高さ, 種類]
 import * as THREE from 'three';
-import { rng, rr, pick } from '../core/util.js';
+import { rng, rr, pick, shuffled } from '../core/util.js';
 import { mat, glow } from '../gfx/textures.js';
 import { BP2, ALL2 } from './blueprints2.js';
 
@@ -268,7 +268,7 @@ function enemyBP(def) {
   const ws = pick(r, ['bulk', 'rib', 'rock', 'enemy-wall', 'bulk']), fs = pick(r, ['grate', 'plate', 'hex', 'enemy-floor']), cave = ws === 'rock';
   const theme = { wall: [ws, dark(0.14, cave ? 0x5a4a50 : 0x50545e), 0.8, 0.5], floor: [fs, dark(0.08, 0x6a6e76), 0.45, 0.7], ceil: [cave ? 'rock' : pick(r, ['ceil', 'rib']), dark(0.1, 0x2a2c32)], trim: def.glow, lamp: '#' + new THREE.Color(def.glow).lerp(new THREE.Color('#fff'), 0.55).getHexString(),
     frame: 0x121316, door: dark(0.3, 0x3a3a40), amb: [dark(0.6, 0x404050), 0x0c0c10, 0.42], gloss: 0.5, door3: pick(r, ['hatch', 'blast', 'slide']), trims: pick(r, ['low', 'neon', 'both']), lamps: cave ? 'bare' : pick(r, ['tube', 'panel', 'pendant']), cstyle: cave ? 'rock' : 'flat', ribs: !cave, deco: cave ? ['stal'] : pick(r, [['cables'], ['ducts'], ['cables', 'ducts'], []]) };
-  const topo = def.idx % 3, n = 2 + def.tier + (r() < 0.5 ? 1 : 0), kinds = ['barracks', 'armory', 'cargo', 'medbay', 'reactor', 'brig', 'lab'].sort(() => r() - 0.5).slice(0, Math.min(n, topo === 1 ? 4 : 6));
+  const topo = def.idx % 3, n = 2 + def.tier + (r() < 0.5 ? 1 : 0), kinds = shuffled(['barracks', 'armory', 'cargo', 'medbay', 'reactor', 'brig', 'lab'], r).slice(0, Math.min(n, topo === 1 ? 4 : 6));
   const NAME = { barracks: '兵員室', armory: '武器庫', cargo: '貨物室', medbay: '医務室', reactor: '機関室', brig: '営倉', lab: '実験室' }, rooms = [], doors = [], drones = [];
   /** 部屋の中身。flip=true で東西を鏡写し */
   const fill = (k, w, d, flip, id, ns) => { const X = (v) => (flip ? w - v : v), rot = (q) => (flip ? (4 - q) % 4 : q), P = [], C = ns ? w / 2 + 2.3 : w / 2;

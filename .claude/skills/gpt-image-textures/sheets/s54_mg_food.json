@@ -10,7 +10,13 @@
    "prompt": "A bowl of ramen seen from directly above: noodles, chashu, egg, nori, green onions.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.015,
+    0.01,
+    0.985,
+    0.99
+   ]
   },
   {
    "name": "mg-curry",
@@ -18,7 +24,13 @@
    "prompt": "A plate of Japanese curry rice seen from directly above.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.005,
+    0.005,
+    0.99,
+    0.995
+   ]
   },
   {
    "name": "mg-cake-case",
@@ -50,7 +62,13 @@
    "prompt": "A restaurant meal-ticket vending machine front: rows of blank buttons with food photos.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.06,
+    0.0,
+    0.965,
+    0.975
+   ]
   },
   {
    "name": "mg-coffee-set",
@@ -76,7 +94,15 @@
    "rough": 200,
    "sat": 1.0,
    "normal": 2.0,
-   "uvs": 0.6
+   "uvs": 0.6,
+   "seam": "",
+   "crop": [
+    0.1755,
+    0.1682,
+    0.8293,
+    0.8414
+   ],
+   "flatten": 0
   }
  ]
 }
