@@ -1,0 +1,93 @@
+{
+ "id": "s78_mg_people2",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、画像はまだ無い)。人と持ち物 2",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-cloth-hoodie",
+   "kind": "tile",
+   "prompt": "Clothing fabric: grey cotton sweatshirt fleece.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.5
+  },
+  {
+   "name": "mg-cloth-raincoat",
+   "kind": "tile",
+   "prompt": "Clothing fabric: glossy yellow raincoat.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.5
+  },
+  {
+   "name": "mg-cloth-kimono",
+   "kind": "tile",
+   "prompt": "Clothing fabric: kimono silk with cherry blossoms and flowing water.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.2
+  },
+  {
+   "name": "mg-cloth-labcoat",
+   "kind": "tile",
+   "prompt": "Clothing fabric: white lab coat cotton.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.5
+  },
+  {
+   "name": "mg-cloth-jersey",
+   "kind": "tile",
+   "prompt": "Clothing fabric: navy school sports jersey with two white stripes.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.2
+  },
+  {
+   "name": "mg-randoseru",
+   "kind": "tile",
+   "prompt": "A red Japanese school backpack (randoseru), front-on. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-suitcase",
+   "kind": "tile",
+   "prompt": "A blue hard suitcase standing upright, front-on. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-stroller",
+   "kind": "tile",
+   "prompt": "A baby stroller seen from the side. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-guitar-case",
+   "kind": "tile",
+   "prompt": "A black guitar case standing upright. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  }
+ ]
+}

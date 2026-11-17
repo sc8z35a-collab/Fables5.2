@@ -1,0 +1,112 @@
+{
+ "id": "s55_mg_public2",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 54 枚 (シート 53〜58、画像はまだ無い)。店の品物、飲食店、学校・役所・病院、機械と設備、公園と自然、住人の服と持ち物",
+ "style": "More details of the school, ward office, police box, post office and clinic of a space-habitat neighbourhood. Each PICTURE cell is ONE item seen exactly straight on (or from directly above), filling the cell, flat even light, no shadows, no readable text. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-classroom-floor",
+   "kind": "tile",
+   "prompt": "Classroom floor from above: worn light wooden boards.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-class-board",
+   "kind": "tile",
+   "prompt": "The back wall notice board of a classroom: children drawings and calligraphy sheets (no readable text).",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.04,
+    1.0,
+    0.95
+   ]
+  },
+  {
+   "name": "mg-wall-bars",
+   "kind": "tile",
+   "prompt": "Gym wall bars (wooden climbing ladder) seen front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    0.955
+   ]
+  },
+  {
+   "name": "mg-nursery-mural",
+   "kind": "tile",
+   "prompt": "A nursery wall painting: friendly animals under a rainbow, soft colours.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    0.935
+   ]
+  },
+  {
+   "name": "mg-file-shelf",
+   "kind": "tile",
+   "prompt": "An office shelf front packed with binders and document boxes (labels blank).",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.005,
+    0.015,
+    0.995,
+    0.995
+   ]
+  },
+  {
+   "name": "mg-wanted-board",
+   "kind": "tile",
+   "prompt": "A police box notice board with wanted posters (faces blurred, no readable text).",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.01,
+    0.03,
+    0.99,
+    0.965
+   ]
+  },
+  {
+   "name": "mg-parcel-shelf",
+   "kind": "tile",
+   "prompt": "A post office back shelf with parcels and envelopes in pigeonholes.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-bench-vinyl",
+   "kind": "tile",
+   "prompt": "Waiting room bench upholstery: blue vinyl leather close-up.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.0
+  },
+  {
+   "name": "mg-clinic-files",
+   "kind": "tile",
+   "prompt": "A clinic reception shelf front with patient files in colourful folders.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  }
+ ]
+}

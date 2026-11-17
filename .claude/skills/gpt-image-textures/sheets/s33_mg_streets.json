@@ -1,0 +1,134 @@
+{
+ "id": "s33_mg_streets",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の改修用。ユーザーが別に生成した 1254x1254 の画像。1 枚の絵のマスは crop で余白 (白い背景や壁) を切り落とす",
+ "style": "Bright, clean public streets of a huge rotating space habitat, mechanical but lived-in. Each cell is a flat, evenly lit, front-on or top-down surface with no perspective, no shadows and no readable text.",
+ "cells": [
+  {
+   "name": "mg-floor-main",
+   "kind": "tile",
+   "prompt": "Main shopping street floor seen from directly above: light grey and beige stone pavers in a running bond, worn smooth, thin dark joints.",
+   "mean": [
+    205,
+    200,
+    192
+   ],
+   "rough": 150,
+   "sat": 0.3,
+   "normal": 3.0,
+   "uvs": 0.33
+  },
+  {
+   "name": "mg-wall-main",
+   "kind": "tile",
+   "prompt": "Street wall of shops: light cream glazed brick-like tiles in a stack bond with thin grout lines, slightly uneven glaze.",
+   "mean": [
+    214,
+    208,
+    196
+   ],
+   "rough": 110,
+   "sat": 0.3,
+   "normal": 3.0,
+   "uvs": 0.35
+  },
+  {
+   "name": "mg-floor-market",
+   "kind": "tile",
+   "prompt": "Market street floor from above: light grey sealed concrete with a stainless drain channel, faint water stains and scuffs.",
+   "mean": [
+    176,
+    174,
+    168
+   ],
+   "rough": 120,
+   "sat": 0.15,
+   "normal": 3.0,
+   "uvs": 0.3
+  },
+  {
+   "name": "mg-wall-shop",
+   "kind": "tile",
+   "prompt": "Shop interior wall: off-white painted panels with thin vertical joints and tiny screw heads, very clean.",
+   "mean": [
+    222,
+    218,
+    210
+   ],
+   "rough": 170,
+   "sat": 0.15,
+   "normal": 1.8,
+   "uvs": 0.3
+  },
+  {
+   "name": "mg-floor-civic",
+   "kind": "tile",
+   "prompt": "Civic plaza and ward office floor from above: large pale stone tiles (60 cm) with thin joints and a subtle polished sheen.",
+   "mean": [
+    214,
+    210,
+    202
+   ],
+   "rough": 70,
+   "sat": 0.15,
+   "normal": 1.5,
+   "uvs": 0.25
+  },
+  {
+   "name": "mg-wall-civic",
+   "kind": "tile",
+   "prompt": "Ward office / school wall: white acoustic wall panels with a fine perforated pattern and slim aluminium joints.",
+   "mean": [
+    224,
+    222,
+    216
+   ],
+   "rough": 180,
+   "sat": 0.1,
+   "normal": 2.0,
+   "uvs": 0.3
+  },
+  {
+   "name": "mg-ceil-panel",
+   "kind": "tile",
+   "prompt": "Corridor ceiling seen from below: white square ceiling panels with a small access hatch and slim metal grid lines.",
+   "mean": [
+    226,
+    226,
+    222
+   ],
+   "rough": 200,
+   "sat": 0.05,
+   "normal": 2.0,
+   "uvs": 0.35
+  },
+  {
+   "name": "mg-ceil-pipes",
+   "kind": "tile",
+   "prompt": "Alley ceiling seen from below: light grey painted steel deck with exposed pipes, cable bundles and brackets running across it.",
+   "mean": [
+    176,
+    176,
+    172
+   ],
+   "rough": 170,
+   "sat": 0.25,
+   "normal": 4.0,
+   "uvs": 0.3
+  },
+  {
+   "name": "mg-frame",
+   "kind": "tile",
+   "prompt": "Painted structural steel I-beam surface: off-white paint over steel with rivets, small dents and a few scuffs at the edges.",
+   "mean": [
+    206,
+    202,
+    194
+   ],
+   "rough": 140,
+   "sat": 0.15,
+   "normal": 3.0,
+   "uvs": 0.5
+  }
+ ]
+}

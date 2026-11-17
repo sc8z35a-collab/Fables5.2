@@ -1,0 +1,134 @@
+{
+ "id": "s72_mg_views",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、ユーザーが送った 9 シートの一覧画像から切り出した小さな画像 (1 マス約 136 px を拡大))。窓の外の景色",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-view-earth",
+   "kind": "tile",
+   "prompt": "View from a window into space: the blue Earth with clouds, black sky.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.05,
+    0.05,
+    0.95,
+    0.95
+   ]
+  },
+  {
+   "name": "mg-view-stars",
+   "kind": "tile",
+   "prompt": "A deep starry sky with the Milky Way.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.05,
+    0.05,
+    0.95,
+    0.95
+   ]
+  },
+  {
+   "name": "mg-view-ring",
+   "kind": "tile",
+   "prompt": "A huge rotating habitat ring with lit windows against stars.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.05,
+    0.05,
+    0.95,
+    0.95
+   ]
+  },
+  {
+   "name": "mg-view-port",
+   "kind": "tile",
+   "prompt": "A space port with docked ships and cranes, seen through a window.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.05,
+    0.05,
+    0.95,
+    0.95
+   ]
+  },
+  {
+   "name": "mg-view-sun",
+   "kind": "tile",
+   "prompt": "A bright sun and long reflective mirror panels of a space colony.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.05,
+    0.05,
+    0.95,
+    0.95
+   ]
+  },
+  {
+   "name": "mg-view-city",
+   "kind": "tile",
+   "prompt": "Inside a rotating cylinder colony: city lights curving up overhead.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.05,
+    0.05,
+    0.95,
+    0.95
+   ]
+  },
+  {
+   "name": "mg-view-greenhouse",
+   "kind": "tile",
+   "prompt": "A lush green greenhouse deck seen through glass.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.05,
+    0.05,
+    0.95,
+    0.95
+   ]
+  },
+  {
+   "name": "mg-view-nebula",
+   "kind": "tile",
+   "prompt": "A colourful nebula in space.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.05,
+    0.05,
+    0.95,
+    0.95
+   ]
+  },
+  {
+   "name": "mg-view-moon",
+   "kind": "tile",
+   "prompt": "A grey moon surface with a small lit base and Earth on the horizon.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.05,
+    0.05,
+    0.95,
+    0.95
+   ]
+  }
+ ]
+}

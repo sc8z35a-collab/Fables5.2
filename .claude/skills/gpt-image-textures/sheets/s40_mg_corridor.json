@@ -1,0 +1,134 @@
+{
+ "id": "s40_mg_corridor",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の改修用。ユーザーが別に生成した 1254x1254 の画像。1 枚の絵のマスは crop で余白 (白い背景や壁) を切り落とす",
+ "style": "Small everyday fixtures on the corridor walls of a space-habitat apartment block. Each cell is ONE item seen exactly straight on, filling the cell, flat even light, no shadows, no readable text (blank or abstract labels only).",
+ "cells": [
+  {
+   "name": "mg-nameplate",
+   "kind": "tile",
+   "prompt": "An apartment nameplate above an intercom button panel, mounted on a wall, blank plate.",
+   "seam": "",
+   "rough": 100,
+   "normal": 1.5,
+   "crop": [
+    0.176,
+    0.083,
+    0.824,
+    0.995
+   ]
+  },
+  {
+   "name": "mg-mailboxes",
+   "kind": "tile",
+   "prompt": "A bank of grey metal apartment mailboxes, rows of small doors with number plates (blank).",
+   "seam": "",
+   "rough": 110,
+   "normal": 1.5,
+   "crop": [
+    0.018,
+    0.129,
+    0.987,
+    0.931
+   ]
+  },
+  {
+   "name": "mg-meterbox",
+   "kind": "tile",
+   "prompt": "A utility meter box with a small glass window showing electric and water meters.",
+   "seam": "",
+   "rough": 120,
+   "normal": 1.5,
+   "crop": [
+    0.144,
+    0.057,
+    0.861,
+    0.989
+   ]
+  },
+  {
+   "name": "mg-firehose",
+   "kind": "tile",
+   "prompt": "A red fire hose cabinet with a glass door, the coiled hose visible inside, a red lamp on top.",
+   "seam": "",
+   "rough": 90,
+   "normal": 1.5,
+   "crop": [
+    0.222,
+    0.045,
+    0.786,
+    0.989
+   ]
+  },
+  {
+   "name": "mg-exit-sign",
+   "kind": "tile",
+   "prompt": "A green emergency exit sign: a white running figure pictogram and an arrow, no words.",
+   "seam": "",
+   "rough": 60,
+   "normal": 1.5,
+   "crop": [
+    0.035,
+    0.27,
+    0.972,
+    0.907
+   ]
+  },
+  {
+   "name": "mg-address",
+   "kind": "tile",
+   "prompt": "A blue enamel address plate with white abstract symbols, slightly worn edges.",
+   "seam": "",
+   "rough": 80,
+   "normal": 1.5,
+   "crop": [
+    0.074,
+    0.278,
+    0.934,
+    0.752
+   ]
+  },
+  {
+   "name": "mg-noticeboard",
+   "kind": "tile",
+   "prompt": "A cork notice board with pinned community notices, a lost-cat flyer, a calendar and photos (no readable text).",
+   "seam": "",
+   "rough": 200,
+   "normal": 1.5,
+   "crop": [
+    0.028,
+    0.132,
+    0.955,
+    0.897
+   ]
+  },
+  {
+   "name": "mg-posters",
+   "kind": "tile",
+   "prompt": "Three community posters side by side: a festival, a clean-up day and a health check, colourful illustrations, no readable text.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.011,
+    0.214,
+    0.989,
+    0.776
+   ]
+  },
+  {
+   "name": "mg-trash-sign",
+   "kind": "tile",
+   "prompt": "A garbage sorting sign with coloured icons for burnable, plastic, cans and paper, no words.",
+   "seam": "",
+   "rough": 100,
+   "normal": 1.5,
+   "crop": [
+    0.03,
+    0.142,
+    0.982,
+    0.902
+   ]
+  }
+ ]
+}

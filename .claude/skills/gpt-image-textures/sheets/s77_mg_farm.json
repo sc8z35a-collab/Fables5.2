@@ -1,0 +1,82 @@
+{
+ "id": "s77_mg_farm",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、画像はまだ無い)。農業と水耕",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-hydro-rack",
+   "kind": "tile",
+   "prompt": "A hydroponic shelf of lettuces under pink and white LED lights, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-mushroom-shelf",
+   "kind": "tile",
+   "prompt": "A mushroom growing shelf with shiitake logs and oyster mushrooms, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-seedling-tray",
+   "kind": "tile",
+   "prompt": "Seedling trays seen from directly above.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-fish-farm",
+   "kind": "tile",
+   "prompt": "A fish farming tank seen from directly above: many fish in clear water.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-tomato-vines",
+   "kind": "tile",
+   "prompt": "Tomato vines with red and green tomatoes on strings, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-paddy",
+   "kind": "tile",
+   "prompt": "A small flooded rice paddy with young rice plants seen from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.5
+  },
+  {
+   "name": "mg-compost",
+   "kind": "tile",
+   "prompt": "Dark compost soil with straw seen from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-grow-light",
+   "kind": "tile",
+   "prompt": "A long LED grow light bar glowing pink-purple, seen from below.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-harvest-crates",
+   "kind": "tile",
+   "prompt": "Plastic crates full of harvested vegetables, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  }
+ ]
+}

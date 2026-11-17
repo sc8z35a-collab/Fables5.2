@@ -7,6 +7,8 @@ export const damp = (a, b, l, dt) => a + (b - a) * (1 - Math.exp(-l * dt));
 export const smooth = (a, b, x) => { x = clamp((x - a) / (b - a), 0, 1); return x * x * (3 - 2 * x); };
 export const TAU = Math.PI * 2;
 
+/** 乱数で混ぜた写し (Fisher–Yates)。sort(() => r() - 0.5) はブラウザの最適化で結果が変わるので使わない */
+export function shuffled(a, r) { const o = a.slice(); for (let i = o.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; } return o; }
 export function rng(seed) {
   let s = (seed >>> 0) || 1;
   return () => {

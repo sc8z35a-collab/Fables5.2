@@ -1,0 +1,109 @@
+{
+ "id": "s52_mg_life",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加分。ユーザーが別に生成した 1254x1254 の画像。タイルは画像の色をそのまま使い (mean なし)、1 枚の絵は crop で余白を切り落とす",
+ "style": "Small things of daily life in a space-habitat city, and fabrics for residents clothes. PICTURE cells: one item seen straight on, filling the cell, plain background, no readable text. Tiles: flat, evenly lit, seamless.",
+ "cells": [
+  {
+   "name": "mg-calendar",
+   "kind": "tile",
+   "prompt": "A paper wall calendar with a landscape photo and a grid of days (numbers only as abstract marks).",
+   "seam": "",
+   "rough": 200,
+   "normal": 1.5,
+   "crop": [
+    0.07,
+    0.05,
+    0.93,
+    0.98
+   ]
+  },
+  {
+   "name": "mg-clock",
+   "kind": "tile",
+   "prompt": "A round wall clock seen front-on, white face, simple black hands, on white.",
+   "seam": "",
+   "rough": 80,
+   "normal": 1.5,
+   "crop": [
+    0.03,
+    0.02,
+    0.96,
+    1
+   ]
+  },
+  {
+   "name": "mg-kids-drawing",
+   "kind": "tile",
+   "prompt": "A child crayon drawing of a family and a spaceship on white paper.",
+   "seam": "",
+   "rough": 220,
+   "normal": 1.5,
+   "crop": [
+    0.02,
+    0.1,
+    0.98,
+    0.94
+   ]
+  },
+  {
+   "name": "mg-balcony-floor",
+   "kind": "tile",
+   "prompt": "Balcony floor from above: grey waterproof sheet with a slight emboss.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-soil",
+   "kind": "tile",
+   "prompt": "Planter bed from above: dark soil with wood chips and a little moss.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-ac-outdoor",
+   "kind": "tile",
+   "prompt": "An air conditioner outdoor unit seen front-on: white casing with a round fan grille.",
+   "seam": "",
+   "rough": 110,
+   "normal": 1.5,
+   "crop": [
+    0.02,
+    0.06,
+    0.98,
+    0.84
+   ]
+  },
+  {
+   "name": "mg-clothes-denim",
+   "kind": "tile",
+   "prompt": "Clothing fabric: faded blue denim close-up.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.5
+  },
+  {
+   "name": "mg-clothes-flower",
+   "kind": "tile",
+   "prompt": "Clothing fabric: light dress cotton with a small floral print.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.5
+  },
+  {
+   "name": "mg-clothes-work",
+   "kind": "tile",
+   "prompt": "Clothing fabric: orange work-uniform twill with reflective tape stripe.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.5
+  }
+ ]
+}

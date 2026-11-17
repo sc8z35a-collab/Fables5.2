@@ -1,0 +1,94 @@
+{
+ "id": "s51_mg_big",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加分。ユーザーが別に生成した 1254x1254 の画像。タイルは画像の色をそのまま使い (mean なし)、1 枚の絵は crop で余白を切り落とす",
+ "style": "Floors and walls of the big halls of a space-habitat city: the arrival lobby, the station, the exchange, the lounge, the foundry, the reactor deck and the dock. Flat, evenly lit, top-down for floors, front-on for walls, seamless, no shadows, no readable text.",
+ "cells": [
+  {
+   "name": "mg-lobby-floor",
+   "kind": "tile",
+   "prompt": "Arrival lobby floor from above: large polished light stone tiles with a thin brass inlay line.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.25
+  },
+  {
+   "name": "mg-lobby-wall",
+   "kind": "tile",
+   "prompt": "Arrival lobby wall: brushed light metal panels with slim recessed joints.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.3
+  },
+  {
+   "name": "mg-station-wall",
+   "kind": "tile",
+   "prompt": "Train station platform wall: cream glazed tiles with a single blue band.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.4
+  },
+  {
+   "name": "mg-train",
+   "kind": "tile",
+   "prompt": "The side of a modern commuter train car: white body with a blue stripe, windows and a door, seen exactly side-on.",
+   "seam": "",
+   "rough": 80,
+   "normal": 1.5,
+   "crop": [
+    0,
+    0.3,
+    1,
+    0.68
+   ]
+  },
+  {
+   "name": "mg-exchange-floor",
+   "kind": "tile",
+   "prompt": "Exchange hall floor from above: dark polished wood parquet with a brass star inlay.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.25
+  },
+  {
+   "name": "mg-lounge-wall",
+   "kind": "tile",
+   "prompt": "Lounge wall: deep green fabric-covered panels with brass trim lines.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.4
+  },
+  {
+   "name": "mg-forge-floor",
+   "kind": "tile",
+   "prompt": "Foundry floor from above: heat-darkened steel plates with scorch marks and painted yellow lines.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.3
+  },
+  {
+   "name": "mg-core-floor",
+   "kind": "tile",
+   "prompt": "Reactor deck floor from above: hexagonal steel grating over glowing blue light.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-dock-floor",
+   "kind": "tile",
+   "prompt": "Spaceship dock floor from above: grey anti-slip coating with white lines and tie-down rings.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.15
+  }
+ ]
+}

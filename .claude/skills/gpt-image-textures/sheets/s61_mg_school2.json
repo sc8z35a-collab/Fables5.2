@@ -1,0 +1,81 @@
+{
+ "id": "s61_mg_school2",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 54 枚 (シート 59〜64、画像はまだ無い)。玄関と家の細部、銭湯、学校、通りの細部、飲み屋と娯楽、港と工場。School details 2",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. Each PICTURE cell is ONE item seen exactly straight on (or from directly above), filling the cell, flat even light, no shadows, no readable text or logos. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-school-shoe-lockers",
+   "kind": "tile",
+   "prompt": "A school entrance shoe locker wall: rows of open cubbies with indoor shoes, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-school-desk",
+   "kind": "tile",
+   "prompt": "A school desk top seen from directly above: worn light wood with a pencil groove and a few pencil marks.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-grand-piano",
+   "kind": "tile",
+   "prompt": "A black grand piano seen from directly above with the lid open.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-lab-shelf",
+   "kind": "tile",
+   "prompt": "A science room glass cabinet front: beakers, flasks, specimen jars and a model skeleton hand.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-lunch-tray",
+   "kind": "tile",
+   "prompt": "A school lunch tray seen from directly above: rice, soup, a main dish, salad and a milk carton.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-stage-curtain",
+   "kind": "tile",
+   "prompt": "A deep red velvet stage curtain with vertical folds, front-on.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.4
+  },
+  {
+   "name": "mg-trophy-case",
+   "kind": "tile",
+   "prompt": "A glass trophy cabinet front: golden cups, medals and pennants (no text).",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-class-lockers",
+   "kind": "tile",
+   "prompt": "A row of small classroom cubby shelves with colourful school bags, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-planet-poster",
+   "kind": "tile",
+   "prompt": "A science poster of the planets of a solar system in a row on deep blue, no text.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  }
+ ]
+}

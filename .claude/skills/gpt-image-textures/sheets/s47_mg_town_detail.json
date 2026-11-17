@@ -1,0 +1,103 @@
+{
+ "id": "s47_mg_town_detail",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加分。ユーザーが別に生成した 1254x1254 の画像。タイルは画像の色をそのまま使い (mean なし)、1 枚の絵は crop で余白を切り落とす",
+ "style": "Small landmarks of the plazas, parks and alleys of a space-habitat city. Each cell is ONE item seen straight on or from directly above (or a flat surface), flat even light, no shadows, no readable text.",
+ "cells": [
+  {
+   "name": "mg-fountain-stone",
+   "kind": "tile",
+   "prompt": "Wet polished granite of a fountain basin, light grey with dark speckles.",
+   "rough": 60,
+   "sat": 1.0,
+   "normal": 1.5,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-bench-wood",
+   "kind": "tile",
+   "prompt": "Wooden bench slats seen from above: weathered teak boards with small gaps.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.5,
+   "uvs": 0.8
+  },
+  {
+   "name": "mg-hedge",
+   "kind": "tile",
+   "prompt": "A trimmed hedge seen from the side: dense small green leaves, flat clipped surface.",
+   "rough": 230,
+   "sat": 1.0,
+   "normal": 3.0,
+   "uvs": 0.5
+  },
+  {
+   "name": "mg-lantern",
+   "kind": "tile",
+   "prompt": "A red Japanese paper lantern lit from inside, warm glow, black top and bottom rims, front view.",
+   "seam": "",
+   "rough": 200,
+   "normal": 1.5,
+   "crop": [
+    0.15,
+    0.24,
+    0.85,
+    0.82
+   ]
+  },
+  {
+   "name": "mg-torii",
+   "kind": "tile",
+   "prompt": "Vermilion lacquered wood of a torii gate, slightly weathered, front-on close-up.",
+   "rough": 90,
+   "sat": 1.0,
+   "normal": 1.5,
+   "uvs": 0.6,
+   "keep_hue": true
+  },
+  {
+   "name": "mg-stall-front",
+   "kind": "tile",
+   "prompt": "A small wooden food stall front with a short noren and paper lanterns, no letters.",
+   "seam": "",
+   "rough": 170,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-manhole",
+   "kind": "tile",
+   "prompt": "A round cast-iron manhole cover seen from directly above, raised geometric pattern, set in grey floor.",
+   "seam": "",
+   "rough": 150,
+   "normal": 3.0,
+   "crop": [
+    0.018,
+    0.013,
+    0.98,
+    0.982
+   ]
+  },
+  {
+   "name": "mg-drain",
+   "kind": "tile",
+   "prompt": "A rectangular stainless floor drain grate seen from directly above, set in grey floor.",
+   "seam": "",
+   "rough": 110,
+   "normal": 3.0
+  },
+  {
+   "name": "mg-trash-bin",
+   "kind": "tile",
+   "prompt": "A row of three sorting trash bins front: blue, yellow and green lids with recycling icons, no words.",
+   "seam": "",
+   "rough": 110,
+   "normal": 1.5,
+   "crop": [
+    0.035,
+    0.16,
+    0.97,
+    0.94
+   ]
+  }
+ ]
+}

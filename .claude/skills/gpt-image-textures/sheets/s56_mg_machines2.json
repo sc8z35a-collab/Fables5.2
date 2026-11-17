@@ -1,0 +1,96 @@
+{
+ "id": "s56_mg_machines2",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 54 枚 (シート 53〜58、画像はまだ無い)。店の品物、飲食店、学校・役所・病院、機械と設備、公園と自然、住人の服と持ち物",
+ "style": "More machinery and utilities of a space-habitat city. Each PICTURE cell is ONE item seen exactly straight on (or from directly above), filling the cell, flat even light, no shadows, no readable text. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-big-pipe",
+   "kind": "tile",
+   "prompt": "Large copper and steel pipes side by side with flanges, front-on.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.4
+  },
+  {
+   "name": "mg-control-screen",
+   "kind": "tile",
+   "prompt": "A control console screen glowing with graphs, a map and status bars (no readable text).",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-ceiling-light",
+   "kind": "tile",
+   "prompt": "A square ceiling light panel glowing soft white, seen from below.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.07,
+    0.04,
+    0.93,
+    0.84
+   ]
+  },
+  {
+   "name": "mg-emergency-light",
+   "kind": "tile",
+   "prompt": "A small emergency light fixture on a wall, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.09,
+    0.26,
+    0.91,
+    0.77
+   ]
+  },
+  {
+   "name": "mg-pump",
+   "kind": "tile",
+   "prompt": "An industrial water pump with motor and valves, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-boiler",
+   "kind": "tile",
+   "prompt": "A boiler unit with gauges and insulated pipes, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-tank-steel",
+   "kind": "tile",
+   "prompt": "Surface of a large white painted steel water tank with weld seams and rivets.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.4
+  },
+  {
+   "name": "mg-cables",
+   "kind": "tile",
+   "prompt": "A thick bundle of colourful cables running side by side, front-on.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.8
+  },
+  {
+   "name": "mg-hazard-stripe",
+   "kind": "tile",
+   "prompt": "Yellow and black diagonal hazard stripes painted on steel, worn edges.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  }
+ ]
+}

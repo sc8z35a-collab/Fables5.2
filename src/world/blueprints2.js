@@ -6,6 +6,8 @@ import { rng } from '../core/util.js';
 import { winMat } from './stationkit.js';
 import { buildMycenae, cloneShared, wingOutside } from './rescue.js';
 import { glassMat } from './interior.js';
+import { megatonPlan } from './megaton.js';
+import { hasImage } from '../gfx/materials.js';
 
 const HP = Math.PI / 2;
 const T = (label, use, x, z, rot, o = {}) => ['terminal', x, z, rot, { label, use, ...o }];
@@ -59,63 +61,8 @@ const atlas = () => ({
   doors: [['hangar', 'hall', 23, 5, 4, 'blast'], ['hall', 'ops', 49, 3, 2.8, 'glass'], ['hall', 'med', 49, 3, 2.8, 'glass'], ['hall', 'bay', 23, 7, 5, 'blast'], ['hangar', 'supply', 17, 3.2, 3, 'blast'], ['hangar', 'crew', 18, 2.2, 2.5, 'slide'], ['ops', 'brief', 55, 2, 2.4, 'slide']],
 });
 
-// ───────────────────────── 7. メガトン (巨大): 真鍮と濃緑のアールデコ。ガラス屋根の大吹き抜け、炉心、取引所、空中庭園 ─────────────────────────
-const megaton = () => {
-  const shops = [], add = (side, t, seed) => shops.push(['shopfront', side ? 43.2 : 0.8, t, side ? 3 : 1, { w: 12.6, floors: 3, seed }]);
-  [28, 56, 70, 98].forEach((t, i) => add(1, t, i * 5 + 1)); [14, 28, 56, 70, 98].forEach((t, i) => add(0, t, i * 7 + 3));
-  return {
-    name: 'メガトン', sub: '巨大軌道都市', seed: 77, spawn: [45, 47], view: [1, 0], music: 'interior',
-    theme: { wall: ['brassdeco', 0xffffff, 0.42, 0.75], floor: ['deco', 0xffffff, 0.16, 0.08], ceil: ['ceil', 0x26302e], trim: '#ffd27a', lamp: '#ffe8c0', frame: 0x6a5226, door: 0x2c5a4e, amb: [0xffe2b0, 0x2a3432, 0.84], gloss: 1.1, door3: 'glass', trims: 'low', ribs: false, lamps: 'spot', col: 0x2c5a4e, gilt: 0xc8a04a, cofferC: 0x8a6a2a },
-    rooms: [
-      { id: 'hangar', name: '第 7 ドック', x: 0, z: 0, w: 60, d: 60, h: 24, floor: ['plate', 0x7a7c80, 0.5, 0.7], wall: ['bulk', 0x8a8474, 0.8, 0.5], ceil: ['rib', 0x3a3830], ceil3: 'truss', truss: 0xc08a20, ribs: true, trims: 'both', deco: ['ibeam', 'ducts', 'cables'], win: [['n', 8, 52, 2.5, 18]], li: 1.6,
-        props: [['shipslot', 30, 28, 0, { r: 13 }], T('第 7 ドック管理', 'shipyard', 52.5, 53.5, 0), ['gantry', 30, 6, 0, { w: 56, at: 16 }], ['gantry', 30, 50, 0, { w: 56, at: -18 }], ['cargo', 5, 8, 0, { c: 0xc9a22e }], ['cargo', 8.4, 8, 0, { c: 0x2c5a4e }], ['cargo', 5, 16, 0, { c: 0xb8452e }], ['cargo', 55, 9, 0, { c: 0x2e7ab8 }], ['cargo', 55, 17, 0, { c: 0xc9a22e }],
-          ['crate', 50, 26, 0, { n: 6 }], ['crate', 8, 40, 0, { n: 6 }], ['crate', 13, 44, 0, { n: 5 }], ['barrel', 5, 52, 0], ['barrel', 9, 54, 0], ['pipes', 59.5, 34, 3], ['pipes', 0.5, 30, 1, { c: 0xc9a22e }], ['workbench', 14, 59.2, 2], ['toolcart', 40, 12, 0.4, { c: 0xc9a22e }], ['toolcart', 18, 30, -0.3],
-          ['conveyor', 46, 42, 0, { l: 12, item: 'crate' }], ['loaderbot', 20, 50, 1, { l: 10 }], ['robotarm', 41, 46.4, 2], S('MEGATON', 30, 59.7, 2, { h: 2.4, y: 14, c: '#ffd27a' }), S('第 7 ドック ─ グランド・アトリウム ↓', 30, 59.7, 2, { h: 0.9, y: 11.2, c: '#ffe8c0' }),
-          N('港湾係官', 'talk:megadock', 37.5, 54, -1, 0x2c5a4e, { visor: '#ffd27a' }), ['steam', 14, 12, 0], ['steam', 48, 34, 0], ['alarm', 0.3, 46, 1, { c: '#ffb030' }], ['alarm', 59.7, 46, 3, { c: '#ffb030' }], ['hazard', 30, 58.5, 0, { w: 8, d: 0.6 }]] },
-      { id: 'atrium', name: 'グランド・アトリウム', x: 8, z: 60, w: 44, d: 112, h: 30, ceil3: 'gvault', deco: ['arches'], astep: 14, li: 0.75,
-        props: [...shops, ['atomsculpt', 22, 56, 0, { use: 'talk:atom', label: '原子の像' }], ['fountain', 22, 28, 0, { r: 2.3, c: '#ffd27a' }], ['fountain', 22, 84, 0, { r: 2.3, c: '#ffd27a' }], ['monorail', 7.5, 56, 1, { l: 100, y: 9, n: 2 }], ['lift', 40.4, 3.6, 3, { h: 20 }],
-          ['tree', 14.5, 21, 0, { s: 1.15 }], ['tree', 14.5, 63, 0], ['tree', 14.5, 91, 0, { s: 1.1 }], ['tree', 29.5, 21, 0], ['tree', 29.5, 49, 0, { s: 1.15 }], ['tree', 29.5, 77, 0], ['tree', 29.5, 105, 0, { s: 1.1 }], ['tree', 14.5, 105, 0],
-          ['streetlamp', 16.5, 14, 0], ['streetlamp', 27.5, 14, 0], ['streetlamp', 16.5, 42, 0], ['streetlamp', 27.5, 42, 0], ['streetlamp', 16.5, 70, 0], ['streetlamp', 27.5, 70, 0], ['streetlamp', 16.5, 98, 0], ['streetlamp', 27.5, 98, 0],
-          ['planter', 22, 42, 0, { w: 8, flowers: 1 }], ['planter', 22, 70, 0, { w: 8, flowers: 1 }], ['planter', 22, 14, 0, { w: 6, flowers: 1 }], ['planter', 22, 98, 0, { w: 6, flowers: 1 }], ['bench', 19, 35, 1], ['bench', 25, 35, 3], ['bench', 19, 77, 1], ['bench', 25, 77, 3], ['bench', 19, 49, 1], ['bench', 25, 63, 3],
-          ['stall', 17.6, 9.4, 1.3, { c: 0x2c5a4e }], ['stall', 26.6, 91.4, -1.6, { c: 0x8a2a20 }], ['stall', 34.4, 49, 3, { c: 0xc9a22e }], ['vending', 43.3, 9.2, 3], ['vending', 43.3, 10.5, 3, { c: '#ffd27a', title: 'TEA' }],
-          T('任務端末', 'missions', 16, 5.6, 0.4), T('星図', 'map', 28, 5.6, -0.4, { kind: 'orbit' }), ['hoload', 22, 9, 0, { text: 'MEGATON\nGRAND ATRIUM', c: '#ffd27a', y: 9, h: 2.2 }], ['hoload', 22, 104.4, 2, { text: 'メガトン炉 見学 ↓', c: '#ffb060', y: 7, h: 1.2 }],
-          ['clock', 22, 111.6, 2, { r: 2.6, y: 13.6 }], S('GRAND ATRIUM', 22, 0.3, 0, { h: 1.7, y: 9.4 }), S('中央取引所 →', 43.6, 37.6, 3, { h: 0.7, y: 4.6 }), S('← 空中庭園', 0.4, 37.6, 1, { h: 0.7, y: 4.6, c: '#8aff9a' }), S('中央駅 →', 43.6, 79.6, 3, { h: 0.7, y: 4.6 }), S('← 重工区画', 0.4, 79.6, 1, { h: 0.7, y: 4.6, c: '#ffb060' }), S('カプセルホテル →', 43.6, 9.8, 3, { h: 0.55, y: 3.4, c: '#ffe8c0' }),
-          N('案内係', 'talk:megaguide', 24.4, 7.4, -0.4, 0x2c5a4e, { visor: '#ffd27a' }), N('市民', 'talk:megacitizen', 18.6, 24, 1.4, 0x6a4a8a), N('観光客', 'talk:tourist', 26, 31, -2, 0x3a6ea8), N('商人', 'talk:megatrader', 30.4, 44.6, -1.2, 0xc9a22e), N('市民', 'talk:megacitizen2', 17.4, 58, 0.8, 0x8a3a3a),
-          N('技師', 'talk:megaeng2', 26.4, 66, 2.6, 0xd0a020), N('市民', 'talk:megacitizen', 19.6, 88, 1.9, 0x3a8a6a), N('学生', 'talk:megastudent', 25.6, 100, -2.6, 0x4a6ac8), ['lightcone', 22, 56, 0, { r: 6, k: 0.1, c: '#ffe8c0' }]] },
-      { id: 'core', name: 'メガトン炉心', x: 8, z: 172, w: 44, d: 44, h: 30, shape: 'round', floor: ['hex', 0x4a4e52, 0.3, 0.6], wall: ['bulk', 0x4a5258, 0.7, 0.6], ceil: ['rib', 0x1c2024], li: 0.55, lamp: '#ffb878', trim: '#ffb060',
-        props: [['megacore', 22, 22, 0, { use: 'talk:megacore', label: 'メガトン炉' }], N('炉心技師', 'talk:megaeng', 18, 9, 0.5, 0xd0a020, { visor: '#ffb060' }), T('炉心監視盤', 'talk:corestat', 15.4, 6.4, 0.4, { kind: 'graph', c: '#ffb060' }), T('電力取引', 'market', 28.6, 6.4, -0.4, { c: '#ffb060' }),
-          ['console', 5.2, 16, 0.78, { tall: 1, kind: 'graph', c: '#ffb060' }], ['console', 5.2, 28, 1.22, { tall: 1, kind: 'bars', c: '#ffb060' }], ['console', 38.8, 16, -0.78, { tall: 1, kind: 'radar', c: '#ffb060' }], ['console', 38.8, 28, -1.22, { tall: 1, kind: 'data', c: '#ffb060' }],
-          ['tank', 9.4, 36, 0, { c: '#6fe8ff' }], ['tank', 34.6, 36, 0, { c: '#6fe8ff' }], ['tank', 11.4, 38, 0, { c: '#ffb060' }], ['tank', 32.6, 38, 0, { c: '#ffb060' }], ['alarm', 22, 43.6, 2, { c: '#ffb030', y: 3.4 }], ['steam', 8, 22, 0], ['steam', 36, 22, 0], ['rack', 16.5, 40.6, 2, { n: 2 }], ['rack', 27.5, 40.6, 2, { n: 2 }]] },
-      { id: 'exchange', name: '中央取引所', x: 52, z: 86, w: 32, d: 32, h: 14, shape: 'round', lamps: 'chandelier', rug: [[16, 16, 0, 6.6, 'carpet', 0x2c4a44]],
-        props: [['tradepit', 16, 16, 0, { r: 2.7, use: 'market', label: '中央取引所' }], ['ticker', 16, 16, 0, { r: 4.4, y: 6.4 }], N('仲買人', 'talk:megabroker', 23, 11.4, -1.9, 0x2c5a4e, { visor: '#ffd27a' }), N('相場師', 'market', 9.4, 21, 1.1, 0x8a6a2a), N('投資家', 'talk:megatycoon', 21.4, 22.6, -2.4, 0x4a4a52),
-          ['bench', 16, 4.2, 0, { c: 0x2c5a4e }], ['bench', 16, 27.8, 2, { c: 0x2c5a4e }], ['bench', 27.8, 16, 3, { c: 0x2c5a4e }], ['plant', 7, 7, 0, { s: 1.5, dark: 1 }], ['plant', 25, 7, 0, { s: 1.5, dark: 1 }], ['plant', 7, 25, 0, { s: 1.5, dark: 1 }], ['plant', 25, 25, 0, { s: 1.5, dark: 1 }],
-          ['holo', 26.4, 20.6, 0, { kind: 'planet', s: 0.6, c: '#7fc8e8' }], T('任務端末', 'missions', 6, 12, 1.1)] },
-      { id: 'garden', name: '空中庭園', x: -32, z: 80, w: 40, d: 44, h: 16, sky: true, floor: ['grass', 0x8ac060, 1, 0], wall: ['marble', 0xe8e0cc, 0.4, 0.05], lamp: '#f4ffe8', trims: 'none', rug: [[24, 20.4, 16, 3.2, 'concrete', 0xb8b0a0], [12, 20.4, 12, 3.2, 'concrete', 0xb8b0a0], [18, 6, 3.2, 14.4, 'concrete', 0xb8b0a0], [26.4, 23.6, 3.2, 14, 'concrete', 0xb8b0a0]],
-        props: [['pond', 13, 31, 0, { r: 3.4 }], ['tree', 5, 6, 0, { s: 1.25 }], ['tree', 12, 9, 0], ['tree', 26, 6, 0, { s: 1.1 }], ['tree', 34, 13, 0, { s: 1.2 }], ['tree', 5, 20, 0], ['tree', 34, 30, 0, { s: 1.15 }], ['tree', 24, 39, 0, { s: 1.2 }], ['tree', 5, 39, 0, { s: 1.1 }], ['tree', 20.6, 29.6, 0, { s: 0.9 }], ['tree', 33, 39.6, 0],
-          ['streetlamp', 22.6, 18.4, 0], ['streetlamp', 30, 25, 0], ['streetlamp', 15.6, 12, 0], ['streetlamp', 22, 36, 0], ['bench', 15.4, 18.6, 0, { c: 0x6a8a4a }], ['bench', 33, 18.6, 0, { c: 0x6a8a4a }], ['bench', 19.6, 33.4, 3.5, { c: 0x6a8a4a }], ['bench', 8.4, 26, 1, { c: 0x6a8a4a }],
-          ['stall', 30.6, 5, 0, { c: 0x2c5a4e, use: 'cafe', label: '茶房 雲海' }], ['table', 26.6, 10, 0, { wood: 1 }], ['table', 32.4, 10.4, 0, { wood: 1 }], ['planter', 20, 0.8, 0, { w: 14, flowers: 1 }], ['planter', 0.8, 30, 1, { w: 12, flowers: 1 }], ['planter', 39.2, 34.6, 1, { w: 10, flowers: 1 }], ['planter', 14, 43.2, 0, { w: 12, flowers: 1 }],
-          ['fountain', 19.6, 22, 0, { r: 1.4, c: '#ffd27a' }], N('庭師', 'talk:megagardener', 9, 12.6, 1, 0x3a7a4a), N('散歩する市民', 'talk:megacitizen2', 27.4, 28.6, 2.6, 0x6a4a8a), ['lightcone', 13, 31, 0, { r: 5, k: 0.2 }], ['lightcone', 28, 12, 0, { r: 4.4, k: 0.18 }], ['lightcone', 8, 8, 0, { r: 4, k: 0.16 }],
-          S('SKY GARDEN ─ 空中庭園', 39.6, 16, 3, { h: 0.6, y: 4.4, c: '#8aff9a' })] },
-      { id: 'transit', name: 'メガトン中央駅', x: 52, z: 136, w: 44, d: 16, h: 9, floor: ['tile', 0xd8d0c0, 0.3, 0.1], deco: ['coves'], lamps: 'tube',
-        props: [['train', 24, 12.7, 0, { n: 3 }], ['hazard', 23, 10.5, 0, { w: 40, d: 0.5 }], ['bench', 12, 0.7, 0, { c: 0x2c5a4e }], ['bench', 18, 0.7, 0, { c: 0x2c5a4e }], ['bench', 30, 0.7, 0, { c: 0x2c5a4e }], ['seatrow', 37, 5, 2, { n: 6, c: 0x2c5a4e }], ['seatrow', 37, 6.2, 0, { n: 6, c: 0x2c5a4e }],
-          ['wallscreen', 6.6, 0.3, 0, { w: 5, h: 2.2, y: 3.6, kind: 'data', title: '発車案内 ─ リング線 / 炉心線' }], ['clock', 24, 0.3, 0, { r: 1.1, y: 5.8 }], S('メガトン中央駅 ─ MEGATON CENTRAL', 34.4, 0.3, 0, { h: 0.6, y: 6.6 }), ['vending', 43.3, 3, 3], ['vending', 43.3, 4.4, 3, { c: '#ffd27a', title: 'EKIBEN' }],
-          N('駅員', 'talk:megastation', 29, 6.4, 2, 0x2c5a4e, { visor: '#ffd27a' }), N('通勤客', 'talk:megacitizen', 14, 7.4, 2.4, 0x4a4a52), ['plant', 1.4, 1.4, 0, { s: 1.3, dark: 1 }], ['hoload', 24, 6, 0, { text: '2 番線 リング線 発車', c: '#ffd27a', y: 5.6, h: 0.7 }]] },
-      { id: 'forge', name: '重工区画', x: -30, z: 126, w: 38, d: 36, h: 14, floor: ['plate', 0x5a5e62, 0.5, 0.7], wall: ['bulk', 0x6a6052, 0.8, 0.5], ceil: ['rib', 0x2a2620], ceil3: 'truss', truss: 0xc08a20, ribs: true, trims: 'both', lamps: 'spot', deco: ['ibeam', 'cables'], lamp: '#ffc890', li: 0.85,
-        props: [['ladle', 10, 8, 0], ['robotarm', 23.6, 10, 1], ['robotarm', 23.6, 16, 1, { c: 0x2a6ab8 }], ['conveyor', 26, 14, 1, { l: 16, item: 'ingot' }], ['conveyor', 13, 30, 0, { l: 18, item: 'crate' }], ['robotarm', 22.6, 27.6, 2], ['gantry', 19, 22, 0, { w: 34, at: 8 }],
-          T('重工ドック (改修)', 'shipyard', 33.4, 5.6, -0.6, { c: '#ffb060' }), N('鋳造工長', 'talk:megaforge', 31, 12, -1.5, 0xd0a020, { visor: '#ffb060' }), ['workbench', 32, 35.2, 2], ['workbench', 28, 35.2, 2], ['toolcart', 30, 20, 0.3, { c: 0xc9a22e }], ['cargo', 34.6, 27, 0, { c: 0xc9a22e }], ['barrel', 2, 22, 0], ['barrel', 2.4, 33, 0],
-          ['pipes', 0.5, 4, 1, { c: 0xc9a22e }], ['pipes', 0.5, 26, 1], ['steam', 6, 14, 0], ['steam', 16, 20, 0], ['steam', 30, 30, 0], ['alarm', 37.7, 10, 3, { c: '#ffb030' }], ['alarm', 0.3, 18, 1, { c: '#ffb030' }], ['crate', 34, 32, 0, { n: 5 }], ['rack', 37.3, 22, 3, { n: 3 }], S('HEAVY WORKS ─ 重工区画', 19, 0.3, 0, { h: 0.9, y: 8.4, c: '#ffb060' })] },
-      { id: 'apex', name: '展望ラウンジ「アペックス」', x: 60, z: 10, w: 32, d: 30, h: 10, ceil3: 'coffer', lamps: 'chandelier', floor: ['carpet', 0x1e3a36, 1, 0], wall: ['padded', 0x1e4a44, 0.85, 0.05], deco: ['coves'], win: [['e', 2, 28, 0.5, 8.6], ['n', 2, 30, 0.5, 8.6]], rug: [[9, 8, 14, 10, 'carpet', 0x8a6a2a]],
-        props: [['barcounter', 14, 27, 2, { w: 9, c: '#ffd27a' }], N('バーテンダー', 'bar', 14, 27.85, 2, 0x1a3a3a, { visor: '#ffd27a' }), ['piano', 6, 9, 0.5], ['sofa', 25.6, 7, 1, { c: 0x2c5a4e, w: 3.2 }], ['sofa', 25.6, 12, 1, { c: 0x2c5a4e, w: 3.2 }], ['sofa', 25.6, 17, 1, { c: 0x2c5a4e, w: 3.2 }],
-          ['table', 28.6, 9.5, 0, { c: '#ffd27a', n: 0 }], ['table', 28.6, 14.5, 0, { c: '#ffd27a', n: 0 }], ['sofa', 12, 5.6, 2, { c: 0x8a6a2a, w: 3.4 }], ['sofa', 18, 5.6, 2, { c: 0x8a6a2a, w: 3.4 }], ['table', 15, 2.6, 0, { c: '#ffd27a', n: 0 }], ['table', 12, 14.6, 0, { c: '#ffd27a' }], ['table', 18.6, 18.6, 0, { c: '#ffd27a' }],
-          ['telescope', 26.6, 23.6, 3], ['holo', 4.4, 20.4, 0, { kind: 'planet', s: 0.8, c: '#7fc8e8' }], ['aquarium', 1.0, 24, 1, { w: 5 }], ['slot', 3.4, 28.4, 2], ['slot', 4.8, 28.4, 2], ['floorlamp', 30.4, 2, 0], ['floorlamp', 30.4, 27.4, 0], ['plant', 1.6, 1.6, 0, { s: 1.5, dark: 1 }], ['plant', 22, 28.2, 0, { s: 1.4, dark: 1 }],
-          N('実業家', 'talk:megatycoon', 21.6, 11.6, 1.2, 0x4a4a52), N('楽士', 'talk:megamusician', 8.8, 11.6, 2.6, 0x1c1c22), S('APEX LOUNGE', 0.4, 9, 1, { h: 0.7, y: 6.4, frame: 1 })] },
-      { id: 'hotel', name: 'カプセルホテル「星雲」', x: 52, z: 68, w: 18, d: 12, h: 4.2, floor: ['carpet', 0x2c4a44, 1, 0], wall: ['cork', 0xc8a878, 0.7, 0], ceil: ['plaster', 0xe0d6c4], deco: ['wains', 'coves'], lamps: 'pendant', lamp: '#ffe2b8', trims: 'none',
-        props: [['capsule', 7.4, 2.5, 0, { n: 8 }], ['capsule', 7.4, 9.5, 2, { n: 8 }], ['desk', 15.6, 6, 3, { wood: 1 }], N('フロント係', 'talk:megahotel', 16.9, 6, 3, 0x2c5a4e, { visor: '#ffd27a' }), ['locker', 15.4, 0.5, 0, { n: 4 }], ['vending', 15.4, 11.3, 2], ['plant', 1.2, 1.2, 0, { s: 1.1 }], ['floorlamp', 1.2, 10.8, 0],
-          S('CAPSULE INN 星雲', 0.3, 6, 1, { h: 0.4, y: 3.5, c: '#ffe2b8' })] },
-    ],
-    doors: [['hangar', 'atrium', 30, 7, 5.5, 'blast'], ['atrium', 'core', 30, 6, 5, 'blast'], ['atrium', 'exchange', 102, 4, 3.6, 'open'], ['atrium', 'garden', 102, 4, 3.6, 'glass'], ['atrium', 'transit', 144, 4, 3.4, 'glass'], ['atrium', 'forge', 144, 4, 3.6, 'blast'], ['atrium', 'hotel', 74, 2.4, 2.6, 'wood'], ['hangar', 'apex', 25, 3, 2.8, 'glass']],
-  };
-};
+// ───────────────────────── 7. メガトン (巨大): 第 7 居住甲板。本通り・8 つの街区・300 戸を超える住戸は megaton.js が組み立てる ─────────────────────────
+const megaton = () => megatonPlan(hasImage);
 
 // ───────────────────────── 8. ファイザー: 白と紫の創薬研究所。除染ゲート、二重らせんの吹き抜け、創薬ラボ、製剤ライン、冷凍保管庫 ─────────────────────────
 const fizer = () => ({
@@ -249,22 +196,6 @@ const DRESS = {
     crew: [['painting', 16, 0.22, 0, { kind: 3, y: 2.2 }], ['bulletin', 4, 19.78, 2, { w: 2.4 }], ['firstaid', 0.22, 13, 1], ['extinguisher', 0.22, 14.6, 1], ['dispenser', 6.9, 0.45, 0], ['pennant', 13.6, 0.22, 0, { n: 3, y: 3.6, c: 0xc8501e }]],
     brief: [['bulletin', 0.22, 5, 1, { w: 2.4, items: ['出動手順', '着陸帯 一覧', '気象通報', '無線符号', '訓練日程', '表彰'] }], ['painting', 6.4, 0.22, 0, { kind: 3, w: 1.4, h: 1.0 }]],
   },
-  megaton: {
-    hangar: [['wallpanel', 0.22, 38, 1, { w: 2.4, h: 1.5, text: '第 7 ドック 配電' }], ['cylinders', 0.5, 24, 1, { n: 6 }], ['firstaid', 59.78, 29.4, 3], ['extinguisher', 59.78, 31.4, 3], ['cabledrum', 22, 8, 0.5], ['cabledrum', 24.4, 9.6, 1.4, { c: 0x2a6ab8 }],
-      ['billboard', 0.22, 12, 1, { w: 7, h: 3.2, y: 7.4, text: 'ZEPHYR GAS\n希ガスはメガトンへ', c: '#7fc8e8' }], ['billboard', 59.78, 44, 3, { w: 7, h: 3.2, y: 8, text: 'APEX LOUNGE\n展望ラウンジ', c: '#ffd27a' }], ['floorhatch', 16, 20, 0], ['warnsign', 22, 59.78, 2, { text: '荷役中\n頭上注意', w: 1.3, h: 0.85, y: 2.5 }]],
-    atrium: [['megamodel', 22, 19, 0, { use: 'talk:megamodel', label: 'メガトンの模型' }], ['infopillar', 22, 48.4, 0], ['infopillar', 22, 63.6, 0], ['newsstand', 34.4, 35, 3], ['newsstand', 9.6, 91, 1, { c: 0x8a2a20 }], ['stanchion', 36.4, 2.4, 0, { n: 3, gap: 1.9 }], ['stanchion', 36.4, 5.0, 0, { n: 3, gap: 1.9 }],
-      ['luggage', 41.6, 16.6, 0, { n: 5 }], ['luggage', 41.4, 87, 0, { n: 4 }], ['billboard', 8.4, 0.22, 0, { w: 8, h: 4, y: 7.4, text: 'ZEPHYR TEA\n雲海の一番摘み', c: '#8aff9a' }], ['billboard', 34.2, 0.22, 0, { w: 8, h: 4, y: 7.4, text: 'SKY SUSHI\n環を眺めて一貫', c: '#ff9ad8' }],
-      ['billboard', 9, 111.78, 2, { w: 8, h: 4, y: 7, text: 'MEGATON 炉\n出力 4.8 GW', c: '#ffb060' }], ['billboard', 35, 111.78, 2, { w: 8, h: 4, y: 7, text: 'NOVA MODE\n春の新作', c: '#c9a0ff' }], ['vase', 17.6, 51.6, 0, { s: 1.1 }], ['vase', 26.4, 51.6, 0, { s: 1.1, c: 0x8a2a20 }], ['vase', 17.6, 60.4, 0, { s: 1.1, c: 0x8a2a20 }], ['vase', 26.4, 60.4, 0, { s: 1.1 }]],
-    core: [['capbank', 22, 40.9, 2, { n: 4, c: '#ffb060' }], ['cabledrum', 6.4, 22, 0.2], ['cabledrum', 37.6, 22, 1.2, { c: 0x2a6ab8 }]],
-    exchange: [['decolamp', 9, 9, 0, { y: 7.2 }], ['decolamp', 23, 9, 0, { y: 7.2 }], ['decolamp', 9, 23, 0, { y: 7.2 }], ['decolamp', 23, 23, 0, { y: 7.2 }], ['vase', 12.6, 5.4, 0], ['vase', 19.4, 5.4, 0, { c: 0x8a2a20 }]],
-    transit: [['ticketgate', 6.4, 8, 1, { n: 3 }], ['stanchion', 6.4, 3.2, 1, { n: 4, gap: 1.5 }], ['infopillar', 20, 5.6, 0], ['newsstand', 39.6, 1.0, 0, { w: 2.6 }], ['luggage', 15.6, 1.5, 0, { n: 4 }], ['luggage', 34, 8.6, 0, { n: 5 }], ['bulletin', 43.78, 8, 3, { w: 2, items: ['時刻表', '運賃表', '遺失物', '工事予定', 'お知らせ', '路線図'] }],
-      ['billboard', 14.4, 0.22, 0, { w: 3.6, h: 1.8, y: 6.6, text: 'RING LINE\n前部リングまで 4 分', c: '#ffd27a' }], ['extinguisher', 43.78, 12, 3], ['decolamp', 12, 5, 0, { y: 5.6, s: 0.8 }], ['decolamp', 32, 5, 0, { y: 5.6, s: 0.8 }]],
-    forge: [['capbank', 37.0, 30.6, 3, { n: 4, c: '#ffb060' }], ['cabledrum', 3, 12, 0.4], ['warnsign', 0.22, 12, 1, { text: '高温注意\n溶融金属', w: 1.3, h: 0.85, y: 2.4 }], ['extinguisher', 37.78, 14.4, 3], ['wallpanel', 37.78, 6.4, 3, { w: 2, h: 1.4, text: '鋳造 制御盤' }], ['floorhatch', 16, 24, 0], ['cylinders', 14, 0.45, 0, { n: 6, k: 2 }], ['platestand', 30, 1.0, 0, { w: 2, h: 1.6, n: 3, t: 'II' }]],
-    apex: [['decolamp', 8, 20, 0, { y: 6.6 }], ['decolamp', 20, 22, 0, { y: 6.6 }], ['decolamp', 22, 6, 0, { y: 6.6 }], ['painting', 0.22, 5, 1, { kind: 0, w: 2.2, h: 1.5, y: 2.5 }], ['painting', 24.6, 29.78, 2, { kind: 1, w: 2.4, h: 1.6, y: 2.4 }], ['curtain', 31.72, 15, 3, { w: 26, h: 8.8, c: 0x2c5a4e }], ['curtain', 16, 0.28, 0, { w: 28, h: 8.8, c: 0x2c5a4e }],
-      ['vase', 2, 12.4, 0, { s: 1.1 }], ['vase', 2, 17.6, 0, { s: 1.1, c: 0x8a2a20 }]],
-    hotel: [['painting', 17.78, 6, 3, { kind: 2, w: 1.5, h: 1.0, y: 2.2 }], ['luggage', 13.6, 7.6, 0, { n: 4 }], ['bulletin', 0.22, 9.6, 1, { w: 1.6, items: ['館内案内', '朝食 6 時', '禁煙', '非常口'] }], ['extinguisher', 0.22, 3.6, 1]],
-    garden: [['vase', 37, 19.4, 0, { s: 1.2 }], ['vase', 37, 24.6, 0, { s: 1.2, c: 0x8a2a20 }], ['dispenser', 34.4, 1.2, 0]],
-  },
   fizer: {
     hangar: [['garmentrack', 3.4, 13, 1, { n: 5 }], ['cylinders', 37.5, 12, 3, { n: 5 }], ['wallpanel', 37.78, 18, 3, { text: '滅菌 制御盤' }], ['extinguisher', 37.78, 21.5, 3], ['firstaid', 0.22, 18, 1], ['warnsign', 22.8, 29.78, 2, { text: '清浄区画\n要除染' }], ['floorhatch', 30, 6, 0], ['vent', 0.22, 8, 1, { y: 3, w: 1.6 }]],
     decon: [['warnsign', 0.22, 5.8, 1, { text: '紫外線\n直視禁止', w: 0.8, h: 0.52, y: 1.7 }], ['warnsign', 6.78, 10.2, 3, { text: '薬霧噴射\n立ち止まるな', w: 0.8, h: 0.52, y: 1.7 }], ['vent', 0.22, 14.4, 1, { y: 2.6, w: 0.8, h: 0.4 }]],
@@ -294,12 +225,11 @@ const DRESS = {
 // 各拠点の主役になる大物 (props6.js): 慰霊碑・操縦シミュレーター・培養槽・遠心機・電子顕微鏡・太陽系儀・発車標・訓練標的・試射監視卓
 const HERO = {
   atlas: { hall: [['memorial', 9.8, 26.4, 1.73]], bay: [['simpod', 26, 12.6, 0], S('訓練コーナー ─ 操縦シミュレーター', 26, 0.3, 0, { h: 0.5, y: 6.2, c: '#35ff8a' })] },
-  megaton: { apex: [['orrery', 16, 12, 0, { use: 'talk:orrery', label: '太陽系儀' }]], transit: [['departures', 24, 0.22, 0, { w: 5.2, y: 3.2 }]] },
   fizer: { lab: [['centrifuge', 15.4, 0.75, 0, { use: 'talk:centrifuge' }], ['microscope', 19.4, 8.6, 0, { use: 'talk:microscope' }]], pharma: [['bioreactor', 19.4, 2.5, 0, { use: 'talk:bioreactor', label: '培養槽 BR-1' }]] },
   weapon: { range: [['dummy', 6.5, 1.3, 1], ['dummy', 9.5, 7.7, 1], ['dummy', 3.4, 7.6, 1]], cic: [['firewatch', 11.4, 15.6, 2.22]] },
   mycenae: { cockpit: [['cockpitkit', 3.5, 0, 0]] },
 };
-const dress = (bp, k) => { for (const r of bp.rooms) { if (DRESS[k][r.id]) r.props.push(...DRESS[k][r.id]); if (HERO[k][r.id]) r.props.push(...HERO[k][r.id]); } return bp; };
+const dress = (bp, k) => { for (const r of bp.rooms) { if (DRESS[k]?.[r.id]) r.props.push(...DRESS[k][r.id]); if (HERO[k]?.[r.id]) r.props.push(...HERO[k][r.id]); } return bp; };
 
-export const BP2 = { 'station:atlas': () => dress(atlas(), 'atlas'), 'station:megaton': () => dress(megaton(), 'megaton'), 'station:fizer': () => dress(fizer(), 'fizer'), 'station:weapon': () => dress(weapon(), 'weapon'), 'rescue:mycenae': () => dress(mycenae(false)(), 'mycenae'), 'rescue:mycenae-d': () => dress(mycenae(true)(), 'mycenae') };
+export const BP2 = { 'station:atlas': () => dress(atlas(), 'atlas'), 'station:megaton': () => megaton(), 'station:fizer': () => dress(fizer(), 'fizer'), 'station:weapon': () => dress(weapon(), 'weapon'), 'rescue:mycenae': () => dress(mycenae(false)(), 'mycenae'), 'rescue:mycenae-d': () => dress(mycenae(true)(), 'mycenae') };
 export const ALL2 = [['station', 'atlas'], ['station', 'megaton'], ['station', 'fizer'], ['station', 'weapon'], ['rescue', 'mycenae'], ['rescue', 'mycenae-d']];

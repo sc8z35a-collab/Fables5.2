@@ -1,0 +1,80 @@
+{
+ "id": "s63_mg_nightlife",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 54 枚 (シート 59〜64、画像はまだ無い)。玄関と家の細部、銭湯、学校、通りの細部、飲み屋と娯楽、港と工場。Izakaya, food and amusement",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. Each PICTURE cell is ONE item seen exactly straight on (or from directly above), filling the cell, flat even light, no shadows, no readable text or logos. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-chochin-red",
+   "kind": "tile",
+   "prompt": "A red paper lantern (akachochin) front, glowing softly, no letters.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-izakaya-front",
+   "kind": "tile",
+   "prompt": "An izakaya entrance front: wooden lattice sliding door with a rope curtain (nawa-noren).",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-karaoke-wall",
+   "kind": "tile",
+   "prompt": "A karaoke room wall: purple padded panels with star-shaped lights and a big screen.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-capsule-toys",
+   "kind": "tile",
+   "prompt": "A row of capsule toy vending machines (gachapon) front with colourful capsules.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-crane-game",
+   "kind": "tile",
+   "prompt": "A crane game machine front: glass box full of plush toys, a claw at the top.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-sushi-case",
+   "kind": "tile",
+   "prompt": "A sushi counter glass case front with fresh fish on ice.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-sushi-plates",
+   "kind": "tile",
+   "prompt": "Conveyor belt sushi plates seen from directly above in a row on the belt.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-okonomiyaki",
+   "kind": "tile",
+   "prompt": "An okonomiyaki on a hot iron griddle seen from directly above with sauce and mayonnaise.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-neon-wall",
+   "kind": "tile",
+   "prompt": "A dark wall with glowing neon tube shapes: stars, waves and a cocktail glass, no letters.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  }
+ ]
+}

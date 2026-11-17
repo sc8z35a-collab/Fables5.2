@@ -1,0 +1,85 @@
+{
+ "id": "s75_mg_spaceport",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、画像はまだ無い)。宇宙港と交通",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-luggage-cart",
+   "kind": "tile",
+   "prompt": "An airport style luggage cart with suitcases. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-suitcases",
+   "kind": "tile",
+   "prompt": "A pile of colourful suitcases, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-spacesuit-rack",
+   "kind": "tile",
+   "prompt": "A row of white spacesuits with helmets hanging on a rack, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-airlock-door",
+   "kind": "tile",
+   "prompt": "A round heavy airlock door with a wheel and yellow-black edge, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-departure-board",
+   "kind": "tile",
+   "prompt": "A dark departure board with glowing rows of symbols and coloured status lights, no letters or numbers.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-ship-model",
+   "kind": "tile",
+   "prompt": "A detailed model of a small cargo spaceship on a stand. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-cargo-pod",
+   "kind": "tile",
+   "prompt": "A white cylindrical cargo pod with handles and orange stripes, side view.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-boarding-bridge",
+   "kind": "tile",
+   "prompt": "Inside a boarding bridge corridor looking toward the ship door.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-dock-lights",
+   "kind": "tile",
+   "prompt": "Dark docking floor with a row of small blue guide lights and painted lines.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.4
+  }
+ ]
+}

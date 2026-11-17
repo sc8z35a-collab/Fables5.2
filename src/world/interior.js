@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { Builder, Placer, mx, rockGeo } from '../gfx/builder.js';
 import { mat, glow, glowMap, aoMat, texSet } from '../gfx/textures.js';
+import { hasImage } from '../gfx/materials.js';
 import { rng, vnoise } from '../core/util.js';
 import { fxTime } from '../gfx/fx.js';
 import { PROPS } from './props.js';
@@ -11,6 +12,7 @@ import { PROPS3 } from './props3.js';
 import { PROPS4 } from './props4.js';
 import { PROPS5 } from './props5.js';
 import { PROPS6 } from './props6.js';
+import { PROPS7 } from './props7.js';
 
 /** 小道具 1 個の不具合で内装全体を巻き添えにしない: 例外は警告にとどめ、その小道具の動きだけ止める */
 const guard = (f, tag) => { let dead = false; return (...a) => { if (dead) return undefined; try { return f(...a); } catch (err) { dead = true; console.warn('[小道具]', tag, err); return undefined; } }; };
@@ -31,6 +33,13 @@ function rugMesh(st, c, w, d) {
   return [mat(kind, { color: new THREE.Color(c).lerp(new THREE.Color(0xffffff), 0.6).getHex(), rough: 1, metal: 0 }), g.rotateX(-HP), 0];
 }
 const flat = (c, r = 0.5, m = 0.2) => mat('flat', { color: c, rough: r, metal: m });
+const SKY = new Map(); let LANT;
+/** 赤い提灯 (和紙の絵を内側から光らせる) */
+const lanternMat = () => LANT || (LANT = Object.assign(new THREE.MeshBasicMaterial({ map: texSet('mg-lantern').map, color: new THREE.Color(1.6, 1.4, 1.3), toneMapped: false }), { userData: { uvs: 0 } }));
+/** 人工の空 (発光)。画像 mg-sky があれば雲の空を貼る */
+function skyMat(c) { let m = SKY.get(c); if (!m) { const img = hasImage('materials/mg-sky'); m = new THREE.MeshBasicMaterial({ color: new THREE.Color(img ? '#ffffff' : c).multiplyScalar(img ? 1.05 : 1.1), map: img ? texSet('mg-sky').map : null }); m.userData.uvs = 1 / 16; SKY.set(c, m); } return m; }
+/** 画像があれば name、無ければ代わりの素材名 */
+export const pickTex = (name, fb) => (hasImage('materials/' + name) ? name : fb);
 
 export function holoMat(color, k = 1) {
   return new THREE.ShaderMaterial({
@@ -56,17 +65,22 @@ function vaultGeo(len, half, rise, seg = 16) {
 }
 
 // ───────────────────────── 扉 ─────────────────────────
-function door(out, B, th, axis, line, pos, dw, dh, style = th.door3 || 'slide') {
-  const DK = mat('blasted-steel', { color: th.frame ?? 0x2c3038, rough: 0.8, metal: 0.6 }), tr = glow(th.trim, 3), D = 2 * T + 0.14, heavy = style === 'blast' || style === 'hatch', pw = heavy ? 0.36 : 0.18, hh = heavy ? 0.4 : 0.25;
+function door(out, th, axis, line, pos, dw, dh, style = th.door3 || 'slide', o = {}) {
+  const B = new Builder(), root = new THREE.Group(), home = style === 'home' || style === 'inner', DK = home || o.frame != null ? flat(o.frame ?? 0xe8e4dc, 0.5, 0.2) : mat('blasted-steel', { color: th.frame ?? 0x2c3038, rough: 0.8, metal: 0.6 }), tr = glow(o.trim || th.trim, 3), D = 2 * T + 0.14, heavy = style === 'blast' || style === 'hatch', pw = heavy ? 0.36 : home ? 0.08 : 0.18, hh = heavy ? 0.4 : home ? 0.1 : 0.25;
+  out.group.add(root); const fin = (d) => { root.add(B.build({ shadow: false })); d.grp = root; d.seg = axis === 'z' ? [line, pos - dw / 2, line, pos + dw / 2] : [pos - dw / 2, line, pos + dw / 2, line]; out.doors.push(d); return d; }; // seg = 開口の両端 (見通しの判定に使う)
   const bx = (m, a, y, d, w, h, t = D) => (axis === 'z' ? B.box(m, t, h, w, line + d, y, a) : B.box(m, w, h, t, a, y, line + d));
   bx(DK, pos - dw / 2 - pw / 2, (dh + hh) / 2, 0, pw, dh + hh); bx(DK, pos + dw / 2 + pw / 2, (dh + hh) / 2, 0, pw, dh + hh); bx(DK, pos, dh + hh / 2, 0, dw + pw * 2, hh); bx(DK, pos, 0.015, 0, dw, 0.03);
-  bx(style === 'blast' ? glow('#fc4', 2.4) : tr, pos, dh + 0.06, 0, dw * 0.6, 0.05, D + 0.02);
+  if (!home && !o.plain) bx(style === 'blast' ? glow('#fc4', 2.4) : tr, pos, dh + 0.06, 0, dw * 0.6, 0.05, D + 0.02);
   if (style === 'hatch') for (const s of [-1, 1]) { const g = new THREE.BoxGeometry(axis === 'z' ? D : 0.5, 0.12, axis === 'z' ? 0.5 : D); B.add(DK, g, axis === 'z' ? mx(line, dh - 0.16, pos + s * (dw / 2 - 0.14), s * 0.785, 0, 0) : mx(pos + s * (dw / 2 - 0.14), dh - 0.16, line, 0, 0, -s * 0.785)); }
   const x = axis === 'z' ? line : pos, z = axis === 'z' ? pos : line;
-  if (style === 'open') { out.doors.push({ x, z, dw, dh, k: 1, open: true, panels: [], mode: 'none' }); return out.doors[out.doors.length - 1]; }
-  const g = new THREE.Group(), panels = []; let mode = 'x';
-  if (style === 'blast') {
-    const pb = new Builder(), pm = mat('door-blast', { color: th.door ?? 0x5a5f68, rough: 0.7, metal: 0.7 }); pb.add(pm, new THREE.BoxGeometry(dw, dh, 0.18), mx(0, dh / 2, 0), 0);
+  if (style === 'open') return fin({ x, z, dw, dh, k: 1, open: true, panels: [], mode: 'none', ovr: o.vr });
+  const g = new THREE.Group(), panels = []; let mode = 'x', sw = 1;
+  if (home) { // 開き戸 (住戸の玄関・室内): 枠の片側を軸に部屋の内側へ開く
+    const pb = new Builder(), hand = o.hand || 1, img = o.mat && hasImage('materials/' + o.mat), pm = mat(img ? o.mat : style === 'home' ? 'door-slide' : 'door-wood', { color: img ? 0xffffff : o.c ?? (style === 'home' ? 0xd8d4cc : 0xf0ece4), rough: 0.5, metal: style === 'home' ? 0.35 : 0.05 }), CH = flat(0xd0d5db, 0.2, 1);
+    pb.add(pm, new THREE.BoxGeometry(dw - 0.03, dh - 0.03, 0.05), mx(-hand * dw / 2, dh / 2, 0), 0); for (const s of [-1, 1]) { pb.box(CH, 0.03, 0.03, 0.1, -hand * (dw - 0.1), dh * 0.47, s * 0.05); pb.box(CH, 0.12, 0.03, 0.03, -hand * (dw - 0.16), dh * 0.47, s * 0.085); }
+    const pv = new THREE.Group(); pv.position.x = hand * dw / 2; pv.add(pb.build({ shadow: false })); g.add(pv); panels.push(pv); mode = 'h'; sw = hand * (o.into || 1);
+  } else if (style === 'blast') {
+    const pb = new Builder(), bimg = o.mat && hasImage('materials/' + o.mat), pm = mat(bimg ? o.mat : 'door-blast', { color: bimg ? 0xffffff : th.door ?? 0x5a5f68, rough: 0.7, metal: 0.7 }); pb.add(pm, new THREE.BoxGeometry(dw, dh, 0.18), mx(0, dh / 2, 0), 0);
     for (let i = 0; i < 7; i++) for (const s of [-1, 1]) pb.add(glow('#fc4', 1.3), new THREE.PlaneGeometry(0.2, 0.5), mx(-dw / 2 + 0.3 + i * (dw - 0.6) / 6, 0.35, s * 0.095, 0, s > 0 ? 0 : Math.PI, 0.5), 0);
     pb.box(DK, dw - 0.4, 0.16, 0.22, 0, dh * 0.5, 0); pb.box(glow('#f43', 3), 0.3, 0.08, 0.2, 0, dh * 0.72, 0);
     const p = pb.build({ shadow: false }); g.add(p); panels.push(p); mode = 'y';
@@ -78,23 +92,23 @@ function door(out, B, th, axis, line, pos, dw, dh, style = th.door3 || 'slide') 
     const p = pb.build({ shadow: false }); p.position.x = s * dw / 4; g.add(p); panels.push(p);
   }
   g.position.set(x, 0, z); if (axis === 'z') g.rotation.y = HP;
-  out.group.add(g); const d = { g, panels, x, z, dw, dh, k: 0, was: false, mode }; out.doors.push(d);
-  return d;
+  root.add(g); return fin({ g, panels, x, z, dw, dh, k: 0, was: false, mode, sw, r: o.r, vr: o.vr });
 }
 
 // ───────────────────────── 照明器具 ─────────────────────────
 function lamps(B, out, r, th, pts, style) {
   const DK = mat('blasted-steel', { color: th.frame ?? 0x2c3038, rough: 0.8, metal: 0.6 }), c = r.lamp || th.lamp, LM = glow(c, 3.2), h = r.h, GD = flat(0xd4a84a, 0.25, 1);
-  const light = (x, y, z, k = 1) => out.lights.push({ x, y: Math.min(y, 4.2 + h * 0.25), z, c: new THREE.Color(c), i: (r.li ?? 1) * (9 + h * 3) * k, d: Math.max(14, h * 3) });
+  const light = (x, y, z, k = 1) => out.lights.push({ x, y: Math.min(y, 4.2 + h * 0.25), z, c: new THREE.Color(c), i: (r.li ?? 1) * (9 + h * 3) * k, d: r.ld ?? Math.max(14, h * 3), room: r.id }); // ld = 灯りの届く距離 (天井の低い小部屋は短く) // room = その灯りのある部屋 (見えていない部屋の灯りは壁を透かして照らさないよう使わない)
   pts.forEach(([x, z, y, rot = 0], i) => {
     if (style === 'tube') { B.box(DK, 2.3, 0.1, 0.34, x, y - 0.05, z, rot); B.box(LM, 2.1, 0.04, 0.22, x, y - 0.12, z, rot); light(x, y - 0.6, z); } // 細い蛍光管は遠目に引っかき傷のように見えるので乳白カバー付きの照明器具に
     else if (style === 'pendant') { const ly = Math.max(2.5, Math.min(y - 1.0, 3.6)); B.cyl(DK, 0.012, 0.012, y - ly, x, (y + ly) / 2, z, 'y', 4); B.add(th.shade ? flat(th.shade, 0.6, 0.1) : DK, new THREE.CylinderGeometry(0.08, 0.36, 0.26, 16, 1, true), mx(x, ly + 0.05, z), 0); B.sph(glow(c, 4.5), 0.09, x, ly - 0.02, z, 1, 1, 1, 10); light(x, ly - 0.3, z); }
     else if (style === 'spot') { B.cyl(DK, 0.16, 0.16, 0.05, x, y - 0.025, z, 'y', 12); B.add(glow(c, 5), new THREE.CircleGeometry(0.11, 12).rotateX(HP), mx(x, y - 0.055, z), 0); light(x, y - 0.5, z, 0.8); }
-    else if (style === 'lantern') { const ly = Math.max(2.5, Math.min(y - 0.9, 3.4)), lc = ['#ff5a3a', '#ffb347', '#ff7a5a'][i % 3]; B.cyl(DK, 0.01, 0.01, y - ly, x, (y + ly) / 2, z, 'y', 4); B.sph(glow(lc, 1.7), 0.26, x, ly - 0.25, z, 1, 1.2, 1, 12); B.cyl(DK, 0.1, 0.1, 0.05, x, ly + 0.06, z, 'y', 8); B.cyl(DK, 0.1, 0.1, 0.05, x, ly - 0.56, z, 'y', 8); out.lights.push({ x, y: ly - 0.4, z, c: new THREE.Color(lc), i: (r.li ?? 1) * (8 + h * 2.4), d: 13 }); }
+    else if (style === 'lantern') { const ly = Math.max(2.5, Math.min(y - 0.9, 3.4)), lc = ['#ff5a3a', '#ffb347', '#ff7a5a'][i % 3]; B.cyl(DK, 0.01, 0.01, y - ly, x, (y + ly) / 2, z, 'y', 4); if (hasImage('materials/mg-lantern')) B.add(lanternMat(), new THREE.SphereGeometry(0.26, 16, 10), mx(x, ly - 0.25, z, 0, i * 1.3, 0, 1, 1.2, 1), 0); else B.sph(glow(lc, 1.7), 0.26, x, ly - 0.25, z, 1, 1.2, 1, 12); B.cyl(DK, 0.1, 0.1, 0.05, x, ly + 0.06, z, 'y', 8); B.cyl(DK, 0.1, 0.1, 0.05, x, ly - 0.56, z, 'y', 8); out.lights.push({ x, y: ly - 0.4, z, c: new THREE.Color(lc), i: (r.li ?? 1) * (8 + h * 2.4), d: 13, room: r.id }); }
     else if (style === 'chandelier') { const ly = Math.max(2.9, y - 1.6), R = Math.min(1.6, Math.min(r.w, r.d) * 0.12); B.cyl(GD, 0.03, 0.03, y - ly, x, (y + ly) / 2, z, 'y', 6); B.tor(GD, R, 0.04, x, ly, z, HP, 0, 0, 32, 6); B.tor(GD, R * 0.55, 0.03, x, ly + 0.3, z, HP, 0, 0, 24, 6);
       for (let k = 0; k < 10; k++) { const a = k * TAU / 10; B.sph(glow(c, 5), 0.06, x + Math.cos(a) * R, ly + 0.1, z + Math.sin(a) * R, 1, 1.4, 1, 8); if (k % 2) B.sph(glow(c, 5), 0.05, x + Math.cos(a) * R * 0.55, ly + 0.38, z + Math.sin(a) * R * 0.55, 1, 1.4, 1, 8); } light(x, ly - 0.3, z, 1.5); }
     else if (style === 'bare') { B.cyl(DK, 0.01, 0.01, 0.5, x, y - 0.25, z, 'y', 4); B.sph(glow(c, 5), 0.06, x, y - 0.54, z, 1, 1.3, 1, 8); light(x, y - 0.8, z, 0.8); }
     else if (style === 'strip') light(x, y - 0.5, z);
+    else if (style === 'square') { B.box(DK, 1.3, 0.08, 1.3, x, y - 0.03, z, rot); B.box(glowMap('materials/mg-ceiling-light/color', c, 2.4), 1.16, 0.04, 1.16, x, y - 0.08, z, rot); light(x, y - 0.6, z); } // 四角い天井灯 (事務所・教室・診療所)
     else { B.box(DK, 2.0, 0.1, 0.6, x, y - 0.03, z, rot); B.box(glowMap('effects/light-panel', c, 3.2), 1.8, 0.04, 0.42, x, y - 0.1, z, rot); light(x, y - 0.6, z); }
   });
 }
@@ -134,6 +148,32 @@ function deco(B, r, th, out, kinds, rnd) {
     else if (k === 'floorlights') { // 壁際の床に埋めた誘導灯
       const tr = glow(r.trim || th.trim, 2.2);
       for (const s of [-1, 1]) { const off = s * ((long ? r.d : r.w) / 2 - T - 0.5); for (let t = 1; t < L - 1; t += 1.6) { const p = along(t, off, 0.012); if (out.doors.some((d) => Math.hypot(d.x - p[0], d.z - p[2]) < d.dw / 2 + 0.5)) continue; B.box(tr, long ? 0.9 : 0.07, 0.02, long ? 0.07 : 0.9, ...p); } } }
+    else if (k === 'mgpipes') { // 天井際を這う配管 (太さ・色・本数がばらばら。継手と支持金具の間隔も不揃い)
+      const W = long ? r.d : r.w, cs = [0xe8e2d0, 0x6a9a7a, 0xc8a050, 0x8aa4c0, 0xd8d0c0, 0xb85a3a], side = rnd() < 0.5 ? -1 : 1, n = 2 + Math.floor(rnd() * (W > 3 ? 3 : 2)), PM = pickTex('mg-pipe', 'pipe-insulation');
+      for (let i = 0; i < n; i++) { const rad = 0.035 + rnd() * 0.07, off = side * (W / 2 - T - 0.12 - rad - i * 0.17), y = h - 0.12 - rad - (i % 2) * 0.1, m = mat(PM, { color: cs[Math.floor(rnd() * cs.length)], rough: 0.5, metal: 0.3 }), Lp = L - 2 * T;
+        B.add(m, new THREE.CylinderGeometry(rad, rad, Lp, 8), mx(...along(L / 2 - T, off, y), long ? 0 : HP, 0, long ? HP : 0));
+        for (let t = 0.6 + rnd() * 2.5; t < Lp - 0.4; t += 1.6 + rnd() * 4) B.add(m, new THREE.CylinderGeometry(rad * 1.5, rad * 1.5, 0.05, 8), mx(...along(t, off, y), long ? 0 : HP, 0, long ? HP : 0));
+        if (rnd() < 0.35) { const t = 1 + rnd() * (Lp - 2), p = along(t, off, y); B.tor(flat(0xc8302a, 0.4, 0.3), 0.1, 0.015, p[0], p[1] - rad - 0.12, p[2], 0, 0, 0, 16, 5); B.cyl(DK, 0.012, 0.012, 0.12, p[0], p[1] - rad - 0.06, p[2], 'y', 4); } }
+      for (let t = 0.5 + rnd(); t < L - 0.5; t += 1.4 + rnd() * 1.8) B.box(DK, long ? 0.04 : n * 0.2 + 0.1, 0.04, long ? n * 0.2 + 0.1 : 0.04, ...along(t, side * (W / 2 - T - 0.1 - n * 0.1), h - 0.05)); }
+    else if (k === 'tray') { // 天井中央のケーブルラック
+      const TM = mat(pickTex('mg-cable-tray', 'perforated'), { color: 0xc8ccd0, rough: 0.6, metal: 0.7 }), off = (rnd() - 0.5) * 0.4, y = h - 0.32;
+      B.box(TM, long ? L - 2 * T : 0.45, 0.02, long ? 0.45 : L - 2 * T, ...along(L / 2 - T, off, y)); for (const s of [-1, 1]) B.box(DK, long ? L - 2 * T : 0.02, 0.08, long ? 0.02 : L - 2 * T, ...along(L / 2 - T, off + s * 0.22, y + 0.04));
+      for (let c = 0; c < 5; c++) B.add(mat('cable-bundle', { color: [0x202226, 0x8a2a20, 0x2a5a8a, 0xc9a22e, 0x3a7a4a][c], rough: 0.7, metal: 0.1 }), new THREE.CylinderGeometry(0.022, 0.022, L - 2 * T, 5), mx(...along(L / 2 - T, off + (c - 2) * 0.06, y + 0.035), long ? 0 : HP, 0, long ? HP : 0));
+      for (let t = 0.8 + rnd(); t < L - 0.6; t += 1.8 + rnd() * 1.2) { const p = along(t, off, y); B.box(DK, 0.02, 0.3, 0.02, p[0], h - 0.16, p[2]); } }
+    else if (k === 'rail') { // 壁の手すり (扉の前は途切れる)
+      const CH = flat(r.railC ?? 0xd8c8a8, 0.4, 0.2); for (const s of [-1, 1]) { const off = s * ((long ? r.d : r.w) / 2 - T - 0.06); let t0 = null;
+        for (let t = 0.4; t <= L - 2 * T - 0.3; t += 0.3) { const p = along(t, off, 0.85), end = t >= L - 2 * T - 0.6, blocked = end || out.doors.some((d) => Math.hypot(d.x - p[0], d.z - p[2]) < d.dw / 2 + 0.35);
+          if (!blocked && t0 === null) t0 = t; if (blocked && t0 !== null) { const l = t - t0; if (l > 0.6) { const q = along(t0 + l / 2, off, 0.85); B.add(CH, new THREE.CylinderGeometry(0.022, 0.022, l, 8), mx(q[0], 0.85, q[2], long ? 0 : HP, 0, long ? HP : 0)); for (const e2 of [t0 + 0.1, t - 0.1]) { const b = along(e2, off - s * 0.03, 0.8); B.box(CH, 0.03, 0.1, 0.03, b[0], 0.8, b[2]); } } t0 = null; } } } }
+    else if (k === 'frames') { // 通路の骨組み (壁の柱と天井の梁と方杖。間隔は不揃いで、扉の前は避ける)
+      const W2 = long ? r.d : r.w, FM = mat(pickTex('mg-frame', 'blasted-steel'), { color: r.frameC ?? th.frameC ?? 0xd0ccc4, rough: 0.6, metal: 0.5 });
+      for (let t = 1.5 + rnd() * 2; t < L - 1.2; t += 4.5 + rnd() * 4.5) {
+        const [px, , pz] = along(t, 0, 0); if (out.doors.some((d) => Math.hypot(d.x - px, d.z - pz) < d.dw / 2 + W2 / 2 + 0.5)) { t -= 3; continue; }
+        for (const s of [-1, 1]) { const [x, , z] = along(t, s * (W2 / 2 - T - 0.08), 0); B.box(FM, long ? 0.3 : 0.16, h, long ? 0.16 : 0.3, x, h / 2, z); const [bx, , bz] = along(t, s * (W2 / 2 - T - 0.36), 0); B.add(FM, new THREE.BoxGeometry(long ? 0.1 : 0.6, 0.1, long ? 0.6 : 0.1), long ? mx(bx, h - 0.42, bz, s * 0.8, 0, 0) : mx(bx, h - 0.42, bz, 0, 0, -s * 0.8)); }
+        B.box(FM, long ? 0.3 : W2 - 2 * T, 0.22, long ? W2 - 2 * T : 0.3, px, h - 0.11, pz); } }
+    else if (k === 'soffit') { // 天井の下がり壁 (ダクトや梁を包んだ箱)。位置も長さも深さも不揃いで、照明は避ける
+      const W2 = long ? r.d : r.w, cs = r.ceil || th.ceil, SM = mat(cs[0], { color: cs[1], rough: 0.9, metal: 0.2 }), lp = (r.lampPts || []).map(([lx, lz]) => (long ? r.x + lx : r.z + lz));
+      for (let t = 2 + rnd() * 4; t < L - 2; t += 5 + rnd() * 9) { const len = 0.8 + rnd() * 2.2, drop = Math.min(h - 2.35, 0.28 + rnd() * 0.35), c0 = (long ? x0 : z0) + t; if (drop < 0.2) break; if (lp.some((p) => Math.abs(p - c0) < len / 2 + 0.7)) continue;
+        const p = along(t, 0, h - drop / 2); B.box(SM, long ? len : W2 - 2 * T, drop, long ? W2 - 2 * T : len, ...p); B.box(DK, long ? len + 0.04 : W2 - 2 * T, 0.03, long ? W2 - 2 * T : len + 0.04, p[0], h - drop, p[2]); } }
     else if (k === 'coves') { // 天井際の間接照明 (壁をなめる光の帯)
       const lm = glow(r.lamp || th.lamp, 2.4); B.box(DK, r.w - 2 * T, 0.12, 0.42, cx, h - 0.42, z0 + 0.21); B.box(DK, r.w - 2 * T, 0.12, 0.42, cx, h - 0.42, z1 - 0.21); B.box(DK, 0.42, 0.12, r.d - 2 * T, x0 + 0.21, h - 0.42, cz); B.box(DK, 0.42, 0.12, r.d - 2 * T, x1 - 0.21, h - 0.42, cz);
       B.box(lm, r.w - 2 * T - 0.9, 0.04, 0.1, cx, h - 0.34, z0 + 0.3); B.box(lm, r.w - 2 * T - 0.9, 0.04, 0.1, cx, h - 0.34, z1 - 0.3); B.box(lm, 0.1, 0.04, r.d - 2 * T - 0.9, x0 + 0.3, h - 0.34, cz); B.box(lm, 0.1, 0.04, r.d - 2 * T - 0.9, x1 - 0.3, h - 0.34, cz); }
@@ -144,7 +184,13 @@ function deco(B, r, th, out, kinds, rnd) {
 // ───────────────────────── 天井 ─────────────────────────
 function ceiling(B, r, th, CM, DK, out, rnd) {
   const x0 = r.x, z0 = r.z, h = r.h, cx = x0 + r.w / 2, cz = z0 + r.d / 2, st = r.ceil3 || (r.sky ? 'sky' : th.cstyle || 'flat'), GL = glassMat(), long = r.w >= r.d, tr = glow(r.trim || th.trim, 2.6);
-  let pts = gridPts(r, h - 0.02), lst = r.lamps || th.lamps || 'panel';
+  let pts = r.lampPts ? r.lampPts.map(([lx, lz, rot = 0]) => [x0 + lx, z0 + lz, h - 0.02, rot]) : gridPts(r, h - 0.02), lst = r.lamps || th.lamps || 'panel';
+  if (st === 'skyceil') { // 人工の空: 青空の発光パネル + 細い格子 (公園・広場)
+    B.add(skyMat(r.skyc || '#e2f1ff'), new THREE.PlaneGeometry(r.w - 2 * T, r.d - 2 * T).rotateX(HP), mx(cx, h, cz), 1 / 16);
+    const FR = flat(0xf0f2f4, 0.5, 0.3), sx = (r.w - 2 * T) / Math.max(1, Math.round(r.w / 4)), sz = (r.d - 2 * T) / Math.max(1, Math.round(r.d / 4));
+    for (let x = x0 + T + sx; x < x0 + r.w - T - 0.1; x += sx) B.box(FR, 0.07, 0.06, r.d - 2 * T, x, h - 0.03, cz); for (let z = z0 + T + sz; z < z0 + r.d - T - 0.1; z += sz) B.box(FR, r.w - 2 * T, 0.06, 0.07, cx, h - 0.03, z);
+    lamps(B, out, r, th, gridPts(r, h - 0.4, 9), 'strip'); return;
+  }
   if (st === 'sky') {
     B.add(GL, new THREE.PlaneGeometry(r.w - 2 * T, r.d - 2 * T).rotateX(HP), mx(cx, h, cz), 0);
     for (let x = x0 + T; x <= x0 + r.w - T + 0.01; x += (r.w - 2 * T) / Math.max(1, Math.round(r.w / 3.2))) B.box(DK, 0.14, 0.2, r.d, x, h, cz);
@@ -182,13 +228,13 @@ function ceiling(B, r, th, CM, DK, out, rnd) {
 
 // ───────────────────────── 段差 (壇・階段) ─────────────────────────
 function platforms(B, r, th, FM, out) {
-  const DK = mat('blasted-steel', { color: th.frame ?? 0x2c3038, rough: 0.8, metal: 0.6 }), tr = glow(r.trim || th.trim, 2.4), CH = flat(0xd0d5db, 0.15, 1);
+  const DK = mat('blasted-steel', { color: th.frame ?? 0x2c3038, rough: 0.8, metal: 0.6 }), tr = glow(r.trim || th.trim, 2.4), CH = flat(0xd0d5db, 0.15, 1), SM = r.stairM && hasImage('materials/' + r.stairM) ? mat(r.stairM, { rough: 0.7, metal: 0.2 }) : DK; // stairM = 段板の素材
   for (const [lx, lz, w, d, h, side = 's', sw = 0.6] of r.plat) {
     const x0 = r.x + lx, z0 = r.z + lz, x1 = x0 + w, z1 = z0 + d;
     B.box(DK, w, h, d, x0 + w / 2, h / 2, z0 + d / 2); B.add(FM, new THREE.PlaneGeometry(w, d).rotateX(-HP), mx(x0 + w / 2, h + 0.004, z0 + d / 2)); B.box(tr, w + 0.02, 0.03, d + 0.02, x0 + w / 2, h - 0.05, z0 + d / 2);
     out.heights.push({ x0, z0, x1, z1, h0: h, h1: h });
     const n = Math.ceil(h / 0.18), run = 0.3, hz = side === 'n' || side === 's', wd = (hz ? w : d) * sw, sgn = side === 's' || side === 'e' ? 1 : -1;
-    for (let i = 0; i < n; i++) { const sh = h * (1 - (i + 1) / (n + 1)), c = (i + 0.5) * run; hz ? B.box(DK, wd, sh, run, x0 + w / 2, sh / 2, (sgn > 0 ? z1 : z0) + sgn * c) : B.box(DK, run, sh, wd, (sgn > 0 ? x1 : x0) + sgn * c, sh / 2, z0 + d / 2); }
+    for (let i = 0; i < n; i++) { const sh = h * (1 - (i + 1) / (n + 1)), c = (i + 0.5) * run; hz ? B.box(SM, wd, sh, run, x0 + w / 2, sh / 2, (sgn > 0 ? z1 : z0) + sgn * c) : B.box(SM, run, sh, wd, (sgn > 0 ? x1 : x0) + sgn * c, sh / 2, z0 + d / 2); }
     const len = n * run; out.heights.push(hz ? { x0: x0 + w / 2 - wd / 2, x1: x0 + w / 2 + wd / 2, z0: sgn > 0 ? z1 : z0 - len, z1: sgn > 0 ? z1 + len : z0, h0: sgn > 0 ? h : 0, h1: sgn > 0 ? 0 : h, ax: 'z' } : { z0: z0 + d / 2 - wd / 2, z1: z0 + d / 2 + wd / 2, x0: sgn > 0 ? x1 : x0 - len, x1: sgn > 0 ? x1 + len : x0, h0: sgn > 0 ? h : 0, h1: sgn > 0 ? 0 : h, ax: 'x' });
     // 手すり (階段側を除く)
     const rail = (ax, ay, bx2, by) => { const l = Math.hypot(bx2 - ax, by - ay), a = Math.atan2(by - ay, bx2 - ax); B.add(CH, new THREE.BoxGeometry(l, 0.05, 0.05), mx((ax + bx2) / 2, h + 1.0, (ay + by) / 2, 0, -a, 0)); B.add(glassMat(), new THREE.BoxGeometry(l, 0.8, 0.02), mx((ax + bx2) / 2, h + 0.52, (ay + by) / 2, 0, -a, 0), 0); };
@@ -275,12 +321,12 @@ function round(B, r, th, op, out, rnd, WM, FM, CM, DK, trim) {
 
 /** blueprint → 室内一式 */
 export function buildInterior(bp) {
-  const th = bp.theme, B = new Builder(), rnd = rng(bp.seed || 7), BR = {}, groups = {};
-  const out = { bp, group: new THREE.Group(), walk: [], cols: [], rects: [], items: [], doors: [], lights: [], anim: [], npcs: [], drones: [], heights: [], hooks: [], floorMats: new Set(), slot: null, spawn: bp.spawn, rooms: bp.rooms, adj: {}, roomGroups: groups };
+  const th = bp.theme, B = new Builder(), rnd = rng(bp.seed || 7), BR = {}, BD = {}, DG = {}, groups = {};
+  const out = { bp, group: new THREE.Group(), walk: [], cols: [], rects: [], items: [], doors: [], lights: [], anim: [], npcs: [], drones: [], heights: [], hooks: [], floorMats: new Set(), slot: null, spawn: bp.spawn, rooms: bp.rooms, adj: {}, roomGroups: groups, detail: DG };
   const open = {}, R = (id) => bp.rooms.find((r) => r.id === id);
-  for (const r of bp.rooms) { open[r.id] = { n: [], s: [], w: [], e: [] }; BR[r.id] = new Builder(); groups[r.id] = new THREE.Group(); out.group.add(groups[r.id]); out.adj[r.id] = []; }
+  for (const r of bp.rooms) { open[r.id] = { n: [], s: [], w: [], e: [] }; BR[r.id] = new Builder(); BD[r.id] = new Builder(); groups[r.id] = new THREE.Group(); DG[r.id] = new THREE.Group(); groups[r.id].add(DG[r.id]); out.group.add(groups[r.id]); out.adj[r.id] = []; } // DG = 小道具 (遠い部屋では隠す)
   for (const r of bp.rooms) for (const w of r.win || []) { if (typeof w[0] !== 'string') continue; const [side, a, b, y0 = 0.9, y1 = r.h - 0.5] = w, base = side === 'n' || side === 's' ? r.x : r.z; open[r.id][side].push({ a: base + a, b: base + b, y0, y1, type: 'win' }); }
-  for (const [ia, ib, pos, dw = 2.2, dh = 2.5, style] of bp.doors || []) {
+  for (const [ia, ib, pos, dw = 2.2, dh = 2.5, style, dop = {}] of bp.doors || []) {
     const A = R(ia), Bm = R(ib); let sa, sb, axis, line;
     if (Math.abs(A.x + A.w - Bm.x) < 0.01) { sa = 'e'; sb = 'w'; axis = 'z'; line = Bm.x; }
     else if (Math.abs(Bm.x + Bm.w - A.x) < 0.01) { sa = 'w'; sb = 'e'; axis = 'z'; line = A.x; }
@@ -290,38 +336,42 @@ export function buildInterior(bp) {
     const o = { a: pos - dw / 2, b: pos + dw / 2, y0: 0, y1: dh, type: 'door' }; open[ia][sa].push(o); open[ib][sb].push({ ...o });
     const ext = T + PR + 0.75;
     out.walk.push(axis === 'z' ? [line - ext, pos - dw / 2 + PR, line + ext, pos + dw / 2 - PR] : [pos - dw / 2 + PR, line - ext, pos + dw / 2 - PR, line + ext]);
-    const d = door(out, B, th, axis, line, pos, dw, dh, style); out.adj[ia].push({ to: ib, d }); out.adj[ib].push({ to: ia, d });
+    const d = door(out, th, axis, line, pos, dw, dh, style, { ...dop, into: sb === 'w' || sb === 'n' ? 1 : -1 }); d.ra = ia; d.rb = ib; out.adj[ia].push({ to: ib, d }); out.adj[ib].push({ to: ia, d });
   }
   // 格納庫の位置は装飾 (岩など) より先に確定させる
   for (const r of bp.rooms) for (const pr of r.props || []) if (pr[0] === 'shipslot') out.slot = { x: r.x + pr[1], z: r.z + pr[2], ang: 0 };
   for (const r of bp.rooms) room(BR[r.id], r, th, open[r.id], out, rnd);
-  // 小道具
-  for (const r of bp.rooms) for (const pr of r.props || []) {
-    const [type, lx, lz, rot = 0, o = {}] = pr, fn = PROPS[type] || PROPS2[type] || PROPS3[type] || PROPS4[type] || PROPS5[type] || PROPS6[type]; if (!fn) { console.warn('未知の小道具', type); continue; }
-    const wx = r.x + lx, wz = r.z + lz, ang = rot * HP, y0 = o.y0 || 0, base = mx(wx, y0, wz, 0, ang, 0), P = new Placer(BR[r.id], base), sw = Math.round(rot) % 2 !== 0;
-    const env = {
+  // 小道具。r.lazy の部屋 (メガトンの住戸など) は 1 回目に当たり判定・調べられる物・灯りだけを登録し、形は部屋が初めて見えたときに作る (out.lazy)
+  const SINK = { add() { return SINK; } }, shadows = {}, lazy = (out.lazy = {}), DUM = { lights: [], npcs: [], items: [], cols: [], rects: [], anim: [], doors: out.doors, heights: [], hooks: [] };
+  const place = (r, mode) => { for (const pr of r.props || []) {
+    const [type, lx, lz, rot = 0, o = {}] = pr, fn = PROPS[type] || PROPS2[type] || PROPS3[type] || PROPS4[type] || PROPS5[type] || PROPS6[type] || PROPS7[type]; if (!fn) { if (mode !== 'geo') console.warn('未知の小道具', type); continue; }
+    const wx = r.x + lx, wz = r.z + lz, ang = rot * HP, y0 = o.y0 || 0, base = mx(wx, y0, wz, 0, ang, 0), P = new Placer(mode === 'meta' ? SINK : BD[r.id], base), sw = Math.round(rot) % 2 !== 0;
+    const env = mode === 'geo' ? { th, out: DUM, rnd: rng(hashId(r.id) + Math.round(lx * 7 + lz * 13)), room: r, x: wx, z: wz, ang, y0, col() {}, rect() {}, use: () => ({}), dyn: (obj) => obj, light() {}, anim() {} } : {
       th, out, rnd, room: r, x: wx, z: wz, ang, y0,
       col: (rad, ox = 0, oz = 0) => { const v = new THREE.Vector3(ox, 0, oz).applyMatrix4(base); out.cols.push({ x: v.x, z: v.z, r: rad, y: y0 }); },
       rect: (w, d, ox = 0, oz = 0) => { const v = new THREE.Vector3(ox, 0, oz).applyMatrix4(base), hw = (sw ? d : w) / 2, hd = (sw ? w : d) / 2; out.rects.push([v.x - hw, v.z - hd, v.x + hw, v.z + hd, y0]); },
       use: (label, act, range = 2.4, extra = {}) => { const it = { x: wx, z: wz, y: 1.2 + y0, r: range, label, act, room: r.id, ...extra }; out.items.push(it); return it; },
-      dyn: (obj, x = 0, y = 0, z = 0) => { obj.position.set(x, y, z).applyMatrix4(base); obj.rotation.y += ang; groups[r.id].add(obj); return obj; },
-      light: (c, i, y = 2, d = 12) => out.lights.push({ x: wx, y: y + y0, z: wz, c: new THREE.Color(c), i, d }),
+      dyn: (obj, x = 0, y = 0, z = 0) => { obj.position.set(x, y, z).applyMatrix4(base); obj.rotation.y += ang; DG[r.id].add(obj); return obj; },
+      light: (c, i, y = 2, d = 12) => out.lights.push({ x: wx, y: y + y0, z: wz, c: new THREE.Color(c), i, d, room: r.id }),
       anim: (f, always) => { const g = guard(f, type); g.room = always ? null : groups[r.id]; out.anim.push(g); }, // 既定では部屋が見えている間だけ動かす (always = 隣の部屋からも聞こえる砲など)
     };
-    try { fn(P, o, env); } catch (err) { console.warn('[小道具] 設置に失敗:', type, 'in', r.id, err); }
-  }
-  // 小道具の接地影
-  const BL = aoMat('blob'), rb = (x, z) => BR[roomAt(out, x, z)?.id] || B;
-  for (const c of out.cols) { const d = c.r * 2 + 1.0; rb(c.x, c.z).add(BL, new THREE.PlaneGeometry(d, d).rotateX(-HP), mx(c.x, (c.y || 0) + 0.014, c.z), 0); }
-  for (const q of out.rects) { const w = q[2] - q[0], d = q[3] - q[1]; if (w < 0.35 || d < 0.35) continue; rb((q[0] + q[2]) / 2, (q[1] + q[3]) / 2).add(BL, new THREE.PlaneGeometry(w + 0.9, d + 0.9).rotateX(-HP), mx((q[0] + q[2]) / 2, (q[4] || 0) + 0.014, (q[1] + q[3]) / 2), 0); }
+    try { fn(P, o, env); } catch (err) { if (mode !== 'geo') console.warn('[小道具] 設置に失敗:', type, 'in', r.id, err); }
+  } };
+  for (const r of bp.rooms) place(r, r.lazy ? 'meta' : 'full');
+  // 小道具の接地影 (遅延の部屋の分は、形を作るときまで取っておく)
+  const BL = aoMat('blob'), shadow = (x, z, g, m) => { const rm = roomAt(out, x, z); if (rm?.lazy) (shadows[rm.id] ||= []).push([g, m]); else (BD[rm?.id] || B).add(BL, g, m, 0); };
+  for (const c of out.cols) { const d = c.r * 2 + 1.0; shadow(c.x, c.z, new THREE.PlaneGeometry(d, d).rotateX(-HP), mx(c.x, (c.y || 0) + 0.014, c.z)); }
+  for (const q of out.rects) { const w = q[2] - q[0], d = q[3] - q[1]; if (w < 0.35 || d < 0.35) continue; shadow((q[0] + q[2]) / 2, (q[1] + q[3]) / 2, new THREE.PlaneGeometry(w + 0.9, d + 0.9).rotateX(-HP), mx((q[0] + q[2]) / 2, (q[4] || 0) + 0.014, (q[1] + q[3]) / 2)); }
+  for (const r of bp.rooms) if (r.lazy) lazy[r.id] = () => { place(r, 'geo'); for (const [g, m] of shadows[r.id] || []) BD[r.id].add(BL, g, m, 0); DG[r.id].add(BD[r.id].build({ shadow: false })); };
   try { bp.extra?.(B, out); } catch (err) { console.warn('[内装] extra に失敗:', bp.name, err); }
-  for (const r of bp.rooms) groups[r.id].add(BR[r.id].build({ shadow: false }));
+  for (const r of bp.rooms) { groups[r.id].add(BR[r.id].build({ shadow: false })); if (!r.lazy) DG[r.id].add(BD[r.id].build({ shadow: false })); }
   out.group.add(B.build({ shadow: false }));
   let minX = 1e9, minZ = 1e9, maxX = -1e9, maxZ = -1e9; for (const r of bp.rooms) { minX = Math.min(minX, r.x); minZ = Math.min(minZ, r.z); maxX = Math.max(maxX, r.x + r.w); maxZ = Math.max(maxZ, r.z + r.d); }
   out.bounds = [minX, minZ, maxX, maxZ];
   return out;
 }
 
+const hashId = (s) => { let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return h >>> 0; };
 /** 床の高さ (壇・階段) */
 export function floorY(out, x, z) {
   let y = 0;

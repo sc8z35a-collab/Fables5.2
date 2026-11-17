@@ -1,0 +1,109 @@
+{
+ "id": "s67_mg_kids",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、ユーザーが別に生成した画像)。子どもと遊び",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-sandbox",
+   "kind": "tile",
+   "prompt": "A sandbox seen from directly above with small toy buckets and spades.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.02,
+    0.02,
+    0.98,
+    0.98
+   ]
+  },
+  {
+   "name": "mg-jungle-gym",
+   "kind": "tile",
+   "prompt": "A colourful climbing frame (jungle gym), front-on. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0,
+   "skip": true,
+   "why": "立体の遊具は 1 枚の板にすると横から薄く見える (公園には形のある遊具がある)"
+  },
+  {
+   "name": "mg-swing",
+   "kind": "tile",
+   "prompt": "A playground swing set, front-on. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0,
+   "skip": true,
+   "why": "同上"
+  },
+  {
+   "name": "mg-slide",
+   "kind": "tile",
+   "prompt": "A playground slide seen from the side. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0,
+   "skip": true,
+   "why": "同上"
+  },
+  {
+   "name": "mg-toy-blocks",
+   "kind": "tile",
+   "prompt": "Colourful wooden toy blocks scattered, seen from directly above.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "skip": true,
+   "why": "床と壁の背景ごとの絵で、切り抜けない"
+  },
+  {
+   "name": "mg-plush-pile",
+   "kind": "tile",
+   "prompt": "A pile of plush animal toys, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "skip": true,
+   "why": "ソファの背景ごとの絵で、置き場所が無い"
+  },
+  {
+   "name": "mg-hopscotch",
+   "kind": "tile",
+   "prompt": "A hopscotch pattern painted on a floor, seen from directly above, no numbers.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-chalk-wall",
+   "kind": "tile",
+   "prompt": "A blackboard wall covered in childrens chalk drawings: suns, rockets, cats.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    0.96
+   ]
+  },
+  {
+   "name": "mg-foam-mat",
+   "kind": "tile",
+   "prompt": "Interlocking colourful foam puzzle mats from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  }
+ ]
+}

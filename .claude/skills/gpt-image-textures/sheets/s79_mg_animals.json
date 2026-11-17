@@ -1,0 +1,98 @@
+{
+ "id": "s79_mg_animals",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、画像はまだ無い)。動物とペット",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-cat-sitting",
+   "kind": "tile",
+   "prompt": "A sitting tabby cat, front view. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-cat-sleeping",
+   "kind": "tile",
+   "prompt": "A sleeping curled-up calico cat seen from above. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-dog",
+   "kind": "tile",
+   "prompt": "A shiba inu dog standing, side view. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-birdcage",
+   "kind": "tile",
+   "prompt": "A birdcage with a small green parakeet. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-goldfish-bowl",
+   "kind": "tile",
+   "prompt": "A round glass goldfish bowl with two goldfish. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-pigeons",
+   "kind": "tile",
+   "prompt": "A small group of pigeons on the ground, side view. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-turtle",
+   "kind": "tile",
+   "prompt": "A small turtle, side view. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-rabbit",
+   "kind": "tile",
+   "prompt": "A white rabbit sitting, side view. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-cat-tower",
+   "kind": "tile",
+   "prompt": "A tall carpeted cat tree with platforms. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0
+  }
+ ]
+}

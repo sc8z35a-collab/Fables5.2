@@ -1,0 +1,136 @@
+{
+ "id": "s65_mg_hospital2",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、ユーザーが別に生成した画像)。病院と薬局 2",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-xray-viewer",
+   "kind": "tile",
+   "prompt": "A wall X-ray light box glowing white with two chest X-ray films.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.03,
+    0.15,
+    0.97,
+    0.83
+   ]
+  },
+  {
+   "name": "mg-iv-stand",
+   "kind": "tile",
+   "prompt": "A hospital IV drip stand with a bag, side view. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0,
+   "crop": [
+    0.28,
+    0.0,
+    0.74,
+    1.0
+   ]
+  },
+  {
+   "name": "mg-wheelchair",
+   "kind": "tile",
+   "prompt": "A wheelchair seen from the side. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0,
+   "crop": [
+    0.1,
+    0.03,
+    0.92,
+    1.0
+   ]
+  },
+  {
+   "name": "mg-stretcher",
+   "kind": "tile",
+   "prompt": "A hospital stretcher trolley seen from the side. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0,
+   "crop": [
+    0.0,
+    0.2,
+    1.0,
+    0.84
+   ]
+  },
+  {
+   "name": "mg-eye-chart",
+   "kind": "tile",
+   "prompt": "An eye test chart with rows of shrinking ring symbols (Landolt C), no letters.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.21,
+    0.08,
+    0.79,
+    0.97
+   ]
+  },
+  {
+   "name": "mg-medicine-packs",
+   "kind": "tile",
+   "prompt": "Medicine blister packs, pill bottles and paper bags seen from directly above, no text.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.04,
+    0.1,
+    0.96,
+    0.88
+   ]
+  },
+  {
+   "name": "mg-nurse-station",
+   "kind": "tile",
+   "prompt": "A hospital nurse station counter front with monitors and files behind.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "skip": true,
+   "why": "受付の風景ごとの絵で、物の面に貼れない"
+  },
+  {
+   "name": "mg-ward-window",
+   "kind": "tile",
+   "prompt": "A hospital ward window with pale curtains and a vase of flowers on the sill.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    0.94
+   ]
+  },
+  {
+   "name": "mg-aed-wall",
+   "kind": "tile",
+   "prompt": "A wall with a defibrillator cabinet and a first-aid box, red and green, no text.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.05,
+    0.05,
+    0.97,
+    0.75
+   ]
+  }
+ ]
+}

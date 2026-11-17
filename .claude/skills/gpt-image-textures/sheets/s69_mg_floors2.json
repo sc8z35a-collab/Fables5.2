@@ -1,0 +1,89 @@
+{
+ "id": "s69_mg_floors2",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、ユーザーが別に生成した画像、すべて使用)。床のバリエーション 2",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-floor-terrazzo",
+   "kind": "tile",
+   "prompt": "Green and white terrazzo floor from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-floor-rubber",
+   "kind": "tile",
+   "prompt": "Blue studded rubber floor from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-floor-parquet",
+   "kind": "tile",
+   "prompt": "Square oak parquet floor from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-floor-cobble",
+   "kind": "tile",
+   "prompt": "Rounded grey cobblestone floor from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.5
+  },
+  {
+   "name": "mg-floor-brick",
+   "kind": "tile",
+   "prompt": "Red brick path in a herringbone pattern from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-floor-tatami-old",
+   "kind": "tile",
+   "prompt": "Old sun-faded tatami mats with dark cloth borders from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.4
+  },
+  {
+   "name": "mg-floor-vinyl-wood",
+   "kind": "tile",
+   "prompt": "Wood-look vinyl sheet floor, light grey oak, from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-floor-mesh",
+   "kind": "tile",
+   "prompt": "Fine steel mesh grating floor from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.8
+  },
+  {
+   "name": "mg-floor-black-marble",
+   "kind": "tile",
+   "prompt": "Polished black marble floor tiles with white veins from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.5
+  }
+ ]
+}

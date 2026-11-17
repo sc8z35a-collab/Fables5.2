@@ -1,0 +1,117 @@
+{
+ "id": "s35_mg_work",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の改修用。ユーザーが別に生成した 1254x1254 の画像。1 枚の絵のマスは crop で余白 (白い背景や壁) を切り落とす",
+ "style": "Working neighbourhoods of a space-habitat city: foundry workers dorms, the port and the sailors quarter. Flat, evenly lit, front-on or top-down, no shadows, no readable text.",
+ "cells": [
+  {
+   "name": "mg-floor-foundry",
+   "kind": "tile",
+   "prompt": "Foundry district floor from above: light steel plates with painted yellow walkway lines, scuffs and bolt heads.",
+   "mean": [
+    160,
+    158,
+    150
+   ],
+   "rough": 130,
+   "sat": 0.8,
+   "normal": 3.5,
+   "uvs": 0.35
+  },
+  {
+   "name": "mg-wall-foundry",
+   "kind": "tile",
+   "prompt": "Foundry dorm corridor wall: grey-green painted steel plates with welded seams and stencil-free surfaces.",
+   "mean": [
+    176,
+    188,
+    176
+   ],
+   "rough": 150,
+   "sat": 0.25,
+   "normal": 3.0,
+   "uvs": 0.3
+  },
+  {
+   "name": "mg-floor-port",
+   "kind": "tile",
+   "prompt": "Port warehouse street floor from above: light concrete slab with tyre marks, expansion joints and faint oil stains.",
+   "mean": [
+    176,
+    172,
+    166
+   ],
+   "rough": 190,
+   "sat": 0.15,
+   "normal": 2.5,
+   "uvs": 0.2
+  },
+  {
+   "name": "mg-wall-port",
+   "kind": "tile",
+   "prompt": "Port street wall: light grey painted corrugated steel sheets, vertical ribs, a few dents and rust-free scratches.",
+   "rough": 140,
+   "sat": 1.0,
+   "normal": 4.0,
+   "uvs": 0.4
+  },
+  {
+   "name": "mg-floor-crew",
+   "kind": "tile",
+   "prompt": "Sailors quarter floor from above: old light-brown wooden deck planks, worn and oiled, with metal nail heads.",
+   "mean": [
+    168,
+    140,
+    110
+   ],
+   "rough": 170,
+   "sat": 0.45,
+   "normal": 3.0,
+   "uvs": 0.45
+  },
+  {
+   "name": "mg-pipe",
+   "kind": "tile",
+   "prompt": "Surface of a painted utility pipe: cream paint over steel, a small coloured band and a flange seam, seen front-on and unrolled flat.",
+   "mean": [
+    206,
+    198,
+    178
+   ],
+   "rough": 120,
+   "sat": 0.3,
+   "normal": 2.0,
+   "uvs": 1.0
+  },
+  {
+   "name": "mg-cable-tray",
+   "kind": "tile",
+   "prompt": "Perforated steel cable tray seen from directly above: rows of round holes in galvanised steel with a few bundled cables.",
+   "mean": [
+    176,
+    178,
+    180
+   ],
+   "rough": 110,
+   "sat": 0.1,
+   "normal": 3.5,
+   "uvs": 0.8
+  },
+  {
+   "name": "mg-shutter",
+   "kind": "tile",
+   "prompt": "A closed shop roller shutter seen straight on: light grey corrugated slats filling the whole cell, a little worn at the bottom, no text.",
+   "seam": "",
+   "rough": 140,
+   "normal": 3.0
+  },
+  {
+   "name": "mg-bulkhead",
+   "kind": "tile",
+   "prompt": "A large pressure bulkhead door seen straight on: heavy steel slab with yellow and black hazard stripes along the edges, latches and a round porthole, no text.",
+   "seam": "",
+   "rough": 150,
+   "normal": 3.0
+  }
+ ]
+}

@@ -1,0 +1,89 @@
+{
+ "id": "s70_mg_walls2",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、ユーザーが別に生成した画像、すべて使用)。壁のバリエーション 2",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-wall-shikkui",
+   "kind": "tile",
+   "prompt": "White Japanese lime plaster wall (shikkui), smooth with soft trowel marks.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-wall-yakisugi",
+   "kind": "tile",
+   "prompt": "Charred cedar board wall (yakisugi), vertical boards.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-wall-tin",
+   "kind": "tile",
+   "prompt": "Rusty corrugated tin sheet wall, vertical ribs.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-wall-concrete",
+   "kind": "tile",
+   "prompt": "Exposed concrete wall with form-tie holes in a grid.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.4
+  },
+  {
+   "name": "mg-wall-red-brick",
+   "kind": "tile",
+   "prompt": "Old red brick wall with white mortar.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-wall-green-tile",
+   "kind": "tile",
+   "prompt": "Small glazed green rectangular tiles in a stacked pattern.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-wall-blue-mosaic",
+   "kind": "tile",
+   "prompt": "Blue glass mosaic tiles of mixed shades.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-wall-cork",
+   "kind": "tile",
+   "prompt": "Cork board wall surface.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-wall-pegboard",
+   "kind": "tile",
+   "prompt": "White perforated pegboard with even holes.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  }
+ ]
+}

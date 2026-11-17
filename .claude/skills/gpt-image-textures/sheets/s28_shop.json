@@ -1,0 +1,16 @@
+{
+ "id": "s28_shop",
+ "group": "user",
+ "source": "ユーザーが別に生成した画像 (1254x1254)。合う場所があるマスだけ使い、使わないマスは skip と理由を書いてある。",
+ "cells": [
+  {"name": "vending-front", "prompt": "Vending machine front", "kind": "tile", "seam": "", "rough": 150, "normal": 1.5},
+  {"name": "slot-front", "prompt": "Slot machine front", "kind": "tile", "seam": "", "rough": 150, "normal": 1.5},
+  {"name": "bar-shelf", "prompt": "Bar back shelf with bottles", "kind": "tile", "seam": "", "rough": 150, "normal": 1.5},
+  {"name": "awning", "prompt": "Striped market awning", "kind": "tile", "seam": "", "rough": 240, "normal": 1.5},
+  {"name": "produce", "prompt": "Crates of fruit and vegetables from above", "kind": "tile", "seam": "", "rough": 220, "normal": 1.5},
+  {"name": "fridge-showcase", "kind": "tile", "prompt": "Refrigerated showcase", "skip": true, "why": "置き場所になる冷蔵庫の小道具が無い"},
+  {"name": "aquarium-bg", "prompt": "Aquarium background with coral", "kind": "tile", "seam": "", "rough": 200, "normal": 1.5},
+  {"name": "movie-poster", "kind": "tile", "prompt": "Movie poster without text", "skip": true, "why": "ポスターの小道具は文字入りの看板として使われている"},
+  {"name": "microwave-front", "prompt": "Microwave oven front", "kind": "tile", "seam": "", "rough": 80, "normal": 1.5}
+ ]
+}

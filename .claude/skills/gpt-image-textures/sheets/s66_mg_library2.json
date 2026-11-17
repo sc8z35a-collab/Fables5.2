@@ -1,0 +1,123 @@
+{
+ "id": "s66_mg_library2",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 135 枚 (シート 65〜79、ユーザーが別に生成した画像)。図書館と文化",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text or logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-magazine-rack",
+   "kind": "tile",
+   "prompt": "A magazine rack front with colourful covers (no readable text).",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.02,
+    0.06,
+    0.97,
+    0.98
+   ]
+  },
+  {
+   "name": "mg-picture-books",
+   "kind": "tile",
+   "prompt": "A low shelf of picture books displayed face-out, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.04,
+    0.03,
+    0.97,
+    0.98
+   ]
+  },
+  {
+   "name": "mg-study-carrel",
+   "kind": "tile",
+   "prompt": "A row of library study carrels with desk lamps, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "skip": true,
+   "why": "閲覧室の風景ごとの絵で、物の面に貼れない"
+  },
+  {
+   "name": "mg-globe",
+   "kind": "tile",
+   "prompt": "A desk globe of a blue planet on a wooden stand. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0,
+   "crop": [
+    0.15,
+    0.0,
+    0.85,
+    0.99
+   ]
+  },
+  {
+   "name": "mg-card-catalog",
+   "kind": "tile",
+   "prompt": "A wooden library card catalogue with many small drawers, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.03,
+    0.08,
+    0.98,
+    0.98
+   ]
+  },
+  {
+   "name": "mg-reading-lamp",
+   "kind": "tile",
+   "prompt": "A green glass banker desk lamp. On plain pure white background.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "key": "white",
+   "flatten": 0,
+   "crop": [
+    0.18,
+    0.04,
+    0.94,
+    0.97
+   ]
+  },
+  {
+   "name": "mg-museum-case",
+   "kind": "tile",
+   "prompt": "A museum glass display case front with fossils and meteorites.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-landscape-painting",
+   "kind": "tile",
+   "prompt": "A framed oil painting of an ocean and green hills on Earth.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.02,
+    0.06,
+    0.98,
+    0.95
+   ]
+  },
+  {
+   "name": "mg-library-carpet",
+   "kind": "tile",
+   "prompt": "Library carpet: deep blue with a small gold diamond pattern, from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.8
+  }
+ ]
+}

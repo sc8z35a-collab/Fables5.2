@@ -1,0 +1,113 @@
+{
+ "id": "s58_mg_people",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 54 枚 (シート 53〜58、画像はまだ無い)。店の品物、飲食店、学校・役所・病院、機械と設備、公園と自然、住人の服と持ち物",
+ "style": "Clothes and belongings of the residents of a space-habitat city. Fabric tiles are flat, evenly lit, seamless close-ups. Each PICTURE cell is ONE item seen exactly straight on (or from directly above), filling the cell, flat even light, no shadows, no readable text. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-cloth-check",
+   "kind": "tile",
+   "prompt": "Clothing fabric: red and navy flannel check shirt.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.5
+  },
+  {
+   "name": "mg-cloth-knit",
+   "kind": "tile",
+   "prompt": "Clothing fabric: cream cable-knit sweater.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.5
+  },
+  {
+   "name": "mg-cloth-suit",
+   "kind": "tile",
+   "prompt": "Clothing fabric: navy suit wool with a faint pinstripe.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.5
+  },
+  {
+   "name": "mg-cloth-school",
+   "kind": "tile",
+   "prompt": "Clothing fabric: dark navy school uniform serge.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.5
+  },
+  {
+   "name": "mg-cloth-yukata",
+   "kind": "tile",
+   "prompt": "Clothing fabric: summer yukata cotton with an indigo morning-glory pattern.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.2
+  },
+  {
+   "name": "mg-cloth-apron",
+   "kind": "tile",
+   "prompt": "Clothing fabric: white cotton apron with a small blue stripe.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 1.5
+  },
+  {
+   "name": "mg-backpack",
+   "kind": "tile",
+   "prompt": "A colourful backpack seen front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.06,
+    0.0,
+    0.94,
+    1.0
+   ],
+   "key": "white",
+   "flatten": 0,
+   "holes": 0.002
+  },
+  {
+   "name": "mg-umbrella",
+   "kind": "tile",
+   "prompt": "An open umbrella seen from directly above, colourful panels.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.015,
+    0.0,
+    0.985,
+    0.975
+   ],
+   "key": "white",
+   "flatten": 0
+  },
+  {
+   "name": "mg-shopping-bag",
+   "kind": "tile",
+   "prompt": "A cloth shopping bag with vegetables and a baguette sticking out, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.01,
+    0.0,
+    0.99,
+    1.0
+   ],
+   "key": "white",
+   "tol": 0.05,
+   "flatten": 0,
+   "holes": 0.002
+  }
+ ]
+}

@@ -1,0 +1,108 @@
+{
+ "id": "s54_mg_food",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 54 枚 (シート 53〜58、画像はまだ無い)。店の品物、飲食店、学校・役所・病院、機械と設備、公園と自然、住人の服と持ち物",
+ "style": "Food and small eateries of a space-habitat city. Each PICTURE cell is ONE item seen exactly straight on (or from directly above), filling the cell, flat even light, no shadows, no readable text. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-ramen-bowl",
+   "kind": "tile",
+   "prompt": "A bowl of ramen seen from directly above: noodles, chashu, egg, nori, green onions.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.015,
+    0.01,
+    0.985,
+    0.99
+   ]
+  },
+  {
+   "name": "mg-curry",
+   "kind": "tile",
+   "prompt": "A plate of Japanese curry rice seen from directly above.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.005,
+    0.005,
+    0.99,
+    0.995
+   ]
+  },
+  {
+   "name": "mg-cake-case",
+   "kind": "tile",
+   "prompt": "A cafe cake showcase front: shortcakes, tarts and rolls on glass shelves.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-sake-shelf",
+   "kind": "tile",
+   "prompt": "An izakaya shelf front of sake and shochu bottles, labels blank.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-yakitori",
+   "kind": "tile",
+   "prompt": "Yakitori skewers on a grill seen from directly above, glowing charcoal underneath.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-ticket-machine",
+   "kind": "tile",
+   "prompt": "A restaurant meal-ticket vending machine front: rows of blank buttons with food photos.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5,
+   "crop": [
+    0.06,
+    0.0,
+    0.965,
+    0.975
+   ]
+  },
+  {
+   "name": "mg-coffee-set",
+   "kind": "tile",
+   "prompt": "A coffee cup, saucer and a slice of cake on a cafe table seen from directly above.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-kitchen-floor",
+   "kind": "tile",
+   "prompt": "Commercial kitchen floor from above: red anti-slip quarry tiles.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.8
+  },
+  {
+   "name": "mg-checker-floor",
+   "kind": "tile",
+   "prompt": "Retro cafe floor from above: black and white checkerboard tiles.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6,
+   "seam": "",
+   "crop": [
+    0.1755,
+    0.1682,
+    0.8293,
+    0.8414
+   ],
+   "flatten": 0
+  }
+ ]
+}

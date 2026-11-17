@@ -1,0 +1,82 @@
+{
+ "id": "s60_mg_bath3",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 54 枚 (シート 59〜64、画像はまだ無い)。玄関と家の細部、銭湯、学校、通りの細部、飲み屋と娯楽、港と工場。Public bathhouse (sento) details",
+ "style": "Everyday details of a bright, lived-in space-habitat city in a Japanese style. Each PICTURE cell is ONE item seen exactly straight on (or from directly above), filling the cell, flat even light, no shadows, no readable text or logos. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-sento-lockers",
+   "kind": "tile",
+   "prompt": "A bathhouse wooden shoe locker wall with small wooden key tags, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-bandai",
+   "kind": "tile",
+   "prompt": "A bathhouse attendant booth (bandai) front: raised wooden counter with a small curtain.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-rock-bath",
+   "kind": "tile",
+   "prompt": "Natural rock bath edge: rounded grey stones set in mortar, wet and smooth, front-on.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-bath-buckets",
+   "kind": "tile",
+   "prompt": "Stacked yellow bath buckets and small plastic stools, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-basket-shelf",
+   "kind": "tile",
+   "prompt": "A changing room shelf of woven rattan baskets in square cubbies, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-milk-fridge",
+   "kind": "tile",
+   "prompt": "A glass-door fridge front full of glass bottles of milk and fruit milk.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-massage-chair",
+   "kind": "tile",
+   "prompt": "A massage chair front, brown leather, padded.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-noren-bath",
+   "kind": "tile",
+   "prompt": "A bathhouse entrance curtain (noren) in deep indigo with a white steam swirl pattern, no letters.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-sunoko",
+   "kind": "tile",
+   "prompt": "Wooden duckboard (sunoko) floor slats from above, light cypress wood.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.8
+  }
+ ]
+}

@@ -46,17 +46,21 @@ CUT = ('CUTOUT cells: one isolated subject, fully visible, on a perfectly flat u
        '(#FF00FF, RGB 255,0,255) that fills the rest of the cell; no ground, no pot, no shadow, no gradient on the '
        'background; crisp clean silhouette; keep a small magenta margin around the subject. ')
 EMI = ('EMISSIVE cells: glowing elements on a pure black background (#000000); nothing else lit. ')
+PIC = ('PICTURE cells: one single object or picture seen exactly straight on, filling the cell edge to edge, '
+       'soft uniform shadowless lighting, no perspective, not tiled, no text. ')
 
 
 def build_prompt(sheet):
-    kinds = {c['kind'] for c in sheet['cells']}
+    pic = lambda c: c['kind'] == 'tile' and c.get('seam') == ''  # 面に 1 枚の絵として貼るマス (家電の正面・扉など)
+    kinds = {'picture' if pic(c) else c['kind'] for c in sheet['cells']}
     p = HEAD + (sheet.get('style', '') + ' ' if sheet.get('style') else '')
     if kinds & {'tile', 'image'}: p += TILE
+    if 'picture' in kinds: p += PIC
     if 'cutout' in kinds: p += CUT
     if 'emissive' in kinds: p += EMI
     p += 'Cells in reading order (left to right, top to bottom):\n'
     for i, c in enumerate(sheet['cells']):
-        tag = {'tile': 'TILE', 'image': 'TILE', 'cutout': 'CUTOUT', 'emissive': 'EMISSIVE'}[c['kind']]
+        tag = 'PICTURE' if pic(c) else {'tile': 'TILE', 'image': 'TILE', 'cutout': 'CUTOUT', 'emissive': 'EMISSIVE'}[c['kind']]
         p += f"{i + 1}. (row {i // 3 + 1}, column {i % 3 + 1}) [{tag}] {c['prompt']}\n"
     return p
 
@@ -309,6 +313,25 @@ def save_rgba(rgb, a, path, size=None):
     im.save(path, 'WEBP', quality=90, method=6)
 
 
+def key_bg(t, tol=0.09, holes=0.0):
+    """外周から続く背景 (白など、マスの縁の色に近い画素) を透明にする。物の中の白は外周とつながらなければ残る"""
+    from PIL import ImageDraw, ImageFilter
+    H, W = t.shape[:2]; ring = np.concatenate([t[:4].reshape(-1, 3), t[-4:].reshape(-1, 3), t[:, :4].reshape(-1, 3), t[:, -4:].reshape(-1, 3)])
+    bg = np.median(ring, 0); near = (np.abs(t - bg).max(2) < tol)
+    m = Image.fromarray((near * 255).astype(np.uint8), 'L').copy()  # copy: numpy と共有した画像は塗りつぶしが効かない
+    for x, y in [(x, 0) for x in range(0, W, 7)] + [(x, H - 1) for x in range(0, W, 7)] + [(0, y) for y in range(0, H, 7)] + [(W - 1, y) for y in range(0, H, 7)]:
+        if m.getpixel((x, y)) == 255: ImageDraw.floodfill(m, (x, y), 128)
+    if holes > 0:  # 物に囲まれた背景 (持ち手の内側など) も、面積が holes (割合) 以上なら抜く。水玉のような小さな白は残す
+        for y in range(0, H, 6):
+            for x in range(0, W, 6):
+                if m.getpixel((x, y)) != 255: continue
+                ImageDraw.floodfill(m, (x, y), 64); arr = np.asarray(m).copy(); reg = arr == 64
+                arr[reg] = 128 if reg.mean() >= holes else 0; m = Image.fromarray(arr, 'L').copy()
+    a = (np.asarray(m) != 128).astype(np.uint8) * 255
+    a = Image.fromarray(a, 'L').filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(1.2))  # 縁を 1px 太らせてなめらかに
+    return np.asarray(a, np.float32) / 255
+
+
 def save_normal(n, path, size):
     """法線マップを縮小してから長さ 1 に戻して保存"""
     im = np.asarray(u8(n).resize((size, size), Image.LANCZOS), np.float32) / 255 * 2 - 1
@@ -328,7 +351,9 @@ def process(sheet):
         if c.get('skip'): continue  # ゲームで使わないマス (合う場所が無い・コードの作り直しが要るもの)
         if k in ('tile', 'emissive'):
             src = cell(img, i, 0.025 if c.get('seam', 'xy') else 0.006)
-            if src.shape[0] != work: src = np.asarray(u8(src).resize((work, work), Image.LANCZOS), np.float32) / 255
+            if c.get('crop'):  # 1 枚の絵の余白 (白い背景や壁) を切り落とす: [左, 上, 右, 下] はマスの幅・高さに対する割合
+                x0, y0, x1, y1 = c['crop']; H, W = src.shape[:2]; src = src[int(y0 * H):int(y1 * H), int(x0 * W):int(x1 * W)]
+            if src.shape[0] != work or src.shape[1] != work: src = np.asarray(u8(src).resize((work, work), Image.LANCZOS), np.float32) / 255
             if k != 'emissive': src = flatten_light(src, c.get('flatten', 0.8), src.shape[0] / 7)
             if c.get('seam', 'xy'): t = seamless(src)
             else:  # 1 枚の絵として面いっぱいに貼るもの (扉・敷物・着陸パッド): 継ぎ目処理をせず縮小だけ
@@ -343,7 +368,9 @@ def process(sheet):
             if c.get('also'): (out / c['also']).parent.mkdir(parents=True, exist_ok=True); save_normal(nm, out / f"{c['also']}.webp", MAT_SIZE)
             save(rough_map(gblur(h, 2.5), c.get('rough', 150), c.get('rvar', 0.25)), d / 'roughness.webp', q=85, size=MAT_SIZE // 2)
             t = desat(t, c.get('sat', 1.0))
-            t = match_linear(t, c['mean'], c.get('contrast', 0.1)) if c.get('norm') == 'linear' else match_mean(t, c['mean'], c.get('keep_hue', False))
+            if 'mean' in c:  # mean が無ければ元の明るさのまま (正面に貼る絵など)
+                t = match_linear(t, c['mean'], c.get('contrast', 0.1)) if c.get('norm') == 'linear' else match_mean(t, c['mean'], c.get('keep_hue', False))
+            if c.get('key'): save_rgba(t, key_bg(t, c.get('tol', 0.09), c.get('holes', 0.0)), d / 'color.webp', (MAT_SIZE, MAT_SIZE)); continue  # 白い背景を抜いた切り抜きの絵 (アルファ付き)
             save(t, d / 'color.webp', q=86, size=MAT_SIZE)
         elif k == 'image':  # 1 枚の画像 (惑星の地図・雲・星雲・環・太陽・森の樹冠)。法線・粗さは作らない
             src = cell(img, i, 0.02); ov = c.get('ov', 192); seam = c.get('seam', 'xy')

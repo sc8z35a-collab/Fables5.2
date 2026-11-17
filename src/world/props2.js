@@ -5,7 +5,7 @@ import { mat, glow, aoMat, cv, ctex, JP } from '../gfx/textures.js';
 import { makeGlowSprite } from '../gfx/fx.js';
 import { G } from '../core/util.js';
 import { holoMat, glassMat } from './interior.js';
-import { MM, fab, crateM, flat, scr, blob, bush } from './props.js';
+import { MM, fab, crateM, flat, scr, blob, bush, face } from './props.js';
 import { buildMycenae, instanced, makeBot, makeMedBot, makeLoaderBot, rescueN } from './rescue.js';
 import { globeMat } from './stations2.js';
 import { RESCUE } from './defs.js';
@@ -204,8 +204,8 @@ export const PROPS2 = {
   /** 実験台 (フラスコ・ビーカー・顕微鏡・遠心機) */
   labbench(P, o, e) {
     const m = MM(), w = o.w || 3.2, c = o.c || e.th.trim;
-    P.box(m.wh, w, 0.86, 0.72, 0, 0.43, 0); P.box(flat(0x23272e, 0.25, 0.4), w + 0.06, 0.05, 0.8, 0, 0.885, 0); P.box(glow(c, 2.2), w, 0.025, 0.02, 0, 0.84, 0.365);
-    for (let x = -w / 2 + 0.4; x < w / 2 - 0.2; x += 0.8) { P.box(m.bk, 0.012, 0.7, 0.01, x - 0.4 + 0.02, 0.45, 0.362); P.box(m.ch, 0.2, 0.025, 0.03, x, 0.66, 0.375); }
+    P.box(m.wh, w, 0.86, 0.72, 0, 0.43, 0); P.box(flat(0x23272e, 0.25, 0.4), w + 0.06, 0.05, 0.8, 0, 0.885, 0); P.box(glow(c, 2.2), w, 0.025, 0.02, 0, 0.84, 0.365); const lb = face(P, 'lab-bench', w, 0.8, 0, 0.42, 0.362, { uv: [0, 0, w * 0.56 / 0.8, 0.56] }); // 下半分 (引き出しと扉) を正面に
+    if (!lb) for (let x = -w / 2 + 0.4; x < w / 2 - 0.2; x += 0.8) { P.box(m.bk, 0.012, 0.7, 0.01, x - 0.4 + 0.02, 0.45, 0.362); P.box(m.ch, 0.2, 0.025, 0.03, x, 0.66, 0.375); }
     P.box(m.wh, w, 0.05, 0.26, 0, 1.42, -0.23); P.box(m.wh, 0.05, 0.56, 0.26, -w / 2 + 0.03, 1.16, -0.23); P.box(m.wh, 0.05, 0.56, 0.26, w / 2 - 0.03, 1.16, -0.23); P.box(glow('#f6f2ff', 2.4), w - 0.3, 0.02, 0.05, 0, 1.385, -0.18);
     for (let x = -w / 2 + 0.22; x < w / 2 - 0.15; x += 0.21) { const hh = 0.14 + e.rnd() * 0.12; P.cyl(glow(LIQ[Math.floor(e.rnd() * 6)], 0.8 + e.rnd() * 0.7), 0.04, 0.05, hh, x, 1.445 + hh / 2, -0.23, 'y', 8); P.cyl(m.bk, 0.022, 0.022, 0.03, x, 1.46 + hh, -0.23, 'y', 6); }
     let x = -w / 2 + 0.35; const y = 0.91;

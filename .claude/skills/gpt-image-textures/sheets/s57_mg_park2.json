@@ -1,0 +1,86 @@
+{
+ "id": "s57_mg_park2",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 54 枚 (シート 53〜58、画像はまだ無い)。店の品物、飲食店、学校・役所・病院、機械と設備、公園と自然、住人の服と持ち物",
+ "style": "Nature in the parks and courtyards of a space-habitat city. Each PICTURE cell is ONE item seen exactly straight on (or from directly above), filling the cell, flat even light, no shadows, no readable text. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-bark",
+   "kind": "tile",
+   "prompt": "Tree bark close-up: grey-brown bark with cracks.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.8
+  },
+  {
+   "name": "mg-flowerbed",
+   "kind": "tile",
+   "prompt": "A flower bed seen from directly above: tulips and pansies in rows.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-stepping-stones",
+   "kind": "tile",
+   "prompt": "Garden path of irregular flat stepping stones set in gravel, from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.4
+  },
+  {
+   "name": "mg-pond-edge",
+   "kind": "tile",
+   "prompt": "Natural rounded stones edging a pond, seen from the side.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-bamboo-fence",
+   "kind": "tile",
+   "prompt": "Japanese bamboo fence (takegaki) front-on, tied with black rope.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-stone-lantern",
+   "kind": "tile",
+   "prompt": "A Japanese stone garden lantern (toro) seen front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-wisteria",
+   "kind": "tile",
+   "prompt": "Purple wisteria flowers hanging from a trellis, seen from below.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-moss",
+   "kind": "tile",
+   "prompt": "Thick green moss carpet from above.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.6
+  },
+  {
+   "name": "mg-leaves",
+   "kind": "tile",
+   "prompt": "Fallen autumn leaves on the ground from above, red, orange and brown.",
+   "rough": 200,
+   "sat": 1.0,
+   "normal": 2.0,
+   "uvs": 0.5
+  }
+ ]
+}

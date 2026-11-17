@@ -1,0 +1,16 @@
+{
+ "id": "s30_bases",
+ "group": "user",
+ "source": "ユーザーが別に生成した画像 (1254x1254)。合う場所があるマスだけ使い、使わないマスは skip と理由を書いてある。",
+ "cells": [
+  {"name": "adobe", "kind": "tile", "prompt": "Sun-dried adobe bricks", "rough": 230, "sat": 1.0, "normal": 4.0, "uvs": 0.4},
+  {"name": "ice-panel", "kind": "tile", "prompt": "Ice base insulated wall panel", "rough": 150, "sat": 1.0, "normal": 3.0, "uvs": 0.25},
+  {"name": "lava-wall", "kind": "tile", "prompt": "Heat-resistant wall of the lava planet", "rough": 180, "sat": 1.0, "normal": 3.5, "uvs": 0.25},
+  {"name": "balloon-fabric", "kind": "tile", "prompt": "Balloon envelope fabric", "rough": 230, "sat": 1.0, "normal": 1.5, "seam": ""},
+  {"name": "drill-steel", "kind": "tile", "prompt": "Mining drill steel", "skip": true, "why": "採掘ドリルの模型が無い"},
+  {"name": "dome-panel", "kind": "tile", "prompt": "Geodesic dome triangle panels", "rough": 80, "sat": 1.0, "normal": 1.5, "uvs": 0.1},
+  {"name": "antenna-dish", "kind": "tile", "prompt": "Antenna dish", "skip": true, "why": "アンテナの皿は球の一部で、正方形の絵を貼るとゆがむ"},
+  {"name": "resource-container", "kind": "tile", "prompt": "Resource container", "skip": true, "why": "地表に資源コンテナが無い"},
+  {"name": "airlock-door", "prompt": "Airlock door", "kind": "tile", "seam": "", "rough": 130, "normal": 1.5}
+ ]
+}
