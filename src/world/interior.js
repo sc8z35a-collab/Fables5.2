@@ -33,7 +33,9 @@ function rugMesh(st, c, w, d) {
   return [mat(kind, { color: new THREE.Color(c).lerp(new THREE.Color(0xffffff), 0.6).getHex(), rough: 1, metal: 0 }), g.rotateX(-HP), 0];
 }
 const flat = (c, r = 0.5, m = 0.2) => mat('flat', { color: c, rough: r, metal: m });
-const SKY = new Map();
+const SKY = new Map(); let LANT;
+/** 赤い提灯 (和紙の絵を内側から光らせる) */
+const lanternMat = () => LANT || (LANT = Object.assign(new THREE.MeshBasicMaterial({ map: texSet('mg-lantern').map, color: new THREE.Color(1.6, 1.4, 1.3), toneMapped: false }), { userData: { uvs: 0 } }));
 /** 人工の空 (発光)。画像 mg-sky があれば雲の空を貼る */
 function skyMat(c) { let m = SKY.get(c); if (!m) { const img = hasImage('materials/mg-sky'); m = new THREE.MeshBasicMaterial({ color: new THREE.Color(img ? '#ffffff' : c).multiplyScalar(img ? 1.05 : 1.1), map: img ? texSet('mg-sky').map : null }); m.userData.uvs = 1 / 16; SKY.set(c, m); } return m; }
 /** 画像があれば name、無ければ代わりの素材名 */
@@ -101,7 +103,7 @@ function lamps(B, out, r, th, pts, style) {
     if (style === 'tube') { B.box(DK, 2.3, 0.1, 0.34, x, y - 0.05, z, rot); B.box(LM, 2.1, 0.04, 0.22, x, y - 0.12, z, rot); light(x, y - 0.6, z); } // 細い蛍光管は遠目に引っかき傷のように見えるので乳白カバー付きの照明器具に
     else if (style === 'pendant') { const ly = Math.max(2.5, Math.min(y - 1.0, 3.6)); B.cyl(DK, 0.012, 0.012, y - ly, x, (y + ly) / 2, z, 'y', 4); B.add(th.shade ? flat(th.shade, 0.6, 0.1) : DK, new THREE.CylinderGeometry(0.08, 0.36, 0.26, 16, 1, true), mx(x, ly + 0.05, z), 0); B.sph(glow(c, 4.5), 0.09, x, ly - 0.02, z, 1, 1, 1, 10); light(x, ly - 0.3, z); }
     else if (style === 'spot') { B.cyl(DK, 0.16, 0.16, 0.05, x, y - 0.025, z, 'y', 12); B.add(glow(c, 5), new THREE.CircleGeometry(0.11, 12).rotateX(HP), mx(x, y - 0.055, z), 0); light(x, y - 0.5, z, 0.8); }
-    else if (style === 'lantern') { const ly = Math.max(2.5, Math.min(y - 0.9, 3.4)), lc = ['#ff5a3a', '#ffb347', '#ff7a5a'][i % 3]; B.cyl(DK, 0.01, 0.01, y - ly, x, (y + ly) / 2, z, 'y', 4); B.sph(glow(lc, 1.7), 0.26, x, ly - 0.25, z, 1, 1.2, 1, 12); B.cyl(DK, 0.1, 0.1, 0.05, x, ly + 0.06, z, 'y', 8); B.cyl(DK, 0.1, 0.1, 0.05, x, ly - 0.56, z, 'y', 8); out.lights.push({ x, y: ly - 0.4, z, c: new THREE.Color(lc), i: (r.li ?? 1) * (8 + h * 2.4), d: 13, room: r.id }); }
+    else if (style === 'lantern') { const ly = Math.max(2.5, Math.min(y - 0.9, 3.4)), lc = ['#ff5a3a', '#ffb347', '#ff7a5a'][i % 3]; B.cyl(DK, 0.01, 0.01, y - ly, x, (y + ly) / 2, z, 'y', 4); if (hasImage('materials/mg-lantern')) B.add(lanternMat(), new THREE.SphereGeometry(0.26, 16, 10), mx(x, ly - 0.25, z, 0, i * 1.3, 0, 1, 1.2, 1), 0); else B.sph(glow(lc, 1.7), 0.26, x, ly - 0.25, z, 1, 1.2, 1, 12); B.cyl(DK, 0.1, 0.1, 0.05, x, ly + 0.06, z, 'y', 8); B.cyl(DK, 0.1, 0.1, 0.05, x, ly - 0.56, z, 'y', 8); out.lights.push({ x, y: ly - 0.4, z, c: new THREE.Color(lc), i: (r.li ?? 1) * (8 + h * 2.4), d: 13, room: r.id }); }
     else if (style === 'chandelier') { const ly = Math.max(2.9, y - 1.6), R = Math.min(1.6, Math.min(r.w, r.d) * 0.12); B.cyl(GD, 0.03, 0.03, y - ly, x, (y + ly) / 2, z, 'y', 6); B.tor(GD, R, 0.04, x, ly, z, HP, 0, 0, 32, 6); B.tor(GD, R * 0.55, 0.03, x, ly + 0.3, z, HP, 0, 0, 24, 6);
       for (let k = 0; k < 10; k++) { const a = k * TAU / 10; B.sph(glow(c, 5), 0.06, x + Math.cos(a) * R, ly + 0.1, z + Math.sin(a) * R, 1, 1.4, 1, 8); if (k % 2) B.sph(glow(c, 5), 0.05, x + Math.cos(a) * R * 0.55, ly + 0.38, z + Math.sin(a) * R * 0.55, 1, 1.4, 1, 8); } light(x, ly - 0.3, z, 1.5); }
     else if (style === 'bare') { B.cyl(DK, 0.01, 0.01, 0.5, x, y - 0.25, z, 'y', 4); B.sph(glow(c, 5), 0.06, x, y - 0.54, z, 1, 1.3, 1, 8); light(x, y - 0.8, z, 0.8); }
@@ -225,13 +227,13 @@ function ceiling(B, r, th, CM, DK, out, rnd) {
 
 // ───────────────────────── 段差 (壇・階段) ─────────────────────────
 function platforms(B, r, th, FM, out) {
-  const DK = mat('blasted-steel', { color: th.frame ?? 0x2c3038, rough: 0.8, metal: 0.6 }), tr = glow(r.trim || th.trim, 2.4), CH = flat(0xd0d5db, 0.15, 1);
+  const DK = mat('blasted-steel', { color: th.frame ?? 0x2c3038, rough: 0.8, metal: 0.6 }), tr = glow(r.trim || th.trim, 2.4), CH = flat(0xd0d5db, 0.15, 1), SM = r.stairM && hasImage('materials/' + r.stairM) ? mat(r.stairM, { rough: 0.7, metal: 0.2 }) : DK; // stairM = 段板の素材
   for (const [lx, lz, w, d, h, side = 's', sw = 0.6] of r.plat) {
     const x0 = r.x + lx, z0 = r.z + lz, x1 = x0 + w, z1 = z0 + d;
     B.box(DK, w, h, d, x0 + w / 2, h / 2, z0 + d / 2); B.add(FM, new THREE.PlaneGeometry(w, d).rotateX(-HP), mx(x0 + w / 2, h + 0.004, z0 + d / 2)); B.box(tr, w + 0.02, 0.03, d + 0.02, x0 + w / 2, h - 0.05, z0 + d / 2);
     out.heights.push({ x0, z0, x1, z1, h0: h, h1: h });
     const n = Math.ceil(h / 0.18), run = 0.3, hz = side === 'n' || side === 's', wd = (hz ? w : d) * sw, sgn = side === 's' || side === 'e' ? 1 : -1;
-    for (let i = 0; i < n; i++) { const sh = h * (1 - (i + 1) / (n + 1)), c = (i + 0.5) * run; hz ? B.box(DK, wd, sh, run, x0 + w / 2, sh / 2, (sgn > 0 ? z1 : z0) + sgn * c) : B.box(DK, run, sh, wd, (sgn > 0 ? x1 : x0) + sgn * c, sh / 2, z0 + d / 2); }
+    for (let i = 0; i < n; i++) { const sh = h * (1 - (i + 1) / (n + 1)), c = (i + 0.5) * run; hz ? B.box(SM, wd, sh, run, x0 + w / 2, sh / 2, (sgn > 0 ? z1 : z0) + sgn * c) : B.box(SM, run, sh, wd, (sgn > 0 ? x1 : x0) + sgn * c, sh / 2, z0 + d / 2); }
     const len = n * run; out.heights.push(hz ? { x0: x0 + w / 2 - wd / 2, x1: x0 + w / 2 + wd / 2, z0: sgn > 0 ? z1 : z0 - len, z1: sgn > 0 ? z1 + len : z0, h0: sgn > 0 ? h : 0, h1: sgn > 0 ? 0 : h, ax: 'z' } : { z0: z0 + d / 2 - wd / 2, z1: z0 + d / 2 + wd / 2, x0: sgn > 0 ? x1 : x0 - len, x1: sgn > 0 ? x1 + len : x0, h0: sgn > 0 ? h : 0, h1: sgn > 0 ? 0 : h, ax: 'x' });
     // 手すり (階段側を除く)
     const rail = (ax, ay, bx2, by) => { const l = Math.hypot(bx2 - ax, by - ay), a = Math.atan2(by - ay, bx2 - ax); B.add(CH, new THREE.BoxGeometry(l, 0.05, 0.05), mx((ax + bx2) / 2, h + 1.0, (ay + by) / 2, 0, -a, 0)); B.add(glassMat(), new THREE.BoxGeometry(l, 0.8, 0.02), mx((ax + bx2) / 2, h + 0.52, (ay + by) / 2, 0, -a, 0), 0); };

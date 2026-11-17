@@ -1,7 +1,7 @@
 {
  "id": "s51_mg_big",
  "group": "megaton",
- "source": "メガトン第 7 居住甲板の追加 45 枚 (シート 48〜52、画像はまだ無い)。300 戸の住戸が同じ見た目の繰り返しにならないための色違い・柄違い、港・駅・大きな施設の床と壁、暮らしの小物と住人の服",
+ "source": "メガトン第 7 居住甲板の追加分。ユーザーが別に生成した 1254x1254 の画像。タイルは画像の色をそのまま使い (mean なし)、1 枚の絵は crop で余白を切り落とす",
  "style": "Floors and walls of the big halls of a space-habitat city: the arrival lobby, the station, the exchange, the lounge, the foundry, the reactor deck and the dock. Flat, evenly lit, top-down for floors, front-on for walls, seamless, no shadows, no readable text.",
  "cells": [
   {
@@ -37,7 +37,13 @@
    "prompt": "The side of a modern commuter train car: white body with a blue stripe, windows and a door, seen exactly side-on.",
    "seam": "",
    "rough": 80,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0,
+    0.3,
+    1,
+    0.68
+   ]
   },
   {
    "name": "mg-exchange-floor",

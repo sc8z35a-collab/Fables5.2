@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { Builder, mx } from '../gfx/builder.js';
 import { mat, glow, screenMat, cv, ctex, JP } from '../gfx/textures.js';
+import { hasImage } from '../gfx/materials.js';
 import { fxTime, makeGlowSprite } from '../gfx/fx.js';
 import { G } from '../core/util.js';
 import { holoMat, glassMat } from './interior.js';
@@ -28,13 +29,14 @@ const strut = (P, m, a, c, r0, r1 = r0, seg = 8) => { const A = new THREE.Vector
 /** 水面 (噴水・池) */
 const waterMat = (c = 0x2a6a8a) => { const wm = new THREE.MeshStandardMaterial({ color: c, roughness: 0.04, metalness: 0.6, normalMap: mat('water').normalMap.clone(), transparent: true, opacity: 0.86, envMapIntensity: 2 }); wm.normalMap.needsUpdate = true; wm.normalMap.repeat.set(2, 2); return wm; };
 /** モノレールの車両 (n 両編成)。進行方向 = ローカル X */
-function trainCars(n, c = '#ffd27a') {
+function trainCars(n, c = '#ffd27a', skin) {
   const b = new Builder(), m = MM(), B2 = BM(), W = mat('flat', { color: 0x241a10, rough: 0.2, metal: 0.3, emissive: '#ffd9a0', ei: 1.5 }), CL = 9.2;
   for (let i = 0; i < n; i++) { const x = (i - (n - 1) / 2) * CL, head = i === n - 1, tail = i === 0;
     b.box(B2.iv, 8.2, 2.5, 2.8, x, 1.75, 0); b.add(B2.iv, new THREE.CylinderGeometry(1.4, 1.4, 8.2, 20, 1, false, 0, Math.PI).rotateZ(HP), mx(x, 3.0, 0, 0, 0, 0, 1, 0.42, 1)); // 丸屋根 (半円筒)
     for (const s of [-1, 1]) { b.box(W, 7.0, 0.95, 0.06, x, 2.15, s * 1.41); for (let k = -3; k <= 3; k++) b.box(m.dk, 0.09, 0.99, 0.08, x + k * 1.0, 2.15, s * 1.415); b.box(B2.br, 8.24, 0.1, 0.05, x, 1.5, s * 1.415); b.box(B2.gn, 8.22, 0.6, 0.04, x, 1.05, s * 1.41); b.box(glow(c, 2.2), 8.0, 0.04, 0.04, x, 0.72, s * 1.42);
       for (const dxx of [-2.6, 2.6]) { b.box(m.dk, 1.1, 2.0, 0.05, x + dxx, 1.7, s * 1.42); b.box(W, 0.9, 1.1, 0.06, x + dxx, 2.1, s * 1.425); } }
     b.box(m.dk, 7.6, 0.9, 2.2, x, 0.25, 0); b.box(m.dk, 3.0, 0.3, 1.6, x, 3.66, 0); b.box(m.st, 2.2, 0.16, 1.0, x - 2.4, 3.62, 0);
+    if (skin && hasImage('materials/' + skin)) for (const s of [-1, 1]) b.add(mat(skin, { rough: 0.4, metal: 0.3 }), new THREE.PlaneGeometry(8.3, 2.75), mx(x, 1.82, s * 1.47, 0, s > 0 ? 0 : Math.PI, 0), 0); // 車体の側面の絵 (o.skin)
     for (const e2 of [-1, 1]) { const end = (e2 > 0 && head) || (e2 < 0 && tail); if (end) { b.add(B2.iv, new THREE.SphereGeometry(1.4, 20, 12, 0, Math.PI), mx(x + e2 * 4.1, 1.75, 0, 0, e2 > 0 ? HP : -HP, 0, 1, 0.9, 1.25), 0); b.add(mat('flat', { color: 0x06121f, rough: 0.04, metal: 1, env: 2.4 }), new THREE.SphereGeometry(1.42, 18, 8, 0.5, Math.PI - 1.0, 0.9, 0.7), mx(x + e2 * 4.12, 1.9, 0, 0, e2 > 0 ? HP : -HP, 0, 1, 0.9, 1.22), 0);
         for (const s of [-1, 1]) b.sph(glow(e2 > 0 ? '#fff6e0' : '#ff3a2a', 5), 0.14, x + e2 * 5.36, 1.15, s * 0.7, 1, 1, 1, 8); } else b.box(m.bk, 0.9, 2.2, 2.2, x + e2 * 4.5, 1.7, 0); }
   }
@@ -94,7 +96,7 @@ void main(){float a=vUv.x*6.2832+uTime*.9,b=vUv.y*6.2832;vec3 p=vec3(cos(a)*2.4,
     e.anim((dt, t) => { const k = (t * (o.sp || 0.045) + (o.ph || 0)) % 1, tri = k < 0.5 ? k * 2 : 2 - k * 2, s = Math.min(1, Math.max(0, (tri - 0.12) / 0.76)), q = s * s * (3 - 2 * s), d = (q * 2 - 1) * span; tr.position.set(p0.x + dx * d, p0.y, p0.z + dz * d); });
   },
   /** 停車中の列車 (駅のホーム用) */
-  train(P, o, e) { const n = o.n || 3, g = e.dyn(trainCars(n, o.c || e.th.trim), 0, o.y || 0.3, 0); P.box(MM().dk, n * 9.2 + 2, 0.5, 1.2, 0, 0.25, 0); e.rect(n * 9.2 + 0.4, 3.0); e.light('#ffd9a0', 22, 2.6, 12); return g; },
+  train(P, o, e) { const n = o.n || 3, g = e.dyn(trainCars(n, o.c || e.th.trim, o.skin), 0, o.y || 0.3, 0); P.box(MM().dk, n * 9.2 + 2, 0.5, 1.2, 0, 0.25, 0); e.rect(n * 9.2 + 0.4, 3.0); e.light('#ffd9a0', 22, 2.6, 12); return g; },
   /** 吹き抜けの壁に並ぶ商店街の正面 (多層)。看板は 1 枚のテクスチャにまとめる */
   shopfront(P, o, e) {
     const m = MM(), B2 = BM(), w = o.w || 12, nf = o.floors || 3, fh = o.fh || 4.4, ns = o.shops || Math.max(2, Math.round(w / 4.2)), sw = w / ns, seed = Math.abs(Math.round(e.x * 3 + e.z * 7)) + (o.seed || 0);

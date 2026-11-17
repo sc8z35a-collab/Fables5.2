@@ -1,7 +1,7 @@
 {
  "id": "s50_mg_home_var3",
  "group": "megaton",
- "source": "メガトン第 7 居住甲板の追加 45 枚 (シート 48〜52、画像はまだ無い)。300 戸の住戸が同じ見た目の繰り返しにならないための色違い・柄違い、港・駅・大きな施設の床と壁、暮らしの小物と住人の服",
+ "source": "メガトン第 7 居住甲板の追加分。ユーザーが別に生成した 1254x1254 の画像。タイルは画像の色をそのまま使い (mean なし)、1 枚の絵は crop で余白を切り落とす",
  "style": "More apartment doors and furniture fronts so homes differ. Each cell is ONE item seen exactly straight on, flat even light, on a plain white background, no shadows, no readable text.",
  "cells": [
   {
@@ -10,7 +10,13 @@
    "prompt": "An apartment front door: deep red painted steel, peephole, mail slot, lever handle.",
    "seam": "",
    "rough": 120,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.23,
+    0.01,
+    0.84,
+    0.99
+   ]
   },
   {
    "name": "mg-door-home-f",
@@ -18,7 +24,13 @@
    "prompt": "An apartment front door: mustard yellow painted steel, peephole, mail slot, lever handle.",
    "seam": "",
    "rough": 120,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.26,
+    0.02,
+    0.82,
+    0.99
+   ]
   },
   {
    "name": "mg-door-home-g",
@@ -26,7 +38,13 @@
    "prompt": "An apartment front door: wooden lattice door with frosted glass panels, Japanese style.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.08,
+    0.01,
+    0.95,
+    0.99
+   ]
   },
   {
    "name": "mg-tv-on",
@@ -34,7 +52,13 @@
    "prompt": "A flat TV screen that is switched on, showing a bright nature documentary scene, thin black bezel.",
    "seam": "",
    "rough": 40,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.02,
+    0.165,
+    0.985,
+    0.795
+   ]
   },
   {
    "name": "mg-bookshelf-full",
@@ -42,7 +66,13 @@
    "prompt": "A home bookshelf front completely filled with colourful books, a few ornaments.",
    "seam": "",
    "rough": 180,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.015,
+    0.02,
+    0.985,
+    0.985
+   ]
   },
   {
    "name": "mg-kitchen-wood",
@@ -50,7 +80,13 @@
    "prompt": "The lower cabinets of a fitted kitchen front-on: warm wood doors and drawers with black handles.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.01,
+    0.6,
+    0.99,
+    0.975
+   ]
   },
   {
    "name": "mg-fridge-black",
@@ -58,7 +94,13 @@
    "prompt": "A black two-door refrigerator front with slim handles.",
    "seam": "",
    "rough": 60,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.22,
+    0.01,
+    0.8,
+    0.99
+   ]
   },
   {
    "name": "mg-tansu",
@@ -66,7 +108,13 @@
    "prompt": "A traditional Japanese chest of drawers (tansu) front: dark wood with iron handles.",
    "seam": "",
    "rough": 160,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.03,
+    0.02,
+    0.97,
+    0.99
+   ]
   },
   {
    "name": "mg-dresser",
@@ -74,7 +122,13 @@
    "prompt": "A dressing table front: oval mirror on top, small drawers below, a few cosmetics.",
    "seam": "",
    "rough": 100,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.07,
+    0,
+    0.94,
+    1
+   ]
   }
  ]
 }

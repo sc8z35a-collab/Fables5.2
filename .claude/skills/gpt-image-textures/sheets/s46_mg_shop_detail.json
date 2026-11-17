@@ -1,7 +1,7 @@
 {
  "id": "s46_mg_shop_detail",
  "group": "megaton",
- "source": "メガトン第 7 居住甲板の追加 36 枚 (シート 44〜47、画像はまだ無い)。上の階の家並み・住戸の細部・店と公共施設の細部・広場と路地の名所",
+ "source": "メガトン第 7 居住甲板の追加分。ユーザーが別に生成した 1254x1254 の画像。タイルは画像の色をそのまま使い (mean なし)、1 枚の絵は crop で余白を切り落とす",
  "style": "Interiors of small neighbourhood shops and public baths in a space-habitat city. Each cell is ONE item seen straight on (or a flat surface), flat even light, no shadows, no readable text.",
  "cells": [
   {
@@ -56,13 +56,8 @@
    "name": "mg-hinoki",
    "kind": "tile",
    "prompt": "Hinoki cypress wood of a bath tub rim: pale warm wood with fine straight grain, slightly damp.",
-   "mean": [
-    206,
-    178,
-    136
-   ],
    "rough": 140,
-   "sat": 0.4,
+   "sat": 1.0,
    "normal": 1.8,
    "uvs": 0.6
   },
@@ -78,7 +73,7 @@
    "rough": 150,
    "sat": 0.45,
    "normal": 3.0,
-   "uvs": 0.5
+   "seam": ""
   },
   {
    "name": "mg-medicine-cabinet",
