@@ -1,7 +1,7 @@
 {
  "id": "s43_mg_public",
  "group": "megaton",
- "source": "メガトン第 7 居住甲板 (src/world/megaton.js) の改修用。画像が無いあいだは既存の素材に色を付けて代用している。自分で作った 3x3 の画像を assets/textures/sheets/<id>.webp に置くか、texgen.py generate で生成する",
+ "source": "メガトン第 7 居住甲板の改修用。ユーザーが別に生成した 1254x1254 の画像。1 枚の絵のマスは crop で余白 (白い背景や壁) を切り落とす",
  "style": "Public facilities of a space-habitat neighbourhood: school, clinic, bathhouse, library and a small shrine. Each cell is ONE surface or item, front-on or top-down, flat even light, no shadows, no readable text.",
  "cells": [
   {
@@ -10,7 +10,13 @@
    "prompt": "A school blackboard with chalk drawings of planets, orbits and simple diagrams, no words.",
    "seam": "",
    "rough": 220,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.09,
+    1.0,
+    0.87
+   ]
   },
   {
    "name": "mg-counter",

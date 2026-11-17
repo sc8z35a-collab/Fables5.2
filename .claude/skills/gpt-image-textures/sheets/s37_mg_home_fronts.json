@@ -1,7 +1,7 @@
 {
  "id": "s37_mg_home_fronts",
  "group": "megaton",
- "source": "メガトン第 7 居住甲板 (src/world/megaton.js) の改修用。画像が無いあいだは既存の素材に色を付けて代用している。自分で作った 3x3 の画像を assets/textures/sheets/<id>.webp に置くか、texgen.py generate で生成する",
+ "source": "メガトン第 7 居住甲板の改修用。ユーザーが別に生成した 1254x1254 の画像。1 枚の絵のマスは crop で余白 (白い背景や壁) を切り落とす",
  "style": "Front views of home furniture and appliances for a space-habitat apartment. Each cell is ONE object seen exactly straight on, filling the cell edge to edge, flat even light, no background, no shadows, no readable text.",
  "cells": [
   {
@@ -10,7 +10,13 @@
    "prompt": "A white two-door refrigerator front, freezer on the bottom, slim vertical handles, a few magnets and a child drawing.",
    "seam": "",
    "rough": 90,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.282,
+    0.013,
+    0.761,
+    0.975
+   ]
   },
   {
    "name": "mg-washer",
@@ -18,7 +24,13 @@
    "prompt": "A white front-loading drum washing machine front: round glass door, control panel with a small display at the top.",
    "seam": "",
    "rough": 90,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.117,
+    0.013,
+    0.883,
+    0.975
+   ]
   },
   {
    "name": "mg-tv",
@@ -26,7 +38,13 @@
    "prompt": "A flat TV screen showing a bright daytime scene of a garden under a blue sky, thin black bezel.",
    "seam": "",
    "rough": 40,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.013,
+    0.21,
+    0.987,
+    0.775
+   ]
   },
   {
    "name": "mg-wardrobe",
@@ -34,7 +52,13 @@
    "prompt": "A light wooden wardrobe front with two tall doors and simple metal handles.",
    "seam": "",
    "rough": 160,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.127,
+    0.013,
+    0.885,
+    0.987
+   ]
   },
   {
    "name": "mg-kitchen",
@@ -42,7 +66,13 @@
    "prompt": "The lower cabinets of a white fitted kitchen seen front-on: doors and drawers with slim handles, a plinth at the bottom.",
    "seam": "",
    "rough": 110,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.011,
+    0.098,
+    0.992,
+    0.955
+   ]
   },
   {
    "name": "mg-shoebox",
@@ -50,7 +80,13 @@
    "prompt": "A low wooden shoe cabinet front at an apartment entrance, slatted doors, a small vase on top cut off at the edge.",
    "seam": "",
    "rough": 160,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.117,
+    0.02,
+    0.885,
+    0.95
+   ]
   },
   {
    "name": "mg-aircon",
@@ -58,7 +94,13 @@
    "prompt": "A white wall-mounted air conditioner indoor unit front, wide flap, small indicator light.",
    "seam": "",
    "rough": 110,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.015,
+    0.297,
+    0.989,
+    0.691
+   ]
   },
   {
    "name": "mg-bookshelf",
@@ -66,7 +108,13 @@
    "prompt": "A home bookshelf front: shelves with books, a plant, framed photos and small toys.",
    "seam": "",
    "rough": 180,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.117,
+    0.013,
+    0.883,
+    0.987
+   ]
   },
   {
    "name": "mg-washbasin",
@@ -74,7 +122,13 @@
    "prompt": "A bathroom washbasin unit front with a large mirror above, cabinet doors below and a soap bottle.",
    "seam": "",
    "rough": 60,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.2,
+    0.03,
+    0.8,
+    0.44
+   ]
   }
  ]
 }

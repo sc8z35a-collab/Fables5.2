@@ -1,7 +1,7 @@
 {
  "id": "s39_mg_doors",
  "group": "megaton",
- "source": "メガトン第 7 居住甲板 (src/world/megaton.js) の改修用。画像が無いあいだは既存の素材に色を付けて代用している。自分で作った 3x3 の画像を assets/textures/sheets/<id>.webp に置くか、texgen.py generate で生成する",
+ "source": "メガトン第 7 居住甲板の改修用。ユーザーが別に生成した 1254x1254 の画像。1 枚の絵のマスは crop で余白 (白い背景や壁) を切り落とす",
  "style": "Doors and windows of apartments in a space-habitat city. Each cell is ONE item seen exactly straight on, filling the cell, flat even light, no shadows, no readable text.",
  "cells": [
   {
@@ -10,7 +10,13 @@
    "prompt": "An apartment front door: white painted steel door with a peephole, a mail slot and a lever handle.",
    "seam": "",
    "rough": 120,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.248,
+    0.015,
+    0.756,
+    0.987
+   ]
   },
   {
    "name": "mg-door-home-b",
@@ -18,7 +24,13 @@
    "prompt": "An apartment front door: warm wood-grain door with a small square window and a brass handle.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.239,
+    0.018,
+    0.761,
+    0.985
+   ]
   },
   {
    "name": "mg-door-home-c",
@@ -26,7 +38,13 @@
    "prompt": "An apartment front door: navy blue steel door with a peephole and a silver lever handle.",
    "seam": "",
    "rough": 120,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.236,
+    0.015,
+    0.769,
+    0.985
+   ]
   },
   {
    "name": "mg-door-home-d",
@@ -34,7 +52,13 @@
    "prompt": "An old apartment front door: green painted steel with patched repairs, scratches and a small brass knocker.",
    "seam": "",
    "rough": 160,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.239,
+    0.015,
+    0.766,
+    0.985
+   ]
   },
   {
    "name": "mg-door-inner",
@@ -42,7 +66,13 @@
    "prompt": "An interior room door: plain white wooden door with a silver lever handle.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.244,
+    0.018,
+    0.756,
+    0.985
+   ]
   },
   {
    "name": "mg-door-bath",
@@ -50,7 +80,13 @@
    "prompt": "A bathroom door: white door with a tall frosted glass panel.",
    "seam": "",
    "rough": 100,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.244,
+    0.018,
+    0.759,
+    0.985
+   ]
   },
   {
    "name": "mg-vwindow",
@@ -58,7 +94,13 @@
    "prompt": "A window view screen: a sunny view of a city under a blue sky with soft clouds, seen through a window, bright and calm.",
    "seam": "",
    "rough": 40,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.023,
+    0.12,
+    0.98,
+    0.892
+   ]
   },
   {
    "name": "mg-kitchen-window",
@@ -66,7 +108,13 @@
    "prompt": "A small frosted kitchen window seen from the corridor: vertical metal security bars, warm light glowing from inside.",
    "seam": "",
    "rough": 80,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.11,
+    0.122,
+    0.892,
+    0.885
+   ]
   },
   {
    "name": "mg-doormat",
@@ -74,7 +122,13 @@
    "prompt": "A doormat seen from directly above: coir mat with a simple border pattern, no words.",
    "seam": "",
    "rough": 240,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.025,
+    0.183,
+    0.975,
+    0.829
+   ]
   }
  ]
 }

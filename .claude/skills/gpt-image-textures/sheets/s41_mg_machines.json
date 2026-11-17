@@ -1,7 +1,7 @@
 {
  "id": "s41_mg_machines",
  "group": "megaton",
- "source": "メガトン第 7 居住甲板 (src/world/megaton.js) の改修用。画像が無いあいだは既存の素材に色を付けて代用している。自分で作った 3x3 の画像を assets/textures/sheets/<id>.webp に置くか、texgen.py generate で生成する",
+ "source": "メガトン第 7 居住甲板の改修用。ユーザーが別に生成した 1254x1254 の画像。1 枚の絵のマスは crop で余白 (白い背景や壁) を切り落とす",
  "style": "Machines and utilities that keep a space-habitat city alive, plus its parks. Flat, evenly lit, front-on or top-down, no shadows, no readable text.",
  "cells": [
   {
@@ -34,7 +34,13 @@
    "prompt": "Closed stainless steel elevator doors with a floor indicator above and call buttons at the side.",
    "seam": "",
    "rough": 50,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.155,
+    0.03,
+    0.84,
+    1.0
+   ]
   },
   {
    "name": "mg-district-map",
@@ -42,7 +48,13 @@
    "prompt": "A residential district map sign: a top-down plan of winding corridors, apartment blocks, a park and a plaza in soft colours, no words.",
    "seam": "",
    "rough": 100,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.149,
+    0.205,
+    0.892,
+    0.73
+   ]
   },
   {
    "name": "mg-cardboard",

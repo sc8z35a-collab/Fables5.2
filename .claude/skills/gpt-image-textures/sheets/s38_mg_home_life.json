@@ -1,7 +1,7 @@
 {
  "id": "s38_mg_home_life",
  "group": "megaton",
- "source": "メガトン第 7 居住甲板 (src/world/megaton.js) の改修用。画像が無いあいだは既存の素材に色を付けて代用している。自分で作った 3x3 の画像を assets/textures/sheets/<id>.webp に置くか、texgen.py generate で生成する",
+ "source": "メガトン第 7 居住甲板の改修用。ユーザーが別に生成した 1254x1254 の画像。1 枚の絵のマスは crop で余白 (白い背景や壁) を切り落とす",
  "style": "Fabrics and small surfaces of everyday home life in a space-habitat apartment. Flat, evenly lit, top-down or front-on, no shadows, no readable text.",
  "cells": [
   {
@@ -108,7 +108,13 @@
    "prompt": "Four pieces of hanging laundry side by side, front-on: a blue T-shirt, a white towel, striped socks pair and a yellow child shirt, flat even light.",
    "seam": "",
    "rough": 230,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.02,
+    0.22,
+    0.98,
+    0.72
+   ]
   },
   {
    "name": "mg-table-food",

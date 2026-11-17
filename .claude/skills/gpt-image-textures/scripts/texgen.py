@@ -332,7 +332,9 @@ def process(sheet):
         if c.get('skip'): continue  # ゲームで使わないマス (合う場所が無い・コードの作り直しが要るもの)
         if k in ('tile', 'emissive'):
             src = cell(img, i, 0.025 if c.get('seam', 'xy') else 0.006)
-            if src.shape[0] != work: src = np.asarray(u8(src).resize((work, work), Image.LANCZOS), np.float32) / 255
+            if c.get('crop'):  # 1 枚の絵の余白 (白い背景や壁) を切り落とす: [左, 上, 右, 下] はマスの幅・高さに対する割合
+                x0, y0, x1, y1 = c['crop']; H, W = src.shape[:2]; src = src[int(y0 * H):int(y1 * H), int(x0 * W):int(x1 * W)]
+            if src.shape[0] != work or src.shape[1] != work: src = np.asarray(u8(src).resize((work, work), Image.LANCZOS), np.float32) / 255
             if k != 'emissive': src = flatten_light(src, c.get('flatten', 0.8), src.shape[0] / 7)
             if c.get('seam', 'xy'): t = seamless(src)
             else:  # 1 枚の絵として面いっぱいに貼るもの (扉・敷物・着陸パッド): 継ぎ目処理をせず縮小だけ
