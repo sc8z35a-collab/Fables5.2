@@ -4,12 +4,14 @@ import { Builder, loft, slab, mirrorX, mx } from '../gfx/builder.js';
 import { mat, glow } from '../gfx/textures.js';
 import { rng, rr } from '../core/util.js';
 import { makePlume, makeGlowSprite } from '../gfx/fx.js';
+import { hasImage, texSet } from '../gfx/materials.js';
+import { ENEMY_CLASSES } from './defs.js';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const glassMat = () => { const m = new THREE.MeshStandardMaterial({ color: 0x06121f, roughness: 0.04, metalness: 1, envMapIntensity: 2.6 }); m.userData.uvs = 0; return m; };
 let GLASS;
 
-function nozzle(b, dark, glowM, x, y, z, r, len = 1) {
+function nozzleBase(b, dark, glowM, x, y, z, r, len = 1) {
   dark = mat('nozzle-heat', { color: 0xb8bcc4, rough: 0.5, metal: 0.85 }); // 焼け色の付いたノズル
   b.cyl(dark, r * 0.9, r, len, x, y, z, 'z', 24, true);
   b.cyl(dark, r * 1.08, r * 1.02, len * 0.25, x, y, z - len * 0.4, 'z', 24);
@@ -48,7 +50,7 @@ function hayate() {
   b.add(A, slab(can, 0.08, 0.02), mx(0, 0.05, 0)); b.add(A, slab(mirrorX(can), 0.08, 0.02), mx(0, 0.05, 0));
   for (const s of [-1, 1]) {
     b.add(D, loft([{ z: 1.6, w: 0.3, t: 0.3 }, { z: 2.4, w: 0.66, t: 0.62 }, { z: 5.5, w: 0.7, t: 0.66 }, { z: 7.2, w: 0.6, t: 0.58 }].map((q) => ({ ...q, x: s * 1.75, y: 0.05 })), 24));
-    nozzle(b, D, GC, s * 1.75, 0.05, 7.6, 0.6, 1.0);
+    nozzleBase(b, D, GC, s * 1.75, 0.05, 7.6, 0.6, 1.0);
     b.add(H, slab([[0, 3.6], [0, 6.9], [2.1, 7.6], [2.1, 6.3]], 0.1, 0.03), mx(s * 1.75, 0.55, 0, 0, 0, s > 0 ? 1.22 : Math.PI - 1.22));
     b.cyl(D, 0.13, 0.15, 4.4, s * 6.2, -0.12, 2.2, 'z', 12); b.cyl(D, 0.2, 0.2, 1.4, s * 6.2, -0.12, 3.8, 'z', 12);
     b.cyl(GO, 0.08, 0.08, 0.1, s * 6.2, -0.12, -0.02, 'z', 10);
@@ -78,7 +80,7 @@ function raiden() {
     b.add(A, slab([[1.2, -14], [3.3, -9], [3.7, 1], [1.2, 1]], 0.25, 0.06), mx(0, 2.0, 0, 0, 0, s * -0.16, s, 1, 1)); // 上面装甲
     b.add(A, slab([[1.6, 3], [3.9, 3], [3.6, 13], [1.6, 14]], 0.25, 0.06), mx(0, 2.25, 0, 0, 0, s * -0.08, s, 1, 1));
     b.add(H, slab([[0, 9], [0, 16.5], [3.4, 18], [3.4, 14.5]], 0.22, 0.05), mx(s * 3.2, 1.6, 0, 0, 0, s > 0 ? 0.95 : Math.PI - 0.95)); // 尾翼
-    for (const dy of [0.95, -0.95]) nozzle(b, D, GE, s * 1.75, dy - 0.05, 17.9, 0.92, 1.6);
+    for (const dy of [0.95, -0.95]) nozzleBase(b, D, GE, s * 1.75, dy - 0.05, 17.9, 0.92, 1.6);
     b.box(GR, 0.07, 0.1, 5, s * 4.28, 0.6, 3); b.sph(glow(s > 0 ? '#3f6' : '#f33', 5), 0.1, s * 7.5, -0.3, 2);
     b.box(D, 0.9, 1.3, 3.2, s * 3.9, -1.2, -9.5); // 下部インテーク
   }
@@ -115,7 +117,7 @@ function amatsu() {
     const a = Math.PI / 2 + i * 2.0944, x = Math.cos(a) * 3.3, y = Math.sin(a) * 3.3;
     b.add(H, loft([{ z: 11, w: 0.4, t: 0.4 }, { z: 13, w: 1.25, t: 1.25 }, { z: 21, w: 1.35, t: 1.35 }, { z: 24.5, w: 1.1, t: 1.1 }].map((q) => ({ ...q, x, y })), 28));
     b.tor(A, 1.33, 0.07, x, y, 15, 0, 0, 0, 32, 6); b.tor(A, 1.3, 0.07, x, y, 22, 0, 0, 0, 32, 6);
-    nozzle(b, D, GE, x, y, 25.2, 1.0, 1.6); eng.push({ p: V(x, y, 26.2), r: 0.9 });
+    nozzleBase(b, D, GE, x, y, 25.2, 1.0, 1.6); eng.push({ p: V(x, y, 26.2), r: 0.9 });
     b.add(H, slab([[0, 13], [0, 21], [1.6, 20], [1.6, 15]], 0.3, 0.08), mx(Math.cos(a) * 1.9, Math.sin(a) * 1.9, 0, 0, 0, a));
   }
   // 太陽電池翼
@@ -132,9 +134,10 @@ function amatsu() {
 
 // ───────────────────────── 敵艦 (ヴォイド艦隊) ─────────────────────────
 export function buildEnemy(def) {
-  const r = rng(def.seed), b = new Builder(), sc = rr(r, 0.9, 1.2);
+  const r = rng(def.seed), b = new Builder(), sc = rr(r, 0.9, 1.2), C = def.cls ? ENEMY_CLASSES[def.cls] : null, has = (n) => hasImage('materials/' + n);
   const tint = new THREE.Color(def.glow).multiplyScalar(0.12).add(new THREE.Color(0x3a3c46));
-  const H = mat('enemy-plating', { color: tint.getHex(), rough: 0.5, metal: 0.55 }), A = mat('hull', { color: new THREE.Color(def.glow).multiplyScalar(0.45).getHex(), rough: 0.5, metal: 0.4 }), D = mat('enemy-engine', { color: 0x5a5e66, rough: 0.8, metal: 0.7 });
+  const H = C && has(C.hull) ? mat(C.hull, { rough: 0.5, metal: 0.55, uvs: 0.11 }) : mat('enemy-plating', { color: tint.getHex(), rough: 0.5, metal: 0.55 }), A = mat('hull', { color: new THREE.Color(def.glow).multiplyScalar(0.45).getHex(), rough: 0.5, metal: 0.4 }), D = C && has('en-scorched-metal') ? mat('en-scorched-metal', { color: 0x9a9ea6, rough: 0.6, metal: 0.8, uvs: 0.2 }) : mat('enemy-engine', { color: 0x5a5e66, rough: 0.8, metal: 0.7 });
+  const noz = [], nozzle = (b2, d2, g2, x, y, z, rr2, len = 1) => { noz.push({ x, y, z, r: rr2, len }); nozzleBase(b2, d2, g2, x, y, z, rr2, len); }; // 艦種つきの艦は噴射口に絵を貼るので位置を覚える
   const GL = glow(def.glow, 5), GE = glow(def.glow, 8);
   const F = (secs, seg = 8) => loft(secs, seg, true);
   const engines = [], guns = [];
@@ -180,9 +183,64 @@ export function buildEnemy(def) {
   // 艦橋の「眼」と接舷ポート
   b.box(GL, 1.6 * sc, 0.16, 0.1, 0, top * 0.55, def.arch === 3 ? -L * 0.47 : -L * 0.16, 0, 0.5);
   b.cyl(D, 1.5, 1.7, 0.6, 0, top + 0.2, L * 0.16, 'y', 12); b.tor(glow('#9ff', 3), 1.25, 0.07, 0, top + 0.55, L * 0.16, Math.PI / 2, 0, 0, 24, 6);
+  const fx = C ? classParts(b, def, C, { r, L, sc, top, H, A, D, GL, GE, guns, engines, noz, has }) : null;
   const o = finish(b, { id: def.id, glowColor: def.glow, engines, guns, bottom: top + 1, cam: { d: 60, h: 12 } });
   o.radius = L * 0.62; o.len = L; o.port = { p: V(0, top + 0.6, L * 0.16), dir: V(0, 1, 0) };
+  if (fx) fx(o);
   return o;
+}
+
+// ───────────────────────── 艦種ごとの艤装・塗装・効果 ─────────────────────────
+const ADDM = (map, color, opacity = 1) => new THREE.MeshBasicMaterial({ map, color: new THREE.Color(color), transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
+/** 絵を 1 枚貼った板 (o.cut = 背景を抜いた絵、o.glow = 光らせる強さ)。画像が無ければ何もしない */
+function pic(b, name, w, h, x, y, z, rx = 0, ry = 0, rz = 0, o = {}) {
+  if (!hasImage('materials/' + name)) return false;
+  const m = mat(name, { rough: o.rough ?? 0.5, metal: o.metal ?? 0.4, ...(o.cut ? { cut: 1 } : {}), ...(o.glow ? { emissive: '#ffffff', ei: o.glow, emap: 'materials/' + name + '/color' } : {}) });
+  b.add(m, new THREE.PlaneGeometry(w, h), mx(x, y, z, rx, ry, rz), 0); return true;
+}
+/** 船体の形ごとの、側面の板 (紋章) と機首の板 (ノーズアート) の位置: [x, y, z, 高さ] */
+function plates(arch, L, sc, top) {
+  if (arch === 0) return { side: [2.6 * sc, 0, L * 0.18, 1.2 * sc], nose: [1.6 * sc, 0.1, -L * 0.2, 0.9 * sc] };
+  if (arch === 1) return { side: [4.3 * sc, 0, L * 0.22, 1.5 * sc], nose: [4.6 * sc, 0, -L * 0.24, 0.9 * sc] };
+  if (arch === 2) return { side: [2.2 * sc, 0.9 * sc, L * 0.08, 1.1 * sc], nose: [2.2 * sc, 0.9 * sc, -L * 0.08, 0.8 * sc] };
+  return { side: [2.3 * sc, 0, L * 0.38, 1.4 * sc], nose: [5.6 * sc, 0, -L * 0.4, 0.9 * sc] };
+}
+function classParts(b, def, C, k) {
+  const { L, sc, top, H, D, GL, guns, noz, has } = k, P = plates(def.arch, L, sc, top), parts = C.parts || [];
+  // 側面の装甲板と紋章・機首のノーズアート (横長 3:1 の絵)
+  const plate = ([x, y, z, h], img, glowK) => { for (const s of [-1, 1]) { b.box(H, 0.3, h * 1.1, h * 3.3, s * x, y, z); pic(b, img, h * 3, h, s * (x + 0.17), y, z, 0, s * Math.PI / 2, 0, { glow: glowK, metal: 0.3, cut: img !== 'en-noseart-fang' }); } }; // 紋章は背景を抜いた絵、牙のノーズアートは板ごと
+  if (C.mark && has(C.mark)) plate(P.side, C.mark);
+  if (C.nose && has(C.nose)) plate(P.nose, C.nose);
+  if (parts.includes('lights') && has('en-id-lights')) { const [x, y, z, h] = P.side; for (const s of [-1, 1]) pic(b, 'en-id-lights', h * 2.4, h * 0.8, s * (x + 0.17), y - h * 1.0, z, 0, s * Math.PI / 2, 0, { glow: 1.6 }); }
+  // 噴射口の絵 (噴射口の出口に、後ろ向きに貼る)
+  for (const n of noz) pic(b, C.eng, n.r * 2.2, n.r * 2.2, n.x, n.y, n.z + n.len * 0.5 + 0.03, 0, 0, 0, { cut: 1, glow: C.eng === 'en-nozzle-inner' ? 0.25 : 1.4 });
+  const M = (n, fb, o = {}) => (has(n) ? mat(n, { rough: o.rough ?? 0.5, metal: o.metal ?? 0.5 }) : fb);
+  for (const p of parts) {
+    if (p === 'dish') { b.cyl(D, 0.15, 0.2, 2.2 * sc, 0, top + 1.1 * sc, L * 0.05, 'y', 8); b.cyl(D, 1.6 * sc, 0.3, 0.8 * sc, 0, top + 2.5 * sc, L * 0.05, 'z', 20); pic(b, 'en-sensor-dish', 3.4 * sc, 3.4 * sc, 0, top + 2.6 * sc, L * 0.05 - 0.42 * sc, 0, Math.PI, 0, { cut: 1 }); }
+    else if (p === 'tanks') { const T = M('en-fuel-tank', D); for (const s of [-1, 1]) { b.cyl(T, 1.5 * sc, 1.5 * sc, L * 0.5, s * 5.5 * sc, -0.8 * sc, L * 0.08, 'z', 20); b.sph(T, 1.5 * sc, s * 5.5 * sc, -0.8 * sc, L * 0.08 - L * 0.25, 1, 1, 0.5); b.sph(T, 1.5 * sc, s * 5.5 * sc, -0.8 * sc, L * 0.08 + L * 0.25, 1, 1, 0.5); } }
+    else if (p === 'arms') { for (const s of [-1, 1]) { b.cyl(D, 0.35, 0.35, 6 * sc, s * 3 * sc, -1.2 * sc, -L * 0.35, 'z', 10); b.sph(D, 0.6 * sc, s * 3 * sc, -1.2 * sc, -L * 0.35 - 3 * sc); for (const t of [-1, 1]) b.box(H, 0.3, 0.3, 1.8 * sc, s * 3 * sc + t * 0.45 * sc, -1.2 * sc, -L * 0.35 - 3.9 * sc, t * 0.35); } }
+    else if (p === 'guns') { for (const s of [-1, 1]) for (const y of [0.6, -0.8]) { b.cyl(D, 0.22, 0.3, 7 * sc, s * 3.4 * sc, y * sc, -L * 0.25, 'z', 8); guns.push(V(s * 3.4 * sc, y * sc, -L * 0.25 - 3.6 * sc)); } b.box(M('en-hull-scrap', H), 3 * sc, 1.2 * sc, 4 * sc, 0, top + 0.4, L * 0.25, 0.2); }
+    else if (p === 'torpedo') { b.box(H, 4.4 * sc, 2.2 * sc, 6 * sc, 0, -1.6 * sc, -L * 0.28); pic(b, 'en-torpedo-tubes', 4.2 * sc, 2.1 * sc, 0, -1.6 * sc, -L * 0.28 - 3 * sc - 0.02, 0, Math.PI, 0); guns.length = 0; for (const x of [-1, 1]) guns.push(V(x * 1.1 * sc, -1.6 * sc, -L * 0.28 - 3.2 * sc)); }
+    else if (p === 'mines') { for (const s of [-1, 1]) { b.box(D, 1.2 * sc, 3 * sc, 6 * sc, s * 4.6 * sc, -0.4 * sc, L * 0.22); pic(b, 'en-mine-rack', 6 * sc, 3 * sc, s * (4.6 * sc + 0.62 * sc), -0.4 * sc, L * 0.22, 0, s * Math.PI / 2, 0, { cut: 1 }); } for (let i = 0; i < 3; i++) { const z = L * 0.32 + i * 1.6 * sc; b.sph(D, 0.6 * sc, 0, -2.2 * sc, z); for (const [ax, ay] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) b.cyl(D, 0.02, 0.12, 0.6 * sc, ax * 0.75 * sc, -2.2 * sc + ay * 0.75 * sc, z, ax ? 'x' : 'y', 5); } }
+    else if (p === 'ram') { const R = M('en-hull-ram', H); b.add(R, new THREE.ConeGeometry(2.6 * sc, 9 * sc, 6), mx(0, 0, -L * 0.5 - 2.5 * sc, -Math.PI / 2, 0, 0)); b.box(M('en-paint-stripes', R), 5.4 * sc, 0.25, 3 * sc, 0, top * 0.6, -L * 0.3); }
+    else if (p === 'clamp') { b.tor(D, 2.2 * sc, 0.45 * sc, 0, 0, -L * 0.5 - 0.6, 0, 0, 0, 24, 8); pic(b, 'en-boarding-clamp', 5.6 * sc, 5.6 * sc, 0, 0, -L * 0.5 - 1.2, 0, Math.PI, 0, { cut: 1 }); }
+    else if (p === 'radiators') { const F = M('en-radiator-fins', D, { metal: 0.7 }); for (const s of [-1, 1]) for (let i = 0; i < 4; i++) b.box(F, 3.2 * sc, 0.12, 2.4 * sc, s * (6 + i * 0.4) * sc, 1.0 + i * 0.5, L * (0.05 + i * 0.08), 0, 0, s * 0.35); for (const z of [-0.05, 0.12]) pic(b, 'en-reactor-vent', 2.4 * sc, 2.4 * sc, 0, 2.6 * sc, L * z, -Math.PI / 2, 0, 0, { cut: 1, glow: 1.2 }); }
+    else if (p === 'cannon') { b.cyl(D, 1.6 * sc, 1.9 * sc, 1.2 * sc, 0, top + 0.6 * sc, -L * 0.05, 'y', 16); b.box(H, 2.6 * sc, 1.4 * sc, 3.6 * sc, 0, top + 1.6 * sc, -L * 0.05); b.cyl(D, 0.45 * sc, 0.55 * sc, 12 * sc, 0, top + 1.6 * sc, -L * 0.05 - 7.5 * sc, 'z', 12); guns.length = 0; guns.push(V(0, top + 1.6 * sc, -L * 0.05 - 13.6 * sc)); }
+    else if (p === 'pods') { guns.length = 0; for (const s of [-1, 1]) { b.box(H, 3.4 * sc, 3.4 * sc, 5 * sc, s * 6.2 * sc, 0, -L * 0.05); pic(b, 'en-missile-pod', 3.3 * sc, 3.3 * sc, s * 6.2 * sc, 0, -L * 0.05 - 2.5 * sc - 0.02, 0, Math.PI, 0); for (const y of [-1, 1]) guns.push(V(s * 6.2 * sc, y * 0.8 * sc, -L * 0.05 - 2.8 * sc)); } }
+    else if (p === 'bombbay') { b.box(H, 5 * sc, 1.6 * sc, 9 * sc, 0, -1.8 * sc, L * 0.05); pic(b, 'en-bomb-bay', 4.6 * sc, 8.4 * sc, 0, -2.62 * sc, L * 0.05, Math.PI / 2, 0, 0); guns.push(V(0, -2.8 * sc, -L * 0.05)); }
+    else if (p === 'stealth') { for (const s of [-1, 1]) b.add(H, slab([[0, -L * 0.1], [5 * sc, L * 0.2], [4 * sc, L * 0.42], [0, L * 0.35]], 0.25, 0.04), mx(0, top * 0.9, 0, 0, 0, s * 0.18, s, 1, 1)); }
+    else if (p === 'ew') { for (const ry of [0, Math.PI / 2]) pic(b, 'en-ew-array', 5 * sc, 5 * sc, 0, top + 2.6 * sc, L * 0.2, 0, ry, 0, { cut: 1 }); b.cyl(D, 0.25, 0.3, 1.2 * sc, 0, top + 0.6 * sc, L * 0.2, 'y', 8); }
+    else if (p === 'rail') { const RC = M('en-rail-coils', D, { metal: 0.8 }); b.cyl(RC, 0.7 * sc, 0.7 * sc, L * 0.75, 0, -1.8 * sc, -L * 0.25, 'z', 16); b.cyl(D, 0.35 * sc, 0.35 * sc, 6 * sc, 0, -1.8 * sc, -L * 0.62 - 3 * sc, 'z', 10); guns.length = 0; guns.push(V(0, -1.8 * sc, -L * 0.62 - 6.2 * sc)); }
+    else if (p === 'antennas') { for (const [x, z, h] of [[0, L * 0.25, 5], [1.6, L * 0.3, 3.4], [-1.6, L * 0.3, 3.4]]) { b.cyl(D, 0.06, 0.12, h * sc, x * sc, top + h * sc / 2, z, 'y', 6); b.sph(GL, 0.16, x * sc, top + h * sc, z); } }
+    else if (p === 'coolant') { const CP = M('en-coolant-pipes', D, { metal: 0.6 }); for (const s of [-1, 1]) b.box(CP, 0.8 * sc, 1.6 * sc, L * 0.55, s * 4.6 * sc, -0.6 * sc, L * 0.1); }
+    else if (p === 'dronebay') { for (const s of [-1, 1]) { b.box(H, 0.8 * sc, 3 * sc, 4.4 * sc, s * 4.4 * sc, 0, L * 0.12); pic(b, 'en-drone-bay', 4.2 * sc, 2.9 * sc, s * (4.4 * sc + 0.42 * sc), 0, L * 0.12, 0, s * Math.PI / 2, 0); } for (let i = 0; i < 4; i++) { const a = i * 1.57 + 0.4; b.add(D, new THREE.ConeGeometry(0.5 * sc, 1.6 * sc, 3), mx(Math.cos(a) * 9 * sc, Math.sin(a) * 3 * sc + 2, L * 0.1, -Math.PI / 2, 0, 0)); } }
+  }
+  // 宇宙での効果: 盾の泡 (六角の網)、アフターバーナーの炎、砲口の閃光。あとから o.tilt に付ける
+  return (o) => {
+    if (parts.includes('shield') && has('en-shield-hex')) { const t = texSet('en-shield-hex').map; t.repeat.set(6, 3); const sh = new THREE.Mesh(new THREE.SphereGeometry(L * 0.62, 32, 18), ADDM(t, def.glow, 0.16)); sh.renderOrder = 2; o.tilt.add(sh); o.bubble = sh; }
+    if (C.eng === 'en-afterburner' && has('en-engine-plume')) { const pm = ADDM(texSet('en-engine-plume').map, '#ffffff', 0.85); for (const e of o.engines) for (const ry of [0, Math.PI / 2]) { const g = new THREE.PlaneGeometry(e.r * 2.6, e.r * 9); g.translate(0, -e.r * 4.5, 0); const m = new THREE.Mesh(g, pm); m.position.copy(e.p); m.rotation.set(-Math.PI / 2, ry, 0, 'XYZ'); o.tilt.add(m); } } // 炎の板を十字に 2 枚、後ろ (+Z) へ伸ばす
+    if (has('en-muzzle-flash')) { const t = texSet('en-muzzle-flash').map; o.flashes = o.guns.map((gp) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, color: new THREE.Color(def.glow).lerp(new THREE.Color('#ffffff'), 0.5), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false })); sp.scale.setScalar(3.2 * sc); sp.position.copy(gp); sp.visible = false; o.tilt.add(sp); return sp; }); }
+  };
 }
 
 const BUILD = { hayate, raiden, amatsu };

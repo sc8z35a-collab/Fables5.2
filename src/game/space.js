@@ -1,7 +1,7 @@
 // 宇宙モード: 操縦 / 戦闘 / 敵 AI / ドッキング / 超巡航 / 大気圏突入
 import * as THREE from 'three';
 import { G, clamp, damp, smooth, fmtDist, fmtSpeed, fmtTime, fmtCr, rng, rr } from '../core/util.js';
-import { BODIES, STATIONS, ENEMIES } from '../world/defs.js';
+import { BODIES, STATIONS, ENEMIES, ENEMY_CLASSES } from '../world/defs.js';
 import { buildShip, buildEnemy } from '../world/ships.js';
 import { buildStation, stationSDF } from '../world/stations.js';
 import { enableDamage, rayHit, applyDamage, logDamage, clearDamage, syncDamage, Debris } from '../gfx/damage.js';
@@ -32,7 +32,7 @@ export class SpaceMode {
     this.bodies = BODIES.filter((b) => b.type !== 'sun').map((b) => ({ def: b, uni: V(...b.pos), R: b.R }));
     this.stations = STATIONS.map((def) => ({ def, uni: V(...def.pos), m: null, kind: 'station' }));
     this.enemies = ENEMIES.map((def) => ({ def, kind: 'enemy', uni: V(...def.pos), anchor: V(...def.pos), quat: new THREE.Quaternion(), vel: V(), m: null, state: 'idle', hull: def.hull, maxHull: def.hull, shield: def.shield, maxShield: def.shield,
-      fireT: 2, burst: 0, breakT: 0, breakDir: V(), gi: 0, ph: def.idx * 1.7, dis: 90, lastHit: -99, dist: 1e9 }));
+      fireT: 2, burst: 0, breakT: 0, breakDir: V(), gi: 0, ph: def.idx * 1.7, dis: 90, lastHit: -99, dist: 1e9, K: { speed: 1, turn: 1, rate: 1, range: 1, bolt: 1, size: 1, spread: 1, aggro: 1, regen: 1, ...(def.cls ? ENEMY_CLASSES[def.cls].k : {}) } })); // K = 艦種ごとの速さ・射程・連射などの倍率
     this.missiles = []; this.misPool = [];
     for (let i = 0; i < 8; i++) { const g = new THREE.Group(), b = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 2.4, 8).rotateX(Math.PI / 2), mat('hull', { color: 0xdddddd, metal: 0.3, rough: 0.6 })); const gs = makeGlowSprite('#ffb060', 5, 4); gs.position.set(0, 0, 1.6); g.add(b, gs); g.visible = false; s.add(g); this.misPool.push(g); }
     this.pl = { m: null, id: null, vel: V(), av: V(), thr: 0.5, sc: { on: false, speed: 0, charge: 0 }, auto: null, docked: null, gi: 0, fireT: 0, lastHit: -99, view: 0, camQ: new THREE.Quaternion(), target: null, misT: 0, shake: 0 };
@@ -484,31 +484,34 @@ export class SpaceMode {
       } else if (e.state === 'idle') {
         const a = this.time * 0.05 + e.ph; _c.copy(e.anchor).add(_d.set(Math.cos(a) * 1400, Math.sin(a * 1.7) * 300, Math.sin(a) * 1400));
         want = _c.sub(e.uni).normalize(); speed = 110;
-        if (active && e.dist < 9500) { e.state = 'attack'; if (G.hud.once('a' + e.def.body, `${e.def.name}：「獲物だ。逃がすな」`, 'comm', 60)) G.hud.msg('警告：ヴォイド艦隊が接近中！', 'warn'); if (!p.target) p.target = e; G.audio?.music('battle'); }
+        if (active && e.dist < 9500 * e.K.aggro) { e.state = 'attack'; if (G.hud.once('a' + e.def.body, `${e.def.name}：「獲物だ。逃がすな」`, 'comm', 60)) G.hud.msg('警告：ヴォイド艦隊が接近中！', 'warn'); if (!p.target) p.target = e; G.audio?.music('battle'); }
       } else {
         if (!active || e.dist > 18000) { e.state = 'idle'; continue; }
+        const K = e.K;
         const tier = e.def.tier, tp = _c.subVectors(this.uni(p.pos, _d), e.uni), d = tp.length();
         tp.addScaledVector(p.vel, d / 950).addScaledVector(e.vel, -d / 950).normalize();
-        if (e.breakT > 0) { e.breakT -= dt; want = e.breakDir; speed = 300 + tier * 30; }
+        if (e.breakT > 0) { e.breakT -= dt; want = e.breakDir; speed = (300 + tier * 30) * K.speed; }
         else if (d < 320 || (this.time - e.lastHit < 0.4 && Math.random() < dt * 0.6)) {
-          e.breakT = 2.2 + Math.random() * 2.2; e.breakDir.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).cross(tp).normalize().addScaledVector(tp, d < 320 ? -0.3 : 0.4).normalize(); want = e.breakDir; speed = 320;
-        } else { want = tp; speed = clamp(d * 0.35, 150, 260 + tier * 40); }
+          e.breakT = 2.2 + Math.random() * 2.2; e.breakDir.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).cross(tp).normalize().addScaledVector(tp, d < 320 ? -0.3 : 0.4).normalize(); want = e.breakDir; speed = 320 * K.speed;
+        } else { want = tp; speed = clamp(d * 0.35, 150, 260 + tier * 40) * K.speed; }
         e.fireT -= dt;
-        if (e.breakT <= 0 && e.fireT <= 0 && d < 2600 && fwd.dot(tp) > 0.994) {
-          const g = e.m.guns, gp = _d.copy(g[e.gi++ % g.length]).applyMatrix4(o.matrixWorld), sp = (0.035 - tier * 0.007);
+        if (e.breakT <= 0 && e.fireT <= 0 && d < 2600 * K.range && fwd.dot(tp) > 0.994) {
+          const g = e.m.guns, gp = _d.copy(g[e.gi++ % g.length]).applyMatrix4(o.matrixWorld), sp = (0.035 - tier * 0.007) * K.spread, gix = (e.gi - 1) % g.length;
           // 砲口から狙う: 砲は機体の中心線から最大 13m 横に付いているので、中心からの向きのまま撃つと弾が平行に目標の横を素通りしていた
           const aim = _hp.copy(p.pos).addScaledVector(p.vel, d / 950).addScaledVector(e.vel, -d / 950).sub(gp).normalize();
           _a.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(sp).add(aim).normalize(); // ばらつき用に tp (=_c, 向きの目標) を上書きしない
-          this.bolts.fire(gp, _a, 950, e.bc || (e.bc = C(e.def.glow).multiplyScalar(5)), e.def.dmg, 'e', 3, 20, 0.34, e.vel); G.audio?.sfx('elaser', clamp(1 - d / 3000, 0.1, 1));
-          e.burst++; e.fireT = e.burst % (3 + tier) === 0 ? 1.5 - tier * 0.25 : 0.16;
+          this.bolts.fire(gp, _a, 950 * K.bolt, e.bc || (e.bc = C(e.def.glow).multiplyScalar(5)), e.def.dmg, 'e', 3 * K.range / K.bolt, 20 * K.size, 0.34 * K.size, e.vel); const fl = e.m.flashes?.[gix]; if (fl) { fl.visible = true; fl.material.opacity = 1; fl.material.rotation = Math.random() * 6.28; } // 砲口の閃光 G.audio?.sfx('elaser', clamp(1 - d / 3000, 0.1, 1));
+          e.burst++; e.fireT = (e.burst % (3 + tier) === 0 ? 1.5 - tier * 0.25 : 0.16) / K.rate;
         }
-        if (e.shield < e.maxShield && this.time - e.lastHit > 5) e.shield = Math.min(e.maxShield, e.shield + e.maxShield * 0.05 * dt);
+        if (e.shield < e.maxShield && this.time - e.lastHit > 5) e.shield = Math.min(e.maxShield, e.shield + e.maxShield * 0.05 * K.regen * dt);
       }
       if (want) {
-        _m.lookAt(_a.set(0, 0, 0), want, _d.copy(UP).applyQuaternion(e.quat)); _q.setFromRotationMatrix(_m); e.quat.rotateTowards(_q, (0.7 + e.def.tier * 0.18) * dt);
+        _m.lookAt(_a.set(0, 0, 0), want, _d.copy(UP).applyQuaternion(e.quat)); _q.setFromRotationMatrix(_m); e.quat.rotateTowards(_q, (0.7 + e.def.tier * 0.18) * e.K.turn * dt);
         e.vel.lerp(_a.copy(FWD).applyQuaternion(e.quat).multiplyScalar(speed), 1 - Math.exp(-1.6 * dt));
         for (const pl of e.m.plumes) { pl.material.uniforms.uPow.value = 0.4 + speed / 300; pl.scale.z = 0.5 + speed / 250; }
       }
+      if (e.m.flashes) for (const fl of e.m.flashes) if (fl.visible) { fl.material.opacity -= dt * 14; if (fl.material.opacity <= 0) fl.visible = false; } // 砲口の閃光を消していく
+      if (e.m.bubble) e.m.bubble.material.opacity = 0.06 + 0.16 * (e.shield / Math.max(1, e.maxShield)) * (this.time - e.lastHit < 0.3 ? 2.5 : 1); // 盾の泡: シールドの残りと被弾で明るさが変わる
       e.uni.addScaledVector(e.vel, dt); o.position.subVectors(e.uni, this.origin); o.quaternion.copy(e.quat);
       if (e.dist < 30000) this._keepOut(e, o.position); // 敵艦もステーションの外板を突き抜けないよう押し出す
     }

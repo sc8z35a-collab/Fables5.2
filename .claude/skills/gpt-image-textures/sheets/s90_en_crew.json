@@ -1,7 +1,7 @@
 {
  "id": "s90_en_crew",
  "group": "enemy",
- "source": "敵の小型戦艦 20 種類の追加用 90 枚 (シート 84〜93、画像はまだ無い)。乗員区画",
+ "source": "敵の小型戦艦 20 種類の追加用 90 枚 (シート 84〜93、ユーザーが別に生成した画像)。乗員区画",
  "style": "Small hostile warships of the \"Void fleet\" in a stylised sci-fi space game: dark gunmetal, angular, worn, with glowing accent lights. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or real-world logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object or emblem, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
  "cells": [
   {
@@ -10,7 +10,13 @@
    "prompt": "A crew mess table seen from directly above: metal trays with grey food and cups.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.3,
+    0.15,
+    0.7,
+    0.85
+   ]
   },
   {
    "name": "en-galley",
@@ -18,7 +24,9 @@
    "prompt": "A cramped warship galley front: steel cooker, food dispensers and hanging pots.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "skip": true,
+   "why": "細長い厨房を奥まで見た風景で、物の面に貼れない"
   },
   {
    "name": "en-crew-lockers",
@@ -26,7 +34,13 @@
    "prompt": "A row of dark grey crew lockers with violet stripe and vents, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.02,
+    0.02,
+    0.98,
+    0.98
+   ]
   },
   {
    "name": "en-hammocks",
@@ -34,7 +48,13 @@
    "prompt": "Hammock bunks hung in rows in a narrow steel bay, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ]
   },
   {
    "name": "en-shower-stall",
@@ -42,7 +62,13 @@
    "prompt": "A cramped steel shower stall with a drain and a water timer panel, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.02,
+    0.02,
+    0.98,
+    0.98
+   ]
   },
   {
    "name": "en-propaganda",
@@ -50,7 +76,13 @@
    "prompt": "A propaganda poster: a heroic soldier silhouette under a violet eclipse emblem, bold shapes, no text.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.22,
+    0.04,
+    0.955,
+    0.96
+   ]
   },
   {
    "name": "en-uniform-fabric",
@@ -67,7 +99,13 @@
    "prompt": "A wall rack of dark armoured helmets with violet visors, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.04,
+    0.0,
+    0.97,
+    1.0
+   ]
   },
   {
    "name": "en-ready-room",
@@ -75,7 +113,9 @@
    "prompt": "A pilot ready room: rows of padded seats facing a briefing screen, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "skip": true,
+   "why": "待機室を奥まで見た風景で、物の面に貼れない"
   }
  ]
 }

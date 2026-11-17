@@ -1,7 +1,7 @@
 {
  "id": "s89_en_weapons_bay",
  "group": "enemy",
- "source": "敵の小型戦艦 20 種類の追加用 90 枚 (シート 84〜93、画像はまだ無い)。兵器区画",
+ "source": "敵の小型戦艦 20 種類の追加用 90 枚 (シート 84〜93、ユーザーが別に生成した画像)。兵器区画。一覧画像 (3 列 x 9 段、1 マス約 413x140 の横長) から、横長のマスを正方形に引き伸ばして並べたシート。ゲームでは横長 (約 3:1) の面に貼ると元の比率に戻る。タイルのマスは一覧画像 b の正方形のマスを使った",
  "style": "Small hostile warships of the \"Void fleet\" in a stylised sci-fi space game: dark gunmetal, angular, worn, with glowing accent lights. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or real-world logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object or emblem, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
  "cells": [
   {
@@ -10,7 +10,13 @@
    "prompt": "A torpedo storage rack with long grey torpedoes stacked on cradles, side view.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ]
   },
   {
    "name": "en-missile-magazine",
@@ -18,7 +24,13 @@
    "prompt": "A missile magazine wall: rows of missiles in vertical slots, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ]
   },
   {
    "name": "en-mine-store",
@@ -26,7 +38,13 @@
    "prompt": "A storage room shelf of spiked mines in padded cradles, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ]
   },
   {
    "name": "en-drone-rack",
@@ -34,7 +52,13 @@
    "prompt": "A hangar rack of folded attack drones hanging in rows, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ]
   },
   {
    "name": "en-capacitor-bank",
@@ -42,7 +66,13 @@
    "prompt": "A railgun capacitor bank: tall cylinders with glowing blue rings and thick cables, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ]
   },
   {
    "name": "en-ammo-conveyor",
@@ -50,7 +80,13 @@
    "prompt": "An ammunition feed conveyor carrying brass shells through a steel channel, side view.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ]
   },
   {
    "name": "en-bomb-rack",
@@ -58,7 +94,13 @@
    "prompt": "A bomb rack with fat dark bombs hanging from hooks, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ]
   },
   {
    "name": "en-weapon-locker",
@@ -66,7 +108,13 @@
    "prompt": "An open weapon locker with rifles, helmets and armour vests, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "crop": [
+    0.0,
+    0.0,
+    1.0,
+    1.0
+   ]
   },
   {
    "name": "en-turret-interior",
@@ -74,7 +122,9 @@
    "prompt": "Inside a gun turret: gunner seat, sights and breech of a big cannon, front-on.",
    "seam": "",
    "rough": 150,
-   "normal": 1.5
+   "normal": 1.5,
+   "skip": true,
+   "why": "砲塔の部屋の風景で、物の面に貼れない"
   }
  ]
 }

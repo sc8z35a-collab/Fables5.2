@@ -97,7 +97,38 @@ export const UPGRADES = [
   { id: 'missile', name: 'ミサイルラック', desc: '搭載数 +4/Lv', base: 750 },
 ];
 
-// 小型敵戦艦 20 隻 (ヴォイド艦隊)
+// 小型敵戦艦 40 隻 (ヴォイド艦隊)。前半 20 隻は形だけの汎用艦、後半 20 隻は艦種つき (ENEMY_CLASSES)
+/**
+ * 艦種: name = 艦種名、code = 艦名、arch = 船体の基本形 (0 ダガー / 1 クロー / 2 マンタ / 3 スパイン)、glow = 灯りの色、tier = 宙域の脅威度への加減
+ * hull = 外装の素材 (en-hull-*)、mark = 側面の紋章、nose = 機首の絵、parts = 艤装 (ships.js の CLASS_PARTS)、eng = 噴射口の絵
+ * k = 強さの倍率 (hull 装甲 / shield シールド / dmg 威力 / speed 速さ / turn 旋回 / rate 連射 / range 射程 / bolt 弾速 / size 弾の太さ / aggro 気付く距離 / regen シールド回復 / bounty 賞金)
+ * room = 艦内の特別な部屋、wall / floor / ceil = 艦内の素材 (en-*)
+ */
+export const ENEMY_CLASSES = {
+  scout: { name: '偵察艇', code: 'アイズ', arch: 0, glow: '#7dff2a', hull: 'en-hull-camo', mark: 'en-emblem-void', parts: ['dish'], eng: 'en-nozzle-inner', k: { hull: 0.7, shield: 0.8, dmg: 0.7, speed: 1.35, turn: 1.3, aggro: 1.4, bounty: 0.8 }, room: 'sensor', wall: 'en-bridge-wall', floor: 'en-floor-mat' },
+  tanker: { name: '補給艇', code: 'オアシス', arch: 2, glow: '#ff8a1e', hull: 'en-hull-industrial', mark: 'en-emblem-void', parts: ['tanks'], eng: 'en-nozzle-inner', k: { hull: 1.5, shield: 0.7, dmg: 0.6, speed: 0.8, turn: 0.8, rate: 0.7, bounty: 1.1 }, room: 'fuel', floor: 'en-floor-mat' },
+  repair: { name: '工作艇', code: 'レンチ', arch: 1, glow: '#ffd23a', hull: 'en-hull-industrial', mark: 'en-emblem-void', parts: ['arms'], eng: 'en-nozzle-inner', k: { hull: 1.3, shield: 1.1, dmg: 0.7, regen: 2.5, speed: 0.9 }, room: 'workshop', floor: 'en-hazard-floor' },
+  pirate: { name: '海賊改造艇', code: 'ジャンク', arch: 1, glow: '#ff2a2a', hull: 'en-hull-scrap', mark: 'en-emblem-pirate', nose: 'en-noseart-fang', parts: ['guns'], eng: 'en-afterburner', k: { hull: 1.1, shield: 0.5, dmg: 1.2, rate: 1.2, speed: 1.1, bounty: 1.2 }, room: 'holding', wall: 'en-wall-scrap', floor: 'en-floor-mat' },
+  torpedo: { name: '魚雷艇', code: 'ランス', arch: 0, glow: '#ff2ad4', hull: 'en-hull-hex', mark: 'en-emblem-void', parts: ['torpedo'], eng: 'en-nozzle-inner', k: { dmg: 2.2, rate: 0.45, bolt: 0.75, size: 2.2, range: 1.2 }, room: 'torpedo', floor: 'en-hazard-floor' },
+  mine: { name: '機雷敷設艇', code: 'スパイク', arch: 2, glow: '#ff8a1e', hull: 'en-hull-hex', mark: 'en-emblem-void', parts: ['mines'], eng: 'en-nozzle-inner', k: { hull: 1.2, dmg: 1.4, rate: 0.6, size: 1.6, speed: 0.85 }, room: 'mines' },
+  ram: { name: '突撃艇', code: 'ブル', arch: 0, glow: '#ff2a2a', hull: 'en-hull-ram', mark: 'en-emblem-void', nose: 'en-noseart-fang', parts: ['ram'], eng: 'en-afterburner', k: { hull: 1.6, shield: 0.8, speed: 1.4, turn: 1.1, range: 0.7, bounty: 1.1 }, room: 'barracks2', wall: 'en-battle-damage' },
+  boarding: { name: '強襲揚陸艇', code: 'クラッチ', arch: 3, glow: '#ff2ad4', hull: 'en-hull-hex', mark: 'en-emblem-void', parts: ['clamp'], eng: 'en-nozzle-inner', k: { hull: 1.3, speed: 1.15 }, room: 'boarding', floor: 'en-hazard-floor' },
+  magma: { name: '溶岩艇', code: 'ヴォルカ', arch: 2, glow: '#ff6a1e', hull: 'en-hull-ceramic', mark: 'en-emblem-void', parts: ['radiators'], eng: 'en-afterburner', k: { hull: 1.3, dmg: 1.2, speed: 1.05 }, room: 'reactor2', wall: 'en-wall-padded', floor: 'en-floor-hot' },
+  gunboat: { name: '砲艇', code: 'ハンマー', arch: 3, glow: '#ffd23a', hull: 'en-hull-hex', mark: 'en-emblem-void', nose: 'en-noseart-bolt', parts: ['cannon'], eng: 'en-nozzle-inner', k: { hull: 1.2, dmg: 1.8, rate: 0.6, size: 1.8, bolt: 0.9 }, room: 'gunnery' },
+  missile: { name: 'ミサイル艇', code: 'ヴォレー', arch: 1, glow: '#ff2a2a', hull: 'en-hull-camo', mark: 'en-emblem-void', parts: ['pods'], eng: 'en-nozzle-inner', k: { dmg: 0.8, rate: 1.6, spread: 2.2, range: 1.25 }, room: 'missiles', floor: 'en-hazard-floor' },
+  bomber: { name: '爆撃艇', code: 'アンヴィル', arch: 2, glow: '#ff8a1e', hull: 'en-hull-industrial', mark: 'en-emblem-void', nose: 'en-noseart-bolt', parts: ['bombbay'], eng: 'en-afterburner', k: { hull: 1.4, dmg: 2.4, rate: 0.35, size: 2.6, bolt: 0.6, speed: 0.85, turn: 0.8 }, room: 'bombs', floor: 'en-hazard-floor' },
+  stealth: { name: 'ステルス艇', code: 'シャドウ', arch: 0, glow: '#a04dff', hull: 'en-hull-stealth', parts: ['stealth'], eng: 'en-ion-core', k: { hull: 0.8, dmg: 1.3, speed: 1.25, turn: 1.2, aggro: 0.55, bounty: 1.3 }, room: 'ewroom', wall: 'en-wall-stealth', floor: 'en-bridge-floor', ceil: 'en-ceil-grate' },
+  ew: { name: '電子戦艇', code: 'ノイズ', arch: 3, glow: '#2ad4ff', hull: 'en-hull-camo', mark: 'en-emblem-void', parts: ['ew'], eng: 'en-ion-core', k: { shield: 1.4, dmg: 0.8, spread: 0.5, range: 1.3, bounty: 1.2 }, room: 'ewroom', wall: 'en-wall-stealth', ceil: 'en-ceil-grate' },
+  sniper: { name: '狙撃艇', code: 'ニードル', arch: 3, glow: '#2ad4ff', hull: 'en-hull-stealth', mark: 'en-emblem-void', parts: ['rail'], eng: 'en-ion-core', k: { hull: 0.8, dmg: 2.6, rate: 0.35, range: 1.8, bolt: 1.7, spread: 0.2, speed: 0.9 }, room: 'capacitors', ceil: 'en-ceil-lit' },
+  command: { name: '指揮艇', code: 'クラウン', arch: 2, glow: '#ffd23a', hull: 'en-hull-command', mark: 'en-emblem-command', parts: ['antennas', 'lights'], eng: 'en-ion-core', k: { hull: 1.5, shield: 1.5, dmg: 1.2, bounty: 1.8 }, room: 'command', wall: 'en-wall-command', floor: 'en-bridge-floor', ceil: 'en-ceil-lit' },
+  frost: { name: '氷結艇', code: 'グレイシャー', arch: 1, glow: '#9adfff', hull: 'en-hull-frost', mark: 'en-emblem-void', parts: ['coolant'], eng: 'en-ion-core', k: { hull: 1.3, shield: 1.2, speed: 0.95 }, room: 'reactor2', wall: 'en-wall-frost', floor: 'en-floor-mat' },
+  guard: { name: '護衛艇', code: 'イージス', arch: 2, glow: '#2ad4ff', hull: 'en-hull-hex', mark: 'en-emblem-void', parts: ['shield'], eng: 'en-nozzle-inner', k: { hull: 1.1, shield: 2.4, regen: 2.0, dmg: 0.9 }, room: 'shieldgen', wall: 'en-wall-padded' },
+  drone: { name: 'ドローン母艇', code: 'ハイヴ', arch: 3, glow: '#7dff2a', hull: 'en-hull-hex', mark: 'en-emblem-void', parts: ['dronebay'], eng: 'en-nozzle-inner', k: { hull: 1.2, dmg: 0.6, rate: 2.0, spread: 1.8 }, room: 'drones', floor: 'en-hazard-floor' },
+  carrier: { name: '迎撃機母艇', code: 'ワスプ', arch: 1, glow: '#ff2ad4', hull: 'en-hull-command', mark: 'en-emblem-void', parts: ['dronebay', 'lights'], eng: 'en-afterburner', k: { hull: 1.3, shield: 1.2, dmg: 0.7, rate: 1.8, speed: 1.1, bounty: 1.4 }, room: 'drones', ceil: 'en-ceil-lit' },
+};
+/** 艦種つきの艦の配置: [惑星, その宙域の脅威度, 艦種] */
+const CLASS_PLAN = [['terra', 1, ['scout', 'tanker', 'repair', 'pirate']], ['sahar', 2, ['torpedo', 'mine', 'ram', 'boarding']], ['ignis', 2, ['magma', 'gunboat', 'missile', 'bomber']],
+  ['zephyr', 3, ['stealth', 'ew', 'sniper', 'command']], ['glacies', 3, ['frost', 'guard', 'drone', 'carrier']]];
 const NAMES = ['ファング', 'クロウ', 'レイス', 'ヴァイパー', 'シェイド', 'タロン', 'スコーピオ', 'ハウンド', 'リーパー', 'ゴースト', 'ヴェノム', 'ラプター', 'バラクーダ', 'マンティス', 'ケルベロス', 'ヘルハウンド', 'ナイトメア', 'スペクター', 'バジリスク', 'ドレッド'];
 const GLOWS = ['#ff2a2a', '#ff2ad4', '#7dff2a', '#ff8a1e', '#a04dff'];
 export const ENEMIES = (() => {
@@ -113,6 +144,20 @@ export const ENEMIES = (() => {
       out.push({ id: 'e' + i, idx: i, name: 'ヴォイド・' + NAMES[i] + '-' + String(11 + ((i * 37) % 88)).padStart(2, '0'), arch: i % 4, seed: 1000 + i * 77, tier, body: bid,
         glow: GLOWS[(i + tier) % GLOWS.length], pos: p.toArray(), hull: 90 + tier * 55, shield: 60 + tier * 45, dmg: 5 + tier * 2.5, bounty: 1200 + tier * 900 });
     }
+  }
+  // 艦種つきの小型戦艦 20 隻 (各惑星の宙域に 4 隻ずつ、既存の艦とは駅を挟んだ反対側)
+  const r2 = rng(9002);
+  for (const [bid, tier, ids] of CLASS_PLAN) {
+    const b = body(bid), st = STATIONS.find((s) => s.body === bid), base = V(st.pos), up = base.clone().sub(V(b.pos)).normalize();
+    const side = new THREE.Vector3(0, 1, 0).cross(up).normalize(), fw = up.clone().cross(side);
+    ids.forEach((cid, k) => {
+      const c = ENEMY_CLASSES[cid], g = Math.floor(k / 2), a = Math.PI + (g * 1.9 + 0.5) + (k % 2) * 0.45 + r2() * 0.3, d = 46e3 + g * 24e3 + r2() * 8e3;
+      const p = base.clone().addScaledVector(side, Math.cos(a) * d).addScaledVector(fw, Math.sin(a) * d).addScaledVector(up, (r2() - 0.3) * 12e3 + 5e3);
+      const t = Math.max(1, Math.min(3, tier + (c.tier || 0))), K = c.k || {};
+      out.push({ id: 'e' + i, idx: i, cls: cid, name: `ヴォイド${c.name}「${c.code}」-${String(11 + ((i * 41) % 88)).padStart(2, '0')}`, arch: c.arch, seed: 1000 + i * 77, tier: t, body: bid,
+        glow: c.glow, pos: p.toArray(), hull: Math.round((90 + t * 55) * (K.hull || 1)), shield: Math.round((60 + t * 45) * (K.shield || 1)), dmg: +((5 + t * 2.5) * (K.dmg || 1)).toFixed(1), bounty: Math.round((1200 + t * 900) * (K.bounty || 1) / 100) * 100 });
+      i++;
+    });
   }
   return out;
 })();

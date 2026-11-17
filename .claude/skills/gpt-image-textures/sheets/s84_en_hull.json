@@ -1,7 +1,7 @@
 {
  "id": "s84_en_hull",
  "group": "enemy",
- "source": "敵の小型戦艦 20 種類の追加用 90 枚 (シート 84〜93、画像はまだ無い)。外装の装甲",
+ "source": "敵の小型戦艦 20 種類の追加用 90 枚 (シート 84〜93、ユーザーが別に生成した画像)。外装の装甲",
  "style": "Small hostile warships of the \"Void fleet\" in a stylised sci-fi space game: dark gunmetal, angular, worn, with glowing accent lights. PICTURE cells: ONE item or scene seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or real-world logos. CUTOUT-style PICTURE cells say \"on plain pure white background\": draw only the object or emblem, centred, on flat pure white with no shadow. Tiles are flat, evenly lit and seamless.",
  "cells": [
   {
