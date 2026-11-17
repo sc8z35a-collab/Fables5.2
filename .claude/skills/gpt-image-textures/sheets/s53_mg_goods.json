@@ -1,0 +1,80 @@
+{
+ "id": "s53_mg_goods",
+ "group": "megaton",
+ "source": "メガトン第 7 居住甲板の追加 54 枚 (シート 53〜58、画像はまだ無い)。店の品物、飲食店、学校・役所・病院、機械と設備、公園と自然、住人の服と持ち物",
+ "style": "Goods in small neighbourhood shops of a space-habitat city. Each PICTURE cell is ONE item seen exactly straight on (or from directly above), filling the cell, flat even light, no shadows, no readable text. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "mg-books-table",
+   "kind": "tile",
+   "prompt": "A bookshop display table seen from directly above: neat stacks of colourful books.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-flower-buckets",
+   "kind": "tile",
+   "prompt": "A florist display front: metal buckets of colourful cut flowers.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-clothes-rack",
+   "kind": "tile",
+   "prompt": "A secondhand clothes rack front: shirts, jackets and dresses on hangers.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-appliance-shelf",
+   "kind": "tile",
+   "prompt": "An electronics shop shelf front: radios, rice cookers, fans and kettles.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-tool-wall",
+   "kind": "tile",
+   "prompt": "A hardware shop wall of hanging tools: hammers, wrenches, saws and tape.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-candy-shelf",
+   "kind": "tile",
+   "prompt": "A Japanese penny-candy shop shelf front: small colourful candy boxes and jars.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-fish-ice",
+   "kind": "tile",
+   "prompt": "A fishmonger display seen from directly above: fish laid on crushed ice with green leaves.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-meat-case",
+   "kind": "tile",
+   "prompt": "A butcher refrigerated showcase front: trays of meat cuts behind glass.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "mg-tea-cans",
+   "kind": "tile",
+   "prompt": "A tea shop shelf front: rows of round tea canisters in many colours.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  }
+ ]
+}
