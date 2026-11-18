@@ -1,0 +1,97 @@
+{
+ "id": "s97_rd_crew",
+ "group": "raiden",
+ "source": "ライデン (重装ガンシップ) の船内改修用。ユーザー提供の画像 (2026-11)。乗員区画",
+ "style": "Interior of a heavy gunship spacecraft in a grounded, worn military style: dark gunmetal, red accent lights, scuffs and stencils. PICTURE cells: ONE item or wall section seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or logos. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "rd-crew-wall",
+   "kind": "tile",
+   "prompt": "Crew quarters wall: beige padded panels with red piping and small vents, front-on.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.2,
+   "uvs": 0.36,
+   "crop": [
+    0.36,
+    0.0,
+    1.0,
+    1.0
+   ],
+   "why": "左端の寝台を切り落として壁だけを繰り返す"
+  },
+  {
+   "name": "rd-bunk-blanket",
+   "kind": "tile",
+   "prompt": "A dark red military wool blanket with a grey stripe, close-up.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.2,
+   "uvs": 1.2
+  },
+  {
+   "name": "rd-crew-locker",
+   "kind": "tile",
+   "prompt": "A tall personal crew locker, half open, with a jacket, photos taped inside and a towel, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-galley",
+   "kind": "tile",
+   "prompt": "A compact ship galley wall: steel cabinets, a hot drink dispenser and hanging mugs, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-mess-table",
+   "kind": "tile",
+   "prompt": "A crew mess table seen from directly above: steel tabletop with metal trays, cups and a deck of cards.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-medbay-wall",
+   "kind": "tile",
+   "prompt": "Medical bay wall: white clean panels with a thin red cross stripe and small storage drawers.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.2,
+   "uvs": 0.34,
+   "crop": [
+    0.0,
+    0.0,
+    0.86,
+    1.0
+   ],
+   "why": "右端のカーテンを切り落とす"
+  },
+  {
+   "name": "rd-med-scanner",
+   "kind": "tile",
+   "prompt": "A medical body scanner arm with a glowing blue screen, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-crew-photo",
+   "kind": "tile",
+   "prompt": "A small framed group photo of a smiling ship crew in red jackets in front of a gunship.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-patch-board",
+   "kind": "tile",
+   "prompt": "A cork board with embroidered squadron patches: a red thunderbolt, a wolf, stars (no text).",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  }
+ ]
+}

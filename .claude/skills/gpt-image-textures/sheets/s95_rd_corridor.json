@@ -1,0 +1,84 @@
+{
+ "id": "s95_rd_corridor",
+ "group": "raiden",
+ "source": "ライデン (重装ガンシップ) の船内改修用。ユーザー提供の画像 (2026-11)。通路と前室",
+ "style": "Interior of a heavy gunship spacecraft in a grounded, worn military style: dark gunmetal, red accent lights, scuffs and stencils. PICTURE cells: ONE item or wall section seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or logos. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "rd-corridor-wall",
+   "kind": "tile",
+   "prompt": "Gunship corridor wall: dark gunmetal panels with rivets, a stencilled red stripe and scuffs at shoulder height.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.2,
+   "uvs": 0.34
+  },
+  {
+   "name": "rd-corridor-floor",
+   "kind": "tile",
+   "prompt": "Gunship corridor floor: dark metal grating over a lit sub-floor, worn yellow edge lines, from above.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.2,
+   "uvs": 0.45
+  },
+  {
+   "name": "rd-corridor-ceil",
+   "kind": "tile",
+   "prompt": "Gunship corridor ceiling seen from below: pipes and cable trays with a long red-white light strip.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.2,
+   "uvs": 0.36
+  },
+  {
+   "name": "rd-hatch-floor",
+   "kind": "tile",
+   "prompt": "A round floor hatch with a recessed wheel handle and yellow-black ring, seen from directly above.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-pipe-wall",
+   "kind": "tile",
+   "prompt": "A wall of horizontal pipes in grey and red with valves and clamps, front-on.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.2,
+   "uvs": 0.32
+  },
+  {
+   "name": "rd-ready-board",
+   "kind": "tile",
+   "prompt": "A crew readiness board: magnetic tags in columns, checklists and red markers, no readable text, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-emergency-locker",
+   "kind": "tile",
+   "prompt": "A red emergency locker door with a small window showing an oxygen mask and fire extinguisher, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-deck-marking",
+   "kind": "tile",
+   "prompt": "A painted deck marking on dark metal: a red chevron arrow inside a white circle with worn edges, seen from above.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-bulkhead-door",
+   "kind": "tile",
+   "prompt": "A heavy gunship bulkhead door with a central wheel, red edge stripes and thick hinges, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  }
+ ]
+}

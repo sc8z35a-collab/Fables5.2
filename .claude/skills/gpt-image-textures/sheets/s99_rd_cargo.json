@@ -1,0 +1,83 @@
+{
+ "id": "s99_rd_cargo",
+ "group": "raiden",
+ "source": "ライデン (重装ガンシップ) の船内改修用。ユーザー提供の画像 (2026-11)。格納庫",
+ "style": "Interior of a heavy gunship spacecraft in a grounded, worn military style: dark gunmetal, red accent lights, scuffs and stencils. PICTURE cells: ONE item or wall section seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or logos. Tiles are flat, evenly lit and seamless.",
+ "cells": [
+  {
+   "name": "rd-cargo-floor",
+   "kind": "tile",
+   "prompt": "Cargo bay floor: worn dark steel with tie-down rails and yellow hazard edges, from above.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.2,
+   "uvs": 0.3
+  },
+  {
+   "name": "rd-cargo-wall",
+   "kind": "tile",
+   "prompt": "Cargo bay wall: ribbed grey metal with cargo net hooks and red stencil stripes.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.2,
+   "uvs": 0.26
+  },
+  {
+   "name": "rd-ramp-door",
+   "kind": "tile",
+   "prompt": "The inside of a cargo ramp door: heavy hydraulic pistons, yellow-black stripes and anti-slip treads, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-cargo-net",
+   "kind": "tile",
+   "prompt": "A tight cargo net strapped over boxes against a wall, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-strap-crates",
+   "kind": "tile",
+   "prompt": "Grey and olive crates strapped down with orange ratchet straps, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-loader-arm",
+   "kind": "tile",
+   "prompt": "A small yellow cargo loader arm mounted on a rail, side view.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-fuel-cells",
+   "kind": "tile",
+   "prompt": "A rack of glowing cyan fuel cells in a protective cage, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  },
+  {
+   "name": "rd-tie-down",
+   "kind": "tile",
+   "prompt": "Floor tie-down rings and rails on dark steel, from above.",
+   "rough": 170,
+   "sat": 1.0,
+   "normal": 2.2,
+   "uvs": 0.5
+  },
+  {
+   "name": "rd-airlock-panel",
+   "kind": "tile",
+   "prompt": "An airlock control panel with a big green and red button and a pressure gauge, front-on.",
+   "seam": "",
+   "rough": 150,
+   "normal": 1.5
+  }
+ ]
+}
