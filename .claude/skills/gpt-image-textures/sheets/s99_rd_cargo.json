@@ -1,7 +1,7 @@
 {
  "id": "s99_rd_cargo",
  "group": "raiden",
- "source": "ライデン (重装ガンシップ) の船内改修用 54 枚 (シート 94〜99、画像はまだ無い)。名前はすべて rd-。設計図は docs/raiden-interior.md。格納庫",
+ "source": "ライデン (重装ガンシップ) の船内改修用。ユーザー提供の画像 (2026-11)。格納庫",
  "style": "Interior of a heavy gunship spacecraft in a grounded, worn military style: dark gunmetal, red accent lights, scuffs and stencils. PICTURE cells: ONE item or wall section seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or logos. Tiles are flat, evenly lit and seamless.",
  "cells": [
   {
@@ -11,7 +11,7 @@
    "rough": 170,
    "sat": 1.0,
    "normal": 2.2,
-   "uvs": 0.4
+   "uvs": 0.3
   },
   {
    "name": "rd-cargo-wall",
@@ -20,7 +20,7 @@
    "rough": 170,
    "sat": 1.0,
    "normal": 2.2,
-   "uvs": 0.4
+   "uvs": 0.26
   },
   {
    "name": "rd-ramp-door",
@@ -69,7 +69,7 @@
    "rough": 170,
    "sat": 1.0,
    "normal": 2.2,
-   "uvs": 0.6
+   "uvs": 0.5
   },
   {
    "name": "rd-airlock-panel",

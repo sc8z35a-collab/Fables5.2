@@ -1,7 +1,7 @@
 {
  "id": "s98_rd_engine",
  "group": "raiden",
- "source": "ライデン (重装ガンシップ) の船内改修用 54 枚 (シート 94〜99、画像はまだ無い)。名前はすべて rd-。設計図は docs/raiden-interior.md。機関",
+ "source": "ライデン (重装ガンシップ) の船内改修用。ユーザー提供の画像 (2026-11)。機関",
  "style": "Interior of a heavy gunship spacecraft in a grounded, worn military style: dark gunmetal, red accent lights, scuffs and stencils. PICTURE cells: ONE item or wall section seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or logos. Tiles are flat, evenly lit and seamless.",
  "cells": [
   {
@@ -11,7 +11,7 @@
    "rough": 170,
    "sat": 1.0,
    "normal": 2.2,
-   "uvs": 0.4
+   "uvs": 0.36
   },
   {
    "name": "rd-engine-wall",
@@ -20,7 +20,7 @@
    "rough": 170,
    "sat": 1.0,
    "normal": 2.2,
-   "uvs": 0.4
+   "uvs": 0.2
   },
   {
    "name": "rd-reactor-core",
@@ -53,7 +53,7 @@
    "rough": 170,
    "sat": 1.0,
    "normal": 2.2,
-   "uvs": 0.6
+   "uvs": 0.4
   },
   {
    "name": "rd-heat-vent",
@@ -70,7 +70,7 @@
    "rough": 170,
    "sat": 1.0,
    "normal": 2.2,
-   "uvs": 0.8
+   "uvs": 0.6
   },
   {
    "name": "rd-engine-gauges",

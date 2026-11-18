@@ -1,7 +1,7 @@
 {
  "id": "s97_rd_crew",
  "group": "raiden",
- "source": "ライデン (重装ガンシップ) の船内改修用 54 枚 (シート 94〜99、画像はまだ無い)。名前はすべて rd-。設計図は docs/raiden-interior.md。乗員区画",
+ "source": "ライデン (重装ガンシップ) の船内改修用。ユーザー提供の画像 (2026-11)。乗員区画",
  "style": "Interior of a heavy gunship spacecraft in a grounded, worn military style: dark gunmetal, red accent lights, scuffs and stencils. PICTURE cells: ONE item or wall section seen exactly straight on (or from directly above), filling the cell, flat even light, no readable text, letters, numbers or logos. Tiles are flat, evenly lit and seamless.",
  "cells": [
   {
@@ -11,7 +11,14 @@
    "rough": 170,
    "sat": 1.0,
    "normal": 2.2,
-   "uvs": 0.4
+   "uvs": 0.36,
+   "crop": [
+    0.36,
+    0.0,
+    1.0,
+    1.0
+   ],
+   "why": "左端の寝台を切り落として壁だけを繰り返す"
   },
   {
    "name": "rd-bunk-blanket",
@@ -53,7 +60,14 @@
    "rough": 170,
    "sat": 1.0,
    "normal": 2.2,
-   "uvs": 0.4
+   "uvs": 0.34,
+   "crop": [
+    0.0,
+    0.0,
+    0.86,
+    1.0
+   ],
+   "why": "右端のカーテンを切り落とす"
   },
   {
    "name": "rd-med-scanner",

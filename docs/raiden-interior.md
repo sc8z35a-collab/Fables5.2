@@ -9,7 +9,7 @@
 - **広さは改修前と同じ**: 船内は x −4〜13 m、z 0〜37 m の範囲（北が機首）に収める。床面積は約 470 m²（改修前は約 450 m²）。
 - **部屋は 1 つずつ手で置く**: 左右対称・同じ大きさの部屋の繰り返し・等間隔の扉は使わない。部屋ごとに、その部屋の仕事から大きさ・天井の高さ・扉の位置を決める。
 - **改修前の働きは全部残す**: 操縦席に座る、星図、弾薬補給、寝台で休む、船体状況、エアロックから出る。医療ポッド（治療）と自販機を足した。
-- **素材**: `rd-` で始まる 54 枚（シート 94〜99）を使う。画像が届くまでは、`RM()` で既存の素材に色を付けて代わりにする。
+- **素材**: `rd-` で始まる 54 枚（シート 94〜99）を使う。シート 95〜99 の 45 枚は画像が届いて使用中。艦橋のシート 94 はまだ無いので、敵艦の艦橋の素材（`en-`）で代わりにする。
 
 ## 動線
 
@@ -74,16 +74,18 @@
 
 ## 素材（シート 94〜99、`rd-` 54 枚）
 
-画像がまだ無い素材は、部屋の壁・床・天井は `RM(名前, 代わりの素材, 色)` で既存の素材を使い、絵を貼る備品（`picwall` / `picfurn` / `pictop` / `floorpic` / `band`）は画像が無ければ貼らない。
+シート 95〜99 はユーザー提供の画像から切り分けた（`assets/textures/sheets/s95〜s99_rd_*.webp`）。乗員区画の壁は左端の寝台を、医務室の壁は右端のカーテンを切り落として、壁として繰り返せるようにした。機関室・格納庫のように壁の高い部屋では、模様が細かく並びすぎないよう素材の大きさを広げてある（機関室の壁は 5 m ごと）。
 
-| シート | 素材 | 使う所 |
-|---|---|---|
-| 94 艦橋とキャノピー | rd-bridge-floor / rd-bridge-wall / rd-ceiling-bridge / rd-canopy-frame / rd-pilot-console / rd-gunner-console / rd-tactical-table / rd-warning-panel / rd-hud-glass | キャノピーと艦橋の床・壁・天井、操縦卓、兵装卓、戦術台の天板、警告灯、ヘッドアップディスプレイ |
-| 95 通路と前室 | rd-corridor-wall / rd-corridor-floor / rd-corridor-ceil / rd-hatch-floor / rd-pipe-wall / rd-ready-board / rd-emergency-locker / rd-deck-marking / rd-bulkhead-door | 通路の壁・床・天井（船内の標準）、床の点検口、配管の壁、待機表、非常用ロッカー、床の標示、隔壁扉 |
-| 96 兵装 | rd-armory-wall / rd-rifle-rack / rd-ammo-crates / rd-gun-sight / rd-turret-controls / rd-shell-feed / rd-armor-locker / rd-target-screen / rd-gunnery-floor | 兵装庫と砲塔管制室の壁・床、銃架、弾薬箱、照準器、操作盤、砲弾の送り込み装置、防弾服ロッカー、照準画面 |
-| 97 乗員区画 | rd-crew-wall / rd-bunk-blanket / rd-crew-locker / rd-galley / rd-mess-table / rd-medbay-wall / rd-med-scanner / rd-crew-photo / rd-patch-board | 兵員室と食堂の壁、毛布、個人ロッカー、厨房、長机の天板、医務室の壁、スキャナー、写真、部隊章 |
-| 98 機関 | rd-engine-floor / rd-engine-wall / rd-reactor-core / rd-turbine / rd-coolant-panel / rd-power-conduit / rd-heat-vent / rd-catwalk-grate / rd-engine-gauges | 機関室の床・壁、炉心の覗き窓、タービン、冷却盤、電力ケーブル、排熱口、炉区画の床、計器 |
-| 99 格納庫 | rd-cargo-floor / rd-cargo-wall / rd-ramp-door / rd-cargo-net / rd-strap-crates / rd-loader-arm / rd-fuel-cells / rd-tie-down / rd-airlock-panel | 格納庫の床・壁、後部ランプの扉、荷物ネット、固定された木箱、荷役アーム、燃料電池、床の固定具、エアロックの操作盤 |
+| シート | 状態 | 素材 | 使う所 |
+|---|---|---|---|
+| 94 艦橋とキャノピー | 画像まだ | rd-bridge-floor / rd-bridge-wall / rd-ceiling-bridge / rd-canopy-frame / rd-pilot-console / rd-gunner-console / rd-tactical-table / rd-warning-panel / rd-hud-glass | 代わりに `en-bridge-floor` / `en-bridge-wall` / `rd-corridor-ceil` / `en-wall-stealth` / `en-helm-console` / `en-weapon-panel` / `en-tactical-display` / `en-holo-warning` / `rd-gun-sight`。艦橋の北の壁に `en-radar-scope`、星図の上に `en-star-chart` |
+| 95 通路と前室 | 使用中 | rd-corridor-wall / rd-corridor-floor / rd-corridor-ceil / rd-hatch-floor / rd-pipe-wall / rd-ready-board / rd-emergency-locker / rd-deck-marking / rd-bulkhead-door | 船内の標準の壁・床・天井、前室の点検口と待機表、中央通路（前）の配管の壁、物置の非常用ロッカー、床の矢印（中央通路の後部 = 機関室へ、格納庫 = ランプへ）、機関室と格納庫の隔壁扉 |
+| 96 兵装 | 使用中 | rd-armory-wall / rd-rifle-rack / rd-ammo-crates / rd-gun-sight / rd-turret-controls / rd-shell-feed / rd-armor-locker / rd-target-screen / rd-gunnery-floor | 兵装庫と砲塔管制室の壁・床、銃架、弾薬箱、照準器、操作盤、砲弾の送り込み装置、防弾服ロッカー、照準画面（砲塔管制室と通信室） |
+| 97 乗員区画 | 使用中 | rd-crew-wall / rd-bunk-blanket / rd-crew-locker / rd-galley / rd-mess-table / rd-medbay-wall / rd-med-scanner / rd-crew-photo / rd-patch-board | 兵員室と食堂の壁、二段ベッドの毛布、個人ロッカー、食堂の厨房（絵そのものを厨房の箱の正面に）、長机の天板、医務室の壁とスキャナー、写真、部隊章 |
+| 98 機関 | 使用中 | rd-engine-floor / rd-engine-wall / rd-reactor-core / rd-turbine / rd-coolant-panel / rd-power-conduit / rd-heat-vent / rd-catwalk-grate / rd-engine-gauges | 機関室の床・壁、炉心の覗き窓、タービン 2 基、冷却盤、電力ケーブル（機関室・中央通路の前後）、排熱口、炉区画の床、計器 |
+| 99 格納庫 | 使用中 | rd-cargo-floor / rd-cargo-wall / rd-ramp-door / rd-cargo-net / rd-strap-crates / rd-loader-arm / rd-fuel-cells / rd-tie-down / rd-airlock-panel | 格納庫の床・壁、後部ランプの扉、荷物ネット、固定された木箱、荷役アーム、燃料電池、床の固定具、エアロックの操作盤 |
+
+既存の素材と組み合わせた所: 洗面所はメガトンの浴室の壁と床（`mg-wall-bath` / `mg-floor-bath`）、艦橋まわりは敵艦の艦橋（`en-`）。
 
 ## 確かめたこと
 
